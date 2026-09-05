@@ -1,0 +1,13 @@
+{
+  "schema_version": 2,
+  "workflow_id": "dwi-preprocess-metrics",
+  "title": "DWI 预处理与扩散指标流程",
+  "description": "根据数据集检查结果规划 BIDS 准备、DWI 预处理、扩散指标和 QC 报告。",
+  "steps": [
+    {"id": "inspect_inputs", "title": "检查 DWI 输入", "description": "确认数据结构、梯度文件、相位编码和结构像条件。", "capability": "dwi.inspect", "selection": "auto", "always_include": true},
+    {"id": "validate_bids", "title": "整理并校验 BIDS", "description": "将输入整理为后续工具可消费的 BIDS DWI 数据。", "capability": "dwi.bids", "selection": "auto", "always_include": true},
+    {"id": "preprocess", "title": "DWI 预处理", "description": "进行畸变、运动和涡流校正，并产生质量控制结果。", "capability": "dwi.preprocess", "selection": "user", "always_include": true},
+    {"id": "tensor_metrics", "title": "计算扩散张量指标", "description": "拟合扩散张量并生成 FA、MD、AD、RD 等指标。", "capability": "dwi.tensor_metrics", "selection": "user", "include_for_goals": ["preprocess_and_metrics"]},
+    {"id": "report", "title": "汇总结果与 QC", "description": "整理输出文件、参数快照、质量控制摘要和异常项。", "capability": "dwi.report", "selection": "auto", "always_include": true}
+  ]
+}

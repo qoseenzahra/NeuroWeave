@@ -1,0 +1,17 @@
+.git
+.gitignore
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.venv
+**/node_modules
+frontend/dist
+frontend/.next
+frontend/.vinext
+frontend/.wrangler
+frontend/tsconfig.tsbuildinfo
+bakend/.env
+bakend/data/*.db*
+runtime
+datasets
+*.tar.gz

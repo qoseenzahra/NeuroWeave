@@ -1,0 +1,2251 @@
+{
+  "schema_version": 1,
+  "generated_from": "scripts/build_capability_tree.py",
+  "root": {
+    "id": "localflow-capabilities",
+    "label": "LocalFlow 本地数据处理能力",
+    "description": "完整索引所有现有 Skill；先按能力定位，再只读取命中的 SKILL.md。所有 Skill 都有结构化规划 Manifest；只有受审 runner 能力可生成执行预览。",
+    "execution_level": "category",
+    "children": [
+      {
+        "id": "structured-execution",
+        "label": "已结构化的本地任务能力",
+        "description": "已有受审 Manifest、方法选项、参数定义和 runner，可生成交互式任务卡。",
+        "execution_level": "category",
+        "children": [
+          {
+            "id": "structured-data-preparation",
+            "label": "数据检查与整理",
+            "execution_level": "category",
+            "children": [
+              {
+                "id": "dwi.inspect",
+                "label": "DWI 数据集巡检",
+                "description": "扫描目录结构和轻量元数据，识别 DWI、梯度文件与输入条件。",
+                "keywords": [
+                  "检查数据",
+                  "数据巡检",
+                  "DWI inspection",
+                  "质量检查"
+                ],
+                "skill_ids": [
+                  "dataset-inspector"
+                ],
+                "execution_level": "structured"
+              },
+              {
+                "id": "dwi.bids",
+                "label": "整理并校验 BIDS",
+                "description": "把原始或已有 DWI 数据整理为可供 BIDS-App 使用的结构。",
+                "keywords": [
+                  "BIDS",
+                  "整理数据",
+                  "组织数据集",
+                  "BIDS validation"
+                ],
+                "skill_ids": [
+                  "bids-organizer"
+                ],
+                "execution_level": "structured"
+              }
+            ]
+          },
+          {
+            "id": "structured-image-processing",
+            "label": "影像预处理与定量分析",
+            "execution_level": "category",
+            "children": [
+              {
+                "id": "dwi.preprocess",
+                "label": "DWI 预处理",
+                "description": "完成畸变、运动和涡流校正，并生成质量控制结果。",
+                "keywords": [
+                  "DWI 预处理",
+                  "eddy",
+                  "topup",
+                  "QSIPrep",
+                  "运动校正"
+                ],
+                "skill_ids": [
+                  "qsiprep-tool",
+                  "fsl-tool",
+                  "hcppipeline-tool"
+                ],
+                "execution_level": "structured"
+              },
+              {
+                "id": "image.registration",
+                "label": "图像配准",
+                "description": "使用 FSL FLIRT 或 ANTs 把移动影像对齐到参考影像，输出配准结果与变换。",
+                "keywords": [
+                  "图像配准",
+                  "registration",
+                  "FLIRT",
+                  "ANTs",
+                  "SyN",
+                  "刚体配准",
+                  "仿射配准",
+                  "非线性配准"
+                ],
+                "skill_ids": [
+                  "fsl-tool",
+                  "smri-skill"
+                ],
+                "execution_level": "structured"
+              },
+              {
+                "id": "dwi.tensor_metrics",
+                "label": "扩散张量指标",
+                "description": "拟合扩散张量并计算 FA、MD、AD、RD 等指标。",
+                "keywords": [
+                  "FA",
+                  "MD",
+                  "DTI",
+                  "张量拟合",
+                  "扩散指标"
+                ],
+                "skill_ids": [
+                  "dipy-tool",
+                  "fsl-tool"
+                ],
+                "execution_level": "structured"
+              },
+              {
+                "id": "dwi.response",
+                "label": "DWI 组织响应函数",
+                "description": "使用 dwi2response 估计 CSD 所需白质或多组织响应函数。",
+                "keywords": [
+                  "响应函数",
+                  "response function",
+                  "dwi2response",
+                  "Dhollander",
+                  "Tournier"
+                ],
+                "skill_ids": [
+                  "dwi-skill"
+                ],
+                "execution_level": "structured"
+              },
+              {
+                "id": "dwi.fod",
+                "label": "DWI FOD 估计",
+                "description": "使用 CSD 或 MSMT-CSD 估计纤维方向分布，供纤维追踪使用。",
+                "keywords": [
+                  "FOD",
+                  "纤维方向分布",
+                  "dwi2fod",
+                  "CSD",
+                  "MSMT-CSD"
+                ],
+                "skill_ids": [
+                  "dwi-skill"
+                ],
+                "execution_level": "structured"
+              },
+              {
+                "id": "dwi.five_tt",
+                "label": "ACT 五组织类型分割",
+                "description": "从 T1w 生成 MRtrix3 ACT 追踪需要的 5TT 影像。",
+                "keywords": [
+                  "5TT",
+                  "five tissue",
+                  "5ttgen",
+                  "ACT",
+                  "五组织"
+                ],
+                "skill_ids": [
+                  "dwi-skill"
+                ],
+                "execution_level": "structured"
+              },
+              {
+                "id": "dwi.tractography",
+                "label": "DWI 纤维追踪与连接组",
+                "description": "选择 MRtrix3 或 FSL 纤维追踪方法；已有有效 FOD 时可直接执行 MRtrix3 tckgen。",
+                "keywords": [
+                  "纤维追踪",
+                  "tractography",
+                  "MRtrix3",
+                  "probtrackx",
+                  "connectome"
+                ],
+                "skill_ids": [
+                  "dwi-skill",
+                  "fsl-tool"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "dwi.connectome",
+                "label": "结构连接组矩阵",
+                "description": "使用 tck2connectome 将纤维流线与脑区分区汇总为连接矩阵。",
+                "keywords": [
+                  "结构连接组",
+                  "connectome",
+                  "连接矩阵",
+                  "tck2connectome"
+                ],
+                "skill_ids": [
+                  "dwi-skill"
+                ],
+                "execution_level": "structured"
+              }
+            ]
+          },
+          {
+            "id": "structured-reporting",
+            "label": "结果与质量控制",
+            "execution_level": "category",
+            "children": [
+              {
+                "id": "dwi.report",
+                "label": "处理结果报告",
+                "description": "生成流程摘要、参数快照、质量控制与结果清单。",
+                "keywords": [
+                  "QC",
+                  "报告",
+                  "结果汇总",
+                  "quality control"
+                ],
+                "skill_ids": [
+                  "report-builder"
+                ],
+                "execution_level": "structured"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "dataset-workflows",
+        "label": "公开数据集工作流",
+        "description": "按数据集定位访问、整理、质控和多模态处理指南。",
+        "execution_level": "category",
+        "children": [
+          {
+            "id": "population-development-datasets",
+            "label": "人群、发育与生命周期数据集",
+            "execution_level": "category",
+            "children": [
+              {
+                "id": "skill.abcd-skill",
+                "label": "Abcd Skill",
+                "description": "Use this skill whenever the user wants an end-to-end workflow for the ABCD Study dataset, including download via NIMH Data Archive, BIDS organization, and multimodal processing of sMRI, fMRI, and dMRI.",
+                "keywords": [
+                  "abcd-skill",
+                  "Abcd Skill",
+                  "Use",
+                  "ABCD",
+                  "Study",
+                  "NIMH",
+                  "Data",
+                  "Archive",
+                  "BIDS"
+                ],
+                "skill_ids": [
+                  "abcd-skill"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.aomic-skill",
+                "label": "Aomic Skill",
+                "description": "Use this skill whenever the user wants an end-to-end workflow for the AOMIC (Amsterdam Open MRI Collection) dataset, including data access, BIDS organization, and multimodal processing of sMRI, rs-fMRI, and task-fMRI.",
+                "keywords": [
+                  "aomic-skill",
+                  "Aomic Skill",
+                  "Use",
+                  "AOMIC",
+                  "Amsterdam",
+                  "Open",
+                  "MRI",
+                  "Collection",
+                  "BIDS"
+                ],
+                "skill_ids": [
+                  "aomic-skill"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.camcan-skill",
+                "label": "Camcan Skill",
+                "description": "Use this skill whenever the user wants an end-to-end workflow for the Cam-CAN (Cambridge Centre for Ageing and Neuroscience) dataset, including BIDS validation, multimodal processing of sMRI, rs-fMRI, task-fMRI, and MEG, phenotype extraction, and QC integra...",
+                "keywords": [
+                  "camcan-skill",
+                  "Camcan Skill",
+                  "Use",
+                  "Cam-CAN",
+                  "Cambridge",
+                  "Centre",
+                  "Ageing",
+                  "Neuroscience",
+                  "BIDS",
+                  "MEG"
+                ],
+                "skill_ids": [
+                  "camcan-skill"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.hbn-skill",
+                "label": "Hbn Skill",
+                "description": "Use this skill whenever the user wants an end-to-end workflow for the Healthy Brain Network (HBN) dataset, including download, BIDS organization, and multimodal processing of sMRI, dMRI, rs-fMRI, task-fMRI, and EEG data.",
+                "keywords": [
+                  "hbn-skill",
+                  "Hbn Skill",
+                  "Use",
+                  "Healthy",
+                  "Brain",
+                  "Network",
+                  "HBN",
+                  "BIDS",
+                  "EEG"
+                ],
+                "skill_ids": [
+                  "hbn-skill"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.hcpa-skill",
+                "label": "Hcpa Skill",
+                "description": "Use this skill whenever the user wants an end-to-end workflow for the HCP Aging (HCP-A) dataset, including dataset download, BIDS organization, and multimodal processing of sMRI, fMRI, and dMRI.",
+                "keywords": [
+                  "hcpa-skill",
+                  "Hcpa Skill",
+                  "Use",
+                  "HCP",
+                  "Aging",
+                  "HCP-A",
+                  "BIDS"
+                ],
+                "skill_ids": [
+                  "hcpa-skill"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.hcpd-skill",
+                "label": "Hcpd Skill",
+                "description": "Use this skill whenever the user wants an end-to-end workflow for the HCP Development (HCP-D) dataset, including dataset download, BIDS organization, and multimodal processing of sMRI, fMRI, and dMRI.",
+                "keywords": [
+                  "hcpd-skill",
+                  "Hcpd Skill",
+                  "Use",
+                  "HCP",
+                  "Development",
+                  "HCP-D",
+                  "BIDS"
+                ],
+                "skill_ids": [
+                  "hcpd-skill"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.hcpya-skill",
+                "label": "Hcpya Skill",
+                "description": "Use this skill whenever the user wants an end-to-end workflow for the HCP Young Adult (HCP-YA / HCP1200) dataset, including dataset download, BIDS organization, and multimodal processing of sMRI, fMRI, and dMRI.",
+                "keywords": [
+                  "hcpya-skill",
+                  "Hcpya Skill",
+                  "Use",
+                  "HCP",
+                  "Young",
+                  "Adult",
+                  "HCP-YA",
+                  "HCP1200",
+                  "BIDS"
+                ],
+                "skill_ids": [
+                  "hcpya-skill"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.ixi-skill",
+                "label": "Ixi Skill",
+                "description": "Use this skill whenever the user wants an end-to-end workflow for the IXI (Information eXtraction from Images) dataset, including data download, BIDS organization, and multimodal processing of T1w, T2w, and MRA.",
+                "keywords": [
+                  "ixi-skill",
+                  "Ixi Skill",
+                  "Use",
+                  "IXI",
+                  "Information",
+                  "Images",
+                  "BIDS",
+                  "T1w",
+                  "T2w",
+                  "MRA"
+                ],
+                "skill_ids": [
+                  "ixi-skill"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.pnc-skill",
+                "label": "Pnc Skill",
+                "description": "Use this skill whenever the user wants an end-to-end workflow for the Philadelphia Neurodevelopmental Cohort (PNC) dataset, including BIDS validation, multimodal processing of sMRI, rs-fMRI, task-fMRI, and dMRI, phenotype extraction, and QC integration.",
+                "keywords": [
+                  "pnc-skill",
+                  "Pnc Skill",
+                  "Use",
+                  "Philadelphia",
+                  "Cohort",
+                  "PNC",
+                  "BIDS",
+                  "QC"
+                ],
+                "skill_ids": [
+                  "pnc-skill"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.ukb-skill",
+                "label": "Ukb Skill",
+                "description": "Use this skill whenever the user wants to analyze already available UK Biobank data for brain-related research, including neurological outcomes, cognitive phenotypes, brain MRI derived phenotypes, survival analysis, subgroup analysis, propensity score analy...",
+                "keywords": [
+                  "ukb-skill",
+                  "Ukb Skill",
+                  "Use",
+                  "UK",
+                  "Biobank",
+                  "MRI"
+                ],
+                "skill_ids": [
+                  "ukb-skill"
+                ],
+                "execution_level": "planning"
+              }
+            ]
+          },
+          {
+            "id": "clinical-datasets",
+            "label": "临床与疾病数据集",
+            "execution_level": "category",
+            "children": [
+              {
+                "id": "skill.abide-skill",
+                "label": "Abide Skill",
+                "description": "Use this skill whenever the user wants an end-to-end workflow for the ABIDE (Autism Brain Imaging Data Exchange) dataset, including download, BIDS organization, and processing of sMRI and rs-fMRI data.",
+                "keywords": [
+                  "abide-skill",
+                  "Abide Skill",
+                  "Use",
+                  "ABIDE",
+                  "Autism",
+                  "Brain",
+                  "Imaging",
+                  "Data",
+                  "Exchange",
+                  "BIDS"
+                ],
+                "skill_ids": [
+                  "abide-skill"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.adhd200-skill",
+                "label": "Adhd200 Skill",
+                "description": "Use this skill whenever the user wants an end-to-end workflow for the ADHD-200 dataset, including download, BIDS organization, and processing of sMRI and rs-fMRI data.",
+                "keywords": [
+                  "adhd200-skill",
+                  "Adhd200 Skill",
+                  "Use",
+                  "ADHD-200",
+                  "BIDS"
+                ],
+                "skill_ids": [
+                  "adhd200-skill"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.adni-skill",
+                "label": "Adni Skill",
+                "description": "Use this skill whenever the user wants an end-to-end workflow for ADNI data (fMRI + T1), including BIDS preparation, fMRIPrep preprocessing, and DK68 ROI pipeline.",
+                "keywords": [
+                  "adni-skill",
+                  "Adni Skill",
+                  "Use",
+                  "ADNI",
+                  "T1",
+                  "BIDS",
+                  "DK68",
+                  "ROI"
+                ],
+                "skill_ids": [
+                  "adni-skill"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.aibl-skill",
+                "label": "Aibl Skill",
+                "description": "Use this skill whenever the user wants an end-to-end workflow for the AIBL (Australian Imaging, Biomarkers and Lifestyle) dataset, including data access guidance, BIDS organization, and multimodal processing of sMRI and PET (PiB, FDG, tau).",
+                "keywords": [
+                  "aibl-skill",
+                  "Aibl Skill",
+                  "Use",
+                  "AIBL",
+                  "Australian",
+                  "Imaging",
+                  "Biomarkers",
+                  "Lifestyle",
+                  "BIDS",
+                  "PET"
+                ],
+                "skill_ids": [
+                  "aibl-skill"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.cobre-skill",
+                "label": "Cobre Skill",
+                "description": "Use this skill whenever the user wants an end-to-end workflow for the COBRE dataset, including download, BIDS organization, and processing of sMRI and rs-fMRI data for schizophrenia research.",
+                "keywords": [
+                  "cobre-skill",
+                  "Cobre Skill",
+                  "Use",
+                  "COBRE",
+                  "BIDS"
+                ],
+                "skill_ids": [
+                  "cobre-skill"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.hcpep-skill",
+                "label": "Hcpep Skill",
+                "description": "Use this skill whenever the user wants an end-to-end workflow for the HCP Early Psychosis (HCP-EP) dataset, including dataset download, BIDS organization, and multimodal processing of sMRI, fMRI, and dMRI.",
+                "keywords": [
+                  "hcpep-skill",
+                  "Hcpep Skill",
+                  "Use",
+                  "HCP",
+                  "Early",
+                  "Psychosis",
+                  "HCP-EP",
+                  "BIDS"
+                ],
+                "skill_ids": [
+                  "hcpep-skill"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.mnd-skill",
+                "label": "Mnd Skill",
+                "description": "Use this skill whenever the user wants an end-to-end workflow for the Motor Neuron Disease (MND) dataset from OpenNeuro ds005874, including BIDS validation, multimodal processing of rs-fMRI and task-fMRI, phenotype extraction, and QC integration.",
+                "keywords": [
+                  "mnd-skill",
+                  "Mnd Skill",
+                  "Use",
+                  "Motor",
+                  "Neuron",
+                  "Disease",
+                  "MND",
+                  "OpenNeuro",
+                  "BIDS",
+                  "QC"
+                ],
+                "skill_ids": [
+                  "mnd-skill"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.mschallenge-skill",
+                "label": "Mschallenge Skill",
+                "description": "Use this skill whenever the user wants an end-to-end workflow for the Longitudinal MS Lesion Segmentation Challenge dataset, including data validation, multimodal processing of T1w, T2w, FLAIR, and PD, lesion segmentation, and QC integration.",
+                "keywords": [
+                  "mschallenge-skill",
+                  "Mschallenge Skill",
+                  "Use",
+                  "Longitudinal",
+                  "MS",
+                  "Lesion",
+                  "Segmentation",
+                  "Challenge",
+                  "T1w",
+                  "T2w"
+                ],
+                "skill_ids": [
+                  "mschallenge-skill"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.nifd-skill",
+                "label": "Nifd Skill",
+                "description": "Use this skill whenever the user wants an end-to-end workflow for the Neuroimaging in Frontotemporal Dementia (NIFD) dataset, including BIDS validation, multimodal processing of sMRI, rs-fMRI, and dMRI, phenotype extraction, and QC integration.",
+                "keywords": [
+                  "nifd-skill",
+                  "Nifd Skill",
+                  "Use",
+                  "Neuroimaging",
+                  "Frontotemporal",
+                  "Dementia",
+                  "NIFD",
+                  "BIDS",
+                  "QC"
+                ],
+                "skill_ids": [
+                  "nifd-skill"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.oasis-skill",
+                "label": "Oasis Skill",
+                "description": "Use this skill whenever the user wants an end-to-end workflow for the OASIS (Open Access Series of Imaging Studies) dataset, including BIDS validation, multimodal processing of sMRI, and phenotype extraction for aging and Alzheimer's disease research.",
+                "keywords": [
+                  "oasis-skill",
+                  "Oasis Skill",
+                  "Use",
+                  "OASIS",
+                  "Open",
+                  "Access",
+                  "Series",
+                  "Imaging",
+                  "Studies",
+                  "BIDS"
+                ],
+                "skill_ids": [
+                  "oasis-skill"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.ppmi-skill",
+                "label": "Ppmi Skill",
+                "description": "Use this skill whenever the user wants an end-to-end workflow for the Parkinson's Progression Markers Initiative (PPMI) dataset, including BIDS validation, multimodal processing of sMRI, rs-fMRI, and dMRI, phenotype extraction, and QC integration.",
+                "keywords": [
+                  "ppmi-skill",
+                  "Ppmi Skill",
+                  "Use",
+                  "Parkinson",
+                  "Progression",
+                  "Markers",
+                  "Initiative",
+                  "PPMI",
+                  "BIDS",
+                  "QC"
+                ],
+                "skill_ids": [
+                  "ppmi-skill"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.rest-mneta-mdd-skill",
+                "label": "Rest Mneta Mdd Skill",
+                "description": "Use this skill whenever the user wants an end-to-end workflow for the REST-meta-MDD (Resting-State Meta-Major Depressive Disorder) dataset, including BIDS validation, processing of rs-fMRI, phenotype extraction, and QC integration.",
+                "keywords": [
+                  "rest-mneta-mdd-skill",
+                  "Rest Mneta Mdd Skill",
+                  "Use",
+                  "REST-meta-MDD",
+                  "Resting-State",
+                  "Meta-Major",
+                  "Depressive",
+                  "Disorder",
+                  "BIDS",
+                  "QC"
+                ],
+                "skill_ids": [
+                  "rest-mneta-mdd-skill"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.tcp-skill",
+                "label": "Tcp Skill",
+                "description": "Use this skill whenever the user wants an end-to-end workflow for the Transdiagnostic Connectome Project (TCP) dataset, including BIDS validation, multimodal processing of sMRI, rs-fMRI, and dMRI, phenotype extraction, and QC integration.",
+                "keywords": [
+                  "tcp-skill",
+                  "Tcp Skill",
+                  "Use",
+                  "Transdiagnostic",
+                  "Connectome",
+                  "Project",
+                  "TCP",
+                  "BIDS",
+                  "QC"
+                ],
+                "skill_ids": [
+                  "tcp-skill"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.ucla-cnp-skill",
+                "label": "Ucla Cnp Skill",
+                "description": "Use this skill whenever the user wants an end-to-end workflow for the UCLA CNP (Consortium for Neuropsychiatric Phenomics) dataset, including BIDS validation, multimodal processing of sMRI, task-fMRI, and dMRI, phenotype extraction, and QC integration.",
+                "keywords": [
+                  "ucla-cnp-skill",
+                  "Ucla Cnp Skill",
+                  "Use",
+                  "UCLA",
+                  "CNP",
+                  "Consortium",
+                  "Neuropsychiatric",
+                  "Phenomics",
+                  "BIDS",
+                  "QC"
+                ],
+                "skill_ids": [
+                  "ucla-cnp-skill"
+                ],
+                "execution_level": "planning"
+              }
+            ]
+          },
+          {
+            "id": "task-cognitive-datasets",
+            "label": "任务态与认知实验数据集",
+            "execution_level": "category",
+            "children": [
+              {
+                "id": "skill.bold5000-skill",
+                "label": "Bold5000 Skill",
+                "description": "Use this skill whenever the user wants an end-to-end workflow for the BOLD5000 dataset, including download, BIDS organization, and processing of task-fMRI data with visual image stimuli.",
+                "keywords": [
+                  "bold5000-skill",
+                  "Bold5000 Skill",
+                  "Use",
+                  "BOLD5000",
+                  "BIDS"
+                ],
+                "skill_ids": [
+                  "bold5000-skill"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.dmt-har-med-skill",
+                "label": "Dmt Har Med Skill",
+                "description": "Use this skill whenever the user wants an end-to-end workflow for the DMT-HAR-MED dataset (ds006644), including download, BIDS organization, and processing of rs-fMRI data from a psychedelic intervention study.",
+                "keywords": [
+                  "dmt-har-med-skill",
+                  "Dmt Har Med Skill",
+                  "Use",
+                  "DMT-HAR-MED",
+                  "BIDS"
+                ],
+                "skill_ids": [
+                  "dmt-har-med-skill"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.nsd-skill",
+                "label": "Nsd Skill",
+                "description": "Use this skill whenever the user wants an end-to-end workflow for the Natural Scenes Dataset (NSD), including data access, BIDS validation, multimodal processing of task-fMRI and structural MRI, stimulus metadata extraction, and QC integration.",
+                "keywords": [
+                  "nsd-skill",
+                  "Nsd Skill",
+                  "Use",
+                  "Natural",
+                  "Scenes",
+                  "Dataset",
+                  "NSD",
+                  "BIDS",
+                  "MRI",
+                  "QC"
+                ],
+                "skill_ids": [
+                  "nsd-skill"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.scan-skill",
+                "label": "Scan Skill",
+                "description": "Use this skill to turn an approved SCAN export into an auditable multimodal workflow. Keep access control, identifier handling, staging, phenotype linkage, and modality processing explicit.",
+                "keywords": [
+                  "scan-skill",
+                  "Scan Skill",
+                  "Use",
+                  "SCAN",
+                  "Keep"
+                ],
+                "skill_ids": [
+                  "scan-skill"
+                ],
+                "execution_level": "planning"
+              }
+            ]
+          },
+          {
+            "id": "eeg-datasets",
+            "label": "EEG 数据集",
+            "execution_level": "category",
+            "children": [
+              {
+                "id": "skill.seed-iv-skill",
+                "label": "Seed Iv Skill",
+                "description": "Use this skill whenever the user wants an end-to-end workflow for the SEED-IV (SJTU Emotion EEG Dataset - 4 emotions) dataset, including EEG validation, preprocessing, feature extraction, and emotion classification.",
+                "keywords": [
+                  "seed-iv-skill",
+                  "Seed Iv Skill",
+                  "Use",
+                  "SEED-IV",
+                  "SJTU",
+                  "Emotion",
+                  "EEG",
+                  "Dataset"
+                ],
+                "skill_ids": [
+                  "seed-iv-skill"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.seed-vig-skill",
+                "label": "Seed Vig Skill",
+                "description": "Use this skill whenever the user wants an end-to-end workflow for the SEED-VIG (SJTU Emotion EEG Dataset - Vigilance) dataset, including EEG validation, preprocessing, feature extraction, and vigilance/fatigue detection.",
+                "keywords": [
+                  "seed-vig-skill",
+                  "Seed Vig Skill",
+                  "Use",
+                  "SEED-VIG",
+                  "SJTU",
+                  "Emotion",
+                  "EEG",
+                  "Dataset",
+                  "Vigilance"
+                ],
+                "skill_ids": [
+                  "seed-vig-skill"
+                ],
+                "execution_level": "planning"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "modality-workflows",
+        "label": "成像与电生理模态",
+        "description": "按数据模态定位端到端预处理、特征提取与分析指南。",
+        "execution_level": "category",
+        "children": [
+          {
+            "id": "modality-pipelines",
+            "label": "模态处理工作流",
+            "execution_level": "category",
+            "children": [
+              {
+                "id": "skill.asl-skill",
+                "label": "ASL 灌注成像处理",
+                "description": "Use this skill whenever the user wants to process Arterial Spin Labeling (ASL) perfusion MRI data including CBF (cerebral blood flow) quantification, ASL preprocessing (motion correction, partial volume correction, M0 normalization), or ASL-based brain perf...",
+                "keywords": [
+                  "asl-skill",
+                  "Asl Skill",
+                  "ASL",
+                  "CBF",
+                  "脑灌注",
+                  "Use",
+                  "Arterial",
+                  "Spin",
+                  "Labeling",
+                  "MRI"
+                ],
+                "skill_ids": [
+                  "asl-skill"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.dwi-skill",
+                "label": "DWI 扩散成像工作流",
+                "description": "Use this skill whenever the user wants to preprocess diffusion MRI / DWI data, compute diffusion metrics (FA/MD/AD/RD, etc.), extract ROI-wise diffusion features, or run tractography/connectome-related workflows.",
+                "keywords": [
+                  "dwi-skill",
+                  "Dwi Skill",
+                  "DWI",
+                  "DTI",
+                  "扩散磁共振",
+                  "纤维追踪",
+                  "Use",
+                  "MRI",
+                  "FA",
+                  "MD",
+                  "AD",
+                  "RD",
+                  "ROI-wise"
+                ],
+                "skill_ids": [
+                  "dwi-skill"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.eeg-skill",
+                "label": "EEG 脑电处理工作流",
+                "description": "Use this skill whenever the user wants to load, preprocess, epoch, filter, or extract features from EEG data (resting-state, task-based, BCI, clinical, motor imagery, emotion, epilepsy, fatigue, etc.).",
+                "keywords": [
+                  "eeg-skill",
+                  "Eeg Skill",
+                  "EEG",
+                  "脑电",
+                  "ERP",
+                  "BCI",
+                  "Use"
+                ],
+                "skill_ids": [
+                  "eeg-skill"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.fmri-skill",
+                "label": "fMRI 功能成像工作流",
+                "description": "Use this skill whenever the user wants to perform fMRI preprocessing, first-level analysis, ROI extraction, functional connectivity, effective connectivity, or atlas-based alignment to MNI152 space using either fMRIPrep, HCP-style pipelines, or CONN Toolbox...",
+                "keywords": [
+                  "fmri-skill",
+                  "Fmri Skill",
+                  "fMRI",
+                  "功能磁共振",
+                  "功能连接",
+                  "Use",
+                  "ROI",
+                  "MNI152",
+                  "HCP-style",
+                  "CONN",
+                  "Toolbox"
+                ],
+                "skill_ids": [
+                  "fmri-skill"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.meg-skill",
+                "label": "MEG 脑磁处理工作流",
+                "description": "Use this skill whenever the user wants to process MEG (magnetoencephalography) data including source localization, time-frequency analysis, connectivity analysis, sensor-level preprocessing, or MEG-specific feature extraction.",
+                "keywords": [
+                  "meg-skill",
+                  "Meg Skill",
+                  "MEG",
+                  "脑磁",
+                  "源定位",
+                  "时频分析",
+                  "Use",
+                  "MEG-specific"
+                ],
+                "skill_ids": [
+                  "meg-skill"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.pet-skill",
+                "label": "PET 成像处理工作流",
+                "description": "Use this skill whenever the user wants to process PET neuroimaging data including spatial normalization to T1w/MNI space, SUVR computation, reference region quantification, partial volume correction, or tracer-specific workflows (PiB amyloid, FDG metabolism...",
+                "keywords": [
+                  "pet-skill",
+                  "Pet Skill",
+                  "PET",
+                  "SUVR",
+                  "部分容积校正",
+                  "Use",
+                  "T1w",
+                  "MNI",
+                  "PiB",
+                  "FDG"
+                ],
+                "skill_ids": [
+                  "pet-skill"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.smri-skill",
+                "label": "sMRI 结构成像工作流",
+                "description": "Use this skill whenever the user wants to process structural MRI (sMRI) such as T1w/T2w/FLAIR for brain extraction, bias correction, tissue segmentation (GM/WM/CSF), registration to MNI, cortical/subcortical parcellation, cortical thickness/volumetry (FreeS...",
+                "keywords": [
+                  "smri-skill",
+                  "Smri Skill",
+                  "sMRI",
+                  "T1w",
+                  "T2w",
+                  "FLAIR",
+                  "结构磁共振",
+                  "Use",
+                  "MRI",
+                  "GM",
+                  "WM",
+                  "CSF"
+                ],
+                "skill_ids": [
+                  "smri-skill"
+                ],
+                "execution_level": "planning"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "data-preparation",
+        "label": "数据理解、转换与整理",
+        "description": "检查输入、转换格式、组织 BIDS、批处理影像和清洗表格。",
+        "execution_level": "category",
+        "children": [
+          {
+            "id": "inspection-cleaning",
+            "label": "检查、清洗与批处理",
+            "execution_level": "category",
+            "children": [
+              {
+                "id": "skill.dataset-inspector",
+                "label": "数据集巡检",
+                "description": "在开始处理前建立数据概况。先确认用户允许访问的根目录，再汇总文件数量、扩展名、大小和目录层级；对表格抽取字段与缺失率，对影像只读取必要的元数据。",
+                "keywords": [
+                  "dataset-inspector",
+                  "数据集巡检",
+                  "数据巡检",
+                  "文件检查",
+                  "元数据"
+                ],
+                "skill_ids": [
+                  "dataset-inspector"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.table-cleaning",
+                "label": "表格清洗",
+                "description": "先确认主键、目标字段和不可修改字段。生成清洗方案时保留原始文件，记录每个规则影响的行数，并在输出前执行模式和行数校验。",
+                "keywords": [
+                  "table-cleaning",
+                  "表格清洗",
+                  "CSV",
+                  "TSV",
+                  "Excel",
+                  "缺失值",
+                  "异常值"
+                ],
+                "skill_ids": [
+                  "table-cleaning"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.image-batch-processing",
+                "label": "影像批处理",
+                "description": "先识别输入格式、空间信息与命名规则，再选择已经安装的软件或开源方法。任何批处理都应先对单个样本试运行，并保留输入输出映射和失败清单。",
+                "keywords": [
+                  "image-batch-processing",
+                  "影像批处理"
+                ],
+                "skill_ids": [
+                  "image-batch-processing"
+                ],
+                "execution_level": "planning"
+              }
+            ]
+          },
+          {
+            "id": "format-conversion-organization",
+            "label": "格式转换与数据组织",
+            "execution_level": "category",
+            "children": [
+              {
+                "id": "skill.bids-organizer",
+                "label": "BIDS 数据组织",
+                "description": "Use this skill whenever the user wants to automatically organize raw neuroimaging data (DICOM, NIfTI, EEG, etc.) into a valid BIDS (Brain Imaging Data Structure) dataset.",
+                "keywords": [
+                  "bids-organizer",
+                  "Bids Organizer",
+                  "BIDS",
+                  "数据整理",
+                  "数据组织",
+                  "Use",
+                  "DICOM",
+                  "NIfTI",
+                  "EEG",
+                  "Brain",
+                  "Imaging",
+                  "Data"
+                ],
+                "skill_ids": [
+                  "bids-organizer"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.dcm2nii",
+                "label": "Dcm2Nii",
+                "description": "Use this skill whenever the user wants to convert DICOM files or folders to NIfTI format (.nii or .nii.gz), extract neuroimaging volumes from clinical DICOM series (MRI, CT, PET, etc.), prepare raw DICOM data for research processing pipelines, anonymize whi...",
+                "keywords": [
+                  "dcm2nii",
+                  "Dcm2Nii",
+                  "DICOM",
+                  "NIfTI",
+                  "格式转换",
+                  "Use",
+                  "MRI",
+                  "CT",
+                  "PET"
+                ],
+                "skill_ids": [
+                  "dcm2nii"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.nii2dcm",
+                "label": "Nii2Dcm",
+                "description": "Use this skill whenever the user wants to convert NIfTI files (.nii or .nii.gz) to DICOM format, create DICOM series from processed neuroimaging results, write segmentation/registration/analysis outputs back to DICOM for PACS compatibility or clinical viewe...",
+                "keywords": [
+                  "nii2dcm",
+                  "Nii2Dcm",
+                  "NIfTI",
+                  "DICOM",
+                  "格式转换",
+                  "Use",
+                  "PACS"
+                ],
+                "skill_ids": [
+                  "nii2dcm"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.nibabel-skill",
+                "label": "Nibabel Skill",
+                "description": "Use this skill whenever NeuroClaw needs concrete nibabel operations for neuroimaging files: loading and validating NIfTI images, inspecting shapes and affine matrices, saving derived images, converting voxel coordinates to MNI/world coordinates, or reading...",
+                "keywords": [
+                  "nibabel-skill",
+                  "Nibabel Skill",
+                  "NIfTI",
+                  "affine",
+                  "影像读写",
+                  "Use",
+                  "NeuroClaw",
+                  "MNI"
+                ],
+                "skill_ids": [
+                  "nibabel-skill"
+                ],
+                "execution_level": "planning"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "neuroimaging-tools",
+        "label": "神经影像软件与分析工具",
+        "description": "定位现有开源软件的预处理、连接、量化和分割能力。",
+        "execution_level": "category",
+        "children": [
+          {
+            "id": "preprocessing-suites",
+            "label": "标准预处理与综合软件",
+            "execution_level": "category",
+            "children": [
+              {
+                "id": "skill.fmriprep-tool",
+                "label": "Fmriprep Tool",
+                "description": "Use this skill whenever the user wants to perform standardized preprocessing of functional MRI (fMRI) and anatomical MRI data using fMRIPrep.",
+                "keywords": [
+                  "fmriprep-tool",
+                  "Fmriprep Tool",
+                  "fMRIPrep",
+                  "fMRI 预处理",
+                  "Use",
+                  "MRI"
+                ],
+                "skill_ids": [
+                  "fmriprep-tool"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.freesurfer-tool",
+                "label": "Freesurfer Tool",
+                "description": "Use this skill whenever the user wants to process structural MRI data (T1w, T2w, FLAIR, etc.) with FreeSurfer, especially for cortical/subcortical segmentation, surface reconstruction, parcellation, cortical thickness, volume statistics, or full recon-all p...",
+                "keywords": [
+                  "freesurfer-tool",
+                  "Freesurfer Tool",
+                  "FreeSurfer",
+                  "皮层重建",
+                  "分割",
+                  "Use",
+                  "MRI",
+                  "T1w",
+                  "T2w",
+                  "FLAIR"
+                ],
+                "skill_ids": [
+                  "freesurfer-tool"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.fsl-tool",
+                "label": "Fsl Tool",
+                "description": "Use this skill whenever the user wants to process neuroimaging data with FSL (FMRIB Software Library), covering structural MRI, functional MRI (fMRI), and diffusion MRI (dMRI/DTI).",
+                "keywords": [
+                  "fsl-tool",
+                  "Fsl Tool",
+                  "FSL",
+                  "FLIRT",
+                  "FEAT",
+                  "eddy",
+                  "配准",
+                  "Use",
+                  "FMRIB",
+                  "Software",
+                  "Library",
+                  "MRI"
+                ],
+                "skill_ids": [
+                  "fsl-tool"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.hcppipeline-tool",
+                "label": "Hcppipeline Tool",
+                "description": "Use this skill whenever the user wants to perform high-quality, HCP-style preprocessing of multimodal MRI data (structural, functional, diffusion) using the official HCP Pipelines.",
+                "keywords": [
+                  "hcppipeline-tool",
+                  "Hcppipeline Tool",
+                  "Use",
+                  "HCP-style",
+                  "MRI",
+                  "HCP",
+                  "Pipelines"
+                ],
+                "skill_ids": [
+                  "hcppipeline-tool"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.qsiprep-tool",
+                "label": "Qsiprep Tool",
+                "description": "Use this skill whenever the user wants to run QSIPrep (BIDS App) for diffusion MRI (DWI) preprocessing with best-practice workflows (topup/eddy, denoising/unringing options, susceptibility/motion correction, coregistration/normalization, QC reports) on BIDS...",
+                "keywords": [
+                  "qsiprep-tool",
+                  "Qsiprep Tool",
+                  "QSIPrep",
+                  "DWI 预处理",
+                  "topup",
+                  "eddy",
+                  "Use",
+                  "BIDS",
+                  "App",
+                  "MRI",
+                  "DWI",
+                  "QC"
+                ],
+                "skill_ids": [
+                  "qsiprep-tool"
+                ],
+                "execution_level": "planning"
+              }
+            ]
+          },
+          {
+            "id": "analysis-libraries",
+            "label": "模态分析库与连接分析",
+            "execution_level": "category",
+            "children": [
+              {
+                "id": "skill.conn-tool",
+                "label": "Conn Tool",
+                "description": "Use this skill whenever the user wants to perform advanced functional connectivity (ROI-to-ROI, seed-to-voxel, ICA) or effective connectivity (PPI, gPPI, DCM) analysis using the CONN Toolbox.",
+                "keywords": [
+                  "conn-tool",
+                  "Conn Tool",
+                  "Use",
+                  "ROI-to-ROI",
+                  "ICA",
+                  "PPI",
+                  "DCM",
+                  "CONN",
+                  "Toolbox"
+                ],
+                "skill_ids": [
+                  "conn-tool"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.dipy-tool",
+                "label": "Dipy Tool",
+                "description": "Use this skill whenever any NeuroClaw diffusion MRI / DWI modality skill needs to execute concrete DIPY operations: load DWI (NIfTI+bvals+bvecs), optional masking, DTI fitting, compute FA/MD/AD/RD, and extract ROI statistics.",
+                "keywords": [
+                  "dipy-tool",
+                  "Dipy Tool",
+                  "Use",
+                  "NeuroClaw",
+                  "MRI",
+                  "DWI",
+                  "DIPY",
+                  "NIfTI",
+                  "DTI"
+                ],
+                "skill_ids": [
+                  "dipy-tool"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.mne-eeg-tool",
+                "label": "Mne Eeg Tool",
+                "description": "Use this skill whenever any NeuroClaw modality skill (especially eeg-skill) needs to execute concrete MNE-Python operations for EEG loading, preprocessing, filtering, artifact removal, epoching, frequency-band analysis, or feature extraction.",
+                "keywords": [
+                  "mne-eeg-tool",
+                  "Mne Eeg Tool",
+                  "MNE",
+                  "EEG",
+                  "ICA",
+                  "脑电预处理",
+                  "Use",
+                  "NeuroClaw",
+                  "MNE-Python"
+                ],
+                "skill_ids": [
+                  "mne-eeg-tool"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.nilearn-tool",
+                "label": "Nilearn Tool",
+                "description": "Use this skill whenever any NeuroClaw fMRI modality skill needs to execute concrete Nilearn operations: ROI/atlas time-series extraction, confounds handling (fMRIPrep), seed-based connectivity maps, ROI-to-ROI connectivity matrices, and optional GLM/decodin...",
+                "keywords": [
+                  "nilearn-tool",
+                  "Nilearn Tool",
+                  "Nilearn",
+                  "ROI",
+                  "功能连接",
+                  "解码",
+                  "Use",
+                  "NeuroClaw",
+                  "ROI-to-ROI",
+                  "GLM"
+                ],
+                "skill_ids": [
+                  "nilearn-tool"
+                ],
+                "execution_level": "planning"
+              }
+            ]
+          },
+          {
+            "id": "quality-harmonization-segmentation",
+            "label": "校正、Harmonization 与分割",
+            "execution_level": "category",
+            "children": [
+              {
+                "id": "skill.harmonization-tool",
+                "label": "多中心数据 Harmonization",
+                "description": "Use this skill whenever the user wants to remove site/scanner/batch effects from neuroimaging features before running downstream models, run mega-analysis across multiple datasets, or evaluate models with leave-site-out / site-stratified protocols.",
+                "keywords": [
+                  "harmonization-tool",
+                  "Harmonization Tool",
+                  "ComBat",
+                  "批次效应",
+                  "多中心",
+                  "Use"
+                ],
+                "skill_ids": [
+                  "harmonization-tool"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.wmh-segmentation",
+                "label": "白质高信号分割",
+                "description": "Use this skill whenever the user wants to perform automated white matter hyperintensity (WMH) segmentation on structural MRI data using the MARS-WMH nnU-Net model.",
+                "keywords": [
+                  "wmh-segmentation",
+                  "Wmh Segmentation",
+                  "WMH",
+                  "FLAIR",
+                  "白质高信号",
+                  "Use",
+                  "MRI",
+                  "MARS-WMH",
+                  "Net"
+                ],
+                "skill_ids": [
+                  "wmh-segmentation"
+                ],
+                "execution_level": "planning"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "models-analysis",
+        "label": "建模、统计与模式发现",
+        "description": "从经典统计、信号分解到深度学习和因果、生存模型。",
+        "execution_level": "category",
+        "children": [
+          {
+            "id": "deep-prediction-models",
+            "label": "深度学习与脑网络预测",
+            "execution_level": "category",
+            "children": [
+              {
+                "id": "skill.bnt",
+                "label": "Bnt",
+                "description": "Use this model doc whenever the user wants to run BrainNetworkTransformer for fMRI phenotype prediction, including data loading, training, and evaluation.",
+                "keywords": [
+                  "bnt",
+                  "Bnt",
+                  "Use"
+                ],
+                "skill_ids": [
+                  "bnt"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.braingnn",
+                "label": "Braingnn",
+                "description": "Use this model doc whenever the user wants to run BrainGNN for fMRI phenotype prediction, including graph construction, training, and evaluation.",
+                "keywords": [
+                  "braingnn",
+                  "Braingnn",
+                  "Use",
+                  "BrainGNN"
+                ],
+                "skill_ids": [
+                  "braingnn"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.brainnetcnn",
+                "label": "Brainnetcnn",
+                "description": "Train and evaluate BrainNetCNN for classification or regression from dense ROI connectivity matrices.",
+                "keywords": [
+                  "brainnetcnn",
+                  "Brainnetcnn",
+                  "Train",
+                  "BrainNetCNN",
+                  "ROI"
+                ],
+                "skill_ids": [
+                  "brainnetcnn"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.cnn3d",
+                "label": "Cnn3D",
+                "description": "Canonical compact residual 3D CNN for voxel-level neuroimaging classification and regression.",
+                "keywords": [
+                  "cnn3d",
+                  "Cnn3D",
+                  "Canonical",
+                  "CNN"
+                ],
+                "skill_ids": [
+                  "cnn3d"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.combraintf",
+                "label": "Combraintf",
+                "description": "Use this model doc whenever the user wants to run Com-BrainTF (Community-aware Brain Transformer) for fMRI phenotype prediction.",
+                "keywords": [
+                  "combraintf",
+                  "Combraintf",
+                  "Use",
+                  "Com-BrainTF",
+                  "Community-aware",
+                  "Brain",
+                  "Transformer"
+                ],
+                "skill_ids": [
+                  "combraintf"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.fm-app",
+                "label": "Fm App",
+                "description": "Use this model doc whenever the user wants to run FM-APP for phenotype prediction using fMRI ROI features and optional sMRI features.",
+                "keywords": [
+                  "fm_app",
+                  "Fm App",
+                  "Use",
+                  "FM-APP",
+                  "ROI"
+                ],
+                "skill_ids": [
+                  "fm_app"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.ibgnn",
+                "label": "Ibgnn",
+                "description": "Use this model doc whenever the user wants to run IBGNN (Interpretable Brain Graph Neural Network) for fMRI phenotype prediction.",
+                "keywords": [
+                  "ibgnn",
+                  "Ibgnn",
+                  "Use",
+                  "IBGNN",
+                  "Interpretable",
+                  "Brain",
+                  "Graph",
+                  "Neural",
+                  "Network"
+                ],
+                "skill_ids": [
+                  "ibgnn"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.lggnn",
+                "label": "Lggnn",
+                "description": "Use this model doc whenever the user wants to run LG-GNN (Local-to-Global GNN) for fMRI phenotype prediction.",
+                "keywords": [
+                  "lggnn",
+                  "Lggnn",
+                  "Use",
+                  "LG-GNN",
+                  "Local-to-Global",
+                  "GNN"
+                ],
+                "skill_ids": [
+                  "lggnn"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.neurostorm",
+                "label": "Neurostorm",
+                "description": "Use this skill whenever the user wants to run the NeuroSTORM multi-model fMRI platform: preprocessing, pretraining (MAE or contrastive), fine-tuning, inference, or benchmarking.",
+                "keywords": [
+                  "neurostorm",
+                  "Neurostorm",
+                  "Use",
+                  "NeuroSTORM",
+                  "MAE"
+                ],
+                "skill_ids": [
+                  "neurostorm"
+                ],
+                "execution_level": "planning"
+              }
+            ]
+          },
+          {
+            "id": "statistical-prediction-models",
+            "label": "统计、预测与个体差异模型",
+            "execution_level": "category",
+            "children": [
+              {
+                "id": "skill.brain-age-modeling",
+                "label": "脑龄建模",
+                "description": "Cross-validated brain-age workflow with training-fold-only age-bias correction and Brain-PAD export.",
+                "keywords": [
+                  "brain-age-modeling",
+                  "Brain Age Modeling",
+                  "Cross-validated",
+                  "Brain-PAD"
+                ],
+                "skill_ids": [
+                  "brain-age-modeling"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.causal-treatment-models",
+                "label": "Causal Treatment Models",
+                "description": "Treatment-effect model family covering IPW, meta-learners, doubly robust learning, causal forests, TARNet, and DragonNet.",
+                "keywords": [
+                  "causal-treatment-models",
+                  "Causal Treatment Models",
+                  "Treatment-effect",
+                  "IPW",
+                  "TARNet",
+                  "DragonNet"
+                ],
+                "skill_ids": [
+                  "causal-treatment-models"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.cpm",
+                "label": "Cpm",
+                "description": "Canonical Connectome Predictive Modeling with fold-local functional-connectivity edge selection.",
+                "keywords": [
+                  "cpm",
+                  "Cpm",
+                  "Canonical",
+                  "Connectome",
+                  "Predictive",
+                  "Modeling"
+                ],
+                "skill_ids": [
+                  "cpm"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.glm",
+                "label": "Glm",
+                "description": "Use this model doc whenever the user wants to run a classical General Linear Model (GLM) for task-evoked fMRI activation analysis.",
+                "keywords": [
+                  "glm",
+                  "Glm",
+                  "Use",
+                  "General",
+                  "Linear",
+                  "Model",
+                  "GLM"
+                ],
+                "skill_ids": [
+                  "glm"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.imaging-genetics-models",
+                "label": "Imaging Genetics Models",
+                "description": "Imaging-genetics model family for association, LMM, PRS, PLS, CCA, and PLINK2 command construction.",
+                "keywords": [
+                  "imaging-genetics-models",
+                  "Imaging Genetics Models",
+                  "Imaging-genetics",
+                  "LMM",
+                  "PRS",
+                  "PLS",
+                  "CCA",
+                  "PLINK2"
+                ],
+                "skill_ids": [
+                  "imaging-genetics-models"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.spacenet",
+                "label": "Spacenet",
+                "description": "Use this model doc whenever the user wants to perform disease classification with SpaceNet.",
+                "keywords": [
+                  "spacenet",
+                  "Spacenet",
+                  "Use",
+                  "SpaceNet"
+                ],
+                "skill_ids": [
+                  "spacenet"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.statistical-ml",
+                "label": "统计与机器学习",
+                "description": "Canonical tabular statistical and machine-learning family for OLS/GLM, SVM/SVR, Ridge, Elastic Net, XGBoost, and mixed effects.",
+                "keywords": [
+                  "statistical-ml",
+                  "Statistical Ml",
+                  "Canonical",
+                  "OLS",
+                  "GLM",
+                  "SVM",
+                  "SVR",
+                  "Ridge",
+                  "Elastic",
+                  "Net"
+                ],
+                "skill_ids": [
+                  "statistical-ml"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.subject-subtyping",
+                "label": "Subject Subtyping",
+                "description": "Subject-level disease subtyping with clustering, consensus analysis, PCA, NMF, and autoencoder embeddings.",
+                "keywords": [
+                  "subject-subtyping",
+                  "Subject Subtyping",
+                  "Subject-level",
+                  "PCA",
+                  "NMF"
+                ],
+                "skill_ids": [
+                  "subject-subtyping"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.survival-models",
+                "label": "Survival Models",
+                "description": "Censor-aware survival model family with Cox, Random Survival Forest, DeepSurv, and XGBoost survival.",
+                "keywords": [
+                  "survival-models",
+                  "Survival Models",
+                  "Censor-aware",
+                  "Cox",
+                  "Random",
+                  "Survival",
+                  "Forest",
+                  "DeepSurv",
+                  "XGBoost"
+                ],
+                "skill_ids": [
+                  "survival-models"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.temporal-models",
+                "label": "Temporal Models",
+                "description": "Shared sequence-model family for LSTM, GRU, TCN, and temporal Transformer experiments.",
+                "keywords": [
+                  "temporal-models",
+                  "Temporal Models",
+                  "Shared",
+                  "LSTM",
+                  "GRU",
+                  "TCN",
+                  "Transformer"
+                ],
+                "skill_ids": [
+                  "temporal-models"
+                ],
+                "execution_level": "planning"
+              }
+            ]
+          },
+          {
+            "id": "signal-decomposition-parcellation",
+            "label": "信号处理、分解与脑区划分",
+            "execution_level": "category",
+            "children": [
+              {
+                "id": "skill.detrending",
+                "label": "Detrending",
+                "description": "Use this model doc whenever the user wants to perform neuroimaging signal denoising with classical detrending methods.",
+                "keywords": [
+                  "detrending",
+                  "Detrending",
+                  "Use"
+                ],
+                "skill_ids": [
+                  "detrending"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.dictlearning",
+                "label": "Dictlearning",
+                "description": "Use this model doc whenever the user wants to perform resting-state network decomposition using DictLearning.",
+                "keywords": [
+                  "dictlearning",
+                  "Dictlearning",
+                  "Use",
+                  "DictLearning"
+                ],
+                "skill_ids": [
+                  "dictlearning"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.filtering",
+                "label": "Filtering",
+                "description": "Use this model doc whenever the user wants to perform neuroimaging signal denoising with classical temporal filtering methods.",
+                "keywords": [
+                  "filtering",
+                  "Filtering",
+                  "Use"
+                ],
+                "skill_ids": [
+                  "filtering"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.hierarchical",
+                "label": "Hierarchical",
+                "description": "Use this model doc whenever the user wants to perform brain parcellation using Hierarchical clustering.",
+                "keywords": [
+                  "hierarchical",
+                  "Hierarchical",
+                  "Use"
+                ],
+                "skill_ids": [
+                  "hierarchical"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.ica",
+                "label": "Ica",
+                "description": "Use this model doc whenever the user wants to perform resting-state network decomposition using ICA.",
+                "keywords": [
+                  "ica",
+                  "Ica",
+                  "Use",
+                  "ICA"
+                ],
+                "skill_ids": [
+                  "ica"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.kmeans",
+                "label": "Kmeans",
+                "description": "Use this model doc whenever the user wants to perform brain parcellation using K-means. This is a non-deep-learning unsupervised route focused on parcel discovery, voxel or vertex grouping, and atlas-like region generation from neuroimaging features.",
+                "keywords": [
+                  "kmeans",
+                  "Kmeans",
+                  "Use",
+                  "K-means",
+                  "This"
+                ],
+                "skill_ids": [
+                  "kmeans"
+                ],
+                "execution_level": "planning"
+              }
+            ]
+          },
+          {
+            "id": "discovery-decoding-routing",
+            "label": "连接组发现、解码与模型路由",
+            "execution_level": "category",
+            "children": [
+              {
+                "id": "skill.connectome-discovery",
+                "label": "Connectome Discovery",
+                "description": "Workflow for map similarity, permutation significance, atlas-aware interpretation, and connectome target ranking.",
+                "keywords": [
+                  "connectome-discovery",
+                  "Connectome Discovery",
+                  "Workflow"
+                ],
+                "skill_ids": [
+                  "connectome-discovery"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.kg-link-prediction",
+                "label": "Kg Link Prediction",
+                "description": "NeuroOracle link-prediction family with ComplEx, R-GCN, GraphSAGE, and GAT.",
+                "keywords": [
+                  "kg-link-prediction",
+                  "Kg Link Prediction",
+                  "NeuroOracle",
+                  "ComplEx",
+                  "R-GCN",
+                  "GraphSAGE",
+                  "GAT"
+                ],
+                "skill_ids": [
+                  "kg-link-prediction"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.neuroimaging-decoding",
+                "label": "Neuroimaging Decoding",
+                "description": "Workflow coordinating ROI MVPA, ROI GLM, and voxel-wise SearchLight decoding.",
+                "keywords": [
+                  "neuroimaging-decoding",
+                  "Neuroimaging Decoding",
+                  "Workflow",
+                  "ROI",
+                  "MVPA",
+                  "GLM",
+                  "SearchLight"
+                ],
+                "skill_ids": [
+                  "neuroimaging-decoding"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.run-models",
+                "label": "预测模型选择与运行指南",
+                "description": "Use this skill whenever the user wants to run phenotype-prediction models, browse model cards, map model inputs/outputs, or choose an execution route for fMRI/sMRI based models.",
+                "keywords": [
+                  "run_models",
+                  "Run Models",
+                  "Use"
+                ],
+                "skill_ids": [
+                  "run_models"
+                ],
+                "execution_level": "planning"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "research-lifecycle",
+        "label": "科研全流程与成果表达",
+        "description": "支持检索、构思、方法设计、实验、知识图谱、写作和结果展示。",
+        "execution_level": "category",
+        "children": [
+          {
+            "id": "literature-ideation",
+            "label": "检索、选题与知识组织",
+            "execution_level": "category",
+            "children": [
+              {
+                "id": "skill.academic-research-hub",
+                "label": "学术文献检索与下载",
+                "description": "Use this skill when users need to search academic papers, download research documents, extract citations, or gather scholarly information.",
+                "keywords": [
+                  "academic-research-hub",
+                  "Academic Research Hub",
+                  "Use"
+                ],
+                "skill_ids": [
+                  "academic-research-hub"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.multi-search-engine",
+                "label": "多搜索引擎检索",
+                "description": "Multi search engine integration with 17 engines (8 CN + 9 Global). Supports advanced search operators, time filters, site search, privacy engines, and WolframAlpha knowledge queries.",
+                "keywords": [
+                  "multi-search-engine",
+                  "Multi Search Engine",
+                  "Multi",
+                  "CN",
+                  "Global",
+                  "Supports",
+                  "WolframAlpha"
+                ],
+                "skill_ids": [
+                  "multi-search-engine"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.research-idea",
+                "label": "研究选题与构思",
+                "description": "Use this skill whenever the user wants to generate or refine a research idea through literature search and discussion.",
+                "keywords": [
+                  "research-idea",
+                  "Research Idea",
+                  "Use"
+                ],
+                "skill_ids": [
+                  "research-idea"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.knowledge-graph-builder",
+                "label": "知识图谱构建",
+                "description": "Use this skill when users need to build, populate, or extend a domain-specific knowledge graph from literature and structured databases.",
+                "keywords": [
+                  "knowledge-graph-builder",
+                  "Knowledge Graph Builder",
+                  "Use"
+                ],
+                "skill_ids": [
+                  "knowledge-graph-builder"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.method-design",
+                "label": "研究方法设计",
+                "description": "Use this skill whenever the user wants to formalize a network architecture and derive theoretical components from a research idea.",
+                "keywords": [
+                  "method-design",
+                  "Method Design",
+                  "Use"
+                ],
+                "skill_ids": [
+                  "method-design"
+                ],
+                "execution_level": "planning"
+              }
+            ]
+          },
+          {
+            "id": "experiments-publication",
+            "label": "实验、写作与发布",
+            "execution_level": "category",
+            "children": [
+              {
+                "id": "skill.experiment-controller",
+                "label": "实验执行与记录",
+                "description": "Use this skill whenever the user wants to execute experiments based on a finalized method and record results.",
+                "keywords": [
+                  "experiment-controller",
+                  "Experiment Controller",
+                  "Use"
+                ],
+                "skill_ids": [
+                  "experiment-controller"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.paper-writing",
+                "label": "论文写作",
+                "description": "Use this skill whenever the user wants to generate a full academic paper draft from existing research materials.",
+                "keywords": [
+                  "paper-writing",
+                  "Paper Writing",
+                  "Use"
+                ],
+                "skill_ids": [
+                  "paper-writing"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.overleaf-skill",
+                "label": "Overleaf Skill",
+                "description": "Use this skill whenever the user wants to synchronize NeuroClaw-generated LaTeX manuscripts with Overleaf, read/write .tex files, download/upload projects, create/rename/archive projects, compare versions, or manage project structure.",
+                "keywords": [
+                  "overleaf-skill",
+                  "Overleaf Skill",
+                  "Use",
+                  "NeuroClaw-",
+                  "LaTeX",
+                  "Overleaf"
+                ],
+                "skill_ids": [
+                  "overleaf-skill"
+                ],
+                "execution_level": "planning"
+              }
+            ]
+          },
+          {
+            "id": "visualization-reporting",
+            "label": "可视化与报告",
+            "execution_level": "category",
+            "children": [
+              {
+                "id": "skill.brain-visualization",
+                "label": "脑影像结果可视化",
+                "description": "Use this skill whenever the user wants to visualize neuroimaging analysis results, including 3D brain connectivity networks, atlas-based regional activation summaries, or FreeSurfer cortical surface meshes with anatomical colors.",
+                "keywords": [
+                  "brain-visualization",
+                  "Brain Visualization",
+                  "Use",
+                  "FreeSurfer"
+                ],
+                "skill_ids": [
+                  "brain-visualization"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.report-builder",
+                "label": "结果与质控报告",
+                "description": "围绕需求、输入、方法、结果、异常和复现信息组织报告。优先使用结构化摘要，并明确哪些结论来自真实计算、哪些只是建议或推断。",
+                "keywords": [
+                  "report-builder",
+                  "结果报告"
+                ],
+                "skill_ids": [
+                  "report-builder"
+                ],
+                "execution_level": "planning"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "local-infrastructure",
+        "label": "本地环境、执行与工程保障",
+        "description": "管理环境和依赖，安全调用命令，维护版本与审计记录。",
+        "execution_level": "category",
+        "children": [
+          {
+            "id": "environment-dependencies",
+            "label": "环境、容器与依赖",
+            "execution_level": "category",
+            "children": [
+              {
+                "id": "skill.conda-env-manager",
+                "label": "Conda 环境管理",
+                "description": "Use this skill whenever the user wants to create, activate, list, export, update, clone, remove, or otherwise manage conda environments, or when a deep-learning / model skill requires a clean, isolated conda environment (e.g.",
+                "keywords": [
+                  "conda-env-manager",
+                  "Conda Env Manager",
+                  "Use"
+                ],
+                "skill_ids": [
+                  "conda-env-manager"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.docker-env-manager",
+                "label": "Docker 环境管理",
+                "description": "Use this skill whenever the user wants to pull, run, build, compose, list, prune, manage, or otherwise handle Docker containers, images, volumes, networks, or Docker Compose projects, or when a NeuroClaw skill (e.g.",
+                "keywords": [
+                  "docker-env-manager",
+                  "Docker Env Manager",
+                  "Use",
+                  "Docker",
+                  "Compose",
+                  "NeuroClaw"
+                ],
+                "skill_ids": [
+                  "docker-env-manager"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.dependency-planner",
+                "label": "依赖规划",
+                "description": "Use this skill whenever a NeuroClaw skill, model, or sub-agent reports a missing dependency (e.g.",
+                "keywords": [
+                  "dependency-planner",
+                  "Dependency Planner",
+                  "Use",
+                  "NeuroClaw"
+                ],
+                "skill_ids": [
+                  "dependency-planner"
+                ],
+                "execution_level": "planning"
+              }
+            ]
+          },
+          {
+            "id": "shell-version-control",
+            "label": "命令执行与版本控制",
+            "execution_level": "category",
+            "children": [
+              {
+                "id": "skill.claw-shell",
+                "label": "安全命令执行",
+                "description": "Use this skill whenever any NeuroClaw skill, sub-agent, or model needs to execute shell commands safely (e.g.",
+                "keywords": [
+                  "claw-shell",
+                  "Claw Shell",
+                  "Use",
+                  "NeuroClaw"
+                ],
+                "skill_ids": [
+                  "claw-shell"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.git-essentials",
+                "label": "Git Essentials",
+                "description": "Essential Git commands and workflows for version control, branching, and collaboration.",
+                "keywords": [
+                  "git-essentials",
+                  "Git Essentials",
+                  "Essential",
+                  "Git"
+                ],
+                "skill_ids": [
+                  "git-essentials"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.git-workflows",
+                "label": "Git Workflows",
+                "description": "Advanced git operations beyond add/commit/push. Use when rebasing, bisecting bugs, using worktrees for parallel development, recovering with reflog, managing subtrees/submodules, resolving merge conflicts, cherry-picking across branches, or working with mon...",
+                "keywords": [
+                  "git-workflows",
+                  "Git Workflows",
+                  "Advanced",
+                  "Use"
+                ],
+                "skill_ids": [
+                  "git-workflows"
+                ],
+                "execution_level": "planning"
+              }
+            ]
+          },
+          {
+            "id": "verification-maintenance",
+            "label": "验证、维护与审计",
+            "execution_level": "category",
+            "children": [
+              {
+                "id": "skill.harness-core",
+                "label": "Harness Core",
+                "description": "Core harness library providing standardized self-verification, checkpoint management, drift detection, and audit logging utilities for all NeuroClaw skills.",
+                "keywords": [
+                  "harness-core",
+                  "Harness Core",
+                  "Core",
+                  "NeuroClaw"
+                ],
+                "skill_ids": [
+                  "harness-core"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.skill-updater",
+                "label": "Skill 经验更新",
+                "description": "Use this skill after a task succeeds (user confirms 'success' or tools report success). It extracts new experience from the session log + daily memory, locates relevant skills, and proposes diff-formatted updates to SKILL.md files with a clear summary for t...",
+                "keywords": [
+                  "skill-updater",
+                  "Skill Updater",
+                  "Use",
+                  "It",
+                  "SKILL"
+                ],
+                "skill_ids": [
+                  "skill-updater"
+                ],
+                "execution_level": "planning"
+              },
+              {
+                "id": "skill.beautiful-log",
+                "label": "对话日志整理",
+                "description": "Use this skill after a conversation or task is completed when the user wants a clean, beautiful HTML chat log.",
+                "keywords": [
+                  "beautiful-log",
+                  "Beautiful Log",
+                  "Use",
+                  "HTML"
+                ],
+                "skill_ids": [
+                  "beautiful-log"
+                ],
+                "execution_level": "planning"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

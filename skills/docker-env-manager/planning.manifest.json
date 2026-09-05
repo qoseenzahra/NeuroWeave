@@ -1,0 +1,347 @@
+{
+  "schema_version": 1,
+  "manifest_kind": "planning",
+  "generated_from": "scripts/build_structured_skill_manifests.py",
+  "skill_id": "docker-env-manager",
+  "description": "该技能用于 docker-env-manager 相关工作流。适合在需要执行、检查或组织此类任务时启用；核心能力包括：Use this skill whenever the user wants to pull, run, build, compose, list, prune, manage, or otherwise handle Docker containers, images, volumes, networks, or Docker Compose projects, or when a NeuroClaw skill (e.g. wmh-segmentation, freesurfer-processor in...",
+  "provides": [
+    {
+      "capability": "skill.docker-env-manager",
+      "method_id": "docker-env-manager-guided",
+      "label": "Docker 环境管理 受约束方案",
+      "description": "依据 docker-env-manager/SKILL.md 生成结构化步骤；当前为规划型方法，不对应可直接执行的 runner。",
+      "runner_id": "planning.docker-env-manager",
+      "execution_mode": "planning",
+      "input_types": [
+        "*"
+      ],
+      "output_types": [
+        "planned_artifact"
+      ],
+      "default_recommended": true,
+      "default_reason": "该规划方法包含从 SKILL.md 提取的任务选项、脚本或命令依据。",
+      "structure_level": "evidence",
+      "source_references": [
+        {
+          "path": "skills/docker-env-manager/SKILL.md",
+          "label": "Skill 说明与方法依据",
+          "kind": "skill",
+          "line_start": 1,
+          "line_end": null
+        },
+        {
+          "path": "skills/docker-env-manager/SKILL.md",
+          "label": "已提取 8 条参考命令",
+          "kind": "command",
+          "line_start": null,
+          "line_end": null
+        }
+      ],
+      "command_references": [
+        {
+          "command": "docker inspect ${image_hash} --format='{{.RepoDigests}}'",
+          "language": "bash",
+          "source_path": "skills/docker-env-manager/SKILL.md",
+          "line_start": 185,
+          "kind": "operation",
+          "executable": false
+        },
+        {
+          "command": "trivy image --severity HIGH,CRITICAL ${image}",
+          "language": "bash",
+          "source_path": "skills/docker-env-manager/SKILL.md",
+          "line_start": 188,
+          "kind": "operation",
+          "executable": false
+        },
+        {
+          "command": "nvidia-smi -L # List all GPUs",
+          "language": "bash",
+          "source_path": "skills/docker-env-manager/SKILL.md",
+          "line_start": 191,
+          "kind": "operation",
+          "executable": false
+        },
+        {
+          "command": "docker stats --no-stream ${existing_container_name} || true",
+          "language": "bash",
+          "source_path": "skills/docker-env-manager/SKILL.md",
+          "line_start": 194,
+          "kind": "operation",
+          "executable": false
+        },
+        {
+          "command": "docker run --name ${CONTAINER_NAME} --rm --read-only --cap-drop=ALL --security-opt=no-new-privileges:true --user 1000:1000 --memory=${MEMORY_LIMIT} --memory-swap=${MEMORY_LIMIT} --cpus=${CPU_LIMIT} --pids-limit=512 --gpus=all --env CUDA_VISIBLE_DEVICES=${GPU_DEVICES} -v ${DATA_PATH}:/data:ro -v ${OUTPUT_PATH}:/output:rw -v /dev/shm:/tmp:rw --log-driver=json-file --log-opt max-size=10m --log-opt max-file=3 --network=bridge ${IMAGE} ${COMMAND}",
+          "language": "bash",
+          "source_path": "skills/docker-env-manager/SKILL.md",
+          "line_start": 200,
+          "kind": "operation",
+          "executable": false
+        },
+        {
+          "command": "ACTUAL_DIGEST=$(docker inspect ${IMAGE} --format='{{index .RepoDigests 0}}' | cut -d'@' -f2)",
+          "language": "bash",
+          "source_path": "skills/docker-env-manager/SKILL.md",
+          "line_start": 292,
+          "kind": "operation",
+          "executable": false
+        },
+        {
+          "command": "if [ \"$EXPECTED_DIGEST\" != \"$ACTUAL_DIGEST\" ]; then",
+          "language": "bash",
+          "source_path": "skills/docker-env-manager/SKILL.md",
+          "line_start": 294,
+          "kind": "operation",
+          "executable": false
+        },
+        {
+          "command": "docker pull ${IMAGE}",
+          "language": "bash",
+          "source_path": "skills/docker-env-manager/SKILL.md",
+          "line_start": 291,
+          "kind": "setup",
+          "executable": false
+        }
+      ],
+      "delegate_skill_ids": [
+        "claw-shell",
+        "dependency-planner"
+      ],
+      "input_slots": [],
+      "output_slots": [],
+      "parameters": [
+        {
+          "id": "operation",
+          "argument": "operation",
+          "label": "任务/方法范围",
+          "description": "选项来自该 Skill 的“Quick Reference (Common NeuroClaw Tasks)”章节；这是规划约束，不代表已经存在执行器。",
+          "type": "string",
+          "control": "auto",
+          "level": "basic",
+          "group": "方法与任务",
+          "unit": "",
+          "required": true,
+          "default": "pull-latest-model-image",
+          "options": [
+            {
+              "value": "pull-latest-model-image",
+              "label": "Pull latest model image",
+              "description": "docker pull ghcr.io/miac-research/wmh-nnunet:latest (then tag)（来源：SKILL.md:L44）"
+            },
+            {
+              "value": "run-gpu-container-with-data-mount",
+              "label": "Run GPU container with data mount",
+              "description": "docker run --rm --gpus all -v $(pwd)/data:/data image ...（来源：SKILL.md:L45）"
+            },
+            {
+              "value": "docker-compose-stack",
+              "label": "Docker Compose stack",
+              "description": "docker compose -f docker-compose.yml up -d（来源：SKILL.md:L46）"
+            },
+            {
+              "value": "build-custom-dockerfile",
+              "label": "Build custom Dockerfile",
+              "description": "docker build -t neuroclaw-custom .（来源：SKILL.md:L47）"
+            },
+            {
+              "value": "list-containers-images",
+              "label": "List containers / images",
+              "description": "docker ps -a / docker images（来源：SKILL.md:L48）"
+            },
+            {
+              "value": "safe-cleanup-of-unused-resources",
+              "label": "Safe cleanup of unused resources",
+              "description": "docker system prune --dry-run → confirm → execute via claw-shell（来源：SKILL.md:L49）"
+            },
+            {
+              "value": "fix-common-permission-issues",
+              "label": "Fix common permission issues",
+              "description": "chmod -R 777 outputdir (auto-included in plans)（来源：SKILL.md:L50）"
+            },
+            {
+              "value": "gpu-check-nvidia-toolkit-install",
+              "label": "GPU check & NVIDIA Toolkit install",
+              "description": "Hand over to dependency-planner if nvidia-smi fails（来源：SKILL.md:L51）"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "change_policy",
+          "argument": "change-policy",
+          "label": "变更策略",
+          "description": "当前平台只支持检查、方案和验证型 Dry-run，不执行系统修改。",
+          "type": "string",
+          "control": "auto",
+          "level": "basic",
+          "group": "常用参数",
+          "unit": "",
+          "required": true,
+          "default": "plan_only",
+          "options": [
+            {
+              "value": "inspection_only",
+              "label": "仅检查"
+            },
+            {
+              "value": "plan_only",
+              "label": "只生成方案"
+            },
+            {
+              "value": "validated_dry_run",
+              "label": "验证型 Dry-run"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "preserve_existing",
+          "argument": "preserve-existing",
+          "label": "保留现有状态",
+          "description": "要求方案默认不覆盖已有环境、文件或版本状态。",
+          "type": "boolean",
+          "control": "auto",
+          "level": "basic",
+          "group": "常用参数",
+          "unit": "",
+          "required": true,
+          "default": true,
+          "options": [
+            {
+              "value": true,
+              "label": "保留"
+            },
+            {
+              "value": false,
+              "label": "允许替换方案"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "isolation_mode",
+          "argument": "isolation-mode",
+          "label": "隔离方式",
+          "description": "规划原生环境、Conda 环境或容器隔离。",
+          "type": "string",
+          "control": "auto",
+          "level": "advanced",
+          "group": "环境隔离",
+          "unit": "",
+          "required": true,
+          "default": "existing",
+          "options": [
+            {
+              "value": "existing",
+              "label": "使用现有环境"
+            },
+            {
+              "value": "conda",
+              "label": "Conda 环境"
+            },
+            {
+              "value": "container",
+              "label": "容器"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "rollback_plan",
+          "argument": "rollback-plan",
+          "label": "生成回滚方案",
+          "description": "对可能改变环境或文件状态的步骤生成回滚说明。",
+          "type": "boolean",
+          "control": "auto",
+          "level": "advanced",
+          "group": "安全与审计",
+          "unit": "",
+          "required": true,
+          "default": true,
+          "options": [
+            {
+              "value": true,
+              "label": "生成"
+            },
+            {
+              "value": false,
+              "label": "不生成"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "log_level",
+          "argument": "log-level",
+          "label": "日志级别",
+          "description": "控制规划中建议保留的日志详细程度。",
+          "type": "string",
+          "control": "auto",
+          "level": "advanced",
+          "group": "安全与审计",
+          "unit": "",
+          "required": true,
+          "default": "info",
+          "options": [
+            {
+              "value": "warning",
+              "label": "仅警告"
+            },
+            {
+              "value": "info",
+              "label": "标准"
+            },
+            {
+              "value": "debug",
+              "label": "调试"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "timeout_minutes",
+          "argument": "timeout-minutes",
+          "label": "步骤超时",
+          "description": "单个外部软件或命令步骤的计划超时时间。",
+          "type": "integer",
+          "control": "number",
+          "level": "advanced",
+          "group": "执行限制",
+          "unit": "分钟",
+          "required": true,
+          "default": 60,
+          "options": [],
+          "minimum": 1,
+          "maximum": 10080,
+          "step": 1,
+          "placeholder": "",
+          "visible_when": {}
+        }
+      ]
+    }
+  ]
+}

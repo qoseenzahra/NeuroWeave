@@ -1,0 +1,341 @@
+{
+  "schema_version": 1,
+  "manifest_kind": "planning",
+  "generated_from": "scripts/build_structured_skill_manifests.py",
+  "skill_id": "brain-visualization",
+  "description": "该技能用于 brain-visualization 相关工作流。适合在需要执行、检查或组织此类任务时启用；核心能力包括：Use this skill whenever the user wants to visualize neuroimaging analysis results, including 3D brain connectivity networks, atlas-based regional activation summaries, or FreeSurfer cortical surface meshes with anatomical colors. Triggers include: 'brain vi...",
+  "provides": [
+    {
+      "capability": "skill.brain-visualization",
+      "method_id": "brain-visualization-guided",
+      "label": "脑影像结果可视化 受约束方案",
+      "description": "依据 brain-visualization/SKILL.md 生成结构化步骤；当前为规划型方法，不对应可直接执行的 runner。",
+      "runner_id": "planning.brain-visualization",
+      "execution_mode": "planning",
+      "input_types": [
+        "*"
+      ],
+      "output_types": [
+        "planned_artifact"
+      ],
+      "default_recommended": true,
+      "default_reason": "该规划方法包含从 SKILL.md 提取的任务选项、脚本或命令依据。",
+      "structure_level": "evidence",
+      "source_references": [
+        {
+          "path": "skills/brain-visualization/SKILL.md",
+          "label": "Skill 说明与方法依据",
+          "kind": "skill",
+          "line_start": 1,
+          "line_end": null
+        },
+        {
+          "path": "skills/brain-visualization/scripts/connectome_reference.py",
+          "label": "connectome_reference.py",
+          "kind": "script",
+          "line_start": 1,
+          "line_end": null
+        },
+        {
+          "path": "skills/brain-visualization/scripts/freesurfer_ply_reference.py",
+          "label": "freesurfer_ply_reference.py",
+          "kind": "script",
+          "line_start": 1,
+          "line_end": null
+        },
+        {
+          "path": "skills/brain-visualization/scripts/zalff_summary_reference.py",
+          "label": "zalff_summary_reference.py",
+          "kind": "script",
+          "line_start": 1,
+          "line_end": null
+        },
+        {
+          "path": "skills/brain-visualization/SKILL.md",
+          "label": "已提取 6 条参考命令",
+          "kind": "command",
+          "line_start": null,
+          "line_end": null
+        }
+      ],
+      "command_references": [
+        {
+          "command": "python skills/brain-visualization/scripts/connectome_reference.py --atlas path/to/AAL3v1.nii --template path/to/mni_icbm152_t1_tal_nlin_sym_09a.nii --matrix path/to/fc_matrix.npy --output outputs/3D_brain_network.png",
+          "language": "bash",
+          "source_path": "skills/brain-visualization/SKILL.md",
+          "line_start": 65,
+          "kind": "operation",
+          "executable": false
+        },
+        {
+          "command": "python skills/brain-visualization/scripts/zalff_summary_reference.py --bold path/to/rest_bold.nii.gz --atlas path/to/AAL3v1.nii --labels path/to/AAL3v1.nii.txt --mask path/to/mni_mask.nii.gz --output-dir outputs/active_brain_results",
+          "language": "bash",
+          "source_path": "skills/brain-visualization/SKILL.md",
+          "line_start": 94,
+          "kind": "operation",
+          "executable": false
+        },
+        {
+          "command": "python skills/brain-visualization/scripts/freesurfer_ply_reference.py --surf path/to/lh.pial --annot path/to/lh.aparc.annot --output outputs/lh_colored.ply",
+          "language": "bash",
+          "source_path": "skills/brain-visualization/SKILL.md",
+          "line_start": 124,
+          "kind": "operation",
+          "executable": false
+        },
+        {
+          "command": "conda activate neuroclaw",
+          "language": "bash",
+          "source_path": "skills/brain-visualization/SKILL.md",
+          "line_start": 139,
+          "kind": "setup",
+          "executable": false
+        },
+        {
+          "command": "conda install -n neuroclaw -c conda-forge numpy pandas nibabel nilearn matplotlib networkx -y",
+          "language": "bash",
+          "source_path": "skills/brain-visualization/SKILL.md",
+          "line_start": 140,
+          "kind": "setup",
+          "executable": false
+        },
+        {
+          "command": "conda install -n neuroclaw -c conda-forge scipy seaborn plotly -y",
+          "language": "bash",
+          "source_path": "skills/brain-visualization/SKILL.md",
+          "line_start": 146,
+          "kind": "setup",
+          "executable": false
+        }
+      ],
+      "delegate_skill_ids": [
+        "nibabel-skill",
+        "nilearn-tool"
+      ],
+      "input_slots": [],
+      "output_slots": [],
+      "parameters": [
+        {
+          "id": "operation",
+          "argument": "operation",
+          "label": "任务/方法范围",
+          "description": "选项来自该 Skill 的“Quick Reference”章节；这是规划约束，不代表已经存在执行器。",
+          "type": "string",
+          "control": "auto",
+          "level": "basic",
+          "group": "方法与任务",
+          "unit": "",
+          "required": true,
+          "default": "3d-connectome-figure",
+          "options": [
+            {
+              "value": "3d-connectome-figure",
+              "label": "3D connectome figure",
+              "description": "strongest ROI-to-ROI connections on a template brain；atlas NIfTI + connectivity matrix (.npy / .csv) + template T1；static network figure (.png)（来源：SKILL.md:L39）"
+            },
+            {
+              "value": "regional-activation-summary",
+              "label": "Regional activation summary",
+              "description": "top active atlas regions with MNI coordinates；BOLD-derived zALFF or similar volumetric map + atlas + labels；ranked CSV table + coordinate table（来源：SKILL.md:L40）"
+            },
+            {
+              "value": "freesurfer-surface-export",
+              "label": "FreeSurfer surface export",
+              "description": "anatomical cortical mesh with region colors；lh.pial / rh.pial + .annot files；colored mesh (.ply)（来源：SKILL.md:L41）"
+            },
+            {
+              "value": "publication-ready-snapshots",
+              "label": "Publication-ready snapshots",
+              "description": "compact figures for reports or manuscripts；any of the above；PNG figures and tabular summaries（来源：SKILL.md:L42）"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "output_detail",
+          "argument": "output-detail",
+          "label": "输出详细程度",
+          "description": "控制科研产出的层次与解释深度。",
+          "type": "string",
+          "control": "auto",
+          "level": "basic",
+          "group": "常用参数",
+          "unit": "",
+          "required": true,
+          "default": "standard",
+          "options": [
+            {
+              "value": "outline",
+              "label": "提纲"
+            },
+            {
+              "value": "standard",
+              "label": "标准"
+            },
+            {
+              "value": "detailed",
+              "label": "详细"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "evidence_trace",
+          "argument": "evidence-trace",
+          "label": "保留依据追踪",
+          "description": "要求方案区分已提供证据、外部来源和模型推断。",
+          "type": "boolean",
+          "control": "auto",
+          "level": "basic",
+          "group": "常用参数",
+          "unit": "",
+          "required": true,
+          "default": true,
+          "options": [
+            {
+              "value": true,
+              "label": "保留"
+            },
+            {
+              "value": false,
+              "label": "不保留"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "output_language",
+          "argument": "output-language",
+          "label": "输出语言",
+          "description": "科研材料与报告的主要输出语言。",
+          "type": "string",
+          "control": "auto",
+          "level": "advanced",
+          "group": "表达格式",
+          "unit": "",
+          "required": true,
+          "default": "zh-CN",
+          "options": [
+            {
+              "value": "zh-CN",
+              "label": "中文"
+            },
+            {
+              "value": "en",
+              "label": "英文"
+            },
+            {
+              "value": "bilingual",
+              "label": "中英双语"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "citation_style",
+          "argument": "citation-style",
+          "label": "引文格式",
+          "description": "需要引用时采用的默认格式。",
+          "type": "string",
+          "control": "auto",
+          "level": "advanced",
+          "group": "表达格式",
+          "unit": "",
+          "required": true,
+          "default": "apa",
+          "options": [
+            {
+              "value": "apa",
+              "label": "APA"
+            },
+            {
+              "value": "vancouver",
+              "label": "Vancouver"
+            },
+            {
+              "value": "gbt7714",
+              "label": "GB/T 7714"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "include_methods_appendix",
+          "argument": "include-methods-appendix",
+          "label": "包含方法附录",
+          "description": "在产出中附带检索、分析或生成过程的结构化说明。",
+          "type": "boolean",
+          "control": "auto",
+          "level": "advanced",
+          "group": "透明度",
+          "unit": "",
+          "required": true,
+          "default": true,
+          "options": [
+            {
+              "value": true,
+              "label": "包含"
+            },
+            {
+              "value": false,
+              "label": "不包含"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "mark_uncertainty",
+          "argument": "mark-uncertainty",
+          "label": "标注不确定性",
+          "description": "显式标记证据不足、推断内容和待人工核验项。",
+          "type": "boolean",
+          "control": "auto",
+          "level": "advanced",
+          "group": "透明度",
+          "unit": "",
+          "required": true,
+          "default": true,
+          "options": [
+            {
+              "value": true,
+              "label": "标注"
+            },
+            {
+              "value": false,
+              "label": "不标注"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        }
+      ]
+    }
+  ]
+}

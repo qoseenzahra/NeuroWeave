@@ -1,0 +1,380 @@
+{
+  "schema_version": 1,
+  "manifest_kind": "planning",
+  "generated_from": "scripts/build_structured_skill_manifests.py",
+  "skill_id": "harmonization-tool",
+  "description": "该技能用于 harmonization-tool 相关工作流。适合在需要执行、检查或组织此类任务时启用；核心能力包括：Use this skill whenever the user wants to remove site/scanner/batch effects from neuroimaging features before running downstream models, run mega-analysis across multiple datasets, or evaluate models with leave-site-out / site-stratified protocols. Triggers...",
+  "provides": [
+    {
+      "capability": "skill.harmonization-tool",
+      "method_id": "harmonization-tool-guided",
+      "label": "多中心数据 Harmonization 受约束方案",
+      "description": "依据 harmonization-tool/SKILL.md 生成结构化步骤；当前为规划型方法，不对应可直接执行的 runner。",
+      "runner_id": "planning.harmonization-tool",
+      "execution_mode": "planning",
+      "input_types": [
+        "*"
+      ],
+      "output_types": [
+        "planned_artifact"
+      ],
+      "default_recommended": true,
+      "default_reason": "该规划方法包含从 SKILL.md 提取的任务选项、脚本或命令依据。",
+      "structure_level": "evidence",
+      "source_references": [
+        {
+          "path": "skills/harmonization-tool/SKILL.md",
+          "label": "Skill 说明与方法依据",
+          "kind": "skill",
+          "line_start": 1,
+          "line_end": null
+        },
+        {
+          "path": "skills/harmonization-tool/scripts/adapters/__init__.py",
+          "label": "__init__.py",
+          "kind": "script",
+          "line_start": 1,
+          "line_end": null
+        },
+        {
+          "path": "skills/harmonization-tool/scripts/adapters/base.py",
+          "label": "base.py",
+          "kind": "script",
+          "line_start": 1,
+          "line_end": null
+        },
+        {
+          "path": "skills/harmonization-tool/scripts/adapters/covbat_wrapper.py",
+          "label": "covbat_wrapper.py",
+          "kind": "script",
+          "line_start": 1,
+          "line_end": null
+        },
+        {
+          "path": "skills/harmonization-tool/scripts/adapters/neurocombat_wrapper.py",
+          "label": "neurocombat_wrapper.py",
+          "kind": "script",
+          "line_start": 1,
+          "line_end": null
+        },
+        {
+          "path": "skills/harmonization-tool/scripts/adapters/neuroharmonize_wrapper.py",
+          "label": "neuroharmonize_wrapper.py",
+          "kind": "script",
+          "line_start": 1,
+          "line_end": null
+        },
+        {
+          "path": "skills/harmonization-tool/scripts/adapters/site_covar.py",
+          "label": "site_covar.py",
+          "kind": "script",
+          "line_start": 1,
+          "line_end": null
+        },
+        {
+          "path": "skills/harmonization-tool/scripts/diagnostics.py",
+          "label": "diagnostics.py",
+          "kind": "script",
+          "line_start": 1,
+          "line_end": null
+        },
+        {
+          "path": "skills/harmonization-tool/scripts/extraction/atlas_registry.py",
+          "label": "atlas_registry.py",
+          "kind": "script",
+          "line_start": 1,
+          "line_end": null
+        },
+        {
+          "path": "skills/harmonization-tool/scripts/extraction/extractors.py",
+          "label": "extractors.py",
+          "kind": "script",
+          "line_start": 1,
+          "line_end": null
+        },
+        {
+          "path": "skills/harmonization-tool/scripts/extraction/run_batch.py",
+          "label": "run_batch.py",
+          "kind": "script",
+          "line_start": 1,
+          "line_end": null
+        },
+        {
+          "path": "skills/harmonization-tool/scripts/extraction/worker.py",
+          "label": "worker.py",
+          "kind": "script",
+          "line_start": 1,
+          "line_end": null
+        },
+        {
+          "path": "skills/harmonization-tool/scripts/fetch_abide_rois.py",
+          "label": "fetch_abide_rois.py",
+          "kind": "script",
+          "line_start": 1,
+          "line_end": null
+        },
+        {
+          "path": "skills/harmonization-tool/SKILL.md",
+          "label": "已提取 2 条参考命令",
+          "kind": "command",
+          "line_start": null,
+          "line_end": null
+        }
+      ],
+      "command_references": [
+        {
+          "command": "python skills/harmonization-tool/scripts/pilot_abide_style.py --source abide --abide-atlas rois_aal --method combat --seeds 42 7 123",
+          "language": "bash",
+          "source_path": "skills/harmonization-tool/SKILL.md",
+          "line_start": 231,
+          "kind": "operation",
+          "executable": false
+        },
+        {
+          "command": "python skills/harmonization-tool/scripts/pilot_abide_style.py --source adhd200 --method combat --seeds 42 7 123",
+          "language": "bash",
+          "source_path": "skills/harmonization-tool/SKILL.md",
+          "line_start": 232,
+          "kind": "operation",
+          "executable": false
+        }
+      ],
+      "delegate_skill_ids": [
+        "claw-shell"
+      ],
+      "input_slots": [
+        {
+          "id": "primary_input",
+          "type": "imaging_input",
+          "label": "影像或工具输入",
+          "description": "可从已登记数据集、授权路径或上游步骤选择；具体格式仍以该 Skill 的说明为准。",
+          "required": false,
+          "binding": "artifact",
+          "source_options": [
+            "dataset",
+            "existing_path",
+            "upstream_output"
+          ],
+          "validation": [
+            "path_exists"
+          ]
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "planned_output",
+          "type": "planned_artifact",
+          "label": "规划输出",
+          "description": "该 planning 步骤声明的预期产物；只有接入 runner 后才会实际生成。",
+          "primary": true,
+          "path_template": "derivatives/harmonization-tool/"
+        }
+      ],
+      "parameters": [
+        {
+          "id": "operation",
+          "argument": "operation",
+          "label": "任务/方法范围",
+          "description": "选项来自该 Skill 的“Methods Catalog”章节；这是规划约束，不代表已经存在执行器。",
+          "type": "string",
+          "control": "auto",
+          "level": "basic",
+          "group": "方法与任务",
+          "unit": "",
+          "required": true,
+          "default": "none",
+          "options": [
+            {
+              "value": "none",
+              "label": "none",
+              "description": "Single-site or sanity baseline；No-op, used for A/B comparison（来源：SKILL.md:L116）"
+            },
+            {
+              "value": "site-covar",
+              "label": "site-covar",
+              "description": "Quick first pass；Linear regression, site as covariate, residualize（来源：SKILL.md:L117）"
+            },
+            {
+              "value": "combat",
+              "label": "combat",
+              "description": "ROI-level features, cohort with similar age range；Empirical Bayes; the field's de facto standard（来源：SKILL.md:L118）"
+            },
+            {
+              "value": "combat-gam",
+              "label": "combat-gam",
+              "description": "Wide age range (kids + adults, lifespan)；ComBat with spline on age — avoids over-aggressive linear adjustment（来源：SKILL.md:L119）"
+            },
+            {
+              "value": "covbat",
+              "label": "covbat",
+              "description": "Connectome / FC features where second-order structure matters；Harmonizes mean, variance, and covariance（来源：SKILL.md:L120）"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "processing_level",
+          "argument": "processing-level",
+          "label": "处理级别",
+          "description": "控制方案中启用的步骤深度，不会直接启动对应软件。",
+          "type": "string",
+          "control": "auto",
+          "level": "basic",
+          "group": "常用参数",
+          "unit": "",
+          "required": true,
+          "default": "standard",
+          "options": [
+            {
+              "value": "minimal",
+              "label": "最小必要步骤"
+            },
+            {
+              "value": "standard",
+              "label": "标准流程"
+            },
+            {
+              "value": "advanced",
+              "label": "高级选项"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "quality_control",
+          "argument": "quality-control",
+          "label": "包含质量控制",
+          "description": "要求规划结果包含工具输出的质量检查。",
+          "type": "boolean",
+          "control": "auto",
+          "level": "basic",
+          "group": "常用参数",
+          "unit": "",
+          "required": true,
+          "default": true,
+          "options": [
+            {
+              "value": true,
+              "label": "包含"
+            },
+            {
+              "value": false,
+              "label": "不包含"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "resource_profile",
+          "argument": "resource-profile",
+          "label": "资源配置",
+          "description": "选择偏向低内存、平衡或高性能的工具运行方案。",
+          "type": "string",
+          "control": "auto",
+          "level": "advanced",
+          "group": "计算资源",
+          "unit": "",
+          "required": true,
+          "default": "balanced",
+          "options": [
+            {
+              "value": "conservative",
+              "label": "低资源"
+            },
+            {
+              "value": "balanced",
+              "label": "平衡"
+            },
+            {
+              "value": "performance",
+              "label": "高性能"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "threads",
+          "argument": "threads",
+          "label": "线程数",
+          "description": "工具支持时使用的 CPU 线程数量。",
+          "type": "integer",
+          "control": "number",
+          "level": "advanced",
+          "group": "计算资源",
+          "unit": "",
+          "required": true,
+          "default": 4,
+          "options": [],
+          "minimum": 1,
+          "maximum": 128,
+          "step": 1,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "memory_limit_gb",
+          "argument": "memory-limit-gb",
+          "label": "内存上限",
+          "description": "规划任务可使用的内存上限。",
+          "type": "number",
+          "control": "number",
+          "level": "advanced",
+          "group": "计算资源",
+          "unit": "GB",
+          "required": true,
+          "default": 8,
+          "options": [],
+          "minimum": 1,
+          "maximum": 1024,
+          "step": 1,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "keep_intermediates",
+          "argument": "keep-intermediates",
+          "label": "保留中间文件",
+          "description": "保留关键中间结果以便复核和断点恢复。",
+          "type": "boolean",
+          "control": "auto",
+          "level": "advanced",
+          "group": "输出与复现",
+          "unit": "",
+          "required": true,
+          "default": false,
+          "options": [
+            {
+              "value": true,
+              "label": "保留"
+            },
+            {
+              "value": false,
+              "label": "不保留"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        }
+      ]
+    }
+  ]
+}

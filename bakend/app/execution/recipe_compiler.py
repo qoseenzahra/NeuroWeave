@@ -1,0 +1,231 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+from ..capability_registry import CapabilityMethod, CapabilityRegistry
+from ..workflow_models import InputBinding, MethodOption, Workflow, WorkflowStep
+
+
+class RecipeCompilationError(RuntimeError):
+    pass
+
+
+@dataclass(frozen=True)
+class ExecutionUnit:
+    step: WorkflowStep
+    method: MethodOption
+    workspace_key: str
+    parent_step_id: str
+    recipe_id: str | None = None
+
+
+class RecipeCompiler:
+    """Compile reviewed recipes into immutable, runner-only execution units."""
+
+    def __init__(self, registry: CapabilityRegistry) -> None:
+        self.registry = registry
+
+    def compile(self, workflow: Workflow) -> list[ExecutionUnit]:
+        units: list[ExecutionUnit] = []
+        # Public workflow outputs may be implemented by a nested recipe step.
+        output_aliases: dict[tuple[str, str], tuple[str, str]] = {}
+
+        for parent in sorted(workflow.steps, key=lambda item: item.order):
+            method = self._selected_method(parent)
+            parent = parent.model_copy(deep=True)
+            self._rewrite_upstream_bindings(parent, output_aliases)
+            recipe = method.execution_recipe
+            if recipe is None:
+                unit_method = method.model_copy(deep=True)
+                units.append(
+                    ExecutionUnit(
+                        step=parent,
+                        method=unit_method,
+                        workspace_key=parent.id,
+                        parent_step_id=parent.id,
+                    )
+                )
+                for output in unit_method.output_slots:
+                    output_aliases[(parent.id, output.id)] = (parent.id, output.id)
+                continue
+
+            stage_ids: dict[str, str] = {}
+            stage_outputs: dict[tuple[str, str], tuple[str, str, str]] = {}
+            for stage_index, stage in enumerate(recipe.steps, start=1):
+                if stage.id in stage_ids:
+                    raise RecipeCompilationError(
+                        f"执行配方 {recipe.recipe_id} 含有重复步骤：{stage.id}"
+                    )
+                definition = self.registry.method_for(stage.capability, stage.method_id)
+                if definition is None or definition.execution_mode != "runner":
+                    raise RecipeCompilationError(
+                        f"执行配方 {recipe.recipe_id} 引用了不可执行方法："
+                        f"{stage.capability}/{stage.method_id}"
+                    )
+                child_id = f"{parent.id}__{stage.id}"
+                stage_ids[stage.id] = child_id
+                child_method = self._method_option(definition)
+                parameters = self._default_parameters(child_method)
+                parameters.update(
+                    {
+                        key: value
+                        for key, value in parent.selected_parameters.items()
+                        if key in {spec.id for spec in child_method.parameters}
+                    }
+                )
+                parameters.update(stage.fixed_parameters)
+
+                bindings: dict[str, InputBinding] = {}
+                input_specs = {slot.id: slot for slot in child_method.input_slots}
+                for target_slot_id, binding_spec in stage.input_bindings.items():
+                    target_slot = input_specs.get(target_slot_id)
+                    if target_slot is None:
+                        raise RecipeCompilationError(
+                            f"执行配方 {recipe.recipe_id}/{stage.id} 引用了不存在的输入槽位："
+                            f"{target_slot_id}"
+                        )
+                    if binding_spec.source == "workflow_input":
+                        source_id = binding_spec.slot_id or target_slot_id
+                        source = parent.input_bindings.get(source_id)
+                        if source is not None:
+                            bindings[target_slot_id] = source.model_copy(
+                                deep=True,
+                                update={
+                                    "slot_id": target_slot_id,
+                                    "artifact_type": target_slot.type,
+                                },
+                            )
+                        continue
+
+                    source_step = binding_spec.step_id or ""
+                    source_output = binding_spec.output_slot_id or ""
+                    upstream = stage_outputs.get((source_step, source_output))
+                    if upstream is None:
+                        raise RecipeCompilationError(
+                            f"执行配方 {recipe.recipe_id}/{stage.id} 的上游输出无效："
+                            f"{source_step}.{source_output}"
+                        )
+                    upstream_step_id, upstream_output_id, artifact_type = upstream
+                    if artifact_type != target_slot.type:
+                        raise RecipeCompilationError(
+                            f"执行配方 {recipe.recipe_id}/{stage.id} 的输入类型不匹配："
+                            f"{artifact_type} -> {target_slot.type}"
+                        )
+                    bindings[target_slot_id] = InputBinding(
+                        slot_id=target_slot_id,
+                        artifact_type=target_slot.type,
+                        source="upstream_output",
+                        label=target_slot.label,
+                        upstream_step_id=upstream_step_id,
+                        output_slot_id=upstream_output_id,
+                        status="planned",
+                        messages=["运行时将绑定到配方上一步产生的受审核制品。"],
+                    )
+
+                child = WorkflowStep(
+                    id=child_id,
+                    order=len(units) + 1,
+                    title=stage.title,
+                    description=f"由执行配方 {recipe.label} 展开。",
+                    capability=stage.capability,
+                    origin=parent.origin,
+                    selection="auto",
+                    depends_on=(
+                        [units[-1].step.id]
+                        if stage_index > 1 and units
+                        else list(parent.depends_on)
+                    ),
+                    status="confirmed",
+                    method_options=[child_method],
+                    selected_method_id=child_method.id,
+                    selected_parameters=parameters,
+                    input_bindings=bindings,
+                )
+                units.append(
+                    ExecutionUnit(
+                        step=child,
+                        method=child_method,
+                        workspace_key=f"{parent.id}__{stage.workspace}",
+                        parent_step_id=parent.id,
+                        recipe_id=recipe.recipe_id,
+                    )
+                )
+                for output in child_method.output_slots:
+                    stage_outputs[(stage.id, output.id)] = (
+                        child_id,
+                        output.id,
+                        output.type,
+                    )
+
+            for public_output_id, source in recipe.output_bindings.items():
+                resolved = stage_outputs.get((source.step_id, source.output_slot_id))
+                if resolved is None:
+                    raise RecipeCompilationError(
+                        f"执行配方 {recipe.recipe_id} 的公开输出无效："
+                        f"{source.step_id}.{source.output_slot_id}"
+                    )
+                output_aliases[(parent.id, public_output_id)] = (
+                    resolved[0],
+                    resolved[1],
+                )
+
+        return units
+
+    @staticmethod
+    def _rewrite_upstream_bindings(
+        step: WorkflowStep,
+        aliases: dict[tuple[str, str], tuple[str, str]],
+    ) -> None:
+        for slot_id, binding in list(step.input_bindings.items()):
+            if binding.source != "upstream_output":
+                continue
+            alias = aliases.get(
+                (binding.upstream_step_id or "", binding.output_slot_id or "")
+            )
+            if alias is None:
+                continue
+            step.input_bindings[slot_id] = binding.model_copy(
+                deep=True,
+                update={"upstream_step_id": alias[0], "output_slot_id": alias[1]},
+            )
+
+    @staticmethod
+    def _selected_method(step: WorkflowStep) -> MethodOption:
+        if not step.selected_method_id:
+            raise RecipeCompilationError(f"步骤 {step.title} 尚未选择方法")
+        method = next(
+            (item for item in step.method_options if item.id == step.selected_method_id),
+            None,
+        )
+        if method is None:
+            raise RecipeCompilationError(f"步骤 {step.title} 的方法快照已经失效")
+        return method.model_copy(deep=True)
+
+    @staticmethod
+    def _method_option(definition: CapabilityMethod) -> MethodOption:
+        return MethodOption(
+            id=definition.method_id,
+            skill_id=definition.skill_id,
+            label=definition.label,
+            description=definition.description,
+            runner_id=definition.runner_id,
+            execution_mode=definition.execution_mode,
+            input_types=definition.input_types,
+            output_types=definition.output_types,
+            requires_features=definition.requires_features,
+            parameters=definition.parameters,
+            input_slots=definition.input_slots,
+            output_slots=definition.output_slots,
+            structure_level=definition.structure_level,
+            source_references=definition.source_references,
+            command_references=definition.command_references,
+            delegate_skill_ids=definition.delegate_skill_ids,
+        )
+
+    @staticmethod
+    def _default_parameters(method: MethodOption) -> dict[str, object]:
+        return {
+            spec.id: spec.default
+            for spec in method.parameters
+            if spec.default is not None
+        }

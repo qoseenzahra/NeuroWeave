@@ -1,0 +1,32 @@
+name: localflow
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  gateway:
+    image: public.ecr.aws/docker/library/nginx:1.28-alpine
+    depends_on:
+      frontend:
+        condition: service_healthy
+    ports:
+      - "${LOCALFLOW_BIND_ADDRESS:-127.0.0.1}:${LOCALFLOW_PORT:-3000}:80"
+    volumes:
+      - ./deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./runtime:/run/localflow
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 5s

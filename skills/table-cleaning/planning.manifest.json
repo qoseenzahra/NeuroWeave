@@ -1,0 +1,269 @@
+{
+  "schema_version": 1,
+  "manifest_kind": "planning",
+  "generated_from": "scripts/build_structured_skill_manifests.py",
+  "skill_id": "table-cleaning",
+  "description": "该技能主要用于：先确认主键、目标字段和不可修改字段。生成清洗方案时保留原始文件，记录每个规则影响的行数，并在输出前执行模式和行数校验。",
+  "provides": [
+    {
+      "capability": "skill.table-cleaning",
+      "method_id": "table-cleaning-guided",
+      "label": "表格清洗 受约束方案",
+      "description": "依据 table-cleaning/SKILL.md 生成结构化步骤；当前为规划型方法，不对应可直接执行的 runner。",
+      "runner_id": "planning.table-cleaning",
+      "execution_mode": "planning",
+      "input_types": [
+        "*"
+      ],
+      "output_types": [
+        "planned_artifact"
+      ],
+      "default_recommended": true,
+      "default_reason": "该规划方法包含从 SKILL.md 提取的任务选项、脚本或命令依据。",
+      "structure_level": "evidence",
+      "source_references": [
+        {
+          "path": "skills/table-cleaning/SKILL.md",
+          "label": "Skill 说明与方法依据",
+          "kind": "skill",
+          "line_start": 1,
+          "line_end": null
+        }
+      ],
+      "command_references": [],
+      "delegate_skill_ids": [],
+      "input_slots": [
+        {
+          "id": "primary_input",
+          "type": "dataset_folder",
+          "label": "输入数据集",
+          "description": "可从已登记数据集、授权路径或上游步骤选择；具体格式仍以该 Skill 的说明为准。",
+          "required": false,
+          "binding": "folder",
+          "source_options": [
+            "dataset",
+            "existing_path",
+            "upstream_output"
+          ],
+          "validation": [
+            "path_exists"
+          ]
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "planned_output",
+          "type": "planned_artifact",
+          "label": "规划输出",
+          "description": "该 planning 步骤声明的预期产物；只有接入 runner 后才会实际生成。",
+          "primary": true,
+          "path_template": "derivatives/table-cleaning/"
+        }
+      ],
+      "parameters": [
+        {
+          "id": "operation",
+          "argument": "operation",
+          "label": "任务/方法范围",
+          "description": "选项来自该 Skill 的“Skill 核心能力”章节；这是规划约束，不代表已经存在执行器。",
+          "type": "string",
+          "control": "auto",
+          "level": "basic",
+          "group": "方法与任务",
+          "unit": "",
+          "required": true,
+          "default": "schema_normalization",
+          "options": [
+            {
+              "value": "schema_normalization",
+              "label": "字段与类型规范化",
+              "description": "规范列名、数据类型和日期格式。"
+            },
+            {
+              "value": "missing_values",
+              "label": "缺失值处理",
+              "description": "按字段策略标记、填补或排除缺失值。"
+            },
+            {
+              "value": "duplicates_outliers",
+              "label": "重复与异常值处理",
+              "description": "识别重复记录和异常范围。"
+            },
+            {
+              "value": "cleaning_validation",
+              "label": "清洗结果验证",
+              "description": "核对主键、行数、模式和规则影响范围。"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "output_policy",
+          "argument": "output-policy",
+          "label": "输出策略",
+          "description": "规划阶段默认保留原始数据，并把结果写入新目录。",
+          "type": "string",
+          "control": "auto",
+          "level": "basic",
+          "group": "常用参数",
+          "unit": "",
+          "required": true,
+          "default": "new_output",
+          "options": [
+            {
+              "value": "preview_only",
+              "label": "只预览变更"
+            },
+            {
+              "value": "copy_then_modify",
+              "label": "复制后处理"
+            },
+            {
+              "value": "new_output",
+              "label": "写入新输出目录"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "validation_level",
+          "argument": "validation-level",
+          "label": "输出验证",
+          "description": "选择基础结构检查或包含模式、计数和元数据的严格验证。",
+          "type": "string",
+          "control": "auto",
+          "level": "basic",
+          "group": "常用参数",
+          "unit": "",
+          "required": true,
+          "default": "strict",
+          "options": [
+            {
+              "value": "basic",
+              "label": "基础验证"
+            },
+            {
+              "value": "strict",
+              "label": "严格验证"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "metadata_policy",
+          "argument": "metadata-policy",
+          "label": "元数据处理",
+          "description": "控制缺失或冲突元数据的处理方式。",
+          "type": "string",
+          "control": "auto",
+          "level": "advanced",
+          "group": "结构与元数据",
+          "unit": "",
+          "required": true,
+          "default": "preserve_and_report",
+          "options": [
+            {
+              "value": "preserve_and_report",
+              "label": "保留并报告"
+            },
+            {
+              "value": "normalize",
+              "label": "规范化字段"
+            },
+            {
+              "value": "strict",
+              "label": "严格拒绝冲突"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "naming_template",
+          "argument": "naming-template",
+          "label": "命名模板",
+          "description": "可选的输出文件或实体命名模板。",
+          "type": "string",
+          "control": "text",
+          "level": "advanced",
+          "group": "结构与元数据",
+          "unit": "",
+          "required": false,
+          "default": "",
+          "options": [],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "例如：sub-{subject}_ses-{session}",
+          "visible_when": {}
+        },
+        {
+          "id": "collision_policy",
+          "argument": "collision-policy",
+          "label": "命名冲突策略",
+          "description": "目标位置已经存在同名文件时的处理方式。",
+          "type": "string",
+          "control": "auto",
+          "level": "advanced",
+          "group": "安全策略",
+          "unit": "",
+          "required": true,
+          "default": "stop",
+          "options": [
+            {
+              "value": "stop",
+              "label": "停止并报告"
+            },
+            {
+              "value": "rename",
+              "label": "自动追加编号"
+            },
+            {
+              "value": "replace_copy",
+              "label": "替换输出副本"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "worker_count",
+          "argument": "worker-count",
+          "label": "并行处理数",
+          "description": "批量转换或清洗时允许的并行任务数量。",
+          "type": "integer",
+          "control": "number",
+          "level": "advanced",
+          "group": "性能",
+          "unit": "",
+          "required": true,
+          "default": 2,
+          "options": [],
+          "minimum": 1,
+          "maximum": 64,
+          "step": 1,
+          "placeholder": "",
+          "visible_when": {}
+        }
+      ]
+    }
+  ]
+}

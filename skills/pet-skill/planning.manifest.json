@@ -1,0 +1,315 @@
+{
+  "schema_version": 1,
+  "manifest_kind": "planning",
+  "generated_from": "scripts/build_structured_skill_manifests.py",
+  "skill_id": "pet-skill",
+  "description": "该技能用于 pet-skill 相关工作流。适合在需要执行、检查或组织此类任务时启用；核心能力包括：Use this skill whenever the user wants to process PET neuroimaging data including spatial normalization to T1w/MNI space, SUVR computation, reference region quantification, partial volume correction, or tracer-specific workflows (PiB amyloid, FDG metabolism...",
+  "provides": [
+    {
+      "capability": "skill.pet-skill",
+      "method_id": "pet-skill-guided",
+      "label": "PET 成像处理工作流 受约束方案",
+      "description": "依据 pet-skill/SKILL.md 生成结构化步骤；当前为规划型方法，不对应可直接执行的 runner。",
+      "runner_id": "planning.pet-skill",
+      "execution_mode": "planning",
+      "input_types": [
+        "*"
+      ],
+      "output_types": [
+        "planned_artifact"
+      ],
+      "default_recommended": true,
+      "default_reason": "该规划方法包含从 SKILL.md 提取的任务选项、脚本或命令依据。",
+      "structure_level": "evidence",
+      "source_references": [
+        {
+          "path": "skills/pet-skill/SKILL.md",
+          "label": "Skill 说明与方法依据",
+          "kind": "skill",
+          "line_start": 1,
+          "line_end": null
+        },
+        {
+          "path": "skills/pet-skill/scripts/compute_suvr.py",
+          "label": "compute_suvr.py",
+          "kind": "script",
+          "line_start": 1,
+          "line_end": null
+        },
+        {
+          "path": "skills/pet-skill/SKILL.md",
+          "label": "已提取 1 条参考命令",
+          "kind": "command",
+          "line_start": null,
+          "line_end": null
+        }
+      ],
+      "command_references": [
+        {
+          "command": "python skills/pet-skill/scripts/compute_suvr.py --pet /path/to/pet_in_t1w_space.nii.gz --target-mask /path/to/target_roi_mask.nii.gz --ref-mask /path/to/reference_region_mask.nii.gz --output /path/to/pet_output/suvr_values.csv",
+          "language": "bash",
+          "source_path": "skills/pet-skill/SKILL.md",
+          "line_start": 97,
+          "kind": "operation",
+          "executable": false
+        }
+      ],
+      "delegate_skill_ids": [
+        "fsl-tool",
+        "freesurfer-tool",
+        "nibabel-skill",
+        "claw-shell",
+        "smri-skill",
+        "fmri-skill",
+        "brain-visualization"
+      ],
+      "input_slots": [
+        {
+          "id": "primary_input",
+          "type": "dataset_folder",
+          "label": "输入数据集",
+          "description": "可从已登记数据集、授权路径或上游步骤选择；具体格式仍以该 Skill 的说明为准。",
+          "required": false,
+          "binding": "folder",
+          "source_options": [
+            "dataset",
+            "existing_path",
+            "upstream_output"
+          ],
+          "validation": [
+            "path_exists"
+          ]
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "planned_output",
+          "type": "planned_artifact",
+          "label": "规划输出",
+          "description": "该 planning 步骤声明的预期产物；只有接入 runner 后才会实际生成。",
+          "primary": true,
+          "path_template": "derivatives/pet-skill/"
+        }
+      ],
+      "parameters": [
+        {
+          "id": "operation",
+          "argument": "operation",
+          "label": "任务/方法范围",
+          "description": "选项来自该 Skill 的“Quick Reference (Common PET Tasks)”章节；这是规划约束，不代表已经存在执行器。",
+          "type": "string",
+          "control": "auto",
+          "level": "basic",
+          "group": "方法与任务",
+          "unit": "",
+          "required": true,
+          "default": "pet-to-t1w-coregistration",
+          "options": [
+            {
+              "value": "pet-to-t1w-coregistration",
+              "label": "PET-to-T1w coregistration",
+              "description": "Register dynamic or static PET frame to T1w using rigid-body alignment；fsl-tool (FLIRT)；PET in T1w native space（来源：SKILL.md:L45）"
+            },
+            {
+              "value": "t1w-to-mni-normalization",
+              "label": "T1w-to-MNI normalization",
+              "description": "Warp T1w (and co-registered PET) to MNI152 template；fsl-tool (FNIRT) or smri-skill；PET in MNI152 standard space（来源：SKILL.md:L46）"
+            },
+            {
+              "value": "reference-region-extraction",
+              "label": "Reference region extraction",
+              "description": "Extract mean signal from anatomically defined reference region (e.g., cerebellar cortex, pons, whole cerebellum)；fsl-tool + freesurfer-tool + nibabel-skill；Reference region mean time-activity curve（来源：SKILL.md:L47）"
+            },
+            {
+              "value": "suvr-computation",
+              "label": "SUVR computation",
+              "description": "Compute Standardized Uptake Value Ratio = target ROI / reference region；scripts/computesuvr.py；Per-region SUVR values (CSV)（来源：SKILL.md:L48）"
+            },
+            {
+              "value": "partial-volume-correction",
+              "label": "Partial volume correction",
+              "description": "Apply geometric transfer matrix (GTM) or region-based PVC methods；fsl-tool + custom；PVC-corrected ROI values（来源：SKILL.md:L49）"
+            },
+            {
+              "value": "dynamic-pet-modeling",
+              "label": "Dynamic PET modeling",
+              "description": "Kinetic modeling (e.g., Logan plot, SUVR with dynamic frames)；Custom analysis；DVR or SUVR over time（来源：SKILL.md:L50）"
+            },
+            {
+              "value": "tracer-specific-workflow",
+              "label": "Tracer-specific workflow",
+              "description": "PiB (amyloid, cerebellar cortex ref), FDG (metabolism, pons ref), tau (flortaucipir, cerebellar cortex ref)；Full pipeline；Tracer-appropriate SUVR maps（来源：SKILL.md:L51）"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "workflow_scope",
+          "argument": "workflow-scope",
+          "label": "工作流范围",
+          "description": "选择只做预处理、提取特征或规划端到端模态流程。",
+          "type": "string",
+          "control": "auto",
+          "level": "basic",
+          "group": "常用参数",
+          "unit": "",
+          "required": true,
+          "default": "end_to_end",
+          "options": [
+            {
+              "value": "preprocess",
+              "label": "仅预处理"
+            },
+            {
+              "value": "features",
+              "label": "特征提取"
+            },
+            {
+              "value": "end_to_end",
+              "label": "端到端流程"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "quality_control",
+          "argument": "quality-control",
+          "label": "包含质量控制",
+          "description": "在流程方案中保留输入检查、中间 QC 和结果核验步骤。",
+          "type": "boolean",
+          "control": "auto",
+          "level": "basic",
+          "group": "常用参数",
+          "unit": "",
+          "required": true,
+          "default": true,
+          "options": [
+            {
+              "value": true,
+              "label": "包含"
+            },
+            {
+              "value": false,
+              "label": "不包含"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "artifact_strategy",
+          "argument": "artifact-strategy",
+          "label": "伪影处理策略",
+          "description": "选择保守标记、自动校正或排除受影响数据。",
+          "type": "string",
+          "control": "auto",
+          "level": "advanced",
+          "group": "预处理细节",
+          "unit": "",
+          "required": true,
+          "default": "correct",
+          "options": [
+            {
+              "value": "flag",
+              "label": "仅标记"
+            },
+            {
+              "value": "correct",
+              "label": "自动校正"
+            },
+            {
+              "value": "exclude",
+              "label": "排除受影响数据"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "normalization_space",
+          "argument": "normalization-space",
+          "label": "标准空间",
+          "description": "规划空间标准化目标；原生空间不会应用模板归一化。",
+          "type": "string",
+          "control": "auto",
+          "level": "advanced",
+          "group": "空间与输出",
+          "unit": "",
+          "required": true,
+          "default": "native",
+          "options": [
+            {
+              "value": "native",
+              "label": "原生空间"
+            },
+            {
+              "value": "template",
+              "label": "标准模板空间"
+            },
+            {
+              "value": "both",
+              "label": "同时保留"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "smoothing_extent",
+          "argument": "smoothing-extent",
+          "label": "平滑尺度",
+          "description": "按模态解释为空间或时间平滑尺度；0 表示关闭。",
+          "type": "number",
+          "control": "number",
+          "level": "advanced",
+          "group": "空间与输出",
+          "unit": "",
+          "required": true,
+          "default": 0,
+          "options": [],
+          "minimum": 0,
+          "maximum": 20,
+          "step": 0.5,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "compute_threads",
+          "argument": "compute-threads",
+          "label": "计算线程数",
+          "description": "为支持并行的软件规划线程数量。",
+          "type": "integer",
+          "control": "number",
+          "level": "advanced",
+          "group": "计算资源",
+          "unit": "",
+          "required": true,
+          "default": 4,
+          "options": [],
+          "minimum": 1,
+          "maximum": 128,
+          "step": 1,
+          "placeholder": "",
+          "visible_when": {}
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+# Local secrets and runtime environments
+.env
+bakend/.env
+bakend/.venv/
+bakend/data/*.db
+bakend/data/*.db-shm
+bakend/data/*.db-wal
+
+# Python caches
+__pycache__/
+*.py[cod]
+
+# Local frontend overrides
+frontend/.env.local
+frontend/node_modules/
+frontend/.next/
+frontend/.vinext/
+frontend/dist/
+frontend/.wrangler/
+frontend/tsconfig.tsbuildinfo
+
+# Server deployment state and mounted datasets
+runtime/
+outputs/
+datasets/
+deploy/native-backend.env
+.conda/

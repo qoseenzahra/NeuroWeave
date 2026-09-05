@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "skill_id": "hcppipeline-tool",
+  "provides": [{
+    "capability": "dwi.preprocess", "method_id": "hcp_pipeline", "label": "HCP Diffusion Pipeline",
+    "description": "适合满足 HCP 采集、结构像和资源约束的数据。",
+    "runner_id": "hcp.diffusion", "input_types": ["bids_dwi"], "output_types": ["preprocessed_dwi", "preprocess_qc"],
+    "input_slots": [
+      {"id": "bids_dataset", "type": "bids_dwi", "label": "BIDS DWI 数据集", "description": "符合 HCP 采集与命名约束的 DWI 输入。", "required": true, "binding": "folder", "source_options": ["dataset", "existing_path", "upstream_output"], "validation": ["path_exists", "bids_dwi_complete"]},
+      {"id": "t1w", "type": "t1w_image", "label": "T1w 结构像", "description": "HCP Diffusion Pipeline 所需的结构像输入。", "required": true, "binding": "file", "formats": [".nii", ".nii.gz"], "source_options": ["dataset", "existing_path"], "validation": ["path_exists", "nifti_readable"]}
+    ],
+    "output_slots": [
+      {"id": "preprocessed_dwi", "type": "preprocessed_dwi", "label": "HCP 预处理 DWI", "description": "完成 HCP 风格校正和空间处理的 DWI。", "primary": true, "path_template": "derivatives/hcp/{subject}/Diffusion/"},
+      {"id": "preprocess_qc", "type": "preprocess_qc", "label": "HCP 预处理 QC", "description": "HCP 预处理过程的质量控制与日志。", "path_template": "derivatives/hcp/{subject}/QC/"}
+    ],
+    "requires_features": ["has_t1w"], "default_recommended": false, "default_reason": "只有输入满足 HCP 约定时才建议选择。",
+    "parameters": [
+      {"id": "processing_mode", "argument": "processing-mode", "label": "处理模式", "description": "选择标准或兼容旧数据的处理配置。", "type": "string", "control": "select", "level": "basic", "group": "常用参数", "required": true, "default": "standard", "options": [{"value": "standard", "label": "Standard"}, {"value": "legacy", "label": "Legacy compatibility"}]},
+      {"id": "gradient_distortion", "argument": "gradient-distortion", "label": "梯度非线性校正", "description": "有厂商梯度系数文件时启用梯度非线性校正。", "type": "string", "control": "select", "level": "basic", "group": "常用参数", "required": true, "default": "auto", "options": [{"value": "auto", "label": "自动检测"}, {"value": "on", "label": "启用"}, {"value": "off", "label": "关闭"}]},
+      {"id": "combine_runs", "argument": "combine-runs", "label": "合并 DWI Runs", "description": "在方向与相位编码兼容时合并多个 DWI run。", "type": "boolean", "control": "switch", "level": "advanced", "group": "输入组织", "required": true, "default": true, "options": [{"value": true, "label": "合并"}, {"value": false, "label": "分别处理"}]},
+      {"id": "b0_max_bval", "argument": "b0-max-bval", "label": "b0 最大 b-value", "description": "识别 b0 体积时允许的最大 b-value。", "type": "integer", "control": "number", "level": "advanced", "group": "输入组织", "unit": "s/mm²", "required": true, "default": 50, "minimum": 0, "maximum": 500, "step": 1, "options": []},
+      {"id": "eddy_backend", "argument": "eddy-backend", "label": "Eddy 后端", "description": "选择 CPU 或 CUDA 版 eddy。", "type": "string", "control": "select", "level": "advanced", "group": "校正与资源", "required": true, "default": "cuda", "options": [{"value": "cuda", "label": "CUDA GPU"}, {"value": "cpu", "label": "CPU"}]},
+      {"id": "outlier_replacement", "argument": "outlier-replacement", "label": "离群切片替换", "description": "启用 eddy 的离群切片检测与替换。", "type": "boolean", "control": "switch", "level": "advanced", "group": "校正与资源", "required": true, "default": true, "options": [{"value": true, "label": "启用"}, {"value": false, "label": "关闭"}]},
+      {"id": "threads", "argument": "threads", "label": "线程数", "description": "CPU 阶段允许使用的线程数量。", "type": "integer", "control": "number", "level": "advanced", "group": "校正与资源", "required": true, "default": 8, "minimum": 1, "maximum": 128, "step": 1, "options": []}
+    ]
+  }]
+}

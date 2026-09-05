@@ -1,0 +1,334 @@
+{
+  "schema_version": 1,
+  "manifest_kind": "planning",
+  "generated_from": "scripts/build_structured_skill_manifests.py",
+  "skill_id": "fsl-tool",
+  "description": "该技能用于 fsl-tool 相关工作流。适合在需要执行、检查或组织此类任务时启用；核心能力包括：Use this skill whenever the user wants to process neuroimaging data with FSL (FMRIB Software Library), covering structural MRI, functional MRI (fMRI), and diffusion MRI (dMRI/DTI). Triggers include: 'use FSL', 'FSL processing', 'fsl_anat', 'FEAT', 'MELODIC'...",
+  "provides": [
+    {
+      "capability": "skill.fsl-tool",
+      "method_id": "fsl-tool-guided",
+      "label": "Fsl Tool 受约束方案",
+      "description": "依据 fsl-tool/SKILL.md 生成结构化步骤；当前为规划型方法，不对应可直接执行的 runner。",
+      "runner_id": "planning.fsl-tool",
+      "execution_mode": "planning",
+      "input_types": [
+        "*"
+      ],
+      "output_types": [
+        "planned_artifact"
+      ],
+      "default_recommended": true,
+      "default_reason": "该规划方法包含从 SKILL.md 提取的任务选项、脚本或命令依据。",
+      "structure_level": "evidence",
+      "source_references": [
+        {
+          "path": "skills/fsl-tool/SKILL.md",
+          "label": "Skill 说明与方法依据",
+          "kind": "skill",
+          "line_start": 1,
+          "line_end": null
+        },
+        {
+          "path": "skills/fsl-tool/SKILL.md",
+          "label": "已提取 8 条参考命令",
+          "kind": "command",
+          "line_start": null,
+          "line_end": null
+        }
+      ],
+      "command_references": [
+        {
+          "command": "fsl_anat -i T1w.nii.gz -o T1w_anat --clobber",
+          "language": "bash",
+          "source_path": "skills/fsl-tool/SKILL.md",
+          "line_start": 37,
+          "kind": "operation",
+          "executable": false
+        },
+        {
+          "command": "bet T1w.nii.gz T1w_brain -m -f 0.5",
+          "language": "bash",
+          "source_path": "skills/fsl-tool/SKILL.md",
+          "line_start": 43,
+          "kind": "operation",
+          "executable": false
+        },
+        {
+          "command": "fast -t 1 -n 3 -H 0.1 -I 4 -l 20.0 -o T1w_fast T1w_brain",
+          "language": "bash",
+          "source_path": "skills/fsl-tool/SKILL.md",
+          "line_start": 48,
+          "kind": "operation",
+          "executable": false
+        },
+        {
+          "command": "flirt -in T1w_brain -ref $FSLDIR/data/standard/MNI152_T1_2mm_brain -out T1w_to_MNI -omat T1w_to_MNI.mat -dof 12",
+          "language": "bash",
+          "source_path": "skills/fsl-tool/SKILL.md",
+          "line_start": 54,
+          "kind": "operation",
+          "executable": false
+        },
+        {
+          "command": "fnirt --in=T1w_brain --aff=T1w_to_MNI.mat --cout=T1w_to_MNI_warp --config=T1_2_MNI152_2mm",
+          "language": "bash",
+          "source_path": "skills/fsl-tool/SKILL.md",
+          "line_start": 55,
+          "kind": "operation",
+          "executable": false
+        },
+        {
+          "command": "first -i T1w_brain -o T1w_first -b",
+          "language": "bash",
+          "source_path": "skills/fsl-tool/SKILL.md",
+          "line_start": 58,
+          "kind": "operation",
+          "executable": false
+        },
+        {
+          "command": "mcflirt -in bold.nii.gz -out bold_mcf -plots -refvol 0",
+          "language": "bash",
+          "source_path": "skills/fsl-tool/SKILL.md",
+          "line_start": 64,
+          "kind": "operation",
+          "executable": false
+        },
+        {
+          "command": "feat design.fsf",
+          "language": "bash",
+          "source_path": "skills/fsl-tool/SKILL.md",
+          "line_start": 67,
+          "kind": "operation",
+          "executable": false
+        }
+      ],
+      "delegate_skill_ids": [
+        "claw-shell"
+      ],
+      "input_slots": [
+        {
+          "id": "primary_input",
+          "type": "imaging_input",
+          "label": "影像或工具输入",
+          "description": "可从已登记数据集、授权路径或上游步骤选择；具体格式仍以该 Skill 的说明为准。",
+          "required": false,
+          "binding": "artifact",
+          "source_options": [
+            "dataset",
+            "existing_path",
+            "upstream_output"
+          ],
+          "validation": [
+            "path_exists"
+          ]
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "planned_output",
+          "type": "planned_artifact",
+          "label": "规划输出",
+          "description": "该 planning 步骤声明的预期产物；只有接入 runner 后才会实际生成。",
+          "primary": true,
+          "path_template": "derivatives/fsl-tool/"
+        }
+      ],
+      "parameters": [
+        {
+          "id": "operation",
+          "argument": "operation",
+          "label": "任务/方法范围",
+          "description": "选项来自该 Skill 的“Quick Reference”章节；这是规划约束，不代表已经存在执行器。",
+          "type": "string",
+          "control": "auto",
+          "level": "basic",
+          "group": "方法与任务",
+          "unit": "",
+          "required": true,
+          "default": "structural",
+          "options": [
+            {
+              "value": "structural",
+              "label": "Structural",
+              "description": "Full preprocessing；fslanat；10–40 min（来源：SKILL.md:L97）"
+            },
+            {
+              "value": "functional",
+              "label": "Functional",
+              "description": "Motion correction；mcflirt；2–10 min（来源：SKILL.md:L100）"
+            },
+            {
+              "value": "diffusion",
+              "label": "Diffusion",
+              "description": "Preprocessing；topup + eddy；30–180 min（来源：SKILL.md:L103）"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "processing_level",
+          "argument": "processing-level",
+          "label": "处理级别",
+          "description": "控制方案中启用的步骤深度，不会直接启动对应软件。",
+          "type": "string",
+          "control": "auto",
+          "level": "basic",
+          "group": "常用参数",
+          "unit": "",
+          "required": true,
+          "default": "standard",
+          "options": [
+            {
+              "value": "minimal",
+              "label": "最小必要步骤"
+            },
+            {
+              "value": "standard",
+              "label": "标准流程"
+            },
+            {
+              "value": "advanced",
+              "label": "高级选项"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "quality_control",
+          "argument": "quality-control",
+          "label": "包含质量控制",
+          "description": "要求规划结果包含工具输出的质量检查。",
+          "type": "boolean",
+          "control": "auto",
+          "level": "basic",
+          "group": "常用参数",
+          "unit": "",
+          "required": true,
+          "default": true,
+          "options": [
+            {
+              "value": true,
+              "label": "包含"
+            },
+            {
+              "value": false,
+              "label": "不包含"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "resource_profile",
+          "argument": "resource-profile",
+          "label": "资源配置",
+          "description": "选择偏向低内存、平衡或高性能的工具运行方案。",
+          "type": "string",
+          "control": "auto",
+          "level": "advanced",
+          "group": "计算资源",
+          "unit": "",
+          "required": true,
+          "default": "balanced",
+          "options": [
+            {
+              "value": "conservative",
+              "label": "低资源"
+            },
+            {
+              "value": "balanced",
+              "label": "平衡"
+            },
+            {
+              "value": "performance",
+              "label": "高性能"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "threads",
+          "argument": "threads",
+          "label": "线程数",
+          "description": "工具支持时使用的 CPU 线程数量。",
+          "type": "integer",
+          "control": "number",
+          "level": "advanced",
+          "group": "计算资源",
+          "unit": "",
+          "required": true,
+          "default": 4,
+          "options": [],
+          "minimum": 1,
+          "maximum": 128,
+          "step": 1,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "memory_limit_gb",
+          "argument": "memory-limit-gb",
+          "label": "内存上限",
+          "description": "规划任务可使用的内存上限。",
+          "type": "number",
+          "control": "number",
+          "level": "advanced",
+          "group": "计算资源",
+          "unit": "GB",
+          "required": true,
+          "default": 8,
+          "options": [],
+          "minimum": 1,
+          "maximum": 1024,
+          "step": 1,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "keep_intermediates",
+          "argument": "keep-intermediates",
+          "label": "保留中间文件",
+          "description": "保留关键中间结果以便复核和断点恢复。",
+          "type": "boolean",
+          "control": "auto",
+          "level": "advanced",
+          "group": "输出与复现",
+          "unit": "",
+          "required": true,
+          "default": false,
+          "options": [
+            {
+              "value": true,
+              "label": "保留"
+            },
+            {
+              "value": false,
+              "label": "不保留"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        }
+      ]
+    }
+  ]
+}

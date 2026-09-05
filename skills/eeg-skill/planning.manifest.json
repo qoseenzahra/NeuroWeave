@@ -1,0 +1,307 @@
+{
+  "schema_version": 1,
+  "manifest_kind": "planning",
+  "generated_from": "scripts/build_structured_skill_manifests.py",
+  "skill_id": "eeg-skill",
+  "description": "该技能用于 eeg-skill 相关工作流。适合在需要执行、检查或组织此类任务时启用；核心能力包括：Use this skill whenever the user wants to load, preprocess, epoch, filter, or extract features from EEG data (resting-state, task-based, BCI, clinical, motor imagery, emotion, epilepsy, fatigue, etc.). Triggers include: 'eeg', 'EEG preprocessing', 'EEG feat...",
+  "provides": [
+    {
+      "capability": "skill.eeg-skill",
+      "method_id": "eeg-skill-guided",
+      "label": "EEG 脑电处理工作流 受约束方案",
+      "description": "依据 eeg-skill/SKILL.md 生成结构化步骤；当前为规划型方法，不对应可直接执行的 runner。",
+      "runner_id": "planning.eeg-skill",
+      "execution_mode": "planning",
+      "input_types": [
+        "*"
+      ],
+      "output_types": [
+        "planned_artifact"
+      ],
+      "default_recommended": true,
+      "default_reason": "该规划方法包含从 SKILL.md 提取的任务选项、脚本或命令依据。",
+      "structure_level": "evidence",
+      "source_references": [
+        {
+          "path": "skills/eeg-skill/SKILL.md",
+          "label": "Skill 说明与方法依据",
+          "kind": "skill",
+          "line_start": 1,
+          "line_end": null
+        }
+      ],
+      "command_references": [],
+      "delegate_skill_ids": [
+        "mne-eeg-tool",
+        "claw-shell"
+      ],
+      "input_slots": [
+        {
+          "id": "primary_input",
+          "type": "dataset_folder",
+          "label": "输入数据集",
+          "description": "可从已登记数据集、授权路径或上游步骤选择；具体格式仍以该 Skill 的说明为准。",
+          "required": false,
+          "binding": "folder",
+          "source_options": [
+            "dataset",
+            "existing_path",
+            "upstream_output"
+          ],
+          "validation": [
+            "path_exists"
+          ]
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "planned_output",
+          "type": "planned_artifact",
+          "label": "规划输出",
+          "description": "该 planning 步骤声明的预期产物；只有接入 runner 后才会实际生成。",
+          "primary": true,
+          "path_template": "derivatives/eeg-skill/"
+        }
+      ],
+      "parameters": [
+        {
+          "id": "operation",
+          "argument": "operation",
+          "label": "任务/方法范围",
+          "description": "选项来自该 Skill 的“Quick Reference (Common EEG Tasks – Updated 2026-03-25)”章节；这是规划约束，不代表已经存在执行器。",
+          "type": "string",
+          "control": "auto",
+          "level": "basic",
+          "group": "方法与任务",
+          "unit": "",
+          "required": true,
+          "default": "load-basic-validation",
+          "options": [
+            {
+              "value": "load-basic-validation",
+              "label": "Load & basic validation",
+              "description": "Read raw EEG + channel locations + events + validation；claw-shell (via mne-eeg-tool)；Validation report + raw object（来源：SKILL.md:L38）"
+            },
+            {
+              "value": "bad-channel-detection-interpolation",
+              "label": "Bad-channel detection & interpolation",
+              "description": "Auto-detect + interpolate noisy channels；claw-shell (via mne-eeg-tool)；Cleaned raw data（来源：SKILL.md:L39）"
+            },
+            {
+              "value": "downsampling-filtering",
+              "label": "Downsampling + filtering",
+              "description": "Resample, high-pass, notch, bandpass filtering；claw-shell (via mne-eeg-tool)；Filtered .fif files（来源：SKILL.md:L40）"
+            },
+            {
+              "value": "artifact-removal",
+              "label": "Artifact removal",
+              "description": "ICA + AutoReject + EOG/ECG regression；claw-shell (via mne-eeg-tool)；Cleaned data（来源：SKILL.md:L41）"
+            },
+            {
+              "value": "continuous-data-cleaning",
+              "label": "Continuous data cleaning",
+              "description": "Resting-state pipeline (no events)；claw-shell (via mne-eeg-tool)；Cleaned continuous data（来源：SKILL.md:L42）"
+            },
+            {
+              "value": "re-referencing-epoching",
+              "label": "Re-referencing & epoching",
+              "description": "Average reference (CAR) / REST + epoching + baseline correction；claw-shell (via mne-eeg-tool)；Epoched .fif files（来源：SKILL.md:L43）"
+            },
+            {
+              "value": "waveform-to-mel-spectrogram",
+              "label": "Waveform to Mel-Spectrogram",
+              "description": "Convert raw waveform to Mel spectrogram using torchaudio；claw-shell (via mne-eeg-tool)；Mel-spectrogram tensors (.pt)（来源：SKILL.md:L44）"
+            },
+            {
+              "value": "frequency-band-energy-extraction",
+              "label": "Frequency-band energy extraction",
+              "description": "Extract δ/θ/α/β/γ band energy using CWT with morlet2 wavelet；claw-shell (via mne-eeg-tool)；Per-band power matrices (CSV / .npy)（来源：SKILL.md:L45）"
+            },
+            {
+              "value": "feature-extraction-core",
+              "label": "Feature extraction (core)",
+              "description": "Band power, CSP, Hjorth, sample entropy；claw-shell (via mne-eeg-tool)；Feature matrices (CSV / .npy / .npz)（来源：SKILL.md:L46）"
+            },
+            {
+              "value": "advanced-features",
+              "label": "Advanced features",
+              "description": "Functional connectivity, ERP peaks/latency/AUC, frontal alpha asymmetry, microstates；claw-shell (via mne-eeg-tool)；Connectivity matrices, ERP CSV, asymmetry .npy, microstates .fif（来源：SKILL.md:L47）"
+            },
+            {
+              "value": "full-end-to-end-pipeline",
+              "label": "Full end-to-end pipeline",
+              "description": "Any combination of the above for BCI, emotion, epilepsy, fatigue, etc.；claw-shell + dependency-planner；Complete processed dataset + QC report（来源：SKILL.md:L48）"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "workflow_scope",
+          "argument": "workflow-scope",
+          "label": "工作流范围",
+          "description": "选择只做预处理、提取特征或规划端到端模态流程。",
+          "type": "string",
+          "control": "auto",
+          "level": "basic",
+          "group": "常用参数",
+          "unit": "",
+          "required": true,
+          "default": "end_to_end",
+          "options": [
+            {
+              "value": "preprocess",
+              "label": "仅预处理"
+            },
+            {
+              "value": "features",
+              "label": "特征提取"
+            },
+            {
+              "value": "end_to_end",
+              "label": "端到端流程"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "quality_control",
+          "argument": "quality-control",
+          "label": "包含质量控制",
+          "description": "在流程方案中保留输入检查、中间 QC 和结果核验步骤。",
+          "type": "boolean",
+          "control": "auto",
+          "level": "basic",
+          "group": "常用参数",
+          "unit": "",
+          "required": true,
+          "default": true,
+          "options": [
+            {
+              "value": true,
+              "label": "包含"
+            },
+            {
+              "value": false,
+              "label": "不包含"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "artifact_strategy",
+          "argument": "artifact-strategy",
+          "label": "伪影处理策略",
+          "description": "选择保守标记、自动校正或排除受影响数据。",
+          "type": "string",
+          "control": "auto",
+          "level": "advanced",
+          "group": "预处理细节",
+          "unit": "",
+          "required": true,
+          "default": "correct",
+          "options": [
+            {
+              "value": "flag",
+              "label": "仅标记"
+            },
+            {
+              "value": "correct",
+              "label": "自动校正"
+            },
+            {
+              "value": "exclude",
+              "label": "排除受影响数据"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "normalization_space",
+          "argument": "normalization-space",
+          "label": "标准空间",
+          "description": "规划空间标准化目标；原生空间不会应用模板归一化。",
+          "type": "string",
+          "control": "auto",
+          "level": "advanced",
+          "group": "空间与输出",
+          "unit": "",
+          "required": true,
+          "default": "native",
+          "options": [
+            {
+              "value": "native",
+              "label": "原生空间"
+            },
+            {
+              "value": "template",
+              "label": "标准模板空间"
+            },
+            {
+              "value": "both",
+              "label": "同时保留"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "smoothing_extent",
+          "argument": "smoothing-extent",
+          "label": "平滑尺度",
+          "description": "按模态解释为空间或时间平滑尺度；0 表示关闭。",
+          "type": "number",
+          "control": "number",
+          "level": "advanced",
+          "group": "空间与输出",
+          "unit": "",
+          "required": true,
+          "default": 0,
+          "options": [],
+          "minimum": 0,
+          "maximum": 20,
+          "step": 0.5,
+          "placeholder": "",
+          "visible_when": {}
+        },
+        {
+          "id": "compute_threads",
+          "argument": "compute-threads",
+          "label": "计算线程数",
+          "description": "为支持并行的软件规划线程数量。",
+          "type": "integer",
+          "control": "number",
+          "level": "advanced",
+          "group": "计算资源",
+          "unit": "",
+          "required": true,
+          "default": 4,
+          "options": [],
+          "minimum": 1,
+          "maximum": 128,
+          "step": 1,
+          "placeholder": "",
+          "visible_when": {}
+        }
+      ]
+    }
+  ]
+}
