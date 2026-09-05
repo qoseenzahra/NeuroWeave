@@ -803,6 +803,19 @@ async def cancel_run(run_id: str) -> WorkflowRun:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
+@app.post("/api/runs/{run_id}/recover-freesurfer")
+async def recover_freesurfer_run(
+    run_id: str, request: RunCreateRequest, dry_run: bool = True,
+) -> dict[str, Any]:
+    try:
+        return run_service.recover_freesurfer(
+            run_id, request.expected_revision, dry_run=dry_run)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Run not found") from exc
+    except RunConflict as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
 def _revision_http_error(exc: RevisionConflict) -> HTTPException:
     return HTTPException(
         status_code=409,

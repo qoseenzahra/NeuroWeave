@@ -1,17 +1,20 @@
 from __future__ import annotations
 
 import json
+import os
 import tempfile
 import time
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
+from unittest.mock import patch
 
 from app.capability_registry import CapabilityRegistry
 from app.conversation_models import ConversationRecord
 from app.dataset_models import DatasetInspection, DatasetRecord
 from app.execution import RunnerRegistry, RunConflict, RunService
 from app.execution.base import RunnerResult
+from app.execution.runners.freesurfer import FreeSurferReconAllRunner
 from app.local_store import LocalStore
 from app.run_models import RunArtifact
 from app.workflow_models import (
@@ -264,6 +267,115 @@ class RunServiceTests(unittest.TestCase):
         self.assertIsNone(calls[0][1])
         self.assertEqual(calls[1][1], calls[2][1])
         self.assertTrue(Path(str(calls[1][1])).is_dir())
+
+    def _failed_freesurfer_run(self):
+        self.test_freesurfer_recipe_expands_and_binds_runner_artifacts()
+        run = self.service.list()[0]
+        subject = Path(run.steps[0].artifacts[0].absolute_path)
+        for name in ["mri/aseg.presurf.mgz", "mri/wm.mgz", "mri/filled.mgz",
+                     "surf/lh.white.preaparc", "surf/rh.white.preaparc",
+                     "surf/lh.inflated", "surf/rh.inflated"]:
+            path = subject / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(b"test")
+        scripts = subject / "scripts"
+        scripts.mkdir()
+        done = scripts / "recon-all.done"
+        done.write_text(f'SUBJECT {subject.name}\nCMDARGS -sd "{subject.parent.as_posix()}" '
+                        f'-s {subject.name} -autorecon2 -parallel -openmp 2\n')
+        log = scripts / "recon-all.log"
+        log.write_text(f"recon-all -s {subject.name} finished without error at test\n")
+        stamp = datetime.fromisoformat(run.steps[1].finished_at).timestamp()
+        for path in (done, log):
+            os.utime(path, (stamp, stamp))
+        run.status = "failed"
+        run.progress = 65.333
+        run.steps[1].status = "failed"
+        run.steps[1].progress = 96
+        run.steps[1].artifacts = []
+        run.steps[1].error_code = run.error_code = "runner_failed"
+        run.steps[1].error_message = run.error_message = (
+            f"FreeSurfer 未生成预期输出：{subject / 'surf' / 'lh.white'}")
+        run.steps[2].status = "queued"
+        run.steps[2].progress = 0
+        run.steps[2].artifacts = []
+        run.steps[2].started_at = run.steps[2].finished_at = None
+        run.artifacts = list(run.steps[0].artifacts)
+        self.store.save_run(run)
+        runner = FreeSurferReconAllRunner()
+        self.runners._runners[runner.runner_id] = runner
+        return run, subject, runner
+
+    def test_freesurfer_recovery_only_executes_autorecon3(self) -> None:
+        run, subject, runner = self._failed_freesurfer_run()
+        original_start = run.started_at
+        original_first = run.steps[0].model_dump()
+        calls = []
+
+        def execute(context, argv, **kwargs):
+            calls.append(argv)
+            self.assertIn("-autorecon3", argv)
+            self.assertNotIn("-i", argv)
+            self.assertEqual(argv[argv.index("-sd") + 1], str(subject.parent))
+            for name in ["mri/aseg.mgz", "stats/aseg.stats", "surf/lh.white",
+                         "surf/rh.white", "surf/lh.pial", "surf/rh.pial",
+                         "stats/lh.aparc.stats", "stats/rh.aparc.stats"]:
+                path = subject / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(b"test")
+
+        with patch.object(runner, "preflight", return_value=[]), patch.object(runner, "execute", side_effect=execute):
+            before = self.service.get(run.run_id).model_dump()
+            report = self.service.recover_freesurfer(run.run_id, run.workflow_revision)
+            self.assertTrue(report["dry_run"])
+            self.assertEqual(self.service.get(run.run_id).model_dump(), before)
+            self.assertEqual(calls, [])
+            self.service.recover_freesurfer(run.run_id, run.workflow_revision, dry_run=False)
+            for _ in range(200):
+                current = self.service.get(run.run_id)
+                if current.status in {"succeeded", "failed"}:
+                    break
+                time.sleep(0.01)
+        self.assertEqual(current.status, "succeeded", current.error_message)
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(current.steps[0].model_dump(), original_first)
+        self.assertEqual(current.started_at, original_start)
+        self.assertEqual(len(current.artifacts), 3)
+        self.assertEqual(current.progress, 100)
+        self.assertEqual(current.error_message, "")
+        self.assertIn("freesurfer_stage_recovered", {e["event_type"] for e in self.service.events(run.run_id)})
+        with self.assertRaises(RunConflict):
+            self.service.recover_freesurfer(run.run_id, run.workflow_revision, dry_run=False)
+
+    def test_freesurfer_recovery_rejects_unproven_completion(self) -> None:
+        run, subject, runner = self._failed_freesurfer_run()
+        with patch.object(runner, "preflight", return_value=[]):
+            with self.assertRaises(RunConflict):
+                self.service.recover_freesurfer(run.run_id, run.workflow_revision + 1)
+            for filename in ["surf/rh.white.preaparc", "scripts/recon-all.done", "scripts/recon-all.log"]:
+                path = subject / filename
+                data, stat = path.read_bytes(), path.stat()
+                path.write_bytes(b"")
+                with self.subTest(filename=filename), self.assertRaises(RunConflict):
+                    self.service.recover_freesurfer(run.run_id, run.workflow_revision, dry_run=False)
+                path.write_bytes(data)
+                os.utime(path, (stat.st_atime, stat.st_mtime))
+            done = subject / "scripts/recon-all.done"
+            data, stat = done.read_bytes(), done.stat()
+            os.utime(done, (0, 0))
+            with self.assertRaises(RunConflict):
+                self.service.recover_freesurfer(run.run_id, run.workflow_revision)
+            done.write_bytes(data.replace(b"-autorecon2", b"-autorecon1"))
+            os.utime(done, (stat.st_atime, stat.st_mtime))
+            with self.assertRaises(RunConflict):
+                self.service.recover_freesurfer(run.run_id, run.workflow_revision)
+            done.write_bytes(data)
+            os.utime(done, (stat.st_atime, stat.st_mtime))
+            marker = subject / "scripts/IsRunning.lh+rh"
+            marker.write_text("running")
+            with self.assertRaises(RunConflict):
+                self.service.recover_freesurfer(run.run_id, run.workflow_revision, dry_run=False)
+        self.assertEqual(self.service.get(run.run_id).status, "failed")
 
     def _workflow(self, *, execution_enabled: bool) -> Workflow:
         definition = self.capabilities.methods_for("dwi.inspect")[0]

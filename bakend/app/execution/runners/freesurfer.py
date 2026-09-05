@@ -3,6 +3,8 @@ from __future__ import annotations
 import os
 import re
 import shutil
+import shlex
+from datetime import datetime
 from pathlib import Path
 
 from ..base import RunnerContext, RunnerResult
@@ -213,16 +215,71 @@ class FreeSurferReconAllRunner(ExternalCommandRunner):
             argv.extend(("-FLAIR", str(self.required_binding(context, "flair")), "-FLAIRpial"))
         environment = self.execution_environment(subjects_dir)
         self.execute(context, argv, environment=environment, progress_end=96.0)
-        expected_by_stage = {
-            "autorecon1": subject_dir / "mri" / "T1.mgz",
-            "autorecon2": subject_dir / "surf" / "lh.white",
-            "autorecon3": subject_dir / "stats" / "lh.aparc.stats",
-            "stats": subject_dir / "stats" / "aseg.stats",
-            "all": subject_dir / "mri" / "aseg.mgz",
-        }
-        expected = expected_by_stage[stage]
-        if not expected.is_file() or expected.stat().st_size == 0:
-            raise RuntimeError(f"FreeSurfer 未生成预期输出：{expected}")
+        return self.collect_result(context, subject_dir, stage)
+
+    @staticmethod
+    def validate_outputs(subject_dir: Path, stage: str) -> list[str]:
+        """Stage contracts from FreeSurfer 7.4.1 bin/recon-all.
+
+        autorecon2 enables DoWhitePreAparc; DoWhiteSurfs and statistics
+        are enabled by autorecon3. Check both hemispheres, including sizes.
+        """
+        first = [("mri/T1.mgz",), ("mri/brainmask.mgz",)]
+        second = [("mri/aseg.presurf.mgz",), ("mri/wm.mgz",), ("mri/filled.mgz",)]
+        third = [("mri/aseg.mgz",), ("stats/aseg.stats",)]
+        for hemi in ("lh", "rh"):
+            second.extend([
+                (f"surf/{hemi}.white.preaparc", f"surf/{hemi}.white"),
+                (f"surf/{hemi}.inflated",),
+            ])
+            third.extend([(f"surf/{hemi}.white",), (f"surf/{hemi}.pial",),
+                          (f"stats/{hemi}.aparc.stats",)])
+        contracts = {"autorecon1": first, "autorecon2": second,
+                     "autorecon3": third, "all": first + second + third,
+                     "stats": [("stats/aseg.stats",)]}
+        if stage not in contracts:
+            raise RuntimeError(f"不支持的 FreeSurfer 处理阶段：{stage}")
+        checked = []
+        for alternatives in contracts[stage]:
+            found = next((name for name in alternatives
+                          if (subject_dir / name).is_file()
+                          and (subject_dir / name).stat().st_size > 0), None)
+            if found is None:
+                raise RuntimeError("FreeSurfer 未生成预期输出：" + " 或 ".join(
+                    str(subject_dir / name) for name in alternatives))
+            (subject_dir / found).resolve().relative_to(subject_dir.resolve())
+            checked.append(found)
+        return checked
+
+    @staticmethod
+    def validate_completion(subject_dir: Path, started_at: str, finished_at: str) -> None:
+        """Only recover an autorecon2 completion belonging to the failed attempt."""
+        scripts = subject_dir / "scripts"
+        if list(scripts.glob("IsRunning*")):
+            raise RuntimeError("FreeSurfer 仍有 IsRunning 标记，拒绝恢复")
+        done = scripts / "recon-all.done"
+        log = scripts / "recon-all.log"
+        lower = datetime.fromisoformat(started_at).timestamp() - 5
+        upper = datetime.fromisoformat(finished_at).timestamp() + 5
+        for path in (done, log):
+            if not path.is_file() or not lower <= path.stat().st_mtime <= upper:
+                raise RuntimeError("FreeSurfer 完成证据缺失或不属于本次失败阶段")
+        fields = dict(line.split(" ", 1) for line in done.read_text().splitlines() if " " in line)
+        args = shlex.split(fields.get("CMDARGS", ""))
+        if (fields.get("SUBJECT") != subject_dir.name or "-autorecon2" not in args
+                or any(flag in args for flag in ("-all", "-autorecon1", "-autorecon3"))
+                or "-sd" not in args or "-s" not in args):
+            raise RuntimeError("FreeSurfer 完成标记并非当前受试者 autorecon2")
+        if (Path(args[args.index("-sd") + 1]).resolve() != subject_dir.parent.resolve()
+                or args[args.index("-s") + 1] != subject_dir.name):
+            raise RuntimeError("FreeSurfer 完成标记的 SUBJECTS_DIR 不匹配")
+        last = log.read_text(errors="replace").rstrip().splitlines()[-1]
+        if not last.startswith(f"recon-all -s {subject_dir.name} finished without error"):
+            raise RuntimeError("FreeSurfer 最后一次执行没有正常完成证据")
+
+    def collect_result(self, context: RunnerContext, subject_dir: Path, stage: str) -> RunnerResult:
+        checked = self.validate_outputs(subject_dir, stage)
+        subject_id = subject_dir.name
         artifact = self.directory_artifact(
             context,
             subject_dir,
@@ -232,6 +289,7 @@ class FreeSurferReconAllRunner(ExternalCommandRunner):
                 "subject_id": subject_id,
                 "processing_stage": stage,
                 "output_slot_id": "subject",
+                "validated_files": checked,
             },
         )
         context.log("FreeSurfer 输出目录已通过关键文件检查", 100.0, "info")

@@ -15,6 +15,7 @@ from ..workflow_models import MethodOption, Workflow, WorkflowStep
 from .base import ExecutionCancelled, RunnerContext
 from .recipe_compiler import ExecutionUnit, RecipeCompilationError, RecipeCompiler
 from .runner_registry import RunnerRegistry
+from .runners.freesurfer import FreeSurferReconAllRunner
 
 
 class RunConflict(RuntimeError):
@@ -132,6 +133,92 @@ class RunService:
             raise KeyError(run_id)
         return run
 
+    def recover_freesurfer(self, run_id: str, expected_revision: int, *, dry_run: bool = True) -> dict[str, Any]:
+        """Recover only the known autorecon2 output-validation false negative.
+
+        Revalidate the immutable confirmed recipe and completion evidence before
+        recording its artifact. Never execute autorecon1 or autorecon2 again.
+        """
+        with self._lock:
+            run = self.get(run_id)
+            if (run.status != "failed" or run.cancellation_requested
+                    or run_id in self._futures):
+                raise RunConflict("只能恢复已结束且未取消的失败任务")
+            if self.store.active_run_for_workflow(run.workflow_id) is not None:
+                raise RunConflict("该流程已有活动任务")
+            if run.workflow_revision != expected_revision:
+                raise RunConflict("运行快照版本不匹配")
+            workflow = Workflow.model_validate(run.plan_snapshot)
+            if (workflow.status != "confirmed" or not workflow.dry_run_report
+                    or not workflow.dry_run_report.valid
+                    or not workflow.dry_run_report.execution_enabled):
+                raise RunConflict("原始快照尚未通过 Dry-run 和最终确认")
+            try:
+                units = self.recipe_compiler.compile(workflow)
+                if (len(units) != 3 or len(run.steps) != 3
+                        or [s.status for s in run.steps] != ["succeeded", "failed", "queued"]
+                        or [u.step.selected_parameters.get("processing_stage") for u in units]
+                        != ["autorecon1", "autorecon2", "autorecon3"]
+                        or len({u.workspace_key for u in units}) != 1
+                        or any(u.method.runner_id != "freesurfer.recon_all"
+                               or u.step.id != s.step_id or u.method.id != s.method_id
+                               or s.runner_id != u.method.runner_id
+                               for u, s in zip(units, run.steps))):
+                    raise RuntimeError("仅支持原始三阶段 FreeSurfer 配方的 autorecon2 验证误报")
+                runner = self.runner_registry.get("freesurfer.recon_all")
+                if not isinstance(runner, FreeSurferReconAllRunner):
+                    raise RuntimeError("FreeSurfer 可信 Runner 不可用")
+                directory = self._safe_step_directory(run_id, units[1].workspace_key)
+                step = self._resolve_runtime_bindings(units[1].step, run)
+                context = RunnerContext(run_id, workflow, step, units[1].method,
+                                        directory, Event(), lambda *_: None)
+                subject = runner.required_binding(context, "subject")
+                subject.relative_to(directory)
+                failed = run.steps[1]
+                expected_error = f"FreeSurfer 未生成预期输出：{subject / 'surf' / 'lh.white'}"
+                if (failed.error_code != "runner_failed" or failed.error_message != expected_error
+                        or run.error_message != expected_error
+                        or not failed.started_at or not failed.finished_at):
+                    raise RuntimeError("失败原因不是已知的 autorecon2 制品验证误报")
+                runner.validate_completion(subject, failed.started_at, failed.finished_at)
+                result = runner.collect_result(context, subject, "autorecon2")
+                previous_error = failed.error_message
+                failed.status = "succeeded"
+                failed.progress = 100.0
+                failed.message = "已核验现有 autorecon2 结果，恢复成功"
+                failed.error_code = failed.error_message = ""
+                failed.artifacts = result.artifacts
+                run.artifacts.extend(result.artifacts)
+                next_step = self._resolve_runtime_bindings(units[2].step, run)
+                next_context = RunnerContext(run_id, workflow, next_step, units[2].method,
+                                             directory, Event(), lambda *_: None)
+                problems = runner.preflight(next_context)
+                if problems:
+                    raise RuntimeError("；".join(problems))
+            except (RuntimeError, ValueError, OSError, IndexError) as exc:
+                raise RunConflict(str(exc)) from exc
+            report = {"valid": True, "run_id": run_id, "dry_run": dry_run,
+                      "recovered_stage": "autorecon2", "next_stage": "autorecon3",
+                      "subject_directory": str(subject),
+                      "parameters": next_step.selected_parameters,
+                      "validated_files": result.artifacts[0].metadata["validated_files"]}
+            if dry_run:
+                return report
+            run.status = "queued"
+            run.progress = 200 / 3
+            run.current_step_id = None
+            run.error_code = run.error_message = ""
+            run.finished_at = None
+            run.updated_at = self._now()
+            self.store.save_run(run, event_type="freesurfer_stage_recovered",
+                                event_message=failed.message, step_id=failed.step_id,
+                                event_payload={**report, "previous_error": previous_error})
+            cancel_event = Event()
+            self._cancel_events[run_id] = cancel_event
+            self._futures[run_id] = self._executor.submit(
+                self._execute, run_id, workflow, units, cancel_event, 2)
+            return report
+
     def list(self, workflow_id: str | None = None, limit: int = 50) -> list[WorkflowRun]:
         return self.store.list_runs(workflow_id=workflow_id, limit=limit)
 
@@ -171,19 +258,22 @@ class RunService:
         workflow: Workflow,
         resolved: list[ExecutionUnit],
         cancel_event: Event,
+        start_index: int = 0,
     ) -> None:
         run = self.get(run_id)
         try:
             run.status = "running"
-            run.started_at = self._now()
-            run.updated_at = run.started_at
+            run.started_at = run.started_at or self._now()
+            run.updated_at = self._now()
             self.store.save_run(
                 run,
-                event_type="run_started",
+                event_type="run_resumed" if start_index else "run_started",
                 event_message="本地 Worker 已开始执行",
             )
             step_total = max(len(resolved), 1)
             for step_index, unit in enumerate(resolved):
+                if step_index < start_index:
+                    continue
                 workflow_step, method = unit.step, unit.method
                 if cancel_event.is_set():
                     raise ExecutionCancelled("任务在步骤开始前被取消")
