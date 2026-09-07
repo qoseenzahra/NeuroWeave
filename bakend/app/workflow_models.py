@@ -265,6 +265,10 @@ class MethodSelectionRequest(WorkflowMutationRequest):
     method_id: str = Field(min_length=1, max_length=200)
 
 
+class WorkflowDatasetRequest(WorkflowMutationRequest):
+    dataset_id: str = Field(min_length=1, max_length=200)
+
+
 class ParameterUpdateRequest(WorkflowMutationRequest):
     parameters: dict[str, Any]
 

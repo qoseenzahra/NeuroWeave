@@ -862,6 +862,31 @@ class WorkflowService:
             self._save(workflow, "chain_locked")
             return workflow.model_copy(deep=True)
 
+    def change_dataset(self, workflow_id: str, dataset_id: str, expected_revision: int) -> Workflow:
+        """Replace the draft's dataset and invalidate input choices from its old snapshot."""
+        with self._lock:
+            workflow = self._require(workflow_id)
+            self._check_revision(workflow, expected_revision)
+            if workflow.locked_at is not None or workflow.status == "confirmed":
+                raise ValueError("流程已锁定，请先解锁流程再更换数据集；已确认流程请新建对话。")
+            dataset = self.dataset_service.get(dataset_id)
+            if workflow.dataset == dataset:
+                return workflow.model_copy(deep=True)
+            previous_dataset_id = workflow.dataset_id
+            workflow.dataset_id = dataset.dataset_id
+            workflow.dataset = dataset
+            for step in workflow.steps:
+                step.input_bindings = {}
+                step.command_preview = None
+            self._clear_review(workflow)
+            self._revalidate_chain(workflow)
+            self._advance(workflow)
+            self._refresh(workflow)
+            self._save(workflow, "workflow_dataset_changed", {
+                "previous_dataset_id": previous_dataset_id, "dataset_id": dataset_id,
+            })
+            return workflow.model_copy(deep=True)
+
     def unlock_chain(self, workflow_id: str, expected_revision: int) -> Workflow:
         with self._lock:
             workflow = self._require(workflow_id)

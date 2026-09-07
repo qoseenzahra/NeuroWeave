@@ -39,6 +39,7 @@ from .workflow_models import (
     ParameterUpdateRequest,
     Workflow,
     WorkflowDraftRequest,
+    WorkflowDatasetRequest,
     WorkflowMutationRequest,
 )
 from .workflow_service import RevisionConflict, WorkflowService
@@ -601,6 +602,20 @@ async def lock_workflow(workflow_id: str, request: WorkflowMutationRequest) -> W
         return workflow_service.lock_chain(workflow_id, request.expected_revision)
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="Workflow not found") from exc
+    except RevisionConflict as exc:
+        raise _revision_http_error(exc) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
+@app.patch("/api/workflows/{workflow_id}/dataset", response_model=Workflow)
+async def change_workflow_dataset(workflow_id: str, request: WorkflowDatasetRequest) -> Workflow:
+    try:
+        return workflow_service.change_dataset(
+            workflow_id, request.dataset_id, request.expected_revision,
+        )
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Workflow or dataset not found") from exc
     except RevisionConflict as exc:
         raise _revision_http_error(exc) from exc
     except ValueError as exc:

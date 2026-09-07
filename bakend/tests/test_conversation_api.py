@@ -93,6 +93,28 @@ class ConversationApiTests(unittest.IsolatedAsyncioTestCase):
                         self.assertEqual(bound.json()['steps'][0]['input_bindings']['fod']['source'], 'existing_path')
                         frozen = await client.post(remove_url, json={'expected_revision': bound.json()['revision']})
                         self.assertEqual(frozen.status_code, 409)
+                        (root / 'replacement').mkdir()
+                        dataset = main.dataset_service.register(
+                            main.dataset_service.roots()[0].root_id, 'replacement',
+                        )
+                        dataset_url = f'/api/workflows/{workflow.workflow_id}/dataset'
+                        rejected = await client.patch(dataset_url, json={
+                            'dataset_id': dataset.dataset_id, 'expected_revision': bound.json()['revision'],
+                        })
+                        self.assertEqual(rejected.status_code, 409)
+                        unlocked = await client.post(f'/api/workflows/{workflow.workflow_id}/unlock',
+                            json={'expected_revision': bound.json()['revision']})
+                        changed = await client.patch(dataset_url, json={
+                            'dataset_id': dataset.dataset_id, 'expected_revision': unlocked.json()['revision'],
+                        })
+                        self.assertEqual(changed.status_code, 200)
+                        self.assertEqual(changed.json()['dataset_id'], dataset.dataset_id)
+                        self.assertNotIn('fod', changed.json()['steps'][0]['input_bindings'])
+                        stale = await client.patch(dataset_url, json={
+                            'dataset_id': dataset.dataset_id, 'expected_revision': unlocked.json()['revision'],
+                        })
+                        self.assertEqual(stale.status_code, 409)
+                        self.assertEqual(stale.json()['detail']['current']['revision'], changed.json()['revision'])
                         absent = await client.post('/api/workflows/missing/steps/missing/remove', json={'expected_revision': 1})
                         self.assertEqual(absent.status_code, 404)
 

@@ -296,6 +296,58 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
         )
         self.assertFalse(conceptual["recommend_workflow"])
 
+    async def test_dataset_change_requires_unlock_and_clears_old_file_bindings(self) -> None:
+        workflow = await self._editable_chain(
+            ['dwi.tractography'], {'dwi.tractography': 'mrtrix3-existing-fod'},
+        )
+        workflow = self.service.change_dataset(workflow.workflow_id, self.dataset.dataset_id, workflow.revision)
+        workflow = self.service.lock_chain(workflow.workflow_id, workflow.revision)
+        for slot, name in [('fod', 'FOD.mif'), ('five_tt', '5TT.mif')]:
+            (self.dataset_folder / name).write_bytes(b'synthetic')
+            workflow = self.service.bind_input(workflow.workflow_id, workflow.steps[0].id, slot,
+                self.dataset.root_id, 'bids-example/' + name, workflow.revision)
+        workflow = self.service.review_parameters(workflow.workflow_id, workflow.revision)
+        second_folder = self.dataset_folder.parent / 'second'
+        second_folder.mkdir()
+        second = self.dataset_service.register(self.dataset.root_id, 'second')
+        with self.assertRaisesRegex(ValueError, '先解锁'):
+            self.service.change_dataset(workflow.workflow_id, second.dataset_id, workflow.revision)
+        self.assertEqual(self.service.get(workflow.workflow_id), workflow)
+        workflow = self.service.unlock_chain(workflow.workflow_id, workflow.revision)
+        previous_revision = workflow.revision
+        changed = self.service.change_dataset(workflow.workflow_id, second.dataset_id, workflow.revision)
+        self.assertEqual(changed.dataset_id, second.dataset_id)
+        self.assertEqual(changed.dataset, second)
+        self.assertIsNone(changed.parameters_reviewed_at)
+        self.assertIsNone(changed.dry_run_report)
+        self.assertTrue(all(not step.input_bindings for step in changed.steps))
+        self.assertTrue(all(step.command_preview is None for step in changed.steps))
+        self.assertEqual(self.service.get(changed.workflow_id).dataset_id, second.dataset_id)
+        with self.assertRaises(RevisionConflict):
+            self.service.lock_chain(changed.workflow_id, previous_revision)
+        with self.assertRaises(KeyError):
+            self.service.change_dataset(changed.workflow_id, 'missing-dataset', changed.revision)
+        self.assertEqual(self.service.get(changed.workflow_id), changed)
+
+    async def test_dataset_rescan_refreshes_snapshot_and_confirmed_dataset_is_immutable(self) -> None:
+        workflow, _ = await self.service.draft(
+            ChatRequest(message='检查数据集', dataset_id=self.dataset.dataset_id, interaction_mode='task'),
+            {'recommend_workflow': True, 'capability_ids': ['dwi.inspect'], 'decision_source': 'test'},
+        )
+        workflow = self.service.select_method(
+            workflow.workflow_id, workflow.steps[0].id, 'dataset_inspector', workflow.revision,
+        )
+        (self.dataset_folder / 'new-file.txt').write_text('synthetic')
+        rescanned = self.dataset_service.inspect(self.dataset.dataset_id)
+        changed = self.service.change_dataset(workflow.workflow_id, rescanned.dataset_id, workflow.revision)
+        self.assertEqual(changed.dataset.inspection.file_count, rescanned.inspection.file_count)
+        self.assertGreater(changed.revision, workflow.revision)
+        self.assertEqual(changed.steps[0].selected_method_id, 'dataset_inspector')
+        changed.status = 'confirmed'
+        self.store.save_workflow(changed, event_type='test_confirmed')
+        with self.assertRaisesRegex(ValueError, '已确认'):
+            self.service.change_dataset(changed.workflow_id, rescanned.dataset_id, changed.revision)
+
     async def test_dataset_inspection_routes_to_executable_runner(self) -> None:
         chat_service = ChatService()
         chat_service.base_url = ""

@@ -246,7 +246,12 @@ export default function Home() {
   const [sourceFilter, setSourceFilter] = useState<'all' | 'NeuroClaw' | 'LocalFlow'>('all');
   const [catalogStats, setCatalogStats] = useState<CatalogStats | null>(null);
   const [health, setHealth] = useState<Health | null>(null);
-  const [selectedDataset, setSelectedDataset] = useState<Dataset | null>(null);
+  const [chosenDataset, setSelectedDataset] = useState<Dataset | null>(null);
+  const currentWorkflow = [...messages].reverse().find((message) => message.workflow)?.workflow;
+  // A workflow's persisted snapshot owns its inputs, including after reopening history.
+  const selectedDataset = currentWorkflow ? currentWorkflow.dataset ?? null : chosenDataset;
+  const [isDatasetUpdating, setIsDatasetUpdating] = useState(false);
+  const [busyWorkflows, setBusyWorkflows] = useState<string[]>([]);
   const [interactionMode, setInteractionMode] = useState<InteractionMode>('chat');
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [conversationTitle, setConversationTitle] = useState('新数据处理对话');
@@ -268,6 +273,15 @@ export default function Home() {
   const [isSkillsOpen, setIsSkillsOpen] = useState(false);
   const messageEndRef = useRef<HTMLDivElement>(null);
   const historyEndRef = useRef<HTMLDivElement>(null);
+  const datasetLocked = Boolean(currentWorkflow?.locked_at || currentWorkflow?.status === 'confirmed');
+  const datasetDisabled = datasetLocked || isSending || isConversationOpening || busyWorkflows.length > 0;
+  const datasetContext = useRef({ workflow: currentWorkflow, blocked: datasetDisabled, conversationId });
+  datasetContext.current = { workflow: currentWorkflow, blocked: datasetDisabled, conversationId };
+  const datasetNotice = datasetLocked
+    ? currentWorkflow?.status === 'confirmed'
+      ? '流程已确认，数据集已固定；更换数据集请新建对话。'
+      : '数据集已随流程锁定；请先点击「解锁流程」再更换。'
+    : currentWorkflow ? '更换数据集将清除当前流程的文件输入绑定，并重新检查方法兼容性。' : null;
 
   const visibleSkills = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -375,7 +389,7 @@ export default function Home() {
 
   const openConversation = useCallback(
     async (item: ConversationListItem) => {
-      if (isSending || isConversationOpening) return;
+      if (isSending || isConversationOpening || isDatasetUpdating || busyWorkflows.length > 0) return;
       setIsConversationOpening(true);
       setHistoryError(null);
       try {
@@ -402,14 +416,17 @@ export default function Home() {
         if (Array.isArray(skillMetadata?.selected_skills)) {
           setSelectedSkills(stringArray(skillMetadata.selected_skills));
         }
-        if (typeof datasetMetadata?.dataset_id === 'string' && datasetMetadata.dataset_id) {
+        const restoredWorkflow = [...restoredMessages].reverse().find((message) => message.workflow)?.workflow;
+        if (restoredWorkflow) {
+          setSelectedDataset(restoredWorkflow.dataset ?? null);
+        } else if (typeof datasetMetadata?.dataset_id === 'string' && datasetMetadata.dataset_id) {
           const datasetResponse = await fetch(
             `${API_BASE}/api/datasets/${datasetMetadata.dataset_id}`,
           );
           setSelectedDataset(
             datasetResponse.ok ? ((await datasetResponse.json()) as Dataset) : null,
           );
-        } else if (datasetMetadata && 'dataset_id' in datasetMetadata) {
+        } else {
           setSelectedDataset(null);
         }
         setIsSkillsOpen(false);
@@ -419,7 +436,7 @@ export default function Home() {
         setIsConversationOpening(false);
       }
     },
-    [hydrateMessages, isConversationOpening, isSending, setHistoryError],
+    [hydrateMessages, isConversationOpening, isSending, isDatasetUpdating, busyWorkflows, setHistoryError],
   );
 
   useEffect(() => {
@@ -474,6 +491,7 @@ export default function Home() {
   };
 
   const resetConversation = () => {
+    if (isSending || isConversationOpening || isDatasetUpdating || busyWorkflows.length > 0) return;
     setMessages([WELCOME_MESSAGE]);
     setInput('');
     setConversationId(null);
@@ -557,7 +575,7 @@ export default function Home() {
 
   const sendMessage = async () => {
     const text = input.trim();
-    if (!text || isSending) return;
+    if (!text || isSending || isConversationOpening || isDatasetUpdating || busyWorkflows.length > 0) return;
 
     const userMessage: ChatMessage = {
       id: newMessageId('user'),
@@ -654,6 +672,42 @@ export default function Home() {
           : message,
       ),
     );
+  };
+
+  const workflowBusyChanged = (workflowId: string, busy: boolean) => {
+    setBusyWorkflows((current) => busy
+      ? Array.from(new Set([...current, workflowId]))
+      : current.filter((id) => id !== workflowId));
+  };
+
+  const selectDataset = async (dataset: Dataset) => {
+    const context = datasetContext.current;
+    if (context.blocked || isDatasetUpdating) throw new Error('当前流程或对话正在更新，请先解锁流程再更换数据集。');
+    if (!context.workflow) {
+      setSelectedDataset(dataset);
+      return;
+    }
+    setIsDatasetUpdating(true);
+    try {
+      const response = await fetch(`${API_BASE}/api/workflows/${context.workflow.workflow_id}/dataset`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dataset_id: dataset.dataset_id, expected_revision: context.workflow.revision }),
+      });
+      const payload = await response.json() as Workflow & {
+        detail?: string | { current?: Workflow; message?: string };
+      };
+      if (!response.ok) {
+        if (typeof payload.detail === 'object' && payload.detail.current) updateWorkflowMessage(payload.detail.current);
+        throw new Error(typeof payload.detail === 'string' ? payload.detail
+          : payload.detail?.message ?? '无法更换数据集，请重新加载流程后重试。');
+      }
+      if (datasetContext.current.conversationId !== context.conversationId) return;
+      updateWorkflowMessage(payload as Workflow);
+      setSelectedDataset((payload as Workflow).dataset ?? null);
+    } finally {
+      setIsDatasetUpdating(false);
+    }
   };
 
   return (
@@ -1111,11 +1165,14 @@ export default function Home() {
             {health?.mode === 'model' ? health.model : '对话演示模式'}
           </div>
           <DatasetPicker
+            key={`${conversationId ?? 'new'}:${currentWorkflow?.workflow_id ?? 'draft'}`}
             apiBase={API_BASE}
-            onSelected={setSelectedDataset}
+            onSelected={selectDataset}
             selectedDataset={selectedDataset}
+            disabled={datasetDisabled}
+            disabledReason={datasetNotice ?? '正在更新对话或流程，请稍候。'}
           />
-          <Button className="gap-2" onClick={resetConversation} size="sm" variant="outline">
+          <Button className="gap-2" disabled={isSending || isConversationOpening || isDatasetUpdating || busyWorkflows.length > 0} onClick={resetConversation} size="sm" variant="outline">
             <MessageSquarePlus className="size-4" />
             <span className="hidden sm:inline">新建对话</span>
           </Button>
@@ -1205,6 +1262,8 @@ export default function Home() {
                       <WorkflowCard
                         apiBase={API_BASE}
                         onChange={updateWorkflowMessage}
+                        disabled={isDatasetUpdating || isConversationOpening || isSending}
+                        onBusyChange={workflowBusyChanged}
                         workflow={message.workflow}
                       />
                     )}
@@ -1285,6 +1344,7 @@ export default function Home() {
                   : '只进行问答，不生成流程'}
               </p>
             </div>
+            {datasetNotice && <p role="status" className="mb-2 wrap-anywhere text-xs text-slate-500">{datasetNotice}</p>}
             {selectedDataset && (
               <div className="mb-2.5 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs">
                 <Database className="size-3.5 text-blue-600" />
@@ -1341,7 +1401,7 @@ export default function Home() {
                 <Button
                   aria-label="发送消息"
                   className="size-9 rounded-xl bg-[#1158e6] shadow-[0_6px_18px_rgba(17,88,230,0.22)] hover:bg-blue-700"
-                  disabled={!input.trim() || isSending}
+                  disabled={!input.trim() || isSending || isConversationOpening || isDatasetUpdating || busyWorkflows.length > 0}
                   onClick={() => void sendMessage()}
                   size="icon"
                 >

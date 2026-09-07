@@ -5,6 +5,7 @@ import { mkdir } from 'node:fs/promises';
 import { createServer } from 'vite';
 import tailwindcss from '@tailwindcss/postcss';
 import react from '@vitejs/plugin-react';
+import { checkDatasetLock } from './dataset-lock-browser.mjs';
 const require = createRequire(import.meta.url);
 const browserRequire = process.env.LOCALFLOW_BROWSER_TOOLS
   ? createRequire(join(process.env.LOCALFLOW_BROWSER_TOOLS, '_layout-test.cjs')) : require;
@@ -147,6 +148,8 @@ try {
     }
     await page.screenshot({ path: join(output, `app-${viewport.width}.png`) });
   }
+  await checkDatasetLock({ page, root, dataset, workflow,
+    appUrl: `http://127.0.0.1:${server.httpServer.address().port}/__layout_test?surface=app` });
   assert.deepEqual(errors, []);
   console.log('Responsive dataset/input selectors and per-node settings passed at five viewport sizes.');
 } finally {

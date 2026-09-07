@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useCallback, useMemo, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
   Check,
@@ -43,7 +43,9 @@ import type { DataRoot, Dataset, DirectoryListing } from '@/lib/dataset';
 type DatasetPickerProps = {
   apiBase: string;
   selectedDataset: Dataset | null;
-  onSelected: (dataset: Dataset) => void;
+  onSelected: (dataset: Dataset) => void | Promise<void>;
+  disabled?: boolean;
+  disabledReason?: string;
 };
 
 function formatBytes(value: number) {
@@ -62,7 +64,7 @@ async function responseError(response: Response) {
   }
 }
 
-export function DatasetPicker({ apiBase, selectedDataset, onSelected }: DatasetPickerProps) {
+export function DatasetPicker({ apiBase, selectedDataset, onSelected, disabled = false, disabledReason }: DatasetPickerProps) {
   const [open, setOpen] = useState(false);
   const [roots, setRoots] = useState<DataRoot[]>([]);
   const [datasets, setDatasets] = useState<Dataset[]>([]);
@@ -70,8 +72,35 @@ export function DatasetPicker({ apiBase, selectedDataset, onSelected }: DatasetP
   const [listing, setListing] = useState<DirectoryListing | null>(null);
   const [pathDraft, setPathDraft] = useState('');
   const [filter, setFilter] = useState('');
-  const [busy, setBusy] = useState<'load' | 'register' | 'inspect' | null>(null);
+  const [busy, setBusy] = useState<'load' | 'register' | 'inspect' | 'select' | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const selectionEpoch = useRef(0);
+  const disabledRef = useRef(disabled);
+  disabledRef.current = disabled;
+  useEffect(() => {
+    selectionEpoch.current += 1;
+    if (disabled) setOpen(false);
+    return () => { selectionEpoch.current += 1; };
+  }, [disabled]);
+
+  const applySelection = async (dataset: Dataset, epoch: number) => {
+    if (disabledRef.current || epoch !== selectionEpoch.current) return;
+    await onSelected(dataset);
+    setOpen(false);
+  };
+
+  const selectRegistered = async (dataset: Dataset) => {
+    if (disabledRef.current || busy) return;
+    setBusy('select');
+    setError(null);
+    try {
+      await applySelection(dataset, selectionEpoch.current);
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : '无法更换数据集');
+    } finally {
+      setBusy(null);
+    }
+  };
 
   const currentDataset = useMemo(
     () =>
@@ -149,7 +178,8 @@ export function DatasetPicker({ apiBase, selectedDataset, onSelected }: DatasetP
   }, [apiBase, loadDirectory, rootId, selectedDataset]);
 
   const registerCurrent = async () => {
-    if (!listing) return;
+    if (!listing || disabledRef.current || busy) return;
+    const epoch = selectionEpoch.current;
     setBusy('register');
     setError(null);
     try {
@@ -169,8 +199,7 @@ export function DatasetPicker({ apiBase, selectedDataset, onSelected }: DatasetP
         dataset,
         ...current.filter((item) => item.dataset_id !== dataset.dataset_id),
       ]);
-      onSelected(dataset);
-      setOpen(false);
+      await applySelection(dataset, epoch);
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : '数据集登记失败');
     } finally {
@@ -179,6 +208,8 @@ export function DatasetPicker({ apiBase, selectedDataset, onSelected }: DatasetP
   };
 
   const inspectDataset = async (dataset: Dataset) => {
+    if (disabledRef.current || busy) return;
+    const epoch = selectionEpoch.current;
     setBusy('inspect');
     setError(null);
     try {
@@ -190,8 +221,7 @@ export function DatasetPicker({ apiBase, selectedDataset, onSelected }: DatasetP
       setDatasets((current) =>
         current.map((item) => (item.dataset_id === refreshed.dataset_id ? refreshed : item)),
       );
-      onSelected(refreshed);
-      setOpen(false);
+      await applySelection(refreshed, epoch);
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : '重新扫描失败');
     } finally {
@@ -202,12 +232,13 @@ export function DatasetPicker({ apiBase, selectedDataset, onSelected }: DatasetP
   return (
     <Dialog
       onOpenChange={(nextOpen) => {
+        if (nextOpen && disabledRef.current) return;
         setOpen(nextOpen);
         if (nextOpen) void loadWorkspace();
       }}
-      open={open}
+      open={open && !disabled}
     >
-      <DialogTrigger render={<Button className="gap-2" size="sm" variant="outline" />}>
+      <DialogTrigger disabled={disabled} render={<Button className="gap-2" size="sm" variant="outline" disabled={disabled} title={disabledReason} />}>
         <Database className="size-4" />
         <span className="max-w-40 truncate">
           {selectedDataset?.display_name ?? '选择数据集'}
@@ -431,10 +462,8 @@ export function DatasetPicker({ apiBase, selectedDataset, onSelected }: DatasetP
                           : 'border-slate-200 bg-white hover:border-blue-200',
                       )}
                       key={dataset.dataset_id}
-                      onClick={() => {
-                        onSelected(dataset);
-                        setOpen(false);
-                      }}
+                      disabled={Boolean(busy)}
+                      onClick={() => void selectRegistered(dataset)}
                       type="button"
                     >
                       <div className="flex items-start gap-2">

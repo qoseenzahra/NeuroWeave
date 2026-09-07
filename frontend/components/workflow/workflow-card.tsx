@@ -75,6 +75,8 @@ type WorkflowCardProps = {
   apiBase: string;
   workflow: Workflow;
   onChange: (workflow: Workflow) => void;
+  disabled?: boolean;
+  onBusyChange?: (workflowId: string, busy: boolean) => void;
 };
 
 type ApiError = {
@@ -167,7 +169,7 @@ function inputRequired(slot: InputSlotSpec, values: Record<string, ParameterValu
     (Object.keys(slot.required_when).length > 0 && conditionMatches(slot.required_when, values));
 }
 
-export function WorkflowCard({ apiBase, workflow, onChange }: WorkflowCardProps) {
+export function WorkflowCard({ apiBase, workflow, onChange, disabled = false, onBusyChange }: WorkflowCardProps) {
   const [busyAction, setBusyAction] = useState<string | null>(null);
   const [runBusy, setRunBusy] = useState<string | null>(null);
   const [run, setRun] = useState<WorkflowRun | null>(null);
@@ -302,6 +304,8 @@ export function WorkflowCard({ apiBase, workflow, onChange }: WorkflowCardProps)
     method: 'POST' | 'PATCH',
     body: Record<string, unknown> = {},
   ) => {
+    if (disabled || busyAction) return;
+    onBusyChange?.(workflow.workflow_id, true);
     setBusyAction(action);
     setError(null);
     try {
@@ -324,6 +328,7 @@ export function WorkflowCard({ apiBase, workflow, onChange }: WorkflowCardProps)
       setError(requestError instanceof Error ? requestError.message : '工作流更新失败');
     } finally {
       setBusyAction(null);
+      onBusyChange?.(workflow.workflow_id, false);
     }
   };
 
@@ -414,7 +419,7 @@ export function WorkflowCard({ apiBase, workflow, onChange }: WorkflowCardProps)
 
   const locked = workflow.locked_at !== null;
   const configuredCount = workflow.steps.filter((step) => step.selected_method_id).length;
-  const controlsDisabled = Boolean(busyAction) || workflow.status === 'confirmed';
+  const controlsDisabled = disabled || Boolean(busyAction) || workflow.status === 'confirmed';
   const runActive = Boolean(run && ACTIVE_RUN_STATUSES.has(run.status));
 
   return (
