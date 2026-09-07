@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ExecutionSettings, executionErrors } from '@/components/workflow/execution-settings';
 import { ArtifactPathPicker } from '@/components/dataset/artifact-path-picker';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -235,17 +236,8 @@ export function WorkflowCard({ apiBase, workflow, onChange }: WorkflowCardProps)
   const slurmReason = backendError ?? (backends
     ? backends.slurm.reason || (slurmReady ? '' : 'Slurm 未启用或没有可用分区')
     : '正在检查 Slurm 状态…');
-  const resourceValuesValid = [
-    [execution.cpus, 1, 64],
-    [execution.memory_gb, 1, 256],
-    [execution.gpus, 0, 1],
-    [execution.time_minutes, 1, 1440],
-  ].every(([value, minimum, maximum]) => Number.isInteger(value) && value >= minimum && value <= maximum);
-  const executionBlocked = execution.backend === 'slurm' && (
-    !slurmReady || !resourceValuesValid ||
-    !backends?.slurm.partitions.includes(execution.partition) ||
-    (execution.gpus > 0 && !backends?.slurm.gpu_available)
-  );
+  const resourceErrors = executionErrors(execution, backends, workflow);
+  const executionBlocked = execution.backend === 'slurm' && (!slurmReady || resourceErrors.length > 0);
 
   useEffect(() => {
     let current = true;
@@ -760,54 +752,8 @@ export function WorkflowCard({ apiBase, workflow, onChange }: WorkflowCardProps)
             </div>
             {!slurmReady && <output className="block text-xs text-slate-500">Slurm：{slurmReason}</output>}
             {execution.backend === 'slurm' && (
-              <>
-                <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                  <div className="space-y-1.5">
-                    <Label htmlFor={`partition-${workflow.workflow_id}`}>分区</Label>
-                    <NativeSelect
-                      className="w-full"
-                      disabled={Boolean(runBusy) || !slurmReady}
-                      id={`partition-${workflow.workflow_id}`}
-                      onChange={(event) => setExecution((previous) => ({ ...previous, partition: event.target.value }))}
-                      value={execution.partition}
-                    >
-                      {(backends?.slurm.partitions ?? []).map((partition) => (
-                        <NativeSelectOption key={partition} value={partition}>{partition}</NativeSelectOption>
-                      ))}
-                    </NativeSelect>
-                  </div>
-                  {([
-                    ['cpus', 'CPU 核数', 1, 64],
-                    ['memory_gb', '内存 (GB)', 1, 256],
-                    ['gpus', 'GPU 数量', 0, 1],
-                    ['time_minutes', '时限 (分钟)', 1, 1440],
-                  ] as const).map(([key, label, minimum, maximum]) => (
-                    <div className="space-y-1.5" key={key}>
-                      <Label htmlFor={`${key}-${workflow.workflow_id}`}>{label}</Label>
-                      <Input
-                        disabled={Boolean(runBusy) || (key === 'gpus' && !backends?.slurm.gpu_available)}
-                        id={`${key}-${workflow.workflow_id}`}
-                        max={maximum}
-                        min={minimum}
-                        onChange={(event) => setExecution((previous) => ({
-                          ...previous,
-                          [key]: event.target.value === '' ? Number.NaN : Number(event.target.value),
-                        }))}
-                        step={1}
-                        type="number"
-                        value={Number.isNaN(execution[key]) ? '' : execution[key]}
-                      />
-                    </div>
-                  ))}
-                </div>
-                <p className="text-xs text-slate-500">
-                  资源按每个步骤申请；提交后由 Slurm 排队调度。
-                  {!backends?.slurm.gpu_available && ' 当前没有可申请的 GPU。'}
-                </p>
-                {!resourceValuesValid && (
-                  <p className="text-xs text-red-700" role="alert">请输入整数：CPU 1–64 核，内存 1–256 GB，GPU 0–1 张，时限 1–1440 分钟。</p>
-                )}
-              </>
+              <ExecutionSettings value={execution} backends={backends} workflow={workflow}
+                disabled={Boolean(runBusy)} onChange={setExecution} />
             )}
           </div>
         )}
@@ -972,9 +918,9 @@ function RunPanel({ events, run }: { events: RunEvent[]; run: WorkflowRun }) {
   const active = ACTIVE_RUN_STATUSES.has(run.status);
   const recentEvents = events.filter((event) => event.message).slice(-8);
   return (
-    <section className="rounded-xl border border-blue-100 bg-blue-50/40 p-4">
+    <section className="min-w-0 wrap-anywhere rounded-xl border border-blue-100 bg-blue-50/40 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
           {active ? (
             <LoaderCircle className="size-4 animate-spin text-blue-600" />
           ) : run.status === 'succeeded' ? (
@@ -1003,9 +949,12 @@ function RunPanel({ events, run }: { events: RunEvent[]; run: WorkflowRun }) {
         {run.steps.map((step) => (
           <div className="rounded-lg border border-slate-200 bg-white px-3 py-2.5" key={step.step_id}>
             <div className="flex items-center justify-between gap-3 text-xs">
-              <span className="font-medium text-slate-800">{step.title}</span>
-              <span className="text-slate-500">{Math.round(step.progress)}%</span>
+              <span className="min-w-0 font-medium text-slate-800">{step.title}</span>
+              <span className="shrink-0 text-slate-500">{Math.round(step.progress)}%</span>
             </div>
+            {(step.sample_id || step.node_name) && <p className="mt-1 text-xs text-blue-700">
+              {step.sample_label || step.sample_id} {step.node_name && ` · 节点 ${step.node_name}`}
+            </p>}
             <p className="mt-1 text-[11px] text-slate-500">{step.message}</p>
             {step.scheduler?.job_id && (
               <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-blue-700">
@@ -1251,9 +1200,9 @@ function MethodArtifacts({
   );
 
   return (
-    <div className="mt-4 grid gap-3 lg:grid-cols-[1.35fr_1fr]">
+    <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
       <section className="rounded-lg border border-slate-200 bg-white p-3.5">
-        <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <FileInput className="size-4 text-blue-600" />
             <div>
@@ -1292,7 +1241,7 @@ function MethodArtifacts({
                 )}
                 key={slot.id}
               >
-                <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="flex flex-col items-start gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1.5">
                       <p className="text-xs font-medium text-slate-800">{slot.label}</p>
@@ -1548,8 +1497,8 @@ function ParameterControl({
 }) {
   if (spec.type === 'boolean') {
     return (
-      <div className="flex min-h-20 items-start justify-between gap-3 rounded-lg bg-slate-50 p-3">
-        <div>
+      <div className="flex min-w-0 min-h-20 items-start justify-between gap-3 rounded-lg bg-slate-50 p-3">
+        <div className="min-w-0 flex-1">
           <Label htmlFor={controlId}>
             {spec.label}
             {!spec.required && <span className="ml-1 font-normal text-slate-400">（可选）</span>}
@@ -1578,7 +1527,7 @@ function ParameterControl({
   );
 
   return (
-    <div className="min-h-20 rounded-lg bg-slate-50 p-3">
+    <div className="min-w-0 min-h-20 rounded-lg bg-slate-50 p-3">
       <div className="mb-2 flex items-center justify-between gap-2">
         <Label htmlFor={controlId}>
           {spec.label}

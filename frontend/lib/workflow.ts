@@ -243,6 +243,22 @@ export type ExecutionOptions = {
   memory_gb: number;
   gpus: number;
   time_minutes: number;
+  node?: string | null;
+  nodes?: NodeAllocation[];
+  sample_mode?: 'single' | 'per_sample';
+};
+
+export type NodeAllocation = Pick<ExecutionOptions, 'cpus' | 'memory_gb' | 'gpus' | 'time_minutes'> & { node: string };
+export type SlurmNode = {
+  name: string;
+  partition: string;
+  state: string;
+  schedulable: boolean;
+  cpus?: number;
+  allocated_cpus?: number;
+  memory_mb?: number;
+  free_memory_mb?: number;
+  gpus: number;
 };
 
 export type ExecutionBackends = {
@@ -253,6 +269,7 @@ export type ExecutionBackends = {
     reason?: string;
     partitions: string[];
     gpu_available: boolean;
+    nodes?: SlurmNode[];
   };
 };
 
@@ -261,6 +278,9 @@ export type RunStep = {
   title: string;
   runner_id: string;
   method_id: string;
+  sample_id?: string | null;
+  sample_label?: string;
+  node_name?: string | null;
   status: 'queued' | 'running' | 'cancelled' | 'succeeded' | 'failed';
   progress: number;
   message: string;

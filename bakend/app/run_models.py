@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 RunStatus = Literal[
@@ -44,15 +44,39 @@ class RunStep(BaseModel):
     started_at: str | None = None
     finished_at: str | None = None
     scheduler: dict[str, Any] = Field(default_factory=dict)
+    sample_id: str | None = None
+    sample_label: str = ""
+    node_name: str | None = None
 
 
-class RunExecutionOptions(BaseModel):
-    backend: Literal["local", "slurm"] = "local"
-    partition: str = Field(default="all", pattern=r"^[A-Za-z0-9_-]{1,64}$")
-    cpus: int = Field(default=4, ge=1, le=64)
-    memory_gb: int = Field(default=8, ge=1, le=256)
+class RunResources(BaseModel):
+    cpus: int = Field(default=4, ge=1, le=128)
+    memory_gb: int = Field(default=8, ge=1, le=512)
     gpus: int = Field(default=0, ge=0, le=1)
     time_minutes: int = Field(default=60, ge=1, le=1440)
+
+
+class NodeAllocation(RunResources):
+    node: str = Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$")
+
+
+class RunExecutionOptions(RunResources):
+    backend: Literal["local", "slurm"] = "local"
+    partition: str = Field(default="all", pattern=r"^[A-Za-z0-9_-]{1,64}$")
+    node: str | None = Field(default=None, pattern=r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$")
+    nodes: list[NodeAllocation] = Field(default_factory=list, max_length=32)
+    sample_mode: Literal["single", "per_sample"] = "single"
+
+    @model_validator(mode="after")
+    def validate_nodes(self):
+        names = [item.node for item in self.nodes]
+        if len(set(names)) != len(names):
+            raise ValueError("不能重复选择同一个节点")
+        if self.node and self.nodes:
+            raise ValueError("单节点与节点列表不能同时指定")
+        if len(self.nodes) > 1 and self.sample_mode != "per_sample":
+            raise ValueError("多节点分配需要按样本运行")
+        return self
 
 
 class WorkflowRun(BaseModel):

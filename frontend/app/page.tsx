@@ -657,7 +657,7 @@ export default function Home() {
   };
 
   return (
-    <main className="flex h-dvh min-h-[680px] overflow-hidden bg-[#f4f7fb] text-slate-950">
+    <main className="flex h-dvh min-h-0 overflow-hidden bg-[#f4f7fb] text-slate-950">
       {isSkillsOpen && (
         <button
           aria-label="关闭 Skill 面板"
@@ -669,7 +669,7 @@ export default function Home() {
 
       <aside
         className={cn(
-          'z-40 flex w-[344px] shrink-0 flex-col border-r border-slate-200/80 bg-white transition-transform duration-200',
+          'z-40 flex w-[344px] max-w-[calc(100vw-2rem)] min-h-0 shrink-0 flex-col border-r border-slate-200/80 bg-white transition-transform duration-200',
           'max-lg:fixed max-lg:inset-y-0 max-lg:left-0',
           isSkillsOpen ? 'max-lg:translate-x-0' : 'max-lg:-translate-x-full',
         )}

@@ -90,6 +90,31 @@ class RunnerRegistry:
         step: WorkflowStep,
         method: MethodOption,
     ) -> list[str]:
+        groups = [binding for binding in step.input_bindings.values()
+                  if binding.source != "upstream_output" and binding.binding_mode == "per_sample"]
+        if groups:
+            identifiers = [match.sample_id for match in groups[0].sample_matches]
+            if not identifiers or len(set(identifiers)) != len(identifiers):
+                return ["多样本输入为空或含有重复样本"]
+            expected = set(identifiers)
+            if any({match.sample_id for match in binding.sample_matches} != expected
+                   or len(binding.sample_matches) != len(identifiers)
+                   or any(match.status != "matched" or not match.absolute_path for match in binding.sample_matches)
+                   for binding in groups):
+                return ["多样本输入覆盖不一致，或仍有缺失文件"]
+            problems = []
+            for sample_id in identifiers:
+                sample_step = step.model_copy(deep=True)
+                for binding in sample_step.input_bindings.values():
+                    if binding.source == "upstream_output" or binding.binding_mode != "per_sample":
+                        continue
+                    match = next(item for item in binding.sample_matches if item.sample_id == sample_id)
+                    binding.absolute_path = match.absolute_path
+                    binding.binding_mode = "single"
+                    binding.sample_matches = []
+                problems.extend(f"样本 {sample_id}：{problem}"
+                                for problem in self.preflight_snapshot(workflow, sample_step, method))
+            return problems
         runner = self.get(method.runner_id)
         if runner is None:
             return [f"runner 尚未注册：{method.runner_id}"]

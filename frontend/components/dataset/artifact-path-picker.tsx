@@ -214,10 +214,10 @@ export function ArtifactPathPicker({
       </DialogTrigger>
       <DialogContent
         className={cn(
-          'flex min-h-[28rem] min-w-0 max-w-[calc(100vw-2rem)] resize-none flex-col gap-0 overflow-hidden p-0 sm:max-w-none md:min-h-[32rem] md:min-w-[42rem] md:resize',
+          'flex min-h-0 min-w-0 max-h-[calc(100dvh-2rem)] max-w-[calc(100vw-2rem)] resize-none flex-col gap-0 overflow-hidden p-0 sm:max-w-none md:resize',
           expanded
-            ? 'h-[calc(100vh-2rem)] w-[calc(100vw-2rem)]'
-            : 'h-[82vh] w-[calc(100vw-2rem)] md:w-[82vw] lg:w-[76vw] lg:max-w-[90rem]',
+            ? 'h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)]'
+            : 'h-[86dvh] w-[calc(100vw-2rem)] md:w-[82vw] lg:w-[76vw] lg:max-w-[90rem]',
         )}
       >
         <DialogHeader className="shrink-0 border-b border-slate-200 px-5 py-4 pr-24">
@@ -245,7 +245,7 @@ export function ArtifactPathPicker({
             <Maximize2 className="size-4" />
           )}
         </Button>
-        <div className="flex min-h-0 flex-1 flex-col p-4">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto p-4">
           <div className="flex items-center gap-2">
             <NativeSelect
               className="min-w-0 flex-1"
@@ -358,7 +358,7 @@ export function ArtifactPathPicker({
 
           <ScrollArea
             className={cn(
-              'mt-3 min-h-32 flex-1 rounded-lg border border-slate-200',
+              'mt-3 h-48 min-h-32 shrink-0 flex-1 rounded-lg border border-slate-200',
               preview && 'max-h-56',
             )}
             horizontal
@@ -449,9 +449,9 @@ export function ArtifactPathPicker({
             </div>
           )}
           {preview && (
-            <div className="mt-3 shrink-0 rounded-xl border border-blue-200 bg-blue-50/70 p-3">
+            <div className="mt-3 min-w-0 shrink-0 rounded-xl border border-blue-200 bg-blue-50/70 p-3">
               <div className="flex flex-wrap items-start justify-between gap-2">
-                <div>
+                <div className="min-w-0 flex-1">
                   <p className="text-xs font-semibold text-blue-950">
                     {preview.binding_mode === 'per_sample'
                       ? '全样本路径规则'
@@ -502,7 +502,7 @@ export function ArtifactPathPicker({
                   当前规则存在缺失或格式不匹配，暂不能应用。
                 </p>
               )}
-              <div className="mt-3 flex justify-end gap-2">
+              <div className="mt-3 flex flex-wrap justify-end gap-2">
                 <Button
                   onClick={() => setPreview(null)}
                   size="sm"

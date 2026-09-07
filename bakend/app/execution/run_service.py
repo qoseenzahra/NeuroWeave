@@ -17,6 +17,8 @@ from .recipe_compiler import ExecutionUnit, RecipeCompilationError, RecipeCompil
 from .runner_registry import RunnerRegistry
 from .runners.freesurfer import FreeSurferReconAllRunner
 from .slurm_backend import SlurmBackend, TERMINAL_STATES
+from .sample_plan import schedule_units, workflow_for_unit
+from .sample_execution import execute_samples
 
 
 class RunConflict(RuntimeError):
@@ -96,6 +98,8 @@ class RunService:
                 raise RunConflict("Slurm 分区不在可用白名单中")
             if execution.gpus and not status.get("gpu_available"):
                 raise RunConflict("Slurm 暂无可调度 GPU")
+        elif execution.nodes or execution.node or execution.sample_mode != "single":
+            raise RunConflict("指定节点及按样本运行必须使用 Slurm")
         elif execution.gpus:
             raise RunConflict("GPU 资源请求必须使用 Slurm 执行方式")
         workflow = self.store.get_workflow(workflow_id)
@@ -118,7 +122,8 @@ class RunService:
 
         try:
             resolved = self.recipe_compiler.compile(workflow)
-        except RecipeCompilationError as exc:
+            resolved = schedule_units(workflow, resolved, execution)
+        except (RecipeCompilationError, OSError) as exc:
             raise RunConflict(str(exc)) from exc
         for unit in resolved:
             step, method = unit.step, unit.method
@@ -127,11 +132,13 @@ class RunService:
             if self.runner_registry.get(method.runner_id) is None:
                 raise RunConflict(f"步骤 {step.title} 的 runner 尚未注册：{method.runner_id}")
             if execution.backend == "slurm":
+                allocated = unit.execution or execution
+                self._validate_node_resources(allocated, status)
                 for name in ("threads", "omp_threads", "n_jobs"):
                     requested = step.selected_parameters.get(name)
-                    if isinstance(requested, (int, float)) and (requested < 1 or requested > execution.cpus):
+                    if isinstance(requested, (int, float)) and (requested < 1 or requested > allocated.cpus):
                         raise RunConflict(f"步骤 {step.title} 的 {name} 超过分配的 CPU，请调整资源或参数")
-                if (step.selected_parameters.get("backend") == "cuda" or step.selected_parameters.get("device") == "cuda") and not execution.gpus:
+                if (step.selected_parameters.get("backend") == "cuda" or step.selected_parameters.get("device") == "cuda") and not allocated.gpus:
                     raise RunConflict("CUDA 方法需要申请至少一张 GPU")
             elif ((step.selected_parameters.get("backend") == "cuda" or step.selected_parameters.get("device") == "cuda")
                   and not self.runner_registry.get(method.runner_id).runtime_status().get("cuda_available")):
@@ -157,6 +164,9 @@ class RunService:
                     title=step.title,
                     runner_id=method.runner_id,
                     method_id=method.id,
+                    sample_id=unit.sample_id,
+                    sample_label=unit.sample_label,
+                    node_name=unit.execution.node if unit.execution else None,
                 )
                 for unit in resolved
                 for step, method in [(unit.step, unit.method)]
@@ -206,7 +216,7 @@ class RunService:
             workflow = Workflow.model_validate(run.plan_snapshot)
             if Path(run.output_directory).resolve() != self._safe_run_directory(run_id, "slurm"):
                 raise RunConflict("共享输出根目录与原任务不一致，请恢复原 Slurm 输出配置")
-            units = self.recipe_compiler.compile(workflow)
+            units = schedule_units(workflow, self.recipe_compiler.compile(workflow), run.execution)
             if ([u.step.id for u in units] != [s.step_id for s in run.steps]
                     or any(u.method.runner_id != s.runner_id or u.method.id != s.method_id
                            for u, s in zip(units, run.steps))):
@@ -360,6 +370,9 @@ class RunService:
         start_index: int = 0,
     ) -> None:
         run = self.get(run_id)
+        if run.execution.sample_mode == "per_sample":
+            execute_samples(self, run, workflow, resolved, cancel_event)
+            return
         try:
             run.status = "cancel_requested" if cancel_event.is_set() else "running"
             run.started_at = run.started_at or self._now()
@@ -422,7 +435,7 @@ class RunService:
                 runtime_step = self._resolve_runtime_bindings(workflow_step, run)
                 context = RunnerContext(
                     run_id=run_id,
-                    workflow=workflow,
+                    workflow=workflow_for_unit(workflow, unit),
                     step=runtime_step,
                     method=method,
                     output_directory=step_directory,
@@ -440,7 +453,7 @@ class RunService:
                         self._save_run(run, event_type="slurm_job_state",
                                             event_message=f"Slurm {state.get('job_id', '')}: {state.get('state', '提交中')}",
                                             step_id=step_run.step_id, event_payload=state)
-                    result = self.slurm_backend.execute(context, run.execution.model_dump(),
+                    result = self.slurm_backend.execute(context, (unit.execution or run.execution).model_dump(),
                                                         step_run.scheduler or None, on_job)
                 else:
                     problems = runner.preflight(context)
@@ -540,6 +553,24 @@ class RunService:
             event_message=message,
             level="warning",
         )
+
+    @staticmethod
+    def _validate_node_resources(options: RunExecutionOptions, status: dict[str, Any]) -> None:
+        nodes = [node for node in status.get("nodes", [])
+                 if node.get("partition") == options.partition and node.get("schedulable")]
+        if options.node:
+            nodes = [node for node in nodes if node.get("name") == options.node]
+            if not nodes:
+                raise RunConflict(f"节点 {options.node} 不属于所选可调度分区")
+        if not nodes:
+            return  # Compatibility with older status providers; sbatch still validates.
+        if not any(
+            options.cpus <= node.get("cpus", 128)
+            and options.memory_gb * 1024 <= node.get("memory_mb", 512 * 1024)
+            and options.gpus <= node.get("gpus", 0)
+            for node in nodes
+        ):
+            raise RunConflict(f"申请的 CPU、内存或 GPU 超过节点 {options.node or '所在分区'} 容量")
 
     @staticmethod
     def _resolve_runtime_bindings(step: WorkflowStep, run: WorkflowRun) -> WorkflowStep:

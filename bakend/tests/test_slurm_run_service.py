@@ -171,7 +171,7 @@ class SlurmRunServiceTests(unittest.TestCase):
 
     def test_execution_options_reject_invalid_resource_values(self) -> None:
         for field, values in {
-            "cpus": [0, 65, 1.5], "memory_gb": [0, 257],
+            "cpus": [0, 129, 1.5], "memory_gb": [0, 513],
             "gpus": [-1, 2], "time_minutes": [0, 1441],
             "partition": ["all\n#SBATCH --exclusive", "../other"],
         }.items():

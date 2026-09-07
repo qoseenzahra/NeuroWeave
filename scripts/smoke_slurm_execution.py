@@ -83,6 +83,7 @@ class SmokeSuite:
         self.services: list[Any] = []
         self.service: Any = None
         self.current_case: dict[str, Any] | None = None
+        self.sample_nodes: list[str] = []
         self.evidence: dict[str, Any] = {
             "schema_version": 1, "started_at": now(), "root": str(root),
             "database": str(self.store.database_path), "partition": partition,
@@ -232,6 +233,46 @@ class SmokeSuite:
         run = self.begin("success")
         self.verified_success(self.terminal(run.run_id, deadline, "succeeded"))
 
+    def parallel_samples(self, deadline: float) -> None:
+        from app.dataset_models import DatasetSample
+        from app.run_models import NodeAllocation, RunExecutionOptions
+        workflow = self.fixture("parallel_samples")
+        root = Path(workflow.dataset.absolute_path)
+        samples = []
+        for index in range(len(self.sample_nodes) * 2):
+            name = f"sample-{index + 1:02d}"
+            directory = root / name
+            directory.mkdir(mode=0o700)
+            (directory / "synthetic.txt").write_text(name, encoding="utf-8")
+            samples.append(DatasetSample(sample_id=name, label=name, relative_root=name))
+        workflow.dataset.inspection.samples = samples
+        workflow.dataset.inspection.sample_count = len(samples)
+        self.store.save_workflow(workflow, event_type="workflow_confirmed")
+        options = RunExecutionOptions(
+            backend="slurm", partition=self.partition, sample_mode="per_sample",
+            nodes=[NodeAllocation(node=node, cpus=index + 1, memory_gb=1, time_minutes=2)
+                   for index, node in enumerate(self.sample_nodes)],
+        )
+        run = self.service.create(workflow.workflow_id, workflow.revision, options)
+        self.current_case["run_id"] = run.run_id
+        run = self.terminal(run.run_id, deadline, "succeeded")
+        assert len(run.artifacts) == len(samples)
+        assert len({artifact.absolute_path for artifact in run.artifacts}) == len(samples)
+        verified = []
+        for index, step in enumerate(run.steps):
+            requested = options.nodes[index % len(options.nodes)]
+            terminal = step.scheduler["terminal"]
+            assert terminal["state"] == "COMPLETED" and terminal["exit_code"] == "0:0"
+            assert terminal["node_list"] == requested.node
+            result = self.original_command(["scontrol", "show", "job", str(step.scheduler["job_id"]), "--oneliner"])
+            match = re.search(r"(?:^|\s)NumCPUs=(\d+)(?:\s|$)", result.stdout)
+            assert result.returncode == 0 and match and int(match.group(1)) == requested.cpus
+            report = json.loads(Path(step.artifacts[0].absolute_path).read_text())
+            assert report["file_count"] == 1
+            verified.append({"sample": step.sample_id, "node": requested.node, "cpus": requested.cpus,
+                             "job_id": step.scheduler["job_id"]})
+        self.current_case["sample_allocations"] = verified
+
     def missing_dataset(self, deadline: float) -> None:
         run = self.begin("missing_dataset", missing=True)
         run = self.terminal(run.run_id, deadline, "failed")
@@ -345,8 +386,10 @@ class SmokeSuite:
                 self.evidence["backend"] = status
                 if not status.get("available") or self.partition not in status.get("partitions", []):
                     raise RuntimeError("Slurm 尚未就绪：" + str(status.get("reason")))
-                for name, case in [("success", self.success), ("missing_dataset", self.missing_dataset),
-                                   ("cancel_pending", self.cancel_pending), ("restart_resume", self.restart_resume)]:
+                cases = ([("parallel_samples", self.parallel_samples)] if self.sample_nodes else
+                         [("success", self.success), ("missing_dataset", self.missing_dataset),
+                          ("cancel_pending", self.cancel_pending), ("restart_resume", self.restart_resume)])
+                for name, case in cases:
                     started = time.monotonic()
                     self.current_case = {"case": name, "started_at": now()}
                     self.evidence["cases"].append(self.current_case)
@@ -395,11 +438,16 @@ def main() -> int:
     default = SMOKE_BASE / (datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid4().hex[:8])
     parser.add_argument("--root", type=Path, default=default, help="全新共享测试目录，仅允许 /home/data/neuroweave/smoke 的单层子目录")
     parser.add_argument("--partition", default="all", help="已配置的 CPU Slurm 分区（默认 all）")
+    parser.add_argument("--sample-nodes", nargs="+", default=[],
+                        help="仅验证多样本分配到指定节点，例如 node01 node02；各节点申请 1、2… 核")
     args = parser.parse_args()
     if os.name != "posix":
         parser.error("真实 Slurm 烟测只能在 Linux 提交节点执行")
     if not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", args.partition):
         parser.error("分区名格式无效")
+    if (len(args.sample_nodes) > 16 or len(set(args.sample_nodes)) != len(args.sample_nodes)
+            or any(not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,63}", node) for node in args.sample_nodes)):
+        parser.error("节点名无效、重复或过多")
     if os.getenv("LOCALFLOW_SLURM_ENABLED", "").lower() not in {"1", "true", "yes"}:
         parser.error("请从外部提供 LOCALFLOW_SLURM_ENABLED=true 和共享 Worker/Python 路径；脚本不会读取 .env")
     try:
@@ -415,6 +463,7 @@ def main() -> int:
     # These overrides affect this isolated process only. No file is edited.
     with patch.dict(os.environ, settings):
         suite = SmokeSuite(root, args.partition)
+        suite.sample_nodes = args.sample_nodes
         def stop_requested(*_: Any) -> None:
             raise KeyboardInterrupt("收到停止信号；正在清理本次烟测作业")
 

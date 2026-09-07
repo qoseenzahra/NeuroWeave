@@ -213,7 +213,7 @@ export function DatasetPicker({ apiBase, selectedDataset, onSelected }: DatasetP
           {selectedDataset?.display_name ?? '选择数据集'}
         </span>
       </DialogTrigger>
-      <DialogContent className="max-h-[86vh] gap-0 overflow-hidden p-0 sm:max-w-3xl">
+      <DialogContent className="flex max-h-[calc(100dvh-2rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-4xl">
         <DialogHeader className="border-b border-slate-200 px-5 py-4">
           <DialogTitle>选择本地数据集</DialogTitle>
           <DialogDescription>
@@ -221,8 +221,8 @@ export function DatasetPicker({ apiBase, selectedDataset, onSelected }: DatasetP
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid min-h-0 sm:grid-cols-[1.35fr_1fr]">
-          <section className="min-h-0 border-b border-slate-200 p-4 sm:border-b-0 sm:border-r">
+        <div className="grid auto-rows-max min-h-0 min-w-0 overflow-y-auto md:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+          <section className="min-h-0 min-w-0 border-b border-slate-200 p-4 md:border-b-0 md:border-r">
             <div className="flex items-center gap-2">
               <NativeSelect
                 aria-label="数据根目录"
@@ -258,7 +258,7 @@ export function DatasetPicker({ apiBase, selectedDataset, onSelected }: DatasetP
             <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
               {listing ? (
                 <Breadcrumb>
-                  <BreadcrumbList className="flex-nowrap overflow-x-auto whitespace-nowrap text-[11px]">
+                  <BreadcrumbList className="flex-wrap wrap-anywhere text-xs">
                     {listing.breadcrumbs.map((item, index) => {
                       const current = index === listing.breadcrumbs.length - 1;
                       return (
@@ -344,8 +344,8 @@ export function DatasetPicker({ apiBase, selectedDataset, onSelected }: DatasetP
                     onClick={() => void loadDirectory(rootId, directory.relative_path)}
                     type="button"
                   >
-                    <Folder className="size-4 text-blue-500" />
-                    <span className="truncate">{directory.name}</span>
+                    <Folder className="size-4 shrink-0 text-blue-500" />
+                    <span className="min-w-0 wrap-anywhere">{directory.name}</span>
                   </button>
                 ))}
                 {visibleFiles.map((file) => (
@@ -384,7 +384,7 @@ export function DatasetPicker({ apiBase, selectedDataset, onSelected }: DatasetP
               </div>
             )}
 
-            <div className="mt-3 flex items-center justify-between gap-3">
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
               <div className="min-w-0 text-xs text-slate-500">
                 {currentDataset ? '这个目录已经登记，可以直接重新扫描。' : '登记时会执行只读扫描。'}
               </div>
@@ -410,7 +410,7 @@ export function DatasetPicker({ apiBase, selectedDataset, onSelected }: DatasetP
             </div>
           </section>
 
-          <section className="min-h-0 p-4">
+          <section className="min-h-0 min-w-0 p-4">
             <div className="mb-3 flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-semibold">已登记数据集</h3>
@@ -441,10 +441,10 @@ export function DatasetPicker({ apiBase, selectedDataset, onSelected }: DatasetP
                         <HardDrive className="mt-0.5 size-4 shrink-0 text-slate-500" />
                         <span className="min-w-0 flex-1">
                           <span className="flex items-center gap-2">
-                            <span className="truncate text-sm font-medium">{dataset.display_name}</span>
+                            <span className="min-w-0 wrap-anywhere text-sm font-medium">{dataset.display_name}</span>
                             {active && <Check className="size-3.5 shrink-0 text-blue-700" />}
                           </span>
-                          <span className="mt-1 block truncate font-mono text-[10px] text-slate-400">
+                          <span className="mt-1 block wrap-anywhere font-mono text-xs text-slate-500">
                             {dataset.relative_path || dataset.absolute_path}
                           </span>
                           <span className="mt-2 flex flex-wrap gap-1">
@@ -461,7 +461,7 @@ export function DatasetPicker({ apiBase, selectedDataset, onSelected }: DatasetP
                             </Badge>
                           </span>
                           {dataset.inspection.warnings.length > 0 && (
-                            <span className="mt-2 flex items-start gap-1 text-[10px] leading-4 text-amber-700">
+                            <span className="mt-2 flex items-start gap-1 wrap-anywhere text-xs leading-4 text-amber-700">
                               <TriangleAlert className="mt-0.5 size-3 shrink-0" />
                               {dataset.inspection.warnings[0]}
                             </span>

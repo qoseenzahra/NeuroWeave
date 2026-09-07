@@ -215,6 +215,28 @@ class DryRunUpstreamTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             runner.checked_inputs(context)
 
+    def test_snapshot_checks_all_samples_without_passing_a_batch_to_single_file_runners(self):
+        path = self.bind_file(self.tracking, "five_tt")
+        binding = self.tracking.input_bindings["five_tt"]
+        binding.binding_mode = "per_sample"
+        binding.sample_matches = [
+            SamplePathMatch(sample_id=name, label=name, relative_path=path.name,
+                            absolute_path=str(path), status="matched")
+            for name in ("sample-01", "sample-02")
+        ]
+        seen = []
+        def preflight(context):
+            self.assertTrue(context.input_is_deferred("fod"))
+            self.assertEqual(context.step.input_bindings["five_tt"].binding_mode, "single")
+            seen.append(context.step.input_bindings["five_tt"].absolute_path)
+            return []
+        with patch.object(self.runners.get("mrtrix.tckgen"), "preflight", side_effect=preflight):
+            self.assertEqual(self.runners.preflight_snapshot(
+                self.workflow, self.tracking, self.tracking.method_options[0]), [])
+        self.assertEqual(seen, [str(path), str(path)])
+        binding.sample_matches[1].status = "missing"
+        self.assertTrue(self.runners.preflight_snapshot(self.workflow, self.tracking, self.tracking.method_options[0]))
+
     def test_upstream_dataset_directory_is_checked_at_runtime(self):
         runner = BidsPrepareRunner()
         step = self.tracking.model_copy(deep=True)

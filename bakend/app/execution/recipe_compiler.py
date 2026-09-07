@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from ..capability_registry import CapabilityMethod, CapabilityRegistry
+from ..run_models import RunExecutionOptions
 from ..workflow_models import InputBinding, MethodOption, Workflow, WorkflowStep
 
 
@@ -17,6 +18,10 @@ class ExecutionUnit:
     workspace_key: str
     parent_step_id: str
     recipe_id: str | None = None
+    sample_id: str | None = None
+    sample_label: str = ""
+    sample_root: str | None = None
+    execution: RunExecutionOptions | None = None
 
 
 class RecipeCompiler:

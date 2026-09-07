@@ -91,6 +91,15 @@ class SlurmBackendTests(unittest.TestCase):
         self.assertIn("--no-requeue", calls[0])
         self.assertNotIn("--gres=gpu:1", calls[0])
 
+    def test_fixed_node_submission_uses_reviewed_nodelist_argument(self) -> None:
+        self.options.update(node="node02", cpus=32)
+        with patch.object(self.backend, "_command", return_value=subprocess.CompletedProcess([], 0, "123", "")) as command, \
+                patch.object(self.backend, "_monitor", return_value="ok"):
+            self.backend.execute(self.context, self.options, None, self.persist)
+        self.assertIn("--nodelist=node02", command.call_args.args[0])
+        self.assertIn("--cpus-per-task=32", command.call_args.args[0])
+        self.assertIn("--nodes=1", command.call_args.args[0])
+
     def test_submission_timeout_keeps_durable_ambiguous_state(self) -> None:
         with patch.object(self.backend, "_command", side_effect=subprocess.TimeoutExpired("sbatch", 20)):
             with self.assertRaises(ExecutionDetached):
@@ -197,6 +206,18 @@ class SlurmBackendTests(unittest.TestCase):
         self.assertTrue(status["available"])
         self.assertEqual(status["partitions"], ["all"])
         self.assertFalse(status["gpu_available"])
+
+    def test_status_reports_node_capacity_without_expanding_host_expressions(self) -> None:
+        output = ("all*|up|mix|gpu:1|node01|128|245000|100000|16/112/0/128\n"
+                  "all*|up|idle|gpu:1|node[02-03]|128|245000|100000|0/128/0/128\n")
+        with patch("app.execution.slurm_backend.shutil.which", return_value="/usr/bin/slurm"), \
+                patch.object(self.backend, "_command", return_value=subprocess.CompletedProcess([], 0, output, "")):
+            status = self.backend.status()
+        self.assertEqual(len(status["nodes"]), 1)
+        self.assertEqual(status["nodes"][0]["cpus"], 128)
+        self.assertEqual(status["nodes"][0]["memory_mb"], 245000)
+        self.assertEqual(status["nodes"][0]["allocated_cpus"], 16)
+        self.assertEqual(status["nodes"][0]["gpus"], 1)
 
     def test_script_quotes_paths_and_resets_inherited_environment(self) -> None:
         payload = self.root / "space ' $` injection" / "payload.json"

@@ -63,7 +63,7 @@ class SlurmBackend:
             result["reason"] = "共享输出根目录不存在或不可写"
             return result
         try:
-            completed = self._command(["sinfo", "--noheader", "--Node", "--format=%P|%a|%t|%G|%N"])
+            completed = self._command(["sinfo", "--noheader", "--Node", "--format=%P|%a|%t|%G|%N|%c|%m|%e|%C"])
         except (OSError, subprocess.TimeoutExpired) as exc:
             result["reason"] = f"无法查询 Slurm：{exc}"
             return result
@@ -73,19 +73,30 @@ class SlurmBackend:
         partitions: set[str] = set()
         for line in completed.stdout.splitlines():
             parts = line.strip().split("|")
-            if len(parts) != 5:
+            if len(parts) not in (5, 9):
                 continue
-            partition, availability, state, gres, node = parts
+            partition, availability, state, gres, node = parts[:5]
             partition = partition.rstrip("*")
-            if not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", partition):
+            if (not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", partition)
+                    or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,63}", node)):
                 continue
             usable = availability == "up" and "*" not in state and not any(item in state.lower() for item in
                         ("down", "drain", "fail", "maint", "unknown", "inval", "power"))
             if usable:
                 partitions.add(partition)
             gpu = bool(re.search(r"(?:^|,)gpu(?::[^:,()]+)?:[1-9][0-9]*(?:\(|,|$)", gres))
+            counts = re.findall(r"(?:^|,)gpu(?::[^:,()]+)?:([0-9]+)(?:\([^)]*\))?", gres)
+            capacity = {}
+            if len(parts) == 9:
+                try:
+                    capacity = {"cpus": int(parts[5]), "memory_mb": int(parts[6]),
+                                "free_memory_mb": max(0, int(parts[7])),
+                                "allocated_cpus": int(parts[8].split("/")[0])}
+                except ValueError:
+                    pass
             result["nodes"].append({"name": node, "partition": partition, "state": state,
-                                     "gres": gres, "schedulable": usable})
+                                     "gres": gres, "schedulable": usable,
+                                     "gpus": sum(map(int, counts)), **capacity})
             result["gpu_available"] |= usable and gpu
         result["partitions"] = sorted(partitions)
         result["available"] = bool(partitions)
@@ -134,7 +145,7 @@ class SlurmBackend:
             raise
         if state:
             self._validate_state(state, output)
-            if state.get("options") and state["options"] != options:
+            if state.get("options") and RunExecutionOptions.model_validate(state["options"]).model_dump() != options:
                 self._interrupt(state, on_job, "snapshot_mismatch", "恢复请求与原作业资源快照不一致，保留原作业待核查")
             if not state.get("job_id"):
                 self._interrupt(state, on_job, "submission_uncertain",
@@ -172,6 +183,8 @@ class SlurmBackend:
                     f"--output={directory / 'slurm-%j.out'}", f"--error={directory / 'slurm-%j.err'}"]
             if options["gpus"]:
                 argv.append(f"--gres=gpu:{options['gpus']}")
+            if options.get("node"):
+                argv.append(f"--nodelist={options['node']}")
             argv.append(str(script))
             try:
                 completed = self._command(argv)

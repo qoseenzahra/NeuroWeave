@@ -1,0 +1,230 @@
+from __future__ import annotations
+
+import threading
+import time
+import unittest
+from pathlib import Path
+
+from pydantic import ValidationError
+
+from app.dataset_models import DatasetSample, SamplePathMatch
+from app.execution.base import ExecutionCancelled, ExecutionDetached, RunnerResult
+from app.execution.run_service import RunConflict
+from app.execution.recipe_compiler import RecipeCompiler
+from app.run_models import NodeAllocation, RunArtifact, RunExecutionOptions
+from app.workflow_models import InputBinding, WorkflowStep
+import test_slurm_run_service as fixtures
+
+
+class SampleExecutionTests(unittest.TestCase):
+    def setUp(self):
+        self.fixture = fixtures.SlurmRunServiceTests()
+        self.fixture.setUp()
+        self.addCleanup(self.fixture.doCleanups)
+        self.addCleanup(self.fixture.tearDown)
+        fixture = self.fixture
+        self.workflow = fixture.workflow
+        samples = []
+        for index in range(4):
+            name = f"sample-{index + 1}"
+            (fixture.dataset_root / name).mkdir()
+            samples.append(DatasetSample(sample_id=name, label=name, relative_root=name))
+        self.workflow.dataset.inspection.samples = samples
+        self.workflow.dataset.inspection.sample_count = 4
+        second = self.workflow.steps[0].model_copy(deep=True)
+        second.id = "inspect_again"
+        second.order = 2
+        self.workflow.steps.append(second)
+        fixture.store.save_workflow(self.workflow, event_type="fixture")
+        fixture.backend.status.return_value["nodes"] = [
+            {"name": name, "partition": "all", "schedulable": True,
+             "cpus": 128, "memory_mb": 245000, "gpus": 1}
+            for name in ("node01", "node02", "node03")
+        ]
+        self.options = RunExecutionOptions(
+            backend="slurm", sample_mode="per_sample",
+            nodes=[NodeAllocation(node="node01", cpus=4), NodeAllocation(node="node02", cpus=8)],
+        )
+
+    def create(self):
+        return self.fixture.service.create(self.workflow.workflow_id, self.workflow.revision, self.options)
+
+    def test_samples_execute_concurrently_with_separate_nodes_resources_and_outputs(self):
+        barrier = threading.Barrier(2)
+        calls = []
+        lock = threading.Lock()
+        def execute(context, options, state, on_job):
+            if context.step.id.startswith(("sample_0001__", "sample_0002__")) and context.step.id.endswith("__inspect"):
+                barrier.wait(timeout=2)
+            with lock:
+                calls.append((context.step.id, options, context.workflow.dataset.absolute_path))
+            context.output_directory.mkdir(parents=True, exist_ok=True)
+            path = context.output_directory / "result.txt"
+            path.write_text(context.step.id)
+            on_job({"job_id": str(len(calls)), "state": "COMPLETED", "node_list": options["node"]})
+            context.log("done", 100, "info")
+            return RunnerResult([RunArtifact(
+                artifact_id=context.step.id, step_id=context.step.id, artifact_type="test",
+                label="synthetic", absolute_path=str(path), relative_path=path.name,
+            )], "done")
+        self.fixture.backend.execute.side_effect = execute
+        run = self.fixture._finished(self.create().run_id)
+        self.assertEqual(run.status, "succeeded")
+        self.assertEqual(len(calls), 8)
+        self.assertEqual(len(run.artifacts), 8)
+        self.assertEqual(len({item.absolute_path for item in run.artifacts}), 8)
+        for index, sample in enumerate(self.workflow.dataset.inspection.samples):
+            own = [item for item in calls if item[0].startswith(f"sample_{index + 1:04d}__")]
+            self.assertEqual([item[0].split("__")[1] for item in own], ["inspect", "inspect_again"])
+            self.assertTrue(all(item[1]["node"] == self.options.nodes[index % 2].node for item in own))
+            self.assertTrue(all(item[1]["cpus"] == self.options.nodes[index % 2].cpus for item in own))
+            self.assertTrue(all(Path(item[2]).name == sample.sample_id for item in own))
+
+    def test_fixed_node_is_passed_to_single_run(self):
+        self.options = RunExecutionOptions(backend="slurm", nodes=[NodeAllocation(node="node03", cpus=32)])
+        run = self.fixture._finished(self.create().run_id)
+        self.assertEqual(run.status, "succeeded")
+        for call in self.fixture.backend.execute.call_args_list:
+            self.assertEqual(call.args[1]["node"], "node03")
+            self.assertEqual(call.args[1]["cpus"], 32)
+
+    def test_fod_outputs_are_bound_only_to_the_same_samples_tracking_step(self):
+        definitions = [("dwi.fod", "mrtrix-dwi2fod"), ("dwi.tractography", "mrtrix3-existing-fod")]
+        steps = []
+        for index, (capability, method_id) in enumerate(definitions):
+            method = RecipeCompiler._method_option(self.fixture.capabilities.method_for(capability, method_id))
+            step = WorkflowStep(id=("fod" if index == 0 else "tracking"), order=index + 1,
+                                title=capability, description="", capability=capability, status="confirmed",
+                                method_options=[method], selected_method_id=method.id,
+                                selected_parameters=RecipeCompiler._default_parameters(method))
+            for name in (("dwi", "mask", "bvecs", "bvals", "wm_response") if index == 0 else ("five_tt",)):
+                slot = next(item for item in method.input_slots if item.id == name)
+                matches = []
+                for sample in self.workflow.dataset.inspection.samples:
+                    path = self.fixture.dataset_root / sample.relative_root / (name + ".mif")
+                    path.write_bytes(b"synthetic")
+                    matches.append(SamplePathMatch(sample_id=sample.sample_id, label=sample.label,
+                                                   relative_path=str(path.relative_to(self.fixture.dataset_root)),
+                                                   absolute_path=str(path), status="matched"))
+                step.input_bindings[name] = InputBinding(
+                    slot_id=name, artifact_type=slot.type, source="existing_path", status="validated",
+                    binding_mode="per_sample", sample_matches=matches,
+                )
+            steps.append(step)
+        steps[1].input_bindings["fod"] = InputBinding(
+            slot_id="fod", artifact_type="fod_image", source="upstream_output",
+            upstream_step_id="fod", output_slot_id="wm_fod", status="planned",
+        )
+        self.workflow.steps = steps
+        self.fixture.store.save_workflow(self.workflow, event_type="fixture")
+        tracked = []
+        def execute(context, options, state, on_job):
+            context.output_directory.mkdir(parents=True, exist_ok=True)
+            if context.step.id.endswith("__fod"):
+                path = context.output_directory / "fod.mif"
+                path.write_text(context.step.id)
+                return RunnerResult([RunArtifact(
+                    artifact_id=context.step.id, step_id=context.step.id, artifact_type="fod_image",
+                    label="synthetic FOD", absolute_path=str(path), relative_path=path.name,
+                )], "synthetic FOD completed")
+            source = Path(context.step.input_bindings["fod"].absolute_path)
+            expected_prefix = context.step.id.split("__")[0]
+            self.assertEqual(source.read_text(), expected_prefix + "__fod")
+            sample = Path(context.workflow.dataset.absolute_path).name
+            self.assertEqual(Path(context.step.input_bindings["five_tt"].absolute_path).parent.name, sample)
+            tracked.append(sample)
+            return RunnerResult([], "synthetic tracking completed")
+        self.fixture.backend.execute.side_effect = execute
+        run = self.fixture._finished(self.create().run_id)
+        self.assertEqual(run.status, "succeeded", run.error_message)
+        self.assertEqual(len(set(tracked)), 4)
+
+    def test_resources_unknown_nodes_and_incomplete_samples_are_rejected_before_submission(self):
+        for change in ("missing_node", "cpu", "memory", "gpu", "missing_sample"):
+            with self.subTest(change=change):
+                original = self.options.model_copy(deep=True)
+                if change == "missing_node":
+                    self.options.nodes[0].node = "unknown"
+                elif change == "cpu":
+                    self.fixture.backend.status.return_value["nodes"][0]["cpus"] = 2
+                elif change == "memory":
+                    self.options.nodes[0].memory_gb = 256
+                elif change == "gpu":
+                    self.fixture.backend.status.return_value["nodes"][0]["gpus"] = 0
+                    self.options.nodes[0].gpus = 1
+                else:
+                    self.workflow.dataset.inspection.sample_count = 5
+                    self.fixture.store.save_workflow(self.workflow, event_type="fixture")
+                with self.assertRaises(RunConflict):
+                    self.create()
+                self.options = original
+                self.fixture.backend.status.return_value["nodes"][0].update(cpus=128, gpus=1)
+                self.workflow.dataset.inspection.sample_count = 4
+        self.fixture.backend.execute.assert_not_called()
+        self.assertFalse(self.fixture.store.list_runs())
+
+    def test_node_names_and_duplicate_allocations_reject_command_fragments(self):
+        for name in ("node01,node02", "node[01-03]", "--exclusive", "node01\n#SBATCH --gres=gpu:1"):
+            with self.subTest(name=name), self.assertRaises(ValidationError):
+                NodeAllocation(node=name)
+        with self.assertRaises(ValidationError):
+            RunExecutionOptions(backend="slurm", sample_mode="per_sample",
+                                nodes=[NodeAllocation(node="node01"), NodeAllocation(node="node01")])
+
+    def test_sample_failure_preserves_other_samples_and_skips_its_downstream(self):
+        calls = []
+        def execute(context, options, state, on_job):
+            calls.append(context.step.id)
+            if context.step.id == "sample_0001__inspect":
+                raise RuntimeError("synthetic failure")
+            return RunnerResult([], "done")
+        self.fixture.backend.execute.side_effect = execute
+        run = self.fixture._finished(self.create().run_id)
+        self.assertEqual(run.status, "failed")
+        self.assertNotIn("sample_0001__inspect_again", calls)
+        self.assertEqual(sum(step.status == "succeeded" for step in run.steps), 6)
+        self.assertEqual(run.steps[1].status, "cancelled")
+
+    def test_uncertain_job_keeps_batch_active_and_recovery_reuses_job(self):
+        def detach(context, options, state, on_job):
+            on_job({"job_id": "4201", "state": "RUNNING", "node_list": options["node"]})
+            raise ExecutionDetached("synthetic disconnect")
+        self.fixture.backend.execute.side_effect = detach
+        run = self.create()
+        deadline = time.monotonic() + 4
+        while run.run_id in self.fixture.service._futures and time.monotonic() < deadline:
+            time.sleep(.01)
+        previous = self.fixture.service.get(run.run_id)
+        self.assertEqual(previous.status, "running")
+        started = {step.step_id: step.scheduler for step in previous.steps if step.scheduler}
+        with self.assertRaises(RunConflict):
+            self.create()
+        resumed = []
+        def finish(context, options, state, on_job):
+            resumed.append((context.step.id, state))
+            return RunnerResult([], "done")
+        self.fixture.backend.execute.side_effect = finish
+        self.fixture.service.resume_slurm_monitoring(run.run_id)
+        result = self.fixture._finished(run.run_id)
+        self.assertEqual(result.status, "succeeded")
+        for step_id, state in resumed:
+            self.assertEqual(state, started.get(step_id))
+
+    def test_cancel_reaches_all_active_nodes_and_stops_queued_samples(self):
+        started = threading.Barrier(3)
+        calls = []
+        def execute(context, options, state, on_job):
+            calls.append(context.step.id)
+            on_job({"job_id": options["node"], "state": "RUNNING"})
+            started.wait(timeout=2)
+            self.assertTrue(context.cancel_event.wait(timeout=2))
+            on_job({"job_id": options["node"], "state": "CANCELLED"})
+            raise ExecutionCancelled("cancelled")
+        self.fixture.backend.execute.side_effect = execute
+        run = self.create()
+        started.wait(timeout=2)
+        self.fixture.service.cancel(run.run_id)
+        result = self.fixture._finished(run.run_id)
+        self.assertEqual(result.status, "cancelled")
+        self.assertEqual(len(calls), 2)
+        self.assertTrue(all(step.status == "cancelled" for step in result.steps))
