@@ -14,7 +14,6 @@ import {
   GitBranch,
   FileInput,
   FileOutput,
-  FileText,
   Link2,
   LoaderCircle,
   LockKeyhole,
@@ -26,7 +25,6 @@ import {
   SlidersHorizontal,
   Sparkles,
   Square,
-  Terminal,
   TriangleAlert,
   Trash2,
   UnlockKeyhole,
@@ -54,7 +52,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Progress, ProgressLabel, ProgressValue } from '@/components/ui/progress';
+import { RunPanel } from '@/components/workflow/run-panel';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import type {
@@ -93,15 +91,6 @@ const STATUS_COPY: Record<Workflow['status'], string> = {
   confirmed: '方案已确认',
 };
 
-const RUN_STATUS_COPY: Record<WorkflowRun['status'], string> = {
-  queued: '等待运行',
-  running: '正在运行',
-  cancel_requested: '正在取消',
-  cancelled: '已取消',
-  succeeded: '运行成功',
-  failed: '运行失败',
-};
-
 const ACTIVE_RUN_STATUSES = new Set<WorkflowRun['status']>([
   'queued',
   'running',
@@ -115,21 +104,6 @@ const DEFAULT_EXECUTION: ExecutionOptions = {
   memory_gb: 8,
   gpus: 0,
   time_minutes: 60,
-};
-
-const SCHEDULER_STATUS_COPY: Record<string, string> = {
-  PENDING: '排队中',
-  CONFIGURING: '正在分配资源',
-  RUNNING: '正在计算',
-  COMPLETING: '正在结束',
-  COMPLETED: '已完成',
-  CANCELLED: '已取消',
-  FAILED: '失败',
-  TIMEOUT: '超出时限',
-  OUT_OF_MEMORY: '内存不足',
-  NODE_FAIL: '节点故障',
-  PREEMPTED: '被抢占',
-  SUSPENDED: '已暂停',
 };
 
 function selectedMethod(step: WorkflowStep) {
@@ -911,126 +885,6 @@ function WorkflowCardState({ apiBase, workflow, onChange, disabled = false, onBu
         </div>
       </CardFooter>
     </Card>
-  );
-}
-
-function RunPanel({ events, run }: { events: RunEvent[]; run: WorkflowRun }) {
-  const active = ACTIVE_RUN_STATUSES.has(run.status);
-  const recentEvents = events.filter((event) => event.message).slice(-8);
-  return (
-    <section className="min-w-0 wrap-anywhere rounded-xl border border-blue-100 bg-blue-50/40 p-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
-          {active ? (
-            <LoaderCircle className="size-4 animate-spin text-blue-600" />
-          ) : run.status === 'succeeded' ? (
-            <CheckCircle2 className="size-4 text-emerald-600" />
-          ) : (
-            <CircleAlert className="size-4 text-amber-600" />
-          )}
-          <h3 className="text-sm font-semibold text-slate-900">{RUN_STATUS_COPY[run.status]}</h3>
-          <Badge variant="outline" className="rounded-md bg-white font-mono text-[10px]">
-            {run.run_id.slice(0, 12)}
-          </Badge>
-          {run.execution?.backend === 'slurm' && (
-            <Badge variant="outline" className="rounded-md bg-white text-xs">
-              Slurm · {run.execution.partition}
-            </Badge>
-          )}
-        </div>
-        <span className="text-xs tabular-nums text-slate-500">{Math.round(run.progress)}%</span>
-      </div>
-      {run.execution?.sample_mode === 'per_sample' && (
-        <p className="mt-2 wrap-anywhere text-xs text-slate-600">
-          并行样本上限：{run.execution.nodes?.map(node => `${node.node}：${node.parallel_samples ?? 1}`).join(' · ')}
-        </p>
-      )}
-      <Progress className="mt-3" value={run.progress}>
-        <ProgressLabel className="text-xs text-slate-600">流程进度</ProgressLabel>
-        <ProgressValue className="text-xs" />
-      </Progress>
-
-      <div className="mt-3 grid gap-2">
-        {run.steps.map((step) => (
-          <div className="rounded-lg border border-slate-200 bg-white px-3 py-2.5" key={step.step_id}>
-            <div className="flex items-center justify-between gap-3 text-xs">
-              <span className="min-w-0 font-medium text-slate-800">{step.title}</span>
-              <span className="shrink-0 text-slate-500">{Math.round(step.progress)}%</span>
-            </div>
-            {(step.sample_id || step.node_name) && <p className="mt-1 text-xs text-blue-700">
-              {step.sample_label || step.sample_id} {step.node_name && ` · 节点 ${step.node_name}`}
-            </p>}
-            <p className="mt-1 text-[11px] text-slate-500">{step.message}</p>
-            {step.scheduler?.job_id && (
-              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-blue-700">
-                <span className="font-mono">Job {step.scheduler.job_id}</span>
-                {step.scheduler.state && (
-                  <span title={step.scheduler.state}>
-                    {SCHEDULER_STATUS_COPY[step.scheduler.state.toUpperCase()] ?? step.scheduler.state}
-                  </span>
-                )}
-                {step.scheduler.node_list && <span>节点：{step.scheduler.node_list}</span>}
-                {step.scheduler.reason && <span>原因：{step.scheduler.reason}</span>}
-              </div>
-            )}
-            {step.error_message && (
-              <p className="mt-1 text-[11px] text-red-700">{step.error_message}</p>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {recentEvents.length > 0 && (
-        <Collapsible className="mt-3 rounded-lg border border-slate-800 bg-slate-950 text-slate-200">
-          <CollapsibleTrigger className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left">
-            <span className="flex items-center gap-2 text-xs font-medium">
-              <Terminal className="size-3.5" />
-              运行日志
-            </span>
-            <ChevronDown className="size-4 text-slate-400" />
-          </CollapsibleTrigger>
-          <CollapsibleContent className="space-y-1 border-t border-slate-800 px-3 py-2.5 font-mono text-[10px] leading-4 text-slate-300">
-            {recentEvents.map((event) => (
-              <p className={event.level === 'error' ? 'text-red-300' : ''} key={event.event_id}>
-                [{event.event_id}] {event.message}
-              </p>
-            ))}
-          </CollapsibleContent>
-        </Collapsible>
-      )}
-
-      {run.artifacts.length > 0 && (
-        <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
-          <p className="flex items-center gap-2 text-xs font-semibold text-emerald-800">
-            <FileText className="size-3.5" />
-            输出文件
-          </p>
-          {run.artifacts.map((artifact) => (
-            <div className="mt-2" key={artifact.artifact_id}>
-              <p className="text-xs font-medium text-slate-800">{artifact.label}</p>
-              <p className="break-all font-mono text-[10px] leading-4 text-slate-500">
-                {artifact.absolute_path}
-              </p>
-              {artifact.sha256 && (
-                <p className="truncate font-mono text-[9px] text-slate-400">
-                  SHA-256 {artifact.sha256}
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {run.error_message && (
-        <Alert variant="destructive" className="mt-3">
-          <TriangleAlert />
-          <AlertDescription>{run.error_message}</AlertDescription>
-        </Alert>
-      )}
-      <p className="mt-3 break-all font-mono text-[9px] text-slate-400">
-        输出目录：{run.output_directory}
-      </p>
-    </section>
   );
 }
 

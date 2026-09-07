@@ -55,6 +55,7 @@ LocalFlow/
 - `bakend/app/execution/base.py` 定义 Runner 上下文和共用的可取消文件校验；各 Runner 只负责调用现有实现及整理结果。
 - `frontend/lib/use-conversation-history.ts` 管理列表缓存、翻页与过时请求；完整消息仍在打开对话时读取。
 - `frontend/components/workflow/workflow-card.tsx` 按流程 ID 隔离界面状态；参数编辑保留滚动和运行设置，切换流程才重新初始化。
+- `frontend/components/workflow/run-panel.tsx` 按样本汇总监控，每页最多 8 项，详情和输出默认折叠；筛选与翻页保留到本次运行结束，新的运行重置视图。
 
 清理时保留 `skills/`、`models/`、`neuroclaw_compat/`、环境锁定文件、许可证和部署验证记录。
 这些内容分别用于方法发现、原始算法调用、兼容、环境复现和审计。数据库、研究输入、运行输出、
@@ -69,6 +70,7 @@ python -m pytest bakend/tests -q
 cd frontend
 npm run lint
 npx tsc --noEmit
+node --experimental-strip-types --test tests/run-monitor.test.mjs
 npm run build
 # 已安装 Playwright 时运行；也可设置 LOCALFLOW_BROWSER_TOOLS 指向共享 node_modules。
 node tests/history-browser.mjs
