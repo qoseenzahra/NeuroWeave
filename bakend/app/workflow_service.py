@@ -25,6 +25,7 @@ from .models import (
 )
 from .skill_loader import SkillLoader
 from .task_scope import existing_input_capabilities
+from .workflow_ordering import order_capabilities
 from .workflow_models import (
     DryRunCommand,
     DryRunReport,
@@ -70,6 +71,7 @@ class WorkflowService:
         self.skill_loader = skill_loader
         self.executable_runner_ids = set(executable_runner_ids or set())
         self.runner_registry = runner_registry
+        self._declared_order = [step["capability"] for step in self._load_manifest()["steps"]]
         self.capability_retriever = (
             CapabilityRetriever(capability_tree, registry, skill_loader)
             if capability_tree is not None and skill_loader is not None
@@ -642,6 +644,9 @@ class WorkflowService:
     def list(self, limit: int = 50) -> list[Workflow]:
         workflows = self.store.list_workflows(limit)
         for workflow in workflows:
+            if workflow.locked_at is None and workflow.status != "confirmed":
+                self._revalidate_chain(workflow, check_runtime=False)
+                self._refresh(workflow)
             self._refresh_execution_summary(workflow)
         return workflows
 
@@ -660,6 +665,7 @@ class WorkflowService:
             workflow = self._require(workflow_id)
             self._check_revision(workflow, expected_revision)
             self._ensure_editable_chain(workflow)
+            self._revalidate_chain(workflow)
             step = self._step(workflow, step_id)
             method = next((item for item in step.method_options if item.id == method_id), None)
             if method is None:
@@ -897,6 +903,7 @@ class WorkflowService:
                 raise ValueError("流程链尚未锁定")
             workflow.locked_at = None
             self._clear_review(workflow)
+            self._revalidate_chain(workflow, check_runtime=False)
             self._advance(workflow)
             self._refresh(workflow)
             self._save(workflow, "chain_unlocked")
@@ -1132,13 +1139,16 @@ class WorkflowService:
                          | existing_input_capabilities(request.message))
         if existing:
             initial_types.update(value for step in existing.steps for value in step.manual_input_types)
-        requested_capability_ids = [item for item in routing.get("capability_ids") or []
-                                    if item not in reused_inputs and item not in excluded]
+        requested_capability_ids = order_capabilities(self.registry, [
+            item for item in routing.get("capability_ids") or []
+            if item not in reused_inputs and item not in excluded
+        ], self._declared_order)
         capability_ids = (
             self._expand_and_order_capabilities(requested_capability_ids, initial_types, excluded | reused_inputs)
             if dependency_policy == "complete"
             else requested_capability_ids
         )
+        capability_ids = order_capabilities(self.registry, capability_ids, self._declared_order)
         if not capability_ids:
             raise ValueError("能力路由没有返回可用任务")
         candidate_context = self._candidate_context(capability_ids)
@@ -1168,20 +1178,16 @@ class WorkflowService:
             all_definitions = self.registry.selectable_methods_for(capability_id)
             if not all_definitions:
                 raise RuntimeError(f"能力 {capability_id} 没有注册任何方法")
-            method_candidate_ids = list(
-                planning.get("method_candidates", {}).get(capability_id, [])
-            )
+            # Keep the task-specific shortlist, but restore methods hidden only
+            # because the user removed an operation or plans to reuse its output.
+            method_candidate_ids = list(planning.get("method_candidates", {}).get(capability_id, []))
             previous_step = next((step for step in existing.steps if step.capability == capability_id), None) if existing else None
-            if method_candidate_ids and previous_step and previous_step.selected_method_id:
-                method_candidate_ids = list(dict.fromkeys([*method_candidate_ids, previous_step.selected_method_id]))
-            definition_by_id = {
-                definition.method_id: definition for definition in all_definitions
-            }
-            definitions = [
-                definition_by_id[method_id]
-                for method_id in method_candidate_ids
-                if method_id in definition_by_id
-            ] or all_definitions
+            if method_candidate_ids:
+                if previous_step and previous_step.selected_method_id:
+                    method_candidate_ids.append(previous_step.selected_method_id)
+                method_candidate_ids.extend(method.method_id for method in all_definitions
+                                            if self._scope_conflicts(method, excluded | reused_inputs))
+            definitions = [method for method in all_definitions if method.method_id in method_candidate_ids] or all_definitions
             options = [
                 self._option(method, available_types, features, dataset is not None)
                 for method in definitions
@@ -1189,20 +1195,22 @@ class WorkflowService:
             for option in options:
                 self._restrict_method_scope(option, excluded | reused_inputs)
             compatible = [option for option in options if option.compatible]
+            recommendable = [option for option in compatible if not option.scope_warnings]
+            recommendable = [option for option in recommendable if not option.input_warnings] or recommendable
             requested_method = recommendations.get(capability_id)
             preferred = next(
-                (option for option in compatible if option.id == requested_method),
+                (option for option in recommendable if option.id == requested_method),
                 None,
             ) or next(
                 (
                     option
-                    for option in compatible
+                    for option in recommendable
                     if self._definition_default(definitions, option.id)
                 ),
                 None,
             )
-            if preferred is None and compatible:
-                preferred = compatible[0]
+            if preferred is None and recommendable:
+                preferred = recommendable[0]
             for option in options:
                 option.recommended = bool(preferred and option.id == preferred.id)
                 option.recommendation_reason = (
@@ -1240,6 +1248,8 @@ class WorkflowService:
                 available_types.update(self._selected_method(step).output_types)
             else:
                 for option in compatible:
+                    if option.scope_warnings:
+                        continue
                     available_types.update(option.output_types)
             previous_step_id = step.id
 
@@ -1794,21 +1804,31 @@ class WorkflowService:
         available_types: set[str],
         features: dict[str, bool],
         has_dataset: bool,
+        check_runtime: bool = True,
     ) -> MethodOption:
         reasons: list[str] = []
+        input_warnings: list[str] = []
         if (
             not definition.input_slots
             and "*" not in definition.input_types
             and not available_types.intersection(definition.input_types)
         ):
-            reasons.append("上游没有产生所需输入：" + ", ".join(definition.input_types))
+            input_warnings.append("尚未识别到所需输入：" + ", ".join(definition.input_types)
+                                  + "。仍可选择；请核对输入，执行前会再次校验。")
         if has_dataset:
             missing_features = [
                 feature for feature in definition.requires_features if not features.get(feature, False)
             ]
             if missing_features:
-                reasons.append("数据集缺少条件：" + ", ".join(missing_features))
-        if definition.execution_mode == "runner" and self.runner_registry is not None:
+                input_warnings.append("数据集扫描尚未确认条件：" + ", ".join(missing_features)
+                                      + "。扫描结果可能不完整，请核对实际输入。")
+        if definition.input_slots:
+            missing_types = {slot.type for slot in definition.input_slots
+                             if slot.required and slot.type not in available_types}
+            if missing_types:
+                input_warnings.append("输入待补齐：" + "、".join(sorted(missing_types))
+                                      + "。可以先选择方法，锁定流程后手动绑定文件。")
+        if check_runtime and definition.execution_mode == "runner" and self.runner_registry is not None:
             recipe_methods = (
                 self.registry.recipe_methods(definition.execution_recipe)
                 if definition.execution_recipe is not None
@@ -1834,6 +1854,7 @@ class WorkflowService:
             requires_features=definition.requires_features,
             compatible=not reasons,
             blocked_reasons=reasons,
+            input_warnings=input_warnings,
             parameters=definition.parameters,
             input_slots=definition.input_slots,
             output_slots=definition.output_slots,
@@ -1845,39 +1866,63 @@ class WorkflowService:
             included_capabilities=definition.included_capabilities,
         )
 
-    def _restrict_method_scope(self, method: MethodOption, excluded: set[str]) -> None:
+    @staticmethod
+    def _scope_conflicts(method: MethodOption | CapabilityMethod, excluded: set[str]) -> set[str]:
         included = set(method.included_capabilities)
         if method.execution_recipe:
             included.update(item.capability for item in method.execution_recipe.steps)
-        conflicts = included & excluded
+        return included & excluded
+
+    def _restrict_method_scope(self, method: MethodOption, excluded: set[str]) -> None:
+        conflicts = self._scope_conflicts(method, excluded)
         if conflicts:
-            method.compatible = False
             labels = []
             for capability in sorted(conflicts):
                 node = self.capability_tree.leaf(capability) if self.capability_tree else None
                 labels.append(node.label if node else capability)
-            method.blocked_reasons.append(
-                "此方法包含已排除的生成操作，请选择使用已有输入的方法：" + "、".join(labels))
+            method.scope_warnings.append(
+                "此方法内部仍包含已移除或计划复用的操作：" + "、".join(labels)
+                + "。手动选择后将按该方法原有定义执行；如需复用已有结果，请选择对应的已有输入方法。")
 
-    def _revalidate_chain(self, workflow: Workflow) -> None:
+    def _revalidate_chain(self, workflow: Workflow, *, check_runtime: bool = True) -> None:
+        if workflow.locked_at is None and workflow.status != "confirmed":
+            ordered = order_capabilities(self.registry, [step.capability for step in workflow.steps],
+                                         self._declared_order)
+            changed_order = ordered != [step.capability for step in workflow.steps]
+            workflow.steps.sort(key=lambda step: ordered.index(step.capability))
+            if changed_order:
+                workflow.title = " → ".join(step.title for step in workflow.steps)
+            for index, step in enumerate(workflow.steps):
+                step.order = index + 1
+                step.depends_on = [workflow.steps[index - 1].id] if index else []
         available = set(
             workflow.dataset.inspection.input_types if workflow.dataset else ["dataset_folder"]
         )
         features = workflow.dataset.inspection.features if workflow.dataset else {}
         excluded = set(workflow.excluded_capabilities) | set(workflow.input_capabilities)
         for step in workflow.steps:
+            previous_options = {option.id: option for option in step.method_options}
             definitions = {
                 definition.method_id: definition
                 for definition in self.registry.selectable_methods_for(step.capability)
+                if definition.method_id in previous_options or self._scope_conflicts(definition, excluded)
             }
-            for index, option in enumerate(step.method_options):
-                definition = definitions.get(option.id)
-                if definition:
-                    checked = self._option(definition, available, features, workflow.dataset is not None)
-                    self._restrict_method_scope(checked, excluded)
+            step.method_options = []
+            for definition in definitions.values():
+                checked = self._option(definition, available, features, workflow.dataset is not None,
+                                       check_runtime=check_runtime)
+                option = previous_options.get(definition.method_id)
+                if option:
+                    if not check_runtime:
+                        checked.blocked_reasons = [reason for reason in option.blocked_reasons if not reason.startswith(
+                            ("上游没有产生所需输入：", "数据集缺少条件：", "此方法包含已排除的生成操作"))]
+                        checked.compatible = not checked.blocked_reasons
                     checked.recommended = option.recommended
                     checked.recommendation_reason = option.recommendation_reason
-                    step.method_options[index] = checked
+                self._restrict_method_scope(checked, excluded)
+                if checked.scope_warnings:
+                    checked.recommended = False
+                step.method_options.append(checked)
             selected = next(
                 (option for option in step.method_options if option.id == step.selected_method_id),
                 None,
@@ -1890,7 +1935,7 @@ class WorkflowService:
                 available.update(selected.output_types)
             else:
                 for option in step.method_options:
-                    if option.compatible:
+                    if option.compatible and not option.scope_warnings:
                         available.update(option.output_types)
 
     @staticmethod
@@ -2430,6 +2475,11 @@ class WorkflowService:
         workflow = self.store.get_workflow(workflow_id)
         if workflow is None:
             raise KeyError(workflow_id)
+        if workflow.locked_at is None and workflow.status != "confirmed":
+            # Compatibility and display order are derived from current declarations.
+            # Reading old drafts does not rewrite their persisted snapshots.
+            self._revalidate_chain(workflow, check_runtime=False)
+            self._refresh(workflow)
         return workflow
 
     @staticmethod

@@ -50,6 +50,11 @@ const nodes = ['mgr', 'node01', 'node02', 'node03'].map(name => ({
   name, partition: 'all', state: 'idle', schedulable: true, cpus: 128, allocated_cpus: 0,
   memory_mb: name === 'mgr' ? 490000 : 245000, gpus: name === 'mgr' ? 0 : 1,
 }));
+workflow.steps[0].method_options.push({
+  ...workflow.steps[0].method_options[0], id: 'manual-input', label: '手动绑定已有文件的方法',
+  recommended: false, input_warnings: ['扫描未识别到输入，可以选择方法后手动绑定文件。'],
+  scope_warnings: ['此方法包含已移除的操作，选择后仍按方法原有定义执行。'],
+});
 const server = await createServer({ root: project, configFile: false,
   define: { 'process.env.NEXT_PUBLIC_LOCALFLOW_API_URL': '""' },
   resolve: { alias: { '@': project } }, css: { postcss: { plugins: [tailwindcss()] } },
@@ -89,6 +94,10 @@ try {
       local: { available: true }, slurm: { enabled: true, available: true, partitions: ['all'], gpu_available: true, nodes },
     };
     else if (url.pathname === '/api/runs') data = { runs: [] };
+    else if (url.pathname === '/api/workflows/fixture/steps/step/method') data = {
+      ...workflow, revision: 2, status: 'chain_ready', locked_at: null, can_lock: true,
+      steps: workflow.steps.map(step => ({ ...step, selected_method_id: route.request().postDataJSON().method_id })),
+    };
     else if (url.pathname === '/api/health') data = { status: 'ok', mode: 'demo', model: 'test' };
     else if (url.pathname === '/api/skills') data = { skills: [] };
     else if (url.pathname === '/api/conversations') data = { conversations: [], has_more: false, next_cursor: null };
@@ -132,6 +141,12 @@ try {
     await page.screenshot({ path: join(output, `execution-${viewport.width}.png`), fullPage: true });
     for (const name of ['测试方法选择', '测试参数审核']) {
       await page.getByRole('button', { name, exact: true }).click();
+      if (name === '测试方法选择') {
+        const choice = page.getByRole('radio', { name: /手动绑定已有文件的方法/ });
+        assert(await choice.isEnabled(), 'Input warnings must not disable a registered method');
+        await choice.click();
+        await page.getByRole('radio', { name: /手动绑定已有文件的方法/, checked: true }).waitFor();
+      }
       await checkHorizontal('[data-slot="card"], [data-slot="card-content"], [data-slot="card-footer"]');
       const buttons = page.locator('[data-slot="card"] button:not(:disabled)');
       for (let index = 0; index < await buttons.count(); index++) {

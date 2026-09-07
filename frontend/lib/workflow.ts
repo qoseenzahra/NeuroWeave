@@ -129,6 +129,8 @@ export type MethodOption = {
   requires_features: string[];
   compatible: boolean;
   blocked_reasons: string[];
+  input_warnings?: string[];
+  scope_warnings?: string[];
   recommended: boolean;
   recommendation_reason: string;
   parameters: ParameterSpec[];

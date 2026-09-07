@@ -585,7 +585,7 @@ export function WorkflowCard({ apiBase, workflow, onChange, disabled = false, on
                       )}
                     </div>
 
-                    {!locked && step.method_options.length > 1 && (
+                    {!locked && (step.method_options.length > 1 || !method) && (
                       <RadioGroup
                         aria-label={`${step.title}方法`}
                         className="mt-3 grid gap-2"
@@ -636,6 +636,7 @@ export function WorkflowCard({ apiBase, workflow, onChange, disabled = false, on
                     )}
 
                     {locked && method && <MethodEvidence method={method} />}
+                    {method && (locked || step.method_options.length === 1) && <MethodGuidance method={method} includeInputs={!locked} />}
 
                     {method && (locked || Boolean(step.manual_input_types?.length)) && ((method.input_slots?.length ?? 0) > 0 || (method.output_slots?.length ?? 0) > 0) && (
                       <MethodArtifacts
@@ -1097,9 +1098,18 @@ function MethodChoice({ method, stepId }: { method: MethodOption; stepId: string
             {method.blocked_reasons.join('；')}
           </span>
         )}
+        <MethodGuidance method={method} />
       </span>
     </Label>
   );
+}
+
+function MethodGuidance({ method, includeInputs = true }: { method: MethodOption; includeInputs?: boolean }) {
+  const warnings = [...(includeInputs ? method.input_warnings ?? [] : []), ...(method.scope_warnings ?? [])];
+  if (!warnings.length) return null;
+  return <span className="mt-2 block space-y-1 wrap-anywhere text-[11px] font-normal leading-5 text-amber-700">
+    {warnings.map((warning) => <span className="block" key={warning}>{warning}</span>)}
+  </span>;
 }
 
 function MethodEvidence({ method }: { method: MethodOption }) {

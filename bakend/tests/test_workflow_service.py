@@ -194,8 +194,8 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
             for method in step.method_options
             if method.id == "hcp_pipeline"
         )
-        self.assertFalse(hcp.compatible)
-        self.assertIn("has_t1w", hcp.blocked_reasons[0])
+        self.assertTrue(hcp.compatible)
+        self.assertIn("has_t1w", hcp.input_warnings[0])
 
         workflow = self.service.select_method(
             workflow.workflow_id,
@@ -1112,7 +1112,7 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(workflow.steps[0].selected_method_id, 'mrtrix3-existing-fod')
         self.assertEqual(set(workflow.steps[0].missing_required_inputs), {'fod', 'five_tt'})
         self.assertEqual(set(workflow.excluded_capabilities), {'dwi.five_tt', 'dwi.fod'})
-        self.assertFalse(any(m.compatible for m in workflow.steps[0].method_options if m.id == 'mrtrix3-act-sift2'))
+        self.assertTrue(any(m.compatible for m in workflow.steps[0].method_options if m.id == 'mrtrix3-act-sift2'))
         original_planner = self.service.chat_service.plan_capability_chain
         async def narrow_methods(*args):
             result = await original_planner(*args)
@@ -1122,8 +1122,102 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
             workflow, _ = await self.service.replan(workflow.workflow_id, workflow.revision)
         self.assertEqual(workflow.steps[0].selected_method_id, 'mrtrix3-existing-fod')
         bundled = next(m for m in workflow.steps[0].method_options if m.id == 'mrtrix3-act-sift2')
-        self.assertFalse(bundled.compatible)
-        self.assertTrue(any('已排除' in reason for reason in bundled.blocked_reasons))
+        self.assertTrue(bundled.compatible)
+        self.assertFalse(bundled.recommended)
+        self.assertTrue(any('仍包含' in reason for reason in bundled.scope_warnings))
+
+    async def test_removed_steps_leave_methods_selectable_but_inputs_still_required(self) -> None:
+        workflow = await self._editable_chain(
+            ['dwi.fod', 'dwi.tractography'], {'dwi.tractography': 'mrtrix3-existing-fod'},
+        )
+        workflow = self.service.remove_step(workflow.workflow_id, 'dwi_fod', workflow.revision)
+        bundled = next(m for m in workflow.steps[0].method_options if m.id == 'mrtrix3-act-sift2')
+        self.assertTrue(bundled.compatible)
+        self.assertTrue(bundled.scope_warnings)
+        workflow = self.service.select_method(workflow.workflow_id, 'dwi_tractography',
+                                              bundled.id, workflow.revision)
+        self.assertEqual(workflow.steps[0].selected_method_id, bundled.id)
+        self.assertEqual([s.capability for s in workflow.steps], ['dwi.tractography'])
+        workflow = self.service.select_method(workflow.workflow_id, 'dwi_tractography',
+                                              'mrtrix3-existing-fod', workflow.revision)
+        workflow = self.service.lock_chain(workflow.workflow_id, workflow.revision)
+        with self.assertRaisesRegex(ValueError, '必需输入'):
+            self.service.review_parameters(workflow.workflow_id, workflow.revision)
+        for slot, name in [('fod', 'existing_fod.mif'), ('five_tt', 'existing_5tt.mif')]:
+            (self.dataset_folder / name).write_bytes(b'synthetic existing input')
+            workflow = self.service.bind_input(workflow.workflow_id, 'dwi_tractography', slot,
+                self.dataset.root_id, 'bids-example/' + name, workflow.revision)
+        workflow = self.service.review_parameters(workflow.workflow_id, workflow.revision)
+        self.assertTrue(workflow.can_dry_run)
+        self.assertEqual(workflow.excluded_capabilities, ['dwi.fod'])
+
+    async def test_history_refreshes_old_input_blocks_without_writing_or_runtime_probes(self) -> None:
+        workflow = await self._editable_chain(['dwi.tractography'], {})
+        workflow.steps[0].method_options = [
+            next(m for m in workflow.steps[0].method_options if m.id == 'mrtrix3-existing-fod'),
+        ]
+        workflow.steps[0].method_options[0].compatible = False
+        workflow.steps[0].method_options[0].blocked_reasons = ['上游没有产生所需输入：fod_image']
+        workflow.excluded_capabilities = ['dwi.fod']
+        self.store.save_workflow(workflow, event_type='test_legacy')
+        before = self.store.get_workflow(workflow.workflow_id)
+        from unittest.mock import Mock
+        with patch.object(self.service, 'runner_registry', Mock(get=Mock(side_effect=AssertionError('No runtime probe')))):
+            refreshed = self.service.get(workflow.workflow_id)
+        self.assertEqual({m.id for m in refreshed.steps[0].method_options},
+                         {'mrtrix3-existing-fod', 'mrtrix3-act-sift2'})
+        self.assertTrue(all(m.compatible for m in refreshed.steps[0].method_options))
+        self.assertEqual(self.store.get_workflow(workflow.workflow_id), before)
+
+    async def test_requested_steps_are_ordered_without_adding_producers(self) -> None:
+        requested = ['dwi.connectome', 'dwi.tractography', 'dwi.fod', 'dwi.response', 'dwi.preprocess', 'dwi.five_tt']
+        workflow = await self._editable_chain(requested, {})
+        ids = [s.capability for s in workflow.steps]
+        self.assertEqual(set(ids), set(requested))
+        for before, after in [('dwi.preprocess', 'dwi.response'), ('dwi.response', 'dwi.fod'),
+                              ('dwi.fod', 'dwi.tractography'), ('dwi.five_tt', 'dwi.tractography'),
+                              ('dwi.tractography', 'dwi.connectome')]:
+            self.assertLess(ids.index(before), ids.index(after))
+        self.assertEqual([s.order for s in workflow.steps], list(range(1, 7)))
+        self.assertEqual([s.depends_on for s in workflow.steps], [
+            [workflow.steps[i - 1].id] if i else [] for i in range(6)
+        ])
+        workflow = await self._editable_chain(['dwi.tractography', 'dwi.fod'],
+                                              {'dwi.tractography': 'mrtrix3-existing-fod'})
+        self.assertEqual([s.capability for s in workflow.steps], ['dwi.fod', 'dwi.tractography'])
+        self.assertEqual(workflow.steps[1].input_bindings['fod'].upstream_step_id, workflow.steps[0].id)
+        workflow = await self._editable_chain(['skill.glm', 'skill.nilearn-tool'],
+            {'skill.nilearn-tool': 'reviewed-denoise-nilearn-tool', 'skill.glm': 'reviewed-task-glm-nilearn-tool'})
+        self.assertEqual([s.capability for s in workflow.steps], ['skill.nilearn-tool', 'skill.glm'])
+        self.assertEqual(workflow.steps[1].input_bindings['bold'].upstream_step_id, workflow.steps[0].id)
+        workflow = await self._editable_chain(['dwi.report', 'dwi.fod', 'dwi.inspect'], {})
+        self.assertEqual([s.capability for s in workflow.steps], ['dwi.inspect', 'dwi.fod', 'dwi.report'])
+
+    async def test_legacy_locked_order_changes_only_after_unlock(self) -> None:
+        workflow = await self._editable_chain(['dwi.fod', 'dwi.tractography'],
+                                              {'dwi.tractography': 'mrtrix3-existing-fod'})
+        workflow.steps.reverse()
+        workflow.locked_at = workflow.created_at
+        workflow.status = 'awaiting_parameter_review'
+        self.store.save_workflow(workflow, event_type='test_legacy_order')
+        self.assertEqual([s.capability for s in self.service.get(workflow.workflow_id).steps],
+                         ['dwi.tractography', 'dwi.fod'])
+        changed = self.service.unlock_chain(workflow.workflow_id, workflow.revision)
+        self.assertEqual([s.capability for s in changed.steps], ['dwi.fod', 'dwi.tractography'])
+        self.assertIsNone(changed.parameters_reviewed_at)
+        self.assertIsNone(changed.dry_run_report)
+        self.assertEqual(changed.steps[1].input_bindings['fod'].upstream_step_id, changed.steps[0].id)
+
+    def test_unavailable_software_still_blocks_method_choice(self) -> None:
+        from unittest.mock import Mock
+        method = next(method for method in self.service.registry.selectable_methods_for('dwi.tractography')
+                      if method.method_id == 'mrtrix3-existing-fod')
+        runner = Mock()
+        runner.runtime_status.return_value = {'available': False, 'reason': 'Required software is unavailable'}
+        with patch.object(self.service, 'runner_registry', Mock(get=Mock(return_value=runner))):
+            option = self.service._option(method, set(), {}, True)
+        self.assertFalse(option.compatible)
+        self.assertIn('Required software is unavailable', option.blocked_reasons)
 
     async def test_removed_optional_generation_requires_file_and_uses_existing_source_parameter(self) -> None:
         workflow = await self._editable_chain(['dwi.five_tt', 'dwi.tractography'],

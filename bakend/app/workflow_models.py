@@ -161,6 +161,8 @@ class MethodOption(BaseModel):
     requires_features: list[str] = Field(default_factory=list)
     compatible: bool = True
     blocked_reasons: list[str] = Field(default_factory=list)
+    input_warnings: list[str] = Field(default_factory=list)
+    scope_warnings: list[str] = Field(default_factory=list)
     recommended: bool = False
     recommendation_reason: str = ""
     parameters: list[ParameterSpec] = Field(default_factory=list)
