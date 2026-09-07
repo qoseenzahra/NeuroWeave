@@ -125,6 +125,12 @@ class RunService:
             resolved = schedule_units(workflow, resolved, execution)
         except (RecipeCompilationError, OSError) as exc:
             raise RunConflict(str(exc)) from exc
+        parallel_limits = {}
+        if execution.sample_mode == "per_sample":
+            count = workflow.dataset.inspection.sample_count
+            for index, allocation in enumerate(execution.nodes):
+                assigned = (count + len(execution.nodes) - 1 - index) // len(execution.nodes)
+                parallel_limits[allocation.node] = min(allocation.parallel_samples, assigned)
         for unit in resolved:
             step, method = unit.step, unit.method
             if method.execution_mode != "runner":
@@ -133,7 +139,7 @@ class RunService:
                 raise RunConflict(f"步骤 {step.title} 的 runner 尚未注册：{method.runner_id}")
             if execution.backend == "slurm":
                 allocated = unit.execution or execution
-                self._validate_node_resources(allocated, status)
+                self._validate_node_resources(allocated, status, parallel_samples=parallel_limits.get(allocated.node, 1))
                 for name in ("threads", "omp_threads", "n_jobs"):
                     requested = step.selected_parameters.get(name)
                     if isinstance(requested, (int, float)) and (requested < 1 or requested > allocated.cpus):
@@ -555,7 +561,8 @@ class RunService:
         )
 
     @staticmethod
-    def _validate_node_resources(options: RunExecutionOptions, status: dict[str, Any]) -> None:
+    def _validate_node_resources(options: RunExecutionOptions, status: dict[str, Any], *,
+                                 parallel_samples: int = 1) -> None:
         nodes = [node for node in status.get("nodes", [])
                  if node.get("partition") == options.partition and node.get("schedulable")]
         if options.node:
@@ -565,12 +572,12 @@ class RunService:
         if not nodes:
             return  # Compatibility with older status providers; sbatch still validates.
         if not any(
-            options.cpus <= node.get("cpus", 128)
-            and options.memory_gb * 1024 <= node.get("memory_mb", 512 * 1024)
-            and options.gpus <= node.get("gpus", 0)
+            options.cpus * parallel_samples <= node.get("cpus", 128)
+            and options.memory_gb * 1024 * parallel_samples <= node.get("memory_mb", 512 * 1024)
+            and options.gpus * parallel_samples <= node.get("gpus", 0)
             for node in nodes
         ):
-            raise RunConflict(f"申请的 CPU、内存或 GPU 超过节点 {options.node or '所在分区'} 容量")
+            raise RunConflict(f"申请的 CPU、内存或 GPU（并行 {parallel_samples} 个样本）超过节点 {options.node or '所在分区'} 容量")
 
     @staticmethod
     def _resolve_runtime_bindings(step: WorkflowStep, run: WorkflowRun) -> WorkflowStep:

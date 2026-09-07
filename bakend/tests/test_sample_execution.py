@@ -88,6 +88,85 @@ class SampleExecutionTests(unittest.TestCase):
             self.assertEqual(call.args[1]["node"], "node03")
             self.assertEqual(call.args[1]["cpus"], 32)
 
+    def test_per_node_parallel_limits_preserve_each_samples_step_order(self):
+        self.options.nodes[0].parallel_samples = 2
+        entered = threading.Barrier(4)
+        release = threading.Event()
+        self.addCleanup(release.set)
+        active, peak, calls = {}, {}, []
+        lock = threading.Lock()
+        def execute(context, options, state, on_job):
+            node = options["node"]
+            self.assertNotIn("parallel_samples", options)  # Scheduler options stay backward compatible.
+            with lock:
+                active[node] = active.get(node, 0) + 1
+                peak[node] = max(peak.get(node, 0), active[node])
+                calls.append(context.step.id)
+                first_wave = len(calls) <= 3
+            try:
+                if first_wave:
+                    entered.wait(timeout=3)
+                    self.assertTrue(release.wait(timeout=3))
+                return RunnerResult([], "done")
+            finally:
+                with lock:
+                    active[node] -= 1
+        self.fixture.backend.execute.side_effect = execute
+        run = self.create()
+        try:
+            entered.wait(timeout=3)
+            with lock:
+                self.assertEqual(active, {"node01": 2, "node02": 1})
+        finally:
+            release.set()
+        result = self.fixture._finished(run.run_id)
+        self.assertEqual(result.status, "succeeded", result.error_message)
+        self.assertEqual(peak, {"node01": 2, "node02": 1})
+        self.assertEqual(len(calls), 8)
+        for index in range(4):
+            self.assertLess(calls.index(f"sample_{index + 1:04d}__inspect"),
+                            calls.index(f"sample_{index + 1:04d}__inspect_again"))
+        self.assertEqual(self.fixture.store.get_run(run.run_id).execution.nodes[0].parallel_samples, 2)
+
+    def test_parallel_resources_are_checked_before_any_submission(self):
+        for field, value in (("cpus", 65), ("memory_gb", 120), ("gpus", 1)):
+            with self.subTest(field=field):
+                original = self.options.model_copy(deep=True)
+                self.options.nodes[0].parallel_samples = 2
+                setattr(self.options.nodes[0], field, value)
+                with self.assertRaisesRegex(RunConflict, "并行 2 个样本"):
+                    self.create()
+                self.options = original
+        self.fixture.backend.execute.assert_not_called()
+        self.assertFalse(self.fixture.store.list_runs())
+
+    def test_parallel_limit_above_assigned_sample_count_only_reserves_actual_capacity(self):
+        self.options.nodes[0].parallel_samples = 128  # Only two samples are assigned here.
+        result = self.fixture._finished(self.create().run_id)
+        self.assertEqual(result.status, "succeeded")
+        self.assertEqual(self.fixture.backend.execute.call_count, 8)
+
+    def test_parallel_limit_validation_and_legacy_default(self):
+        self.assertEqual(NodeAllocation.model_validate({"node": "node01"}).parallel_samples, 1)
+        for value in (0, -1, 129, 1.5, True, None):
+            with self.subTest(value=value), self.assertRaises(ValidationError):
+                NodeAllocation(node="node01", parallel_samples=value)
+        with self.assertRaises(ValidationError):
+            RunExecutionOptions(backend="slurm", nodes=[NodeAllocation(node="node01", parallel_samples=2)])
+
+    def test_total_parallel_limit_rejects_before_resolving_or_submitting_samples(self):
+        self.workflow.dataset.inspection.samples = [
+            DatasetSample(sample_id=f"sample-{index}", label=str(index), relative_root=f"sample-{index}")
+            for index in range(129)
+        ]
+        self.workflow.dataset.inspection.sample_count = 129
+        self.fixture.store.save_workflow(self.workflow, event_type="fixture")
+        self.options.nodes[0].parallel_samples = 65
+        self.options.nodes[1].parallel_samples = 64
+        with self.assertRaisesRegex(RunConflict, "不能超过 128"):
+            self.create()
+        self.fixture.backend.execute.assert_not_called()
+
     def test_fod_outputs_are_bound_only_to_the_same_samples_tracking_step(self):
         definitions = [("dwi.fod", "mrtrix-dwi2fod"), ("dwi.tractography", "mrtrix3-existing-fod")]
         steps = []
@@ -172,6 +251,7 @@ class SampleExecutionTests(unittest.TestCase):
                                 nodes=[NodeAllocation(node="node01"), NodeAllocation(node="node01")])
 
     def test_sample_failure_preserves_other_samples_and_skips_its_downstream(self):
+        self.options.nodes[0].parallel_samples = 2
         calls = []
         def execute(context, options, state, on_job):
             calls.append(context.step.id)
@@ -186,8 +266,11 @@ class SampleExecutionTests(unittest.TestCase):
         self.assertEqual(run.steps[1].status, "cancelled")
 
     def test_uncertain_job_keeps_batch_active_and_recovery_reuses_job(self):
+        self.options.nodes[0].parallel_samples = 2
+        entered = threading.Barrier(3)
         def detach(context, options, state, on_job):
-            on_job({"job_id": "4201", "state": "RUNNING", "node_list": options["node"]})
+            on_job({"job_id": context.step.id, "state": "RUNNING", "node_list": options["node"]})
+            entered.wait(timeout=3)
             raise ExecutionDetached("synthetic disconnect")
         self.fixture.backend.execute.side_effect = detach
         run = self.create()
@@ -197,6 +280,7 @@ class SampleExecutionTests(unittest.TestCase):
         previous = self.fixture.service.get(run.run_id)
         self.assertEqual(previous.status, "running")
         started = {step.step_id: step.scheduler for step in previous.steps if step.scheduler}
+        self.assertEqual(len(started), 3)
         with self.assertRaises(RunConflict):
             self.create()
         resumed = []
@@ -207,11 +291,14 @@ class SampleExecutionTests(unittest.TestCase):
         self.fixture.service.resume_slurm_monitoring(run.run_id)
         result = self.fixture._finished(run.run_id)
         self.assertEqual(result.status, "succeeded")
+        self.assertEqual(len(resumed), 8)
+        self.assertEqual(len({step_id for step_id, _ in resumed}), 8)
         for step_id, state in resumed:
             self.assertEqual(state, started.get(step_id))
 
     def test_cancel_reaches_all_active_nodes_and_stops_queued_samples(self):
-        started = threading.Barrier(3)
+        self.options.nodes[0].parallel_samples = 2
+        started = threading.Barrier(4)
         calls = []
         def execute(context, options, state, on_job):
             calls.append(context.step.id)
@@ -226,5 +313,5 @@ class SampleExecutionTests(unittest.TestCase):
         self.fixture.service.cancel(run.run_id)
         result = self.fixture._finished(run.run_id)
         self.assertEqual(result.status, "cancelled")
-        self.assertEqual(len(calls), 2)
+        self.assertEqual(len(calls), 3)
         self.assertTrue(all(step.status == "cancelled" for step in result.steps))

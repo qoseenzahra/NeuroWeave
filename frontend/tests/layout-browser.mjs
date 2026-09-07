@@ -77,9 +77,10 @@ try {
   const errors = [];
   page.on('pageerror', error => { errors.push(error.message); console.error(error.message); });
   await page.addInitScript(fixture => { window.fixture = fixture; }, { dataset, workflow, slot });
+  let submittedExecution;
   await page.route('**/api/**', async route => {
     const url = new URL(route.request().url());
-    let data;
+    let data, status = 200;
     if (url.pathname === '/api/datasets/roots') data = { roots: [root] };
     else if (url.pathname === '/api/datasets') data = { datasets: [dataset, ...Array.from({ length: 5 }, (_, i) => ({
       ...dataset, dataset_id: 'ds-' + i, display_name: 'Long_registered_dataset_' + longName, relative_path: longName,
@@ -96,6 +97,11 @@ try {
       local: { available: true }, slurm: { enabled: true, available: true, partitions: ['all'], gpu_available: true, nodes },
     };
     else if (url.pathname === '/api/runs') data = { runs: [] };
+    else if (url.pathname === '/api/workflows/fixture/runs') {
+      submittedExecution = route.request().postDataJSON().execution;
+      status = 422;
+      data = { detail: 'Synthetic submission captured' };
+    }
     else if (url.pathname === '/api/workflows/fixture/steps/step/method') data = {
       ...workflow, revision: 2, status: 'chain_ready', locked_at: null, can_lock: true,
       steps: workflow.steps.map(step => ({ ...step, selected_method_id: route.request().postDataJSON().method_id })),
@@ -104,7 +110,7 @@ try {
     else if (url.pathname === '/api/skills') data = { skills: [] };
     else if (url.pathname === '/api/conversations') data = { conversations: [], has_more: false, next_cursor: null };
     else throw new Error('Unexpected test API request: ' + url.pathname);
-    await route.fulfill({ contentType: 'application/json', body: JSON.stringify(data) });
+    await route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(data) });
   });
   const checkHorizontal = async selector => {
     const bounds = await page.locator(selector).evaluateAll(elements => elements.map(element => {
@@ -137,12 +143,30 @@ try {
     await page.getByRole('region', { name: 'node01 资源配置' }).getByLabel('CPU 核数', { exact: true }).fill('16');
     await page.getByLabel('样本运行方式', { exact: true }).selectOption('per_sample');
     await page.getByLabel('使用节点 node02', { exact: true }).check();
+    const node01 = page.getByRole('region', { name: 'node01 资源配置' });
+    await node01.getByLabel('并行样本数', { exact: true }).fill('2');
+    await node01.getByLabel('GPU 数量', { exact: true }).fill('1');
+    assert(await page.getByRole('button', { name: '开始运行', exact: true }).isDisabled(),
+      'Parallel GPU reservations must fit the node');
+    await node01.getByLabel('GPU 数量', { exact: true }).fill('0');
+    await node01.getByLabel('并行样本数', { exact: true }).fill('0');
+    assert(await page.getByRole('button', { name: '开始运行', exact: true }).isDisabled(),
+      'Invalid sample concurrency must block submission');
+    await node01.getByLabel('并行样本数', { exact: true }).fill('2');
     await page.getByRole('region', { name: 'node02 资源配置' }).getByLabel('CPU 核数', { exact: true }).fill('32');
     await checkHorizontal('[data-slot="card"], [data-slot="card-content"], [data-slot="card-footer"], section[aria-label]');
     await page.getByRole('button', { name: /开始.*运行|启动.*运行/ }).click({ trial: true });
     await page.screenshot({ path: join(output, `execution-${viewport.width}.png`), fullPage: true });
+    submittedExecution = null;
+    await page.getByRole('button', { name: '开始运行', exact: true }).click();
+    await page.getByText('Synthetic submission captured', { exact: true }).waitFor();
+    assert.equal(submittedExecution.sample_mode, 'per_sample');
+    assert.deepEqual(submittedExecution.nodes.map(({ node, parallel_samples, cpus }) => ({ node, parallel_samples, cpus })),
+      [{ node: 'node01', parallel_samples: 2, cpus: 16 }, { node: 'node02', parallel_samples: 1, cpus: 32 }]);
     for (const name of ['测试方法选择', '测试参数审核']) {
       await page.getByRole('button', { name, exact: true }).click();
+      assert.equal(await page.getByLabel('运行位置', { exact: true }).count(), 0,
+        'Execution settings remain available only after final confirmation');
       if (name === '测试方法选择') {
         const choice = page.getByRole('radio', { name: /手动绑定已有文件的方法/ });
         assert(await choice.isEnabled(), 'Input warnings must not disable a registered method');

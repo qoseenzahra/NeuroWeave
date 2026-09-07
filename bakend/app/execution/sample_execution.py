@@ -1,4 +1,4 @@
-"""Durable sample lanes: one sequential workflow per selected node at a time."""
+"""Durable sample lanes with bounded concurrency on each selected node."""
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
@@ -13,8 +13,16 @@ def execute_samples(service, run, workflow, units, cancel_event):
     stop_submissions = Event()
     detached = Event()
     lanes = {}
+    limits = {allocation.node: allocation.parallel_samples for allocation in run.execution.nodes}
+    sample_lanes = {}
     for index, unit in enumerate(units):
-        lanes.setdefault(unit.execution.node, []).append((index, unit))
+        node = unit.execution.node
+        assigned = sample_lanes.setdefault(node, {})
+        # Keep the whole sample in one stable lane, including during recovery.
+        # Splitting by step would allow downstream work to overtake its inputs.
+        if unit.sample_id not in assigned:
+            assigned[unit.sample_id] = len(assigned) % limits.get(node, 1)
+        lanes.setdefault((node, assigned[unit.sample_id]), []).append((index, unit))
 
     def update_progress():
         run.progress = sum(step.progress for step in run.steps) / max(1, len(run.steps))

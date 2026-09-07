@@ -250,7 +250,10 @@ export type ExecutionOptions = {
   sample_mode?: 'single' | 'per_sample';
 };
 
-export type NodeAllocation = Pick<ExecutionOptions, 'cpus' | 'memory_gb' | 'gpus' | 'time_minutes'> & { node: string };
+export type NodeAllocation = Pick<ExecutionOptions, 'cpus' | 'memory_gb' | 'gpus' | 'time_minutes'> & {
+  node: string;
+  parallel_samples?: number;
+};
 export type SlurmNode = {
   name: string;
   partition: string;

@@ -946,6 +946,11 @@ function RunPanel({ events, run }: { events: RunEvent[]; run: WorkflowRun }) {
         </div>
         <span className="text-xs tabular-nums text-slate-500">{Math.round(run.progress)}%</span>
       </div>
+      {run.execution?.sample_mode === 'per_sample' && (
+        <p className="mt-2 wrap-anywhere text-xs text-slate-600">
+          并行样本上限：{run.execution.nodes?.map(node => `${node.node}：${node.parallel_samples ?? 1}`).join(' · ')}
+        </p>
+      )}
       <Progress className="mt-3" value={run.progress}>
         <ProgressLabel className="text-xs text-slate-600">流程进度</ProgressLabel>
         <ProgressValue className="text-xs" />

@@ -84,6 +84,7 @@ class SmokeSuite:
         self.service: Any = None
         self.current_case: dict[str, Any] | None = None
         self.sample_nodes: list[str] = []
+        self.sample_concurrency = 1
         self.evidence: dict[str, Any] = {
             "schema_version": 1, "started_at": now(), "root": str(root),
             "database": str(self.store.database_path), "partition": partition,
@@ -250,12 +251,15 @@ class SmokeSuite:
         self.store.save_workflow(workflow, event_type="workflow_confirmed")
         options = RunExecutionOptions(
             backend="slurm", partition=self.partition, sample_mode="per_sample",
-            nodes=[NodeAllocation(node=node, cpus=index + 1, memory_gb=1, time_minutes=2)
+            nodes=[NodeAllocation(node=node, cpus=index + 1, memory_gb=1, time_minutes=2,
+                                  parallel_samples=self.sample_concurrency)
                    for index, node in enumerate(self.sample_nodes)],
         )
         run = self.service.create(workflow.workflow_id, workflow.revision, options)
         self.current_case["run_id"] = run.run_id
         run = self.terminal(run.run_id, deadline, "succeeded")
+        assert all(node.parallel_samples == self.sample_concurrency for node in run.execution.nodes)
+        self.current_case["parallel_samples_per_node"] = self.sample_concurrency
         assert len(run.artifacts) == len(samples)
         assert len({artifact.absolute_path for artifact in run.artifacts}) == len(samples)
         verified = []
@@ -440,6 +444,8 @@ def main() -> int:
     parser.add_argument("--partition", default="all", help="已配置的 CPU Slurm 分区（默认 all）")
     parser.add_argument("--sample-nodes", nargs="+", default=[],
                         help="仅验证多样本分配到指定节点，例如 node01 node02；各节点申请 1、2… 核")
+    parser.add_argument("--sample-concurrency", type=int, choices=(1, 2), default=1,
+                        help="每节点并行数量；本合成验证每节点分配两个样本（默认 1）")
     args = parser.parse_args()
     if os.name != "posix":
         parser.error("真实 Slurm 烟测只能在 Linux 提交节点执行")
@@ -464,6 +470,7 @@ def main() -> int:
     with patch.dict(os.environ, settings):
         suite = SmokeSuite(root, args.partition)
         suite.sample_nodes = args.sample_nodes
+        suite.sample_concurrency = args.sample_concurrency
         def stop_requested(*_: Any) -> None:
             raise KeyboardInterrupt("收到停止信号；正在清理本次烟测作业")
 

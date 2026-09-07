@@ -5,8 +5,9 @@ NeuroWeave 保留原来的本地执行，并为已经接入可信 Runner 的流�
 ## 指定节点与按样本并行
 
 - “运行当前输入”：可由 Slurm 自动选节点，也可指定一台节点。指定节点通过既有 sbatch --nodelist 提交。
-- “按样本运行”：先通过路径模板为各样本绑定输入，再勾选一台或多台节点。每台节点分别设置 CPU、主机内存、GPU 和每步时限。
-- 按数据集已保存的样本顺序轮流分配到所选节点；每个节点同时处理一个样本，各节点之间并行。界面显示分配的样本数量。
+- “按样本运行”：先通过路径模板为各样本绑定输入，再勾选一台或多台节点。每台节点分别设置并行样本数（默认 1）、CPU、主机内存、GPU 和每步时限。
+- 按数据集已保存的样本顺序轮流分配到所选节点；各节点最多同时处理设定数量的样本，同一样本内部按流程顺序执行。并行数量受本节点分到的样本数约束，界面显示实际并行上限和资源合计。每台节点可设置 1–128，一次运行的实际并行样本总数最多 128。
+- CPU、主机内存和 GPU 按每个样本的每一步申请，乘以实际并行上限后不得超过节点总容量。例如 node01 设置并行 4、CPU 8、内存 16 GB，将最多申请 32 核和 64 GB。繁忙时仍由 Slurm 排队；并行样本数是上限，不保证立即获得资源。
 - 每个样本使用独立步骤标识和输出目录，上游产物只连接到同一样本的下游。FreeSurfer 等已有执行配方内部仍按原有工作目录约定运行。
 - 单个样本失败时停止其下游步骤，其他样本继续。取消会传递给所有正在执行的节点；服务重启或监控中断保留各个 Job ID 并恢复监控，不重复提交已记录的作业。
 - 整个数据集级别的输入不能自动当成各样本输入；需要有效、完整的样本清单及路径模板。共享参考文件可复用，指向某一样本的单文件绑定需要改为各样本匹配，避免重复处理同一份数据。
@@ -23,8 +24,8 @@ NeuroWeave 保留原来的本地执行，并为已经接入可信 Runner 的流�
     "partition": "all",
     "sample_mode": "per_sample",
     "nodes": [
-      {"node": "node01", "cpus": 8, "memory_gb": 16, "gpus": 0, "time_minutes": 120},
-      {"node": "node02", "cpus": 16, "memory_gb": 32, "gpus": 0, "time_minutes": 120}
+      {"node": "node01", "parallel_samples": 4, "cpus": 8, "memory_gb": 16, "gpus": 0, "time_minutes": 120},
+      {"node": "node02", "parallel_samples": 2, "cpus": 16, "memory_gb": 32, "gpus": 0, "time_minutes": 120}
     ]
   }
 }
@@ -32,7 +33,7 @@ NeuroWeave 保留原来的本地执行，并为已经接入可信 Runner 的流�
 
 运行记录的每一步包含 sample_id、sample_label 和 node_name，并沿用原有 scheduler 日志。节点资源来自 sinfo 查询，客户端选择后服务端再次校验名称、分区和容量；不接受任意主机表达式或 shell 片段。
 
-独立合成数据验证：在已有非密钥 Slurm 环境设置下运行 scripts/smoke_slurm_execution.py --sample-nodes node01 node02。它使用独立 SQLite 库和样本目录，验证真实 Worker 输出、节点及实际 CPU 分配，不读取生产数据库或研究数据。
+独立合成数据验证：在已有非密钥 Slurm 环境设置下运行 scripts/smoke_slurm_execution.py --sample-nodes node01 node02 --sample-concurrency 2。它使用独立 SQLite 库和样本目录，验证每节点并行配置、真实 Worker 输出、节点及实际 CPU 分配，不读取生产数据库或研究数据。
 
 ## 主节点不需要 GPU
 

@@ -16,7 +16,7 @@ def schedule_units(workflow: Workflow, units: list[ExecutionUnit],
         if execution.nodes:
             options = RunExecutionOptions(
                 backend=execution.backend, partition=execution.partition,
-                **execution.nodes[0].model_dump(),
+                **execution.nodes[0].model_dump(exclude={"parallel_samples"}),
             )
         for unit in units:
             if any(binding.binding_mode == "per_sample" and len(binding.sample_matches) > 1
@@ -34,6 +34,9 @@ def schedule_units(workflow: Workflow, units: list[ExecutionUnit],
         raise RecipeCompilationError("数据集样本标识重复，不能进行批量运行")
     if len(execution.nodes) > len(samples):
         raise RecipeCompilationError("选择的节点数不能多于样本数")
+    if sum(min(allocation.parallel_samples, (len(samples) + len(execution.nodes) - 1 - index) // len(execution.nodes))
+           for index, allocation in enumerate(execution.nodes)) > 128:
+        raise RecipeCompilationError("一次运行的实际并行样本数不能超过 128")
     root = Path(workflow.dataset.absolute_path).resolve(strict=True)
     roots = {}
     for sample in samples:
@@ -50,7 +53,7 @@ def schedule_units(workflow: Workflow, units: list[ExecutionUnit],
         prefix = f"sample_{index + 1:04d}__"
         allocation = execution.nodes[index % len(execution.nodes)]
         options = RunExecutionOptions(
-            backend="slurm", partition=execution.partition, **allocation.model_dump(),
+            backend="slurm", partition=execution.partition, **allocation.model_dump(exclude={"parallel_samples"}),
         )
         sample_units = []
         for unit in units:

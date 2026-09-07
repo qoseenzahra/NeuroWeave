@@ -13,6 +13,10 @@ const FIELDS = [
   ['time_minutes', '时限 (分钟)', 1, 1440],
 ] as const;
 
+function assignedSamples(count: number, nodes: NodeAllocation[], index: number) {
+  return Math.floor(count / nodes.length) + (index < count % nodes.length ? 1 : 0);
+}
+
 export function executionErrors(value: ExecutionOptions, backends: ExecutionBackends | null, workflow: Workflow): string[] {
   if (value.backend !== 'slurm') return [];
   const errors: string[] = [];
@@ -22,12 +26,18 @@ export function executionErrors(value: ExecutionOptions, backends: ExecutionBack
   if (!backends?.slurm.available || !backends.slurm.partitions.includes(value.partition)) errors.push('请选择可用的 Slurm 分区。');
   if (batch && (!nodes.length || !count)) errors.push('按样本运行需要有效的样本清单和至少一个节点。');
   if (nodes.length > (batch ? count : 1)) errors.push('节点数不能多于待运行样本数。');
+  const concurrent = nodes.map((allocation, index) => batch
+    ? Math.min(allocation.parallel_samples ?? 1, assignedSamples(count, nodes, index)) : 1);
+  if (concurrent.reduce((sum, number) => sum + number, 0) > 128) errors.push('一次运行的实际并行样本数不能超过 128。');
   if (!batch && workflow.steps.some(step => Object.values(step.input_bindings ?? {}).some(
     binding => binding.binding_mode === 'per_sample' && (binding.coverage?.total ?? 0) > 1,
   ))) errors.push('当前输入包含多个样本，请选择按样本运行。');
-  for (const allocation of nodes.length ? nodes : [value]) {
+  for (const [index, allocation] of (nodes.length ? nodes : [value]).entries()) {
     const name = 'node' in allocation ? allocation.node : null;
     const node = name ? backends?.slurm.nodes?.find(item => item.name === name && item.partition === value.partition) : undefined;
+    const parallel = 'parallel_samples' in allocation ? allocation.parallel_samples ?? 1 : 1;
+    if (!Number.isInteger(parallel) || parallel < 1 || parallel > 128) errors.push(`${name}：并行样本数需为 1–128 的整数。`);
+    if (!batch && parallel !== 1) errors.push('样本并行数量仅适用于按样本运行。');
     if (name && (!node || !node.schedulable)) errors.push(`节点 ${name} 当前不可调度，请重新选择。`);
     for (const [key, label, min, max] of FIELDS) {
       const capacity = key === 'cpus' ? node?.cpus
@@ -36,6 +46,9 @@ export function executionErrors(value: ExecutionOptions, backends: ExecutionBack
       const limit = Math.min(max, capacity ?? max);
       if (!Number.isInteger(allocation[key]) || allocation[key] < min || allocation[key] > limit) {
         errors.push(`${name ?? '资源申请'}：${label}需为 ${min}–${limit} 的整数。`);
+      }
+      if (key !== 'time_minutes' && capacity !== undefined && allocation[key] * (concurrent[index] ?? 1) > capacity) {
+        errors.push(`${name}：并行 ${concurrent[index]} 个样本申请的${label}总量超过节点容量。`);
       }
     }
     if (allocation.gpus && !backends?.slurm.gpu_available) errors.push('当前没有可调度的 GPU。');
@@ -85,7 +98,7 @@ export function ExecutionSettings({ value, backends, workflow, disabled, onChang
   const allocation = (node: SlurmNode): NodeAllocation => ({
     node: node.name, cpus: Math.min(value.cpus, node.cpus ?? 128),
     memory_gb: Math.min(value.memory_gb, Math.floor((node.memory_mb ?? 512 * 1024) / 1024)),
-    gpus: Math.min(value.gpus, node.gpus), time_minutes: value.time_minutes,
+    gpus: Math.min(value.gpus, node.gpus), time_minutes: value.time_minutes, parallel_samples: 1,
   });
   return <div className="min-w-0 space-y-4">
     <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,12rem),1fr))] gap-3">
@@ -100,7 +113,8 @@ export function ExecutionSettings({ value, backends, workflow, disabled, onChang
         <Label htmlFor={'samples-' + workflow.workflow_id}>样本运行方式</Label>
         <NativeSelect className="w-full" id={'samples-' + workflow.workflow_id} disabled={disabled}
           value={value.sample_mode ?? 'single'} onChange={event => onChange({
-            ...value, sample_mode: event.target.value as 'single' | 'per_sample', nodes: nodes.slice(0, 1), node: null,
+            ...value, sample_mode: event.target.value as 'single' | 'per_sample',
+            nodes: nodes.slice(0, 1).map(item => ({ ...item, parallel_samples: 1 })), node: null,
           })}>
           <NativeSelectOption value="single">运行当前输入</NativeSelectOption>
           <NativeSelectOption value="per_sample" disabled={count < 1}>按样本运行（{count} 个样本）</NativeSelectOption>
@@ -131,11 +145,12 @@ export function ExecutionSettings({ value, backends, workflow, disabled, onChang
           <span className="wrap-anywhere">{node.name} · {node.schedulable ? node.state : '不可调度'}</span>
         </label>)}
       </div>
-      <p className="text-xs leading-5 text-slate-500">样本依次分配到所选节点；每个节点同时处理一个样本，各样本内部按流程顺序执行。</p>
+      <p className="text-xs leading-5 text-slate-500">样本依次分配到所选节点；各节点按设定数量并行处理样本，同一样本内部按流程顺序执行。</p>
     </fieldset>}
     {nodes.map((item, index) => {
       const node = available.find(row => row.name === item.node);
-      const assigned = batch ? Math.floor(count / nodes.length) + (index < count % nodes.length ? 1 : 0) : 1;
+      const assigned = batch ? assignedSamples(count, nodes, index) : 1;
+      const parallel = batch ? Math.min(item.parallel_samples ?? 1, assigned) : 1;
       return <section className="min-w-0 space-y-3 rounded-lg border bg-slate-50 p-3" key={item.node} aria-label={`${item.node} 资源配置`}>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h4 className="text-sm font-semibold">{item.node} {batch && <span className="font-normal text-slate-500">· {assigned} 个样本</span>}</h4>
@@ -146,8 +161,22 @@ export function ExecutionSettings({ value, backends, workflow, disabled, onChang
           容量 {node?.cpus ?? '?'} 核 · {node?.memory_mb ? Math.floor(node.memory_mb / 1024) : '?'} GB · {node?.gpus ?? 0} GPU
           {node?.allocated_cpus !== undefined && ` · 已分配 ${node.allocated_cpus} 核`}
         </p>
+        {batch && <div className="min-w-0 space-y-1.5">
+          <Label htmlFor={workflow.workflow_id + item.node + '-parallel'}>并行样本数</Label>
+          <Input id={workflow.workflow_id + item.node + '-parallel'} type="number" min={1} max={128} step={1}
+            disabled={disabled} value={Number.isFinite(item.parallel_samples ?? 1) ? item.parallel_samples ?? 1 : ''}
+            onChange={event => onChange({ ...value, nodes: nodes.map(row => row.node === item.node
+              ? { ...row, parallel_samples: event.target.value === '' ? Number.NaN : Number(event.target.value) } : row) })} />
+          <p className="text-xs leading-5 text-slate-500">
+            本节点分配 {assigned} 个样本，最多同时处理 {Number.isFinite(parallel) ? parallel : '—'} 个。
+            下列 CPU、内存、GPU 和时限均按每个样本的每一步申请。
+          </p>
+        </div>}
         <ResourceFields id={workflow.workflow_id + item.node} value={item} node={node} disabled={disabled}
           onChange={(key, number) => onChange({ ...value, nodes: nodes.map(row => row.node === item.node ? { ...row, [key]: number } : row) })} />
+        {batch && Number.isInteger(parallel) && parallel > 0 && <p className="wrap-anywhere text-xs leading-5 text-slate-500">
+          并行资源合计：{item.cpus * parallel} 核 · {item.memory_gb * parallel} GB · {item.gpus * parallel} GPU。
+        </p>}
       </section>;
     })}
     {!nodes.length && !batch && <ResourceFields id={workflow.workflow_id} value={value} disabled={disabled}

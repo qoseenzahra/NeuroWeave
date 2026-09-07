@@ -58,6 +58,7 @@ class RunResources(BaseModel):
 
 class NodeAllocation(RunResources):
     node: str = Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$")
+    parallel_samples: int = Field(default=1, ge=1, le=128, strict=True)
 
 
 class RunExecutionOptions(RunResources):
@@ -76,6 +77,8 @@ class RunExecutionOptions(RunResources):
             raise ValueError("单节点与节点列表不能同时指定")
         if len(self.nodes) > 1 and self.sample_mode != "per_sample":
             raise ValueError("多节点分配需要按样本运行")
+        if self.sample_mode != "per_sample" and any(item.parallel_samples != 1 for item in self.nodes):
+            raise ValueError("样本并行数量仅适用于按样本运行")
         return self
 
 
