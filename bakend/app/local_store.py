@@ -239,9 +239,6 @@ class LocalStore:
                     c.conversation_id,
                     c.title,
                     c.archived,
-                    '' AS summary,
-                    c.summary_version,
-                    c.summarized_through_sequence,
                     c.created_at,
                     c.updated_at,
                     (
@@ -251,7 +248,7 @@ class LocalStore:
                     ) AS message_count,
                     COALESCE(
                         (
-                            SELECT SUBSTR(REPLACE(REPLACE(latest.content, CHAR(13), ' '), CHAR(10), ' '), 1, 160)
+                            SELECT REPLACE(REPLACE(SUBSTR(latest.content, 1, 160), CHAR(13), ' '), CHAR(10), ' ')
                             FROM conversation_messages AS latest
                             WHERE latest.conversation_id = c.conversation_id
                             ORDER BY latest.sequence DESC

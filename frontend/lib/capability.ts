@@ -36,5 +36,6 @@ export type CapabilityRoutingTrace = {
   intent_source: string;
   normalized_task: string;
   semantic_hints: string[];
+  reused_input_capabilities?: string[];
   confidence: number;
 };

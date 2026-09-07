@@ -253,8 +253,20 @@ class ConversationServiceTests(unittest.IsolatedAsyncioTestCase):
             conversation.conversation_id, summary="很长的摘要" * 1000,
             summary_version=1, summarized_through_sequence=0, updated_at=self.service._now(),
         )
-        self.assertEqual(self.service.list_page().conversations[0].summary, "")
+        item = self.service.list_page().conversations[0].model_dump()
+        self.assertNotIn('summary', item)
+        self.assertNotIn('summarized_through_sequence', item)
         self.assertTrue(self.service.snapshot(conversation.conversation_id).conversation.summary)
+
+    def test_long_messages_have_bounded_previews_without_loading_bodies(self) -> None:
+        conversation = self.service.create('Long history')
+        content = ('message\r\n' * 100_000)
+        self.store.append_conversation_message(conversation.conversation_id, role='assistant', content=content,
+            estimated_tokens=100_000, metadata={}, created_at=self.service._now())
+        with patch.object(self.store, 'conversation_messages', side_effect=AssertionError('List must not load full messages')):
+            item = self.service.list_page().conversations[0]
+        self.assertEqual(item.last_message_preview, content[:160].replace('\r', ' ').replace('\n', ' '))
+        self.assertLess(len(item.model_dump_json()), 800)
 
     def test_invalid_cursor_is_rejected_and_page_size_is_bounded(self) -> None:
         for cursor in ("%%%", "e30", "W10", "bnVsbA", "中文", "x" * 1025):

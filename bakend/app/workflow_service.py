@@ -24,6 +24,7 @@ from .models import (
     ChatRequest,
 )
 from .skill_loader import SkillLoader
+from .task_scope import existing_input_capabilities
 from .workflow_models import (
     DryRunCommand,
     DryRunReport,
@@ -174,7 +175,7 @@ class WorkflowService:
         semantic_leaves = [
             str(item)
             for item in intent.get("candidate_capability_ids") or []
-            if str(item) in allowed_leaf_ids
+            if str(item) in allowed_leaf_ids and str(item) not in existing_input_capabilities(request.message)
         ]
         explicit_skill_leaves = self._explicit_skill_capabilities(
             request.message,
@@ -185,6 +186,10 @@ class WorkflowService:
             explicit_skill_leaves,
         )
         confidence = float(intent.get("confidence") or 0.0)
+        # A complete semantic result is authoritative. Keyword hints must not
+        # turn mentioned inputs into additional requested producer operations.
+        if intent.get('source', '').startswith('model') and intent.get('coverage') == 'complete' and confidence >= 0.7:
+            heuristic_leaves = []
         routed_catalog = self._specific_intent_catalog(
             allowed_leaf_ids,
             [*semantic_leaves, *heuristic_leaves],
@@ -213,6 +218,7 @@ class WorkflowService:
             "normalized_task": str(intent.get("task_brief") or request.message)[:600],
             "semantic_hints": semantic_leaves,
             "confidence": confidence,
+            "reused_input_capabilities": sorted(existing_input_capabilities(request.message)),
         }
         if intent.get("needs_clarification") and not anchor_leaves:
             return {
@@ -351,6 +357,7 @@ class WorkflowService:
         if anchor_leaves:
             selected_leaves = list(dict.fromkeys([*selected_leaves, *anchor_leaves]))
         selected_leaves = self._prune_generic_skill_leaves(selected_leaves)
+        selected_leaves = [item for item in selected_leaves if item not in existing_input_capabilities(request.message)]
         decision = "task" if selected_leaves else "chat"
 
         payload_chars = sum(item["payload_chars"] for item in levels)
@@ -531,6 +538,7 @@ class WorkflowService:
             routing,
             existing=snapshot,
         )
+        self._preserve_step_configuration(replacement, snapshot)
         with self._lock:
             latest = self._require(workflow_id)
             self._check_revision(latest, expected_revision)
@@ -568,6 +576,19 @@ class WorkflowService:
             existing=snapshot,
             dependency_policy="complete",
         )
+        self._preserve_step_configuration(replacement, snapshot)
+        with self._lock:
+            latest = self._require(workflow_id)
+            self._check_revision(latest, expected_revision)
+            self.store.save_workflow(
+                replacement,
+                event_type="workflow_dependencies_completed",
+                event_payload={"requested_capabilities": snapshot.requested_capabilities},
+            )
+        return replacement.model_copy(deep=True)
+
+    def _preserve_step_configuration(self, replacement: Workflow, snapshot: Workflow) -> None:
+        """Keep compatible user choices and bindings when the task chain changes."""
         previous_steps = {step.capability: step for step in snapshot.steps}
         for step in replacement.steps:
             previous = previous_steps.get(step.capability)
@@ -598,15 +619,6 @@ class WorkflowService:
         self._revalidate_chain(replacement)
         self._resolve_workflow_inputs(replacement)
         self._refresh(replacement)
-        with self._lock:
-            latest = self._require(workflow_id)
-            self._check_revision(latest, expected_revision)
-            self.store.save_workflow(
-                replacement,
-                event_type="workflow_dependencies_completed",
-                event_payload={"requested_capabilities": snapshot.requested_capabilities},
-            )
-        return replacement.model_copy(deep=True)
 
     def get(self, workflow_id: str) -> Workflow:
         with self._lock:
@@ -1024,7 +1036,8 @@ class WorkflowService:
             raise RuntimeError("CapabilityTree 尚未配置")
         dataset = self.dataset_service.get(request.dataset_id) if request.dataset_id else None
         initial_types = set(dataset.inspection.input_types if dataset else ["dataset_folder"])
-        requested_capability_ids = list(routing.get("capability_ids") or [])
+        requested_capability_ids = [item for item in routing.get("capability_ids") or []
+                                    if item not in existing_input_capabilities(request.message)]
         capability_ids = (
             self._expand_and_order_capabilities(requested_capability_ids, initial_types)
             if dependency_policy == "complete"
@@ -1355,6 +1368,8 @@ class WorkflowService:
             )
         matched: list[tuple[int, str]] = []
         for capability_id, terms in patterns:
+            if capability_id in existing_input_capabilities(request.message):
+                continue
             positions = [lowered.find(term) for term in terms if lowered.find(term) >= 0]
             if positions and capability_id in allowed:
                 matched.append((min(positions), capability_id))
@@ -1485,6 +1500,12 @@ class WorkflowService:
                 raise RuntimeError(f"能力依赖包含循环：{capability_id}")
             visiting.add(capability_id)
             for prerequisite in explicit_prerequisites.get(capability_id, []):
+                # A requested recomputation must still run; otherwise reuse a
+                # prerequisite artifact already present in the inspected inputs.
+                products = {item for method in self.registry.methods_for(prerequisite)
+                            for item in method.output_types if item != 'execution_log'}
+                if prerequisite not in requested and products.intersection(available):
+                    continue
                 ensure(prerequisite)
             methods = self.registry.methods_for(capability_id)
             if methods and not any(accepts(method) for method in methods):

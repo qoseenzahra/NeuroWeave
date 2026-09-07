@@ -65,6 +65,7 @@ class CapabilityRoutingTrace(BaseModel):
     intent_source: str = ""
     normalized_task: str = ""
     semantic_hints: list[str] = Field(default_factory=list)
+    reused_input_capabilities: list[str] = Field(default_factory=list)
     confidence: float = 0.0
 
 

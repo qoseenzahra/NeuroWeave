@@ -386,8 +386,10 @@ context but is not by itself a reason to recommend a workflow.
             for item in capability_catalog
             if item.get("capability_id")
         }
+        from .task_scope import existing_input_capabilities
+        reused_inputs = existing_input_capabilities(request.message)
         fallback_ids = list(
-            dict.fromkeys(item for item in fallback_capability_ids if item in allowed)
+            dict.fromkeys(item for item in fallback_capability_ids if item in allowed and item not in reused_inputs)
         )[:4]
         fallback = {
             "decision": "task" if fallback_ids else "chat",
@@ -448,6 +450,9 @@ Rules:
   upstream, quality-control, or optimization operations merely because they are normally useful.
 - Missing files, missing software, and incompatible data are execution constraints. They do not
   expand the user's requested operation; the workflow layer will validate inputs separately.
+- Existing artifacts are inputs, not requests to produce them. For example, "根据已有 DWI 和
+  5TT 重新计算 FOD 并追踪" requests FOD estimation and tractography only. Reuse the 5TT.
+  Conversely, an explicit request to regenerate 5TT must be retained even when old 5TT exists.
 - Multiple methods that implement one operation are alternatives, not sequential workflow steps.
 - An explicit software or Skill name in the current message outranks history and UI selections.
 - UI-selected Skills are optional hints unless the current message refers to them.
@@ -491,25 +496,20 @@ Rules:
 
         raw_ids = payload.get("candidate_capability_ids")
         model_ids = (
-            list(dict.fromkeys(str(item) for item in raw_ids if str(item) in allowed))[:4]
+            list(dict.fromkeys(str(item) for item in raw_ids if str(item) in allowed and str(item) not in reused_inputs))[:4]
             if isinstance(raw_ids, list)
-            else []
-        )
-        decision = "task" if payload.get("decision") == "task" or fallback_ids else "chat"
-        candidate_ids = (
-            list(dict.fromkeys([*model_ids, *fallback_ids]))[:4]
-            if decision == "task"
             else []
         )
         try:
             confidence = max(0.0, min(float(payload.get("confidence", 0.0)), 1.0))
         except (TypeError, ValueError):
             confidence = 0.0
-        if fallback_ids:
-            confidence = max(confidence, 0.95)
         coverage = str(payload.get("coverage") or "none")
         if coverage not in {"complete", "partial", "none"}:
             coverage = "none"
+        semantic_complete = confidence >= 0.7 and coverage == 'complete' and bool(model_ids)
+        decision = "task" if payload.get("decision") == "task" or fallback_ids else "chat"
+        candidate_ids = (model_ids if semantic_complete else list(dict.fromkeys([*model_ids, *fallback_ids]))[:4]) if decision == 'task' else []
         if fallback_ids and set(fallback_ids).issubset(candidate_ids) and coverage == "none":
             coverage = "partial"
         operations = payload.get("operations")
@@ -547,7 +547,7 @@ Rules:
                 if isinstance(reason, str) and reason.strip()
                 else fallback["reason"]
             ),
-            "source": "model_with_local_hints" if fallback_ids else "model",
+            "source": "model" if semantic_complete or not fallback_ids else "model_with_local_hints",
         }
 
     async def route_capability_level(

@@ -263,7 +263,7 @@ export default function Home() {
   const {
     conversations, isHistoryLoading, hasMoreConversations, historyError,
     setHistoryError, loadConversations, loadMoreConversations, retryConversations,
-  } = useConversationHistory(API_BASE, conversationSearch, historyScope === 'archived');
+  } = useConversationHistory(API_BASE, conversationSearch, historyScope === 'archived', sidebarView === 'conversations');
   const [isSending, setIsSending] = useState(false);
   const [isSkillsOpen, setIsSkillsOpen] = useState(false);
   const messageEndRef = useRef<HTMLDivElement>(null);
@@ -426,7 +426,7 @@ export default function Home() {
     const loadWorkspace = async () => {
       try {
         const [healthResponse, skillsResponse] = await Promise.all([
-          fetch(`${API_BASE}/api/health`),
+          fetch(`${API_BASE}/api/health?include_runtime=false`),
           fetch(`${API_BASE}/api/skills`),
         ]);
         if (!healthResponse.ok || !skillsResponse.ok) {

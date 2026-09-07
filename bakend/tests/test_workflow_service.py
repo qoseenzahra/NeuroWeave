@@ -989,6 +989,61 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(intent["candidate_capability_ids"], ["dwi.tractography"])
         self.assertEqual(intent["source"], "model")
 
+    async def test_existing_5tt_is_input_while_fod_is_recomputed(self) -> None:
+        original = '我想在这个数据集中，根据已有的dwi数据以及5tt分割结果，重新进行fod计算以及之后的纤维追踪'
+        requests = [original,
+            '已有FOD和5tt，重新进行FOD计算并纤维追踪',
+            'Recompute FOD using existing 5TT, then run tractography',
+            '不要重新生成5tt，只重新计算FOD并进行纤维追踪']
+        for message in requests:
+            with self.subTest(message=message):
+                workflow, _ = await self.service.draft(ChatRequest(message=message, dataset_id=self.dataset.dataset_id, interaction_mode='task'))
+                self.assertEqual(workflow.requested_capabilities, ['dwi.fod', 'dwi.tractography'])
+                self.assertEqual([s.capability for s in workflow.steps], ['dwi.fod', 'dwi.tractography'])
+        workflow, _ = await self.service.draft(ChatRequest(message='已有5tt，但需要重新生成5tt，再做纤维追踪', interaction_mode='task'))
+        self.assertEqual(workflow.requested_capabilities, ['dwi.five_tt', 'dwi.tractography'])
+
+    async def test_replanning_keeps_existing_5tt_binding_and_selected_tracking_method(self) -> None:
+        for sample in ('sub-01', 'sub-02'):
+            (self.dataset_folder / sample / '5TT.mif').write_bytes(b'existing synthetic input')
+        workflow, _ = await self.service.draft(ChatRequest(
+            message='根据已有5tt重新计算FOD并纤维追踪', dataset_id=self.dataset.dataset_id, interaction_mode='task'))
+        workflow = self.service.select_method(workflow.workflow_id, 'dwi_tractography', 'mrtrix3-existing-fod', workflow.revision)
+        workflow = self.service.lock_chain(workflow.workflow_id, workflow.revision)
+        workflow = self.service.bind_input(workflow.workflow_id, 'dwi_tractography', 'five_tt',
+            self.dataset_service.roots()[0].root_id, 'bids-example/sub-01/5TT.mif', workflow.revision)
+        previous = workflow.steps[-1].input_bindings['five_tt'].model_dump()
+        replacement, _ = await self.service.replan(workflow.workflow_id, workflow.revision)
+        self.assertEqual([step.capability for step in replacement.steps], ['dwi.fod', 'dwi.tractography'])
+        tracking = replacement.steps[-1]
+        self.assertEqual(tracking.selected_method_id, 'mrtrix3-existing-fod')
+        self.assertEqual(tracking.input_bindings['five_tt'].model_dump(), previous)
+        self.assertEqual(tracking.input_bindings['fod'].upstream_step_id, 'dwi_fod')
+        self.assertIsNone(replacement.locked_at)
+
+    async def test_complete_semantics_are_not_overridden_by_keyword_hints(self) -> None:
+        chat = self.service.chat_service
+        chat.base_url = 'https://model.invalid/v1'; chat.model = 'test-model'
+        payload = {'decision':'task', 'candidate_capability_ids':['dwi.fod','dwi.tractography'],
+                   'confidence':0.82, 'coverage':'complete', 'task_brief':'重新计算 FOD 并复用已有 5TT 追踪'}
+        catalog = self.service._specific_intent_catalog([node.id for node in self.service.capability_tree.leaves()])
+        request = ChatRequest(message='根据已有5tt重新计算FOD，并进行纤维追踪', interaction_mode='task')
+        with patch.object(chat, '_model_completion', new=AsyncMock(return_value=json.dumps(payload))):
+            intent = await chat.normalize_task_intent(request, catalog, ['dwi.five_tt','dwi.report'])
+        self.assertEqual(intent['candidate_capability_ids'], ['dwi.fod','dwi.tractography'])
+        self.assertEqual(intent['confidence'], 0.82)
+        with patch.object(self.service, '_heuristic_capabilities', return_value=['dwi.five_tt','dwi.report']):
+            routing = await self.service._route_capabilities_hierarchically(request, [n.id for n in self.service.capability_tree.leaves()], None, intent)
+        self.assertEqual(routing['capability_ids'], ['dwi.fod','dwi.tractography'])
+
+    def test_existing_inputs_satisfy_dependencies_but_do_not_skip_requested_recompute(self) -> None:
+        available = {'dataset_folder','preprocessed_dwi','response_functions','fod_image','five_tt_image'}
+        self.assertEqual(self.service._expand_and_order_capabilities(['dwi.tractography'], available), ['dwi.tractography'])
+        self.assertEqual(self.service._expand_and_order_capabilities(['dwi.fod','dwi.tractography'], available), ['dwi.fod','dwi.tractography'])
+        from app.task_scope import existing_input_capabilities
+        self.assertEqual(existing_input_capabilities('根据已有响应函数重新生成FOD'), {'dwi.response'})
+        self.assertEqual(existing_input_capabilities('根据已有FOD和5tt进行纤维追踪'), {'dwi.fod','dwi.five_tt'})
+
     async def test_atomic_bids_and_registration_tasks_use_capability_tree(self) -> None:
         bids, _message = await self.service.draft(
             ChatRequest(

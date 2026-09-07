@@ -90,8 +90,9 @@ run_service = RunService(
 )
 
 
-def _skill_with_execution_status(skill: Any) -> dict[str, Any]:
-    methods = [
+def _skill_with_execution_status(skill: Any, methods: list[Any] | None = None,
+                                 runtime_statuses: dict[str, dict] | None = None) -> dict[str, Any]:
+    methods = methods if methods is not None else [
         method for method in capability_registry.all_methods()
         if method.skill_id == skill.name
     ]
@@ -100,12 +101,15 @@ def _skill_with_execution_status(skill: Any) -> dict[str, Any]:
     )
     ready: list[str] = []
     reasons: list[str] = []
+    statuses = runtime_statuses if runtime_statuses is not None else {}
     for runner_id in runner_ids:
         runner = runner_registry.get(runner_id)
         if runner is None:
             reasons.append(f"{runner_id}：尚未接入可信 Runner")
             continue
-        status = runner.runtime_status()
+        if runner_id not in statuses:
+            statuses[runner_id] = runner.runtime_status()
+        status = statuses[runner_id]
         if status.get("available"):
             ready.append(runner_id)
         else:
@@ -159,10 +163,10 @@ async def root() -> dict[str, str]:
 
 
 @app.get("/api/health")
-async def health() -> dict[str, Any]:
+def health(include_runtime: bool = True) -> dict[str, Any]:
     skill_stats = skill_loader.stats()
     skill_stats["execution_enabled"] = run_service.enabled
-    return {
+    result = {
         "status": "ok",
         "mode": chat_service.mode,
         "model": chat_service.model or "conversation-demo",
@@ -181,11 +185,13 @@ async def health() -> dict[str, Any]:
         "execution": {
             "enabled": run_service.enabled,
             "runner_count": len(runner_registry.ids()),
-            "ready_runner_count": len(runner_registry.available_ids()),
-            "runners": runner_registry.public_catalog(),
             "output_root": str(OUTPUT_ROOT),
         },
     }
+    if include_runtime:
+        runners = runner_registry.public_catalog()
+        result['execution'].update(ready_runner_count=sum(bool(item.get('available')) for item in runners), runners=runners)
+    return result
 
 
 @app.get("/api/datasets/roots")
@@ -255,7 +261,7 @@ async def inspect_dataset(dataset_id: str) -> DatasetRecord:
 
 
 @app.get("/api/skills")
-async def list_skills(q: str = "", source: str = "") -> dict[str, Any]:
+def list_skills(q: str = "", source: str = "") -> dict[str, Any]:
     skills = skill_loader.load_all()
     normalized_query = q.strip().lower()
     normalized_source = source.strip().lower()
@@ -279,8 +285,12 @@ async def list_skills(q: str = "", source: str = "") -> dict[str, Any]:
         skills = [skill for skill in skills if skill.source.lower() == normalized_source]
     skill_stats = skill_loader.stats()
     skill_stats["execution_enabled"] = run_service.enabled
+    methods_by_skill: dict[str, list[Any]] = {}
+    for method in capability_registry.all_methods():
+        methods_by_skill.setdefault(method.skill_id, []).append(method)
+    runtime_statuses: dict[str, dict] = {}
     return {
-        "skills": [_skill_with_execution_status(skill) for skill in skills],
+        "skills": [_skill_with_execution_status(skill, methods_by_skill.get(skill.name, []), runtime_statuses) for skill in skills],
         "stats": {
             **skill_stats,
             "capability_catalog": capability_registry.stats(),
@@ -323,7 +333,7 @@ async def create_conversation() -> ConversationRecord:
 
 
 @app.get("/api/conversations", response_model=ConversationPage)
-async def list_conversations(
+def list_conversations(
     limit: int = Query(default=20, ge=1, le=50),
     q: str = Query(default="", max_length=1000),
     archived: bool = False,

@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import importlib
+import asyncio
 import os
 import sys
 import tempfile
 import unittest
+from threading import Event
 from pathlib import Path
 from unittest.mock import patch
 
@@ -51,6 +53,28 @@ class ConversationApiTests(unittest.IsolatedAsyncioTestCase):
                         "Access-Control-Request-Method": "DELETE",
                     })
                     self.assertEqual(cors.status_code, 200)
+                    with patch.object(main.runner_registry, 'public_catalog', side_effect=AssertionError('Light health must not probe tools')):
+                        light = await client.get('/api/health', params={'include_runtime':'false'})
+                    self.assertEqual(light.status_code, 200)
+                    self.assertNotIn('runners', light.json()['execution'])
+                    self.assertNotIn('summary', page['conversations'][0])
+
+                    entered, released, timed_out = Event(), Event(), Event()
+                    def slow_skill(skill, *_args):
+                        if not entered.is_set():
+                            entered.set()
+                            if not released.wait(3): timed_out.set()
+                        return skill.public_dict()
+                    with patch.object(main, '_skill_with_execution_status', side_effect=slow_skill):
+                        slow_request = asyncio.create_task(client.get('/api/skills'))
+                        try:
+                            self.assertTrue(await asyncio.to_thread(entered.wait, 2))
+                            fast = await asyncio.wait_for(client.get('/api/conversations'), timeout=1)
+                            self.assertEqual(fast.status_code, 200)
+                            self.assertFalse(timed_out.is_set(), 'Skill probes blocked the event loop')
+                        finally:
+                            released.set()
+                            await slow_request
             finally:
                 main.run_service.shutdown()
                 # This test imports app.main with a temporary database path.

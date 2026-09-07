@@ -27,7 +27,12 @@ class ConversationRecord(BaseModel):
     updated_at: str
 
 
-class ConversationListItem(ConversationRecord):
+class ConversationListItem(BaseModel):
+    conversation_id: str
+    title: str
+    archived: bool = False
+    created_at: str
+    updated_at: str
     message_count: int = 0
     last_message_preview: str = ""
     last_message_role: Literal["user", "assistant"] | None = None
