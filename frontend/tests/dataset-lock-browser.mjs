@@ -50,7 +50,7 @@ export async function checkDatasetLock({ page, root, dataset, workflow, appUrl }
     await page.goto(appUrl);
     await page.getByRole('button', { name: '对话', exact: true }).click();
     await page.getByText(conversation.title, { exact: true }).click();
-    await page.getByText('Synthetic workflow', { exact: true }).waitFor();
+    await page.getByText('Synthetic workflow', { exact: true }).last().waitFor();
   };
   const datasetButton = name => page.locator('header').getByRole('button', { name, exact: true });
   await openHistory();

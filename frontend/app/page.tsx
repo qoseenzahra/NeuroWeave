@@ -478,9 +478,11 @@ export default function Home() {
     return () => observer.disconnect();
   }, [sidebarView, isHistoryLoading, historyError, hasMoreConversations, loadMoreConversations, conversations.length]);
 
+  const latestMessageId = messages.at(-1)?.id;
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isSending]);
+    // Editing a workflow updates its message object, but is not a new chat turn.
+  }, [latestMessageId, isSending]);
 
   const toggleSkill = (name: string) => {
     setSelectedSkills((current) =>

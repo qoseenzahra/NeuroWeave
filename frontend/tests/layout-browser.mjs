@@ -6,11 +6,13 @@ import { createServer } from 'vite';
 import tailwindcss from '@tailwindcss/postcss';
 import react from '@vitejs/plugin-react';
 import { checkDatasetLock } from './dataset-lock-browser.mjs';
+import { checkWorkflowScroll } from './workflow-scroll-browser.mjs';
 const require = createRequire(import.meta.url);
 const browserRequire = process.env.LOCALFLOW_BROWSER_TOOLS
   ? createRequire(join(process.env.LOCALFLOW_BROWSER_TOOLS, '_layout-test.cjs')) : require;
 const { chromium } = browserRequire('playwright');
 const project = resolve(import.meta.dirname, '..');
+const scrollOnly = process.argv.includes('--scroll-only');
 const output = resolve(project, '../runtime/layout-checks');
 await mkdir(output, { recursive: true });
 const longName = 'synthetic_long_sample_name_'.repeat(5);
@@ -115,7 +117,7 @@ try {
       assert(item.scroll <= item.client + 2, 'Horizontal overflow: ' + JSON.stringify(item));
     }
   };
-  for (const viewport of [{ width: 1440, height: 900 }, { width: 780, height: 600 },
+  for (const viewport of scrollOnly ? [] : [{ width: 1440, height: 900 }, { width: 780, height: 600 },
     { width: 640, height: 450 }, { width: 390, height: 600 }, { width: 320, height: 420 }]) {
     await page.setViewportSize(viewport);
     await page.goto(`http://127.0.0.1:${server.httpServer.address().port}/__layout_test`);
@@ -163,10 +165,12 @@ try {
     }
     await page.screenshot({ path: join(output, `app-${viewport.width}.png`) });
   }
-  await checkDatasetLock({ page, root, dataset, workflow,
+  if (!scrollOnly) await checkDatasetLock({ page, root, dataset, workflow,
+    appUrl: `http://127.0.0.1:${server.httpServer.address().port}/__layout_test?surface=app` });
+  await checkWorkflowScroll({ page, workflow,
     appUrl: `http://127.0.0.1:${server.httpServer.address().port}/__layout_test?surface=app` });
   assert.deepEqual(errors, []);
-  console.log('Responsive dataset/input selectors and per-node settings passed at five viewport sizes.');
+  if (!scrollOnly) console.log('Responsive dataset/input selectors and per-node settings passed at five viewport sizes.');
 } finally {
   await browser?.close();
   await server.close();
