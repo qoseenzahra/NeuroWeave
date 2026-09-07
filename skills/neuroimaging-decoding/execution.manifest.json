@@ -6,7 +6,7 @@
       "capability": "skill.neuroimaging-decoding",
       "method_id": "reviewed-mvpa-neuroimaging-decoding",
       "label": "ROI 多变量解码",
-      "description": "使用已审核实现执行 ROI 多变量解码；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/neuroimaging-decoding/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.neuroimaging-decoding.mvpa",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -142,7 +142,13 @@
         {
           "path": "skills/neuroimaging-decoding/scripts/train_reference.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -151,7 +157,7 @@
       "capability": "skill.neuroimaging-decoding",
       "method_id": "reviewed-roi-glm-neuroimaging-decoding",
       "label": "ROI GLM 与 FDR",
-      "description": "使用已审核实现执行 ROI GLM 与 FDR；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/neuroimaging-decoding/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.neuroimaging-decoding.roi-glm",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -222,7 +228,13 @@
         {
           "path": "skills/neuroimaging-decoding/scripts/train_reference.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -231,7 +243,7 @@
       "capability": "skill.neuroimaging-decoding",
       "method_id": "reviewed-searchlight-neuroimaging-decoding",
       "label": "SearchLight 分类",
-      "description": "使用已审核实现执行 SearchLight 分类；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/neuroimaging-decoding/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.neuroimaging-decoding.searchlight",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -320,7 +332,13 @@
         {
           "path": "skills/neuroimaging-decoding/scripts/train_reference.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]

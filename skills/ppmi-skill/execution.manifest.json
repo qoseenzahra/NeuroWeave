@@ -6,7 +6,7 @@
       "capability": "skill.ppmi-skill",
       "method_id": "reviewed-extract-ppmi-phenotype-ppmi-skill",
       "label": "ppmi 表型/刺激提取",
-      "description": "使用已审核实现执行 ppmi 表型/刺激提取；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/ppmi-skill/scripts/extract_ppmi_phenotype.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.ppmi-skill.extract-ppmi-phenotype",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -69,7 +69,13 @@
         {
           "path": "skills/ppmi-skill/scripts/extract_ppmi_phenotype.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -78,7 +84,7 @@
       "capability": "skill.ppmi-skill",
       "method_id": "reviewed-ppmi-qc-summary-ppmi-skill",
       "label": "ppmi 质控汇总",
-      "description": "使用已审核实现执行 ppmi 质控汇总；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/ppmi-skill/scripts/ppmi_qc_summary.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.ppmi-skill.ppmi-qc-summary",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -144,7 +150,13 @@
         {
           "path": "skills/ppmi-skill/scripts/ppmi_qc_summary.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -153,7 +165,7 @@
       "capability": "skill.ppmi-skill",
       "method_id": "reviewed-validate-ppmi-ppmi-skill",
       "label": "ppmi 数据校验",
-      "description": "使用已审核实现执行 ppmi 数据校验；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/ppmi-skill/scripts/validate_ppmi.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.ppmi-skill.validate-ppmi",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -198,7 +210,13 @@
         {
           "path": "skills/ppmi-skill/scripts/validate_ppmi.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]

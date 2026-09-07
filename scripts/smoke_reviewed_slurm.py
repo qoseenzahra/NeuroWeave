@@ -33,7 +33,7 @@ def main():
     dispatch=patch.object(SlurmBackend,'_command',staticmethod(compute_nodes));dispatch.start()
     suite=SmokeSuite(root,'all');service=suite.new_service();records=[]
     cases=[('bold_chain',['reviewed.nilearn-tool.denoise','reviewed.nilearn-tool.task-glm'],0,2),
-           ('cnn_cpu',['reviewed.cnn3d.train'],0,2),('bnt_gpu',['reviewed.bnt.train'],1,2),
+           ('cnn_cpu',['reviewed.cnn3d.train'],0,2),('cnn_gpu',['reviewed.cnn3d.train'],1,2),
            ('eddy_cpu',['reviewed.dwi-skill.dwifslpreproc'],0,8)]
     try:
         for name,runners,gpus,cpus in cases:

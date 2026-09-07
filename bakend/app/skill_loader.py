@@ -146,9 +146,11 @@ class SkillLoader:
             fallback_runtime = "Script / external tools" if script_count or handler else "SKILL.md workflow"
             structure_mode = (
                 "runner"
-                if (
-                    (skill_path / "tool.manifest.json").is_file()
-                    or (skill_path / "execution.manifest.json").is_file()
+                if any(
+                    method.get("execution_mode", "runner") == "runner"
+                    for manifest_name in ("tool.manifest.json", "execution.manifest.json")
+                    if (skill_path / manifest_name).is_file()
+                    for method in json.loads((skill_path / manifest_name).read_text(encoding="utf-8")).get("provides", [])
                 )
                 else "planning"
                 if (skill_path / "planning.manifest.json").is_file()

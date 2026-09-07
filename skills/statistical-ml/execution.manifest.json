@@ -6,7 +6,7 @@
       "capability": "skill.statistical-ml",
       "method_id": "reviewed-classification-statistical-ml",
       "label": "统计学习：分类",
-      "description": "使用已审核实现执行 统计学习：分类；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.statistical-ml.classification",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -153,7 +153,13 @@
         {
           "path": "skills/statistical-ml/scripts/train_reference.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -162,7 +168,7 @@
       "capability": "skill.statistical-ml",
       "method_id": "reviewed-regression-statistical-ml",
       "label": "统计学习：回归",
-      "description": "使用已审核实现执行 统计学习：回归；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.statistical-ml.regression",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -309,7 +315,13 @@
         {
           "path": "skills/statistical-ml/scripts/train_reference.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]

@@ -6,7 +6,7 @@
       "capability": "skill.seed-iv-skill",
       "method_id": "reviewed-features-seed-iv-skill",
       "label": "SEED 频带特征提取",
-      "description": "使用已审核实现执行 SEED 频带特征提取；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/seed-iv-skill/scripts/extract_seed_iv_features.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.seed-iv-skill.features",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -61,7 +61,13 @@
         {
           "path": "skills/seed-iv-skill/scripts/extract_seed_iv_features.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -70,7 +76,7 @@
       "capability": "skill.seed-iv-skill",
       "method_id": "reviewed-classify-seed-iv-skill",
       "label": "SEED 按受试者留一交叉验证",
-      "description": "使用已审核实现执行 SEED 按受试者留一交叉验证；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/seed-iv-skill/scripts/classify_seed_iv.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.seed-iv-skill.classify",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -140,7 +146,13 @@
         {
           "path": "skills/seed-iv-skill/scripts/classify_seed_iv.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -149,7 +161,7 @@
       "capability": "skill.seed-iv-skill",
       "method_id": "reviewed-validate-seed-iv-seed-iv-skill",
       "label": "seed-iv 数据校验",
-      "description": "使用已审核实现执行 seed-iv 数据校验；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/seed-iv-skill/scripts/validate_seed_iv.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.seed-iv-skill.validate-seed-iv",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -194,7 +206,13 @@
         {
           "path": "skills/seed-iv-skill/scripts/validate_seed_iv.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]

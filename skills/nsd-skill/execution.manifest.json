@@ -6,7 +6,7 @@
       "capability": "skill.nsd-skill",
       "method_id": "reviewed-extract-nsd-stimulus-nsd-skill",
       "label": "nsd 表型/刺激提取",
-      "description": "使用已审核实现执行 nsd 表型/刺激提取；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/nsd-skill/scripts/extract_nsd_stimulus.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.nsd-skill.extract-nsd-stimulus",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -69,7 +69,13 @@
         {
           "path": "skills/nsd-skill/scripts/extract_nsd_stimulus.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -78,7 +84,7 @@
       "capability": "skill.nsd-skill",
       "method_id": "reviewed-nsd-qc-summary-nsd-skill",
       "label": "nsd 质控汇总",
-      "description": "使用已审核实现执行 nsd 质控汇总；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/nsd-skill/scripts/nsd_qc_summary.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.nsd-skill.nsd-qc-summary",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -140,7 +146,13 @@
         {
           "path": "skills/nsd-skill/scripts/nsd_qc_summary.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -149,7 +161,7 @@
       "capability": "skill.nsd-skill",
       "method_id": "reviewed-validate-nsd-nsd-skill",
       "label": "nsd 数据校验",
-      "description": "使用已审核实现执行 nsd 数据校验；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/nsd-skill/scripts/validate_nsd.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.nsd-skill.validate-nsd",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -194,7 +206,13 @@
         {
           "path": "skills/nsd-skill/scripts/validate_nsd.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]

@@ -18,7 +18,7 @@ def load_image_list(list_path: Path) -> list[str]:
 def build_feature_matrix(images: list[str], masker: NiftiMasker) -> np.ndarray:
     subject_vectors = [masker.fit_transform(image_path) for image_path in images]
     stacked = np.vstack(subject_vectors)
-    return stacked.T
+    return stacked.reshape(len(images), -1, stacked.shape[-1]).mean(axis=0).T
 
 
 def run_hierarchical(input_list: Path, output_dir: Path, n_clusters: int, mask_path: Path) -> None:

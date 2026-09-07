@@ -838,7 +838,7 @@
       "capability": "skill.dwi-skill",
       "method_id": "reviewed-roi-stats-dipy-tool",
       "label": "分区影像统计",
-      "description": "使用已审核实现执行 分区影像统计；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/dipy-tool/scripts/roi_stats_reference.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.dipy-tool.roi-stats",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -909,7 +909,13 @@
         {
           "path": "skills/dipy-tool/scripts/roi_stats_reference.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -918,7 +924,7 @@
       "capability": "skill.dwi-skill",
       "method_id": "reviewed-dwidenoise-dwi-skill",
       "label": "MRtrix MP-PCA 去噪",
-      "description": "使用已审核实现执行 MRtrix MP-PCA 去噪；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：/opt/software/mrtrix3-master/bin/dwidenoise。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.dwi-skill.dwidenoise",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -973,7 +979,13 @@
         {
           "path": "bakend/app/execution/native_worker.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -982,7 +994,7 @@
       "capability": "skill.dwi-skill",
       "method_id": "reviewed-mrdegibbs-dwi-skill",
       "label": "MRtrix Gibbs 校正",
-      "description": "使用已审核实现执行 MRtrix Gibbs 校正；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：/opt/software/mrtrix3-master/bin/mrdegibbs。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.dwi-skill.mrdegibbs",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -1037,7 +1049,13 @@
         {
           "path": "bakend/app/execution/native_worker.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -1046,7 +1064,7 @@
       "capability": "skill.dwi-skill",
       "method_id": "reviewed-mrconvert-dwi-skill",
       "label": "MRtrix 格式转换",
-      "description": "使用已审核实现执行 MRtrix 格式转换；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：/opt/software/mrtrix3-master/bin/mrconvert。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.dwi-skill.mrconvert",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -1101,7 +1119,13 @@
         {
           "path": "bakend/app/execution/native_worker.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -1110,7 +1134,7 @@
       "capability": "skill.dwi-skill",
       "method_id": "reviewed-dwibiascorrect-dwi-skill",
       "label": "MRtrix/ANTs 偏置场校正",
-      "description": "使用已审核实现执行 MRtrix/ANTs 偏置场校正；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：/opt/software/mrtrix3-master/bin/dwibiascorrect, /opt/software/ants-2.6.5/bin/N4BiasFieldCorrection。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.dwi-skill.dwibiascorrect",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -1177,7 +1201,13 @@
         {
           "path": "bakend/app/execution/native_worker.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -1186,7 +1216,7 @@
       "capability": "skill.dwi-skill",
       "method_id": "reviewed-dwifslpreproc-dwi-skill",
       "label": "MRtrix/FSL DWI 预处理（无反向相位编码）",
-      "description": "使用已审核实现执行 MRtrix/FSL DWI 预处理（无反向相位编码）；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：/opt/software/mrtrix3-master/bin/dwifslpreproc, /opt/software/fsl/bin/eddy_cpu。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.dwi-skill.dwifslpreproc",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -1301,7 +1331,13 @@
         {
           "path": "bakend/app/execution/native_worker.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]

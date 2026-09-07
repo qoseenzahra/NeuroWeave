@@ -1,9 +1,8 @@
 {
-  "verified_at": "2026-09-07T05:48:56.384331+00:00",
-  "scope": "Synthetic inputs only; separate databases; production data not used",
-  "new_reviewed_implementations": 154,
-  "direct_cases": 187,
-  "direct_cases_passed": 187,
+  "verified_at": "2026-09-07T06:13:03.580940+00:00",
+  "scope": "Existing implementations only; synthetic inputs; separate test databases; unchanged calls retain prior evidence.",
+  "direct_cases": 175,
+  "direct_cases_passed": 175,
   "slurm_cases_passed": 4,
   "slurm": [
     {
@@ -36,30 +35,14 @@
       "artifacts": 8,
       "jobs": [
         {
-          "job_id": "30",
+          "job_id": "35",
           "node": "node01",
           "state": "COMPLETED",
           "exit_code": "0:0",
           "gpus": 0
         }
       ],
-      "evidence_set": "skill-slurm-v3"
-    },
-    {
-      "case": "bnt_gpu",
-      "passed": true,
-      "device": "cuda",
-      "artifacts": 8,
-      "jobs": [
-        {
-          "job_id": "33",
-          "node": "node01",
-          "state": "COMPLETED",
-          "exit_code": "0:0",
-          "gpus": 1
-        }
-      ],
-      "evidence_set": "skill-slurm-v4"
+      "evidence_set": "existing-only-slurm-v1"
     },
     {
       "case": "eddy_cpu",
@@ -76,6 +59,22 @@
         }
       ],
       "evidence_set": "skill-slurm-v5"
+    },
+    {
+      "case": "cnn_gpu",
+      "passed": true,
+      "device": "cuda",
+      "artifacts": 8,
+      "jobs": [
+        {
+          "job_id": "36",
+          "node": "node01",
+          "state": "COMPLETED",
+          "exit_code": "0:0",
+          "gpus": 1
+        }
+      ],
+      "evidence_set": "existing-only-slurm-v1"
     }
   ],
   "direct_results": [
@@ -357,16 +356,6 @@
       "evidence_set": "skill-smoke-v4"
     },
     {
-      "runner_id": "reviewed.bnt.train",
-      "variant": null,
-      "case": "reviewed.bnt.train",
-      "passed": true,
-      "artifacts": 8,
-      "checked_images": [],
-      "seconds": 4.6,
-      "evidence_set": "skill-smoke-v4"
-    },
-    {
       "runner_id": "reviewed.bold5000-skill.bold5000-qc-summary",
       "variant": null,
       "case": "reviewed.bold5000-skill.bold5000-qc-summary",
@@ -473,16 +462,6 @@
       "artifacts": 3,
       "checked_images": [],
       "seconds": 1.041,
-      "evidence_set": "skill-smoke-v4"
-    },
-    {
-      "runner_id": "reviewed.brainnetcnn.train",
-      "variant": null,
-      "case": "reviewed.brainnetcnn.train",
-      "passed": true,
-      "artifacts": 8,
-      "checked_images": [],
-      "seconds": 4.751,
       "evidence_set": "skill-smoke-v4"
     },
     {
@@ -658,26 +637,6 @@
         }
       ],
       "seconds": 0.711,
-      "evidence_set": "skill-smoke-v5"
-    },
-    {
-      "runner_id": "reviewed.combraintf.train",
-      "variant": null,
-      "case": "reviewed.combraintf.train",
-      "passed": true,
-      "artifacts": 8,
-      "checked_images": [],
-      "seconds": 4.797,
-      "evidence_set": "skill-smoke-v4"
-    },
-    {
-      "runner_id": "reviewed.connectome-discovery.rank",
-      "variant": null,
-      "case": "reviewed.connectome-discovery.rank",
-      "passed": true,
-      "artifacts": 4,
-      "checked_images": [],
-      "seconds": 1.131,
       "evidence_set": "skill-smoke-v5"
     },
     {
@@ -1383,24 +1342,14 @@
       "evidence_set": "skill-smoke-v4"
     },
     {
-      "runner_id": "reviewed.mne-eeg-tool.alpha-asymmetry",
-      "variant": null,
-      "case": "reviewed.mne-eeg-tool.alpha-asymmetry",
-      "passed": true,
-      "artifacts": 4,
-      "checked_images": [],
-      "seconds": 3.309,
-      "evidence_set": "skill-smoke-v4"
-    },
-    {
       "runner_id": "reviewed.mne-eeg-tool.autoreject",
       "variant": null,
       "case": "reviewed.mne-eeg-tool.autoreject",
       "passed": true,
       "artifacts": 4,
       "checked_images": [],
-      "seconds": 3.874,
-      "evidence_set": "skill-smoke-v4"
+      "seconds": 5.985,
+      "evidence_set": "existing-only-smoke-v1"
     },
     {
       "runner_id": "reviewed.mne-eeg-tool.bad-channels",
@@ -1409,28 +1358,8 @@
       "passed": true,
       "artifacts": 4,
       "checked_images": [],
-      "seconds": 3.653,
-      "evidence_set": "skill-smoke-v4"
-    },
-    {
-      "runner_id": "reviewed.mne-eeg-tool.bands",
-      "variant": null,
-      "case": "reviewed.mne-eeg-tool.bands",
-      "passed": true,
-      "artifacts": 5,
-      "checked_images": [],
-      "seconds": 3.438,
-      "evidence_set": "skill-smoke-v4"
-    },
-    {
-      "runner_id": "reviewed.mne-eeg-tool.clean",
-      "variant": null,
-      "case": "reviewed.mne-eeg-tool.clean",
-      "passed": true,
-      "artifacts": 6,
-      "checked_images": [],
-      "seconds": 3.595,
-      "evidence_set": "skill-smoke-v4"
+      "seconds": 5.089,
+      "evidence_set": "existing-only-smoke-v1"
     },
     {
       "runner_id": "reviewed.mne-eeg-tool.connectivity",
@@ -1439,8 +1368,8 @@
       "passed": true,
       "artifacts": 4,
       "checked_images": [],
-      "seconds": 3.612,
-      "evidence_set": "skill-smoke-v4"
+      "seconds": 5.545,
+      "evidence_set": "existing-only-smoke-v1"
     },
     {
       "runner_id": "reviewed.mne-eeg-tool.epoch",
@@ -1449,28 +1378,8 @@
       "passed": true,
       "artifacts": 4,
       "checked_images": [],
-      "seconds": 3.392,
-      "evidence_set": "skill-smoke-v4"
-    },
-    {
-      "runner_id": "reviewed.mne-eeg-tool.erp",
-      "variant": null,
-      "case": "reviewed.mne-eeg-tool.erp",
-      "passed": true,
-      "artifacts": 5,
-      "checked_images": [],
-      "seconds": 3.349,
-      "evidence_set": "skill-smoke-v4"
-    },
-    {
-      "runner_id": "reviewed.mne-eeg-tool.features",
-      "variant": null,
-      "case": "reviewed.mne-eeg-tool.features",
-      "passed": true,
-      "artifacts": 5,
-      "checked_images": [],
-      "seconds": 3.388,
-      "evidence_set": "skill-smoke-v4"
+      "seconds": 4.356,
+      "evidence_set": "existing-only-smoke-v1"
     },
     {
       "runner_id": "reviewed.mne-eeg-tool.filter",
@@ -1479,8 +1388,8 @@
       "passed": true,
       "artifacts": 4,
       "checked_images": [],
-      "seconds": 3.418,
-      "evidence_set": "skill-smoke-v4"
+      "seconds": 4.426,
+      "evidence_set": "existing-only-smoke-v1"
     },
     {
       "runner_id": "reviewed.mne-eeg-tool.ica",
@@ -1489,8 +1398,8 @@
       "passed": true,
       "artifacts": 6,
       "checked_images": [],
-      "seconds": 3.68,
-      "evidence_set": "skill-smoke-v4"
+      "seconds": 4.83,
+      "evidence_set": "existing-only-smoke-v1"
     },
     {
       "runner_id": "reviewed.mne-eeg-tool.inspect",
@@ -1499,8 +1408,8 @@
       "passed": true,
       "artifacts": 4,
       "checked_images": [],
-      "seconds": 3.369,
-      "evidence_set": "skill-smoke-v4"
+      "seconds": 4.385,
+      "evidence_set": "existing-only-smoke-v1"
     },
     {
       "runner_id": "reviewed.mne-eeg-tool.maxwell",
@@ -1509,28 +1418,8 @@
       "passed": true,
       "artifacts": 4,
       "checked_images": [],
-      "seconds": 3.661,
-      "evidence_set": "skill-smoke-v4"
-    },
-    {
-      "runner_id": "reviewed.mne-eeg-tool.mel",
-      "variant": null,
-      "case": "reviewed.mne-eeg-tool.mel",
-      "passed": true,
-      "artifacts": 4,
-      "checked_images": [],
-      "seconds": 3.332,
-      "evidence_set": "skill-smoke-v4"
-    },
-    {
-      "runner_id": "reviewed.mne-eeg-tool.microstates",
-      "variant": null,
-      "case": "reviewed.mne-eeg-tool.microstates",
-      "passed": true,
-      "artifacts": 5,
-      "checked_images": [],
-      "seconds": 3.667,
-      "evidence_set": "skill-smoke-v4"
+      "seconds": 4.92,
+      "evidence_set": "existing-only-smoke-v1"
     },
     {
       "runner_id": "reviewed.mne-eeg-tool.source",
@@ -1539,8 +1428,8 @@
       "passed": true,
       "artifacts": 4,
       "checked_images": [],
-      "seconds": 3.432,
-      "evidence_set": "skill-smoke-v4"
+      "seconds": 4.593,
+      "evidence_set": "existing-only-smoke-v1"
     },
     {
       "runner_id": "reviewed.mne-eeg-tool.time-frequency",
@@ -1549,8 +1438,8 @@
       "passed": true,
       "artifacts": 4,
       "checked_images": [],
-      "seconds": 3.442,
-      "evidence_set": "skill-smoke-v4"
+      "seconds": 4.644,
+      "evidence_set": "existing-only-smoke-v1"
     },
     {
       "runner_id": "reviewed.mschallenge-skill.analyze-lesions",
@@ -1638,8 +1527,8 @@
       "passed": true,
       "artifacts": 3,
       "checked_images": [],
-      "seconds": 1.287,
-      "evidence_set": "skill-smoke-v4"
+      "seconds": 1.262,
+      "evidence_set": "existing-only-smoke-v1"
     },
     {
       "runner_id": "reviewed.nibabel-skill.inspect",
@@ -1648,8 +1537,8 @@
       "passed": true,
       "artifacts": 3,
       "checked_images": [],
-      "seconds": 1.924,
-      "evidence_set": "skill-smoke-v4"
+      "seconds": 1.163,
+      "evidence_set": "existing-only-smoke-v1"
     },
     {
       "runner_id": "reviewed.nibabel-skill.surface",
@@ -1658,8 +1547,8 @@
       "passed": true,
       "artifacts": 3,
       "checked_images": [],
-      "seconds": 1.952,
-      "evidence_set": "skill-smoke-v4"
+      "seconds": 1.347,
+      "evidence_set": "existing-only-smoke-v1"
     },
     {
       "runner_id": "reviewed.nifd-skill.extract-nifd-phenotype",
@@ -1784,8 +1673,8 @@
           ]
         }
       ],
-      "seconds": 2.933,
-      "evidence_set": "skill-smoke-v4"
+      "seconds": 2.862,
+      "evidence_set": "existing-only-smoke-v1"
     },
     {
       "runner_id": "reviewed.nilearn-tool.ica",
@@ -1823,8 +1712,8 @@
           ]
         }
       ],
-      "seconds": 2.885,
-      "evidence_set": "skill-smoke-v4"
+      "seconds": 3.087,
+      "evidence_set": "existing-only-smoke-v1"
     },
     {
       "runner_id": "reviewed.nilearn-tool.preprocess",
@@ -1901,25 +1790,6 @@
         }
       ],
       "seconds": 4.026,
-      "evidence_set": "skill-smoke-v4"
-    },
-    {
-      "runner_id": "reviewed.nilearn-tool.zalff",
-      "variant": null,
-      "case": "reviewed.nilearn-tool.zalff",
-      "passed": true,
-      "artifacts": 6,
-      "checked_images": [
-        {
-          "path": "zalff.nii.gz",
-          "shape": [
-            12,
-            12,
-            12
-          ]
-        }
-      ],
-      "seconds": 1.977,
       "evidence_set": "skill-smoke-v4"
     },
     {
@@ -2543,8 +2413,25 @@
     }
   ],
   "backend_regression": {
-    "full_suite_passed": 114,
-    "final_affected_suite_passed": 33,
-    "new_tests_added_after_full_suite": 2
-  }
+    "tests_passed": 119,
+    "subtests_passed": 467,
+    "seconds": 151.64,
+    "command": "python -m pytest bakend/tests -q"
+  },
+  "retained_call_adapters": 142,
+  "withdrawn_adapters": [
+    "reviewed.bnt.train",
+    "reviewed.brainnetcnn.train",
+    "reviewed.combraintf.train",
+    "reviewed.connectome-discovery.rank",
+    "reviewed.mne-eeg-tool.alpha-asymmetry",
+    "reviewed.mne-eeg-tool.bands",
+    "reviewed.mne-eeg-tool.clean",
+    "reviewed.mne-eeg-tool.erp",
+    "reviewed.mne-eeg-tool.features",
+    "reviewed.mne-eeg-tool.mel",
+    "reviewed.mne-eeg-tool.microstates",
+    "reviewed.nilearn-tool.zalff"
+  ],
+  "current_revision_direct_cases": 15
 }

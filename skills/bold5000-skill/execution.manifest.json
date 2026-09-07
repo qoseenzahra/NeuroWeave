@@ -6,7 +6,7 @@
       "capability": "skill.bold5000-skill",
       "method_id": "reviewed-bold5000-qc-summary-bold5000-skill",
       "label": "bold5000 质控汇总",
-      "description": "使用已审核实现执行 bold5000 质控汇总；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/bold5000-skill/scripts/bold5000_qc_summary.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.bold5000-skill.bold5000-qc-summary",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -72,7 +72,13 @@
         {
           "path": "skills/bold5000-skill/scripts/bold5000_qc_summary.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -81,7 +87,7 @@
       "capability": "skill.bold5000-skill",
       "method_id": "reviewed-extract-bold5000-stimulus-bold5000-skill",
       "label": "bold5000 表型/刺激提取",
-      "description": "使用已审核实现执行 bold5000 表型/刺激提取；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/bold5000-skill/scripts/extract_bold5000_stimulus.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.bold5000-skill.extract-bold5000-stimulus",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -132,7 +138,13 @@
         {
           "path": "skills/bold5000-skill/scripts/extract_bold5000_stimulus.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -141,7 +153,7 @@
       "capability": "skill.bold5000-skill",
       "method_id": "reviewed-reorganize-bold5000-bold5000-skill",
       "label": "bold5000 复制整理为 BIDS 目录",
-      "description": "使用已审核实现执行 bold5000 复制整理为 BIDS 目录；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/bold5000-skill/scripts/reorganize_bold5000.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.bold5000-skill.reorganize-bold5000",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -179,7 +191,13 @@
         {
           "path": "skills/bold5000-skill/scripts/reorganize_bold5000.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]

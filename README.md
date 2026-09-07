@@ -29,9 +29,9 @@ Slurm 执行已启用：主节点提交，三个 RTX 5060 计算节点执行 GPU
 - 可信 Runner 注册表、后台执行队列、取消、进度/日志、制品校验与 SQLite 运行审计
 - 本地或 Slurm 执行选择、CPU/内存/GPU/时限申请、Job ID 展示与持久恢复监控
 
-当前目录共有 103 个 Skill（99 个 NeuroClaw 上游 Skill 和 4 个 NeuroWeave Skill），每个 Skill 都有 `planning.manifest.json`，因此都能进入任务卡并选择受约束参数。生成器会优先从 `SKILL.md` 的方法表、快速参考和命令块中提取操作选项，再补充适合该能力类别的常用与高级规划参数；当前 103 个 planning manifest 都有来源依据，60 个 Skill 提取出了方法级操作选项，共登记 330 条只读参考命令。运行时会把命中 Skill 的多值 `operation` 选项展开为独立候选方法，而不修改能力树或一次读取全部 Skill；当前 114 个能力、374 个原始方法可展开为 646 个可选择方法（包括同一实现的模型选项和跨 Skill 入口）。任务卡可以展开查看 Skill、脚本和命令的来源位置，参数下拉项也可以显示选项说明。
+当前目录共有 103 个 Skill（99 个 NeuroClaw 上游 Skill 和 4 个 NeuroWeave Skill），每个 Skill 都有 `planning.manifest.json`，因此都能进入任务卡并选择受约束参数。生成器会优先从 `SKILL.md` 的方法表、快速参考和命令块中提取操作选项，再补充适合该能力类别的常用与高级规划参数；当前 103 个 planning manifest 都有来源依据，60 个 Skill 提取出了方法级操作选项，共登记 330 条只读参考命令。运行时会把命中 Skill 的多值 `operation` 选项展开为独立候选方法，而不修改能力树或一次读取全部 Skill；当前 114 个能力、346 个原始方法可展开为 669 个可选择方法（包括同一实现的模型选项和跨 Skill 入口）。任务卡可以展开查看 Skill、脚本和命令的来源位置，参数下拉项也可以显示选项说明。
 
-Manifest 的 `runner_id` 只是执行契约，不等于已经有执行代码。只有同时出现在后端可信 Runner 注册表、并通过服务器运行时探测的方法才会在 Dry-run 后标记为可执行。从文档提取的命令始终是只读参考，不会被模型或后端直接运行。当前显式注册 176 个经过审核的 Runner；服务器公共环境中 173 个已就绪。103 个 Skill 中，76 个至少有一项可运行方法，共 333 个就绪的候选方法入口；其余条目包含规划流程和缺少运行条件的方法。fMRIPrep、QSIPrep 和 nii2dcm 尚未配置执行入口，HCP Pipelines 仍无可执行适配。详细范围、输入要求及测试证据见 [Skill 执行配置](deploy/skill-runtime/README.md) 和 [逐方法清单](deploy/skill-runtime/readiness.json)。输入只读，本地结果写入 `LOCALFLOW_OUTPUT_ROOT/run_*/step/`，Slurm 结果写入共享的 `/home/data/neuroweave/runs/hipeson/run_*/step/`，并记录命令日志、进度、校验和与运行事件。
+平台只调用或管理原有项目实现、现有库 API 和已有软件命令；不根据方法名称、文档公式或基础库可用性补写算法。上一轮超出此范围的 12 个接口已撤回，缺少原始可用入口的内容保留规划。Manifest 的 `runner_id` 只是执行契约，不等于已经有执行代码。只有同时出现在后端可信 Runner 注册表、并通过服务器运行时探测的方法才会在 Dry-run 后标记为可执行。从文档提取的命令始终是只读参考，不会被模型或后端直接运行。当前显式注册 164 个经过审核的 Runner；服务器公共环境中 161 个已就绪。103 个 Skill 中，72 个至少有一项可运行方法，共 305 个就绪的候选方法入口；其余条目包含规划流程和缺少运行条件的方法。fMRIPrep、QSIPrep 和 nii2dcm 尚未配置执行入口，HCP Pipelines 仍无可执行适配。详细范围、输入要求及测试证据见 [Skill 执行配置](deploy/skill-runtime/README.md) 和 [逐方法清单](deploy/skill-runtime/readiness.json)。输入只读，本地结果写入 `LOCALFLOW_OUTPUT_ROOT/run_*/step/`，Slurm 结果写入共享的 `/home/data/neuroweave/runs/hipeson/run_*/step/`，并记录命令日志、进度、校验和与运行事件。
 
 ## 目录
 

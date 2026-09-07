@@ -2,12 +2,55 @@
 from __future__ import annotations
 import ast
 import copy
+import hashlib
 import json
 import pathlib
 import re
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 METHODS = []
+SOURCES = json.loads((ROOT/'bakend/resources/existing_implementation_sources.json').read_text(encoding='utf-8'))['files']
+
+# These are existing callable APIs, not algorithm names inferred from a Skill.
+EEG_APIS = {
+    'inspect': [('mne.io','read_raw_fif'), ('mne.io','read_raw_edf'), ('mne.io','read_raw_bdf'), ('mne.io','read_raw_eeglab')],
+    'bad-channels': [('mne.preprocessing','find_bad_channels_lof'), ('mne.io','BaseRaw.interpolate_bads')],
+    'filter': [('mne.io','BaseRaw.filter'), ('mne.io','BaseRaw.notch_filter'), ('mne.io','BaseRaw.resample')],
+    'ica': [('mne.preprocessing','ICA.fit'), ('mne.preprocessing','ICA.apply'), ('mne.preprocessing','ICA.find_bads_eog'), ('mne.preprocessing','ICA.find_bads_ecg')],
+    'epoch': [('mne','Epochs'), ('mne','make_fixed_length_epochs')],
+    'autoreject': [('autoreject','AutoReject.fit_transform')],
+    'connectivity': [('mne_connectivity','spectral_connectivity_epochs')],
+    'time-frequency': [('mne','Epochs.compute_tfr')],
+    'maxwell': [('mne.preprocessing','maxwell_filter')],
+    'source': [('mne.minimum_norm','make_inverse_operator'), ('mne.minimum_norm','apply_inverse_raw')],
+}
+
+
+def implementation_source(spec):
+    script = spec['script']
+    operation = spec['fixed_args'][1] if spec['fixed_args'][:1] == ['--operation'] else None
+    apis = []
+    if script.endswith('/eeg_worker.py'):
+        apis = EEG_APIS[operation]
+        origin = dict(kind='library_api', entrypoints=['.'.join(api) for api in apis])
+    elif script.endswith('/image_summary_worker.py'):
+        apis = {'inspect': [('nibabel','load'), ('nibabel','aff2axcodes')],
+                'surface': [('nibabel.freesurfer','read_geometry'), ('nibabel.freesurfer','read_annot')]}[operation]
+        origin = dict(kind='library_api', entrypoints=['.'.join(api) for api in apis])
+    elif script.endswith('/native_worker.py'):
+        origin = dict(kind='software_command', entrypoints=spec['executables'])
+    else:
+        if script not in SOURCES:
+            raise ValueError('No existing implementation source: '+script)
+        origin = dict(kind='existing_project_script', entrypoints=[script], source=SOURCES[script])
+    origin['dependencies'] = {name: SOURCES[name] for name in spec['required_files']}
+    origin['adapter_scope'] = 'Existing calls, argument/input validation, scheduling and output collection only; no replacement algorithm.'
+    spec['required_apis'] = apis
+    spec['implementation_source'] = origin
+    spec['implementation_files'] = [{
+        'path': name,
+        'sha256': hashlib.sha256((ROOT/name).read_text(encoding='utf-8-sig').encode('utf-8')).hexdigest(),
+    } for name in [script, *spec['required_files']]]
 
 
 def inp(name, label=None, required=True, folder=False, path_list=False, flag=None, many_args=False):
@@ -122,12 +165,6 @@ def more_learning():
         [param('operation','t_learner',choices=['ipw','s_learner','t_learner','x_learner','doubly_robust','policy_learner','tarnet','dragonnet'],flag='--model',label='效应估计方法'),
          param('treatment-col',None,label='处理列（0/1）'),param('outcome-col',None,label='结局列'),param('epochs',50,'integer',minimum=1,maximum=1000),param('device','auto',choices=['auto','cpu','cuda']),*common],
         modules=basic+['torch'],profile='torch',expected=['metrics.json','predictions.csv'],required_files=['models/causal_treatment/train.py'])
-    for model in ['brainnetcnn','bnt','combraintf']:
-        add(model,'train',model+' 连接组模型训练','models/connectome_training.py',[inp('input','NPZ（X、y，ComBrainTF 另需 community_ids）')],
-            [param('task','classification',choices=['classification','regression']),param('epochs',30,'integer',minimum=1,maximum=1000),param('batch-size',8,'integer',minimum=1,maximum=256),
-             param('lr',.001,'number',minimum=.000001,maximum=.1),param('hidden-size',128,'integer',minimum=16,maximum=2048),param('nhead',1,'integer',choices=[1,2,4,8]),
-             param('device','auto',choices=['auto','cpu','cuda']),*common[:2]],fixed=['--model',model],modules=basic+['torch'],profile='torch',expected=['metrics.json','predictions.csv'],
-             required_files=['models/'+model+'/net/'+('bnt.py' if model=='bnt' else model+'.py')])
     script='skills/neuroimaging-decoding/scripts/train_reference.py'
     add('neuroimaging-decoding','mvpa','ROI 多变量解码',script,[features],
         [param('task','classification',choices=['classification','regression']),param('target',None,label='目标列'),param('model','svm',choices=['svm','ridge','random_forest']),*common],
@@ -174,60 +211,45 @@ def native():
 def eeg():
     mapping={
         'inspect':('EEG/MEG 数据检查',['loadeeg','load-validation','load-basic-validation']),
-        'bad-channels':('EEG 坏导联检测与插值',['detectandinterpolatebadchannels','bad-channel-detection-interpolation']),
+        'bad-channels':('MNE LOF 坏导联检测与插值',[]),
         'filter':('EEG/MEG 滤波与降采样',['preprocessfiltering','downsampling-filtering','filtering']),
-        'ica':('ICA 分解与指定成分去除',['removeartifacts','artifact-removal','ica-artifact-removal']),
-        'clean':('连续 EEG/MEG 清理',['continuousdatacleaning','continuous-data-cleaning']),
+        'ica':('MNE ICA 分解与指定成分去除',[]),
         'epoch':('重参考与分段',['rereferenceandepoch','re-referencing-epoching','epoching']),
         'autoreject':('Epoch AutoReject 自动质控',[]),
-        'bands':('EEG/MEG 频带功率',['extractfrequencybands','frequency-band-energy-extraction']),
-        'features':('EEG/MEG 功率与 Hjorth 特征',['extractfeatures','feature-extraction-core']),
         'connectivity':('传感器 PLV/相干/wPLI',['computeconnectivity','sensor-level-connectivity']),
-        'erp':('事件相关响应与峰值',['extracterpfeatures','evoked-responses']),
-        'alpha-asymmetry':('额区 Alpha 功率不对称',['computealphaasymmetry']),
-        'microstates':('极性不变 EEG 微状态聚类',['runmicrostateanalysis']),
         'time-frequency':('Morlet 时频功率与 ITC',['time-frequency-analysis']),
-        'mel':('EEG Mel 频谱',['waveform-to-mel-spectrogram']),
         'maxwell':('MEG Maxwell 滤波',['maxwell-filtering']),
         'source':('dSPM 源定位（需前向模型和噪声协方差）',['source-localization']),
     }
     for operation,(label,operations) in mapping.items():
         inputs=[inp('input','EEG/MEG 原始文件（FIF/EDF/BDF/SET）')]
         parameters=[]
-        if operation in {'filter','clean'}:
+        if operation == 'filter':
             parameters.extend([param('high-pass',.5,'number',minimum=0,maximum=100),param('low-pass',40.,'number',minimum=1,maximum=1000),param('notch',0.,'number',minimum=0,maximum=120),param('sfreq',0.,'number',minimum=0,maximum=10000)])
-        if operation in {'ica','clean'}:
+        if operation == 'ica':
             parameters.extend([param('components',10,'integer',minimum=2,maximum=200),param('exclude-components','',required=False)])
-        if operation in {'epoch','autoreject','bands','features','connectivity','erp','time-frequency'}:
-            inputs.append(inp('events','MNE 事件文件',operation=='erp'))
+        if operation in {'epoch','autoreject','connectivity','time-frequency'}:
+            inputs.append(inp('events','MNE 事件文件',False))
             parameters.extend([param('epoch-seconds',2.,'number',minimum=.1,maximum=60),param('tmin',-.2,'number',minimum=-10,maximum=0),param('tmax',.8,'number',minimum=.01,maximum=60)])
         if operation in {'connectivity','time-frequency'}:
             parameters.extend([param('freq-min',8.,'number',minimum=.1,maximum=1000),param('freq-max',13.,'number',minimum=.2,maximum=2000)])
-        if operation=='microstates': parameters.append(param('states',4,'integer',minimum=2,maximum=20))
         if operation=='source': inputs.extend([inp('forward','前向模型 FIF'),inp('noise-cov','噪声协方差 FIF')])
-        expected={'inspect':'processed-raw.fif','bad-channels':'processed-raw.fif','filter':'processed-raw.fif','ica':'processed-raw.fif','clean':'processed-raw.fif',
-                  'epoch':'processed-epo.fif','autoreject':'processed-epo.fif','bands':'features.csv','features':'features.csv','connectivity':'connectivity.npz',
-                  'erp':'erp.csv','alpha-asymmetry':'alpha_asymmetry.json','microstates':'microstates.npz','time-frequency':'time_frequency.npz','mel':'mel_spectrogram.npz',
-                  'maxwell':'processed-raw.fif','source':'source.npz'}[operation]
-        modules=['numpy','pandas','scipy','mne','sklearn']
+        expected={'inspect':'processed-raw.fif','bad-channels':'processed-raw.fif','filter':'processed-raw.fif','ica':'processed-raw.fif',
+                  'epoch':'processed-epo.fif','autoreject':'processed-epo.fif','connectivity':'connectivity.npz',
+                  'time-frequency':'time_frequency.npz','maxwell':'processed-raw.fif','source':'source.npz'}[operation]
+        modules=['numpy','mne']
         if operation=='autoreject': modules.append('autoreject')
         if operation=='connectivity': modules.append('mne_connectivity')
         add('mne-eeg-tool',operation,label,'bakend/app/execution/eeg_worker.py',inputs,parameters,modules=modules,
-            fixed=['--operation',operation],expected=[expected],aliases=['eeg-skill','meg-skill'] if operation not in {'bad-channels','alpha-asymmetry','microstates','mel'} else ['eeg-skill'],operations=operations)
+            fixed=['--operation',operation],expected=[expected],aliases=['eeg-skill','meg-skill'] if operation not in {'bad-channels'} else ['eeg-skill'],operations=operations)
 
 
 def auxiliary():
-    add('connectome-discovery','rank','连接图相似度与置换检验（需交换性假设）','models/connectome_discovery/run.py',[inp('input','NPZ（reference、candidates、target_names）')],
-        [param('atlas',None,label='图谱与节点顺序说明'),param('space',None,label='坐标空间'),param('permutations',1000,'integer',minimum=10,maximum=100000),param('seed',123,'integer',minimum=0,maximum=2147483647)],
-        modules=['numpy','pandas','scipy'],expected=['ranking.csv','method.json'],required_files=['models/connectome_discovery/mapping.py'])
     add('kg-link-prediction','complex','ComplEx 知识图谱链路预测','skills/kg-link-prediction/scripts/train_reference.py',[inp('kg','知识图谱 JSON（concepts、edges）')],
         [param('epochs',50,'integer',minimum=1,maximum=1000),param('embedding-dim',64,'integer',minimum=4,maximum=512),param('negatives',5,'integer',minimum=1,maximum=100),
          param('device','auto',choices=['auto','cpu','cuda']),param('seed',123,'integer',minimum=0,maximum=2147483647)],
         fixed=['--model','complex'],profile='torch',modules=['torch','numpy','pandas','sklearn'],expected=['metrics.json','checkpoint.pt'],required_files=['models/kg_link_prediction/vendor/complex_scorer.py'])
     image='bakend/app/execution/image_summary_worker.py'
-    add('nilearn-tool','zalff','ALFF 振幅与 zALFF 区域汇总',image,[inp('bold','同空间 BOLD'),inp('atlas','同空间图谱'),inp('mask','同空间脑掩膜'),inp('labels','图谱名称文本')],
-        [param('tr',2.,'number',minimum=.01,maximum=4.9),param('top-n',10,'integer',minimum=1,maximum=1000)],
-        fixed=['--operation','zalff'],expected=['zalff.nii.gz','all_regions.csv'],aliases=['brain-visualization','fmri-skill'],operations=['zalff-regional-activation'])
     add('nibabel-skill','inspect','NIfTI 头信息与空间检查',image,[inp('image','NIfTI')],fixed=['--operation','inspect'],modules=['numpy','pandas','nibabel','scipy'],expected=['inspection.json'],operations=['nifti-inspection'])
     add('nibabel-skill','surface','FreeSurfer 表面与分区读取',image,[inp('surf','表面'),inp('annot','标注')],fixed=['--operation','surface'],modules=['numpy','pandas','nibabel','scipy'],expected=['surface.npz'],operations=['freesurfer-io'])
     for skill in ['seed-iv-skill','seed-vig-skill']:
@@ -297,6 +319,7 @@ def dataset_scripts():
 def emit():
     manifests={}
     for spec in METHODS:
+        implementation_source(spec)
         if spec['skill_id'] in {'statistical-ml','cpm','brain-age-modeling','subject-subtyping','imaging-genetics-models','temporal-models','cnn3d','survival-models','causal-treatment-models','brainnetcnn','bnt','combraintf','neuroimaging-decoding'}:
             spec['aliases'].append('run_models')
         for item in spec['inputs']:
@@ -309,12 +332,13 @@ def emit():
             parameters=[{k:v for k,v in p.items() if k not in {'flag','flag_when','split'}} for p in spec['parameters']]
             inputs=[{k:v for k,v in p.items() if k not in {'flag','path_list','many_args'}} for p in spec['inputs']]
             method=dict(capability='skill.'+re.sub('[^a-z0-9]+','-',skill.lower()).strip('-'),method_id=spec['method_id']+'-'+spec['skill_id'],label=spec['label'],
-                        description='使用已审核实现执行 '+spec['label']+'；输入保持只读，输出写入独立任务目录。',
+                        description='调用现有实现：'+', '.join(spec['implementation_source']['entrypoints'])+'。输入保持只读，输出写入独立任务目录。',
                         runner_id=spec['runner_id'],execution_mode='runner',structure_level='reviewed',
                         parameters=parameters,input_slots=inputs,output_slots=[dict(id='results',type='generated_folder',label='分析结果',primary=True,path_template='results/')],
                         input_types=['analysis_input'],output_types=['generated_folder'],default_recommended=True,
                         replaces_operations=spec['replaces_operations'],
-                        source_references=[dict(path=spec['script'],kind='script',label='已审核实现',line_start=1)])
+                        source_references=[dict(path=spec['script'],kind='script',label='现有实现调用入口',line_start=1),
+                                           dict(path='bakend/resources/existing_implementation_sources.json',kind='script',label='实现来源与原始源码校验记录',line_start=1)])
             method['output_slots'].extend(dict(id='file_'+re.sub('[^a-zA-Z0-9_]+','_',name),type=spec['artifact_types'][name],label=name,path_template='results/'+name)
                 for name in spec['expected'] if not any(c in name for c in '*?['))
             manifests.setdefault(skill,[]).append(method)
@@ -333,10 +357,16 @@ def emit():
                 method=copy.deepcopy(original)
                 method.update(capability='skill.'+re.sub('[^a-z0-9]+','-',skill.lower()).strip('-'),method_id='linked-'+original['method_id'],default_recommended=False)
                 manifests.setdefault(skill,[]).append(method)
+    # Clean every previous generated manifest, including Skills that lost all
+    # runners. Otherwise withdrawn methods survive a catalog regeneration.
+    for path in (ROOT/'skills').glob('*/execution.manifest.json'):
+        manifests.setdefault(path.parent.name, [])
     for skill,methods in manifests.items():
         path=ROOT/'skills'/skill/'execution.manifest.json'
         previous=json.loads(path.read_text(encoding='utf-8')) if path.exists() else dict(schema_version=1,skill_id=skill,provides=[])
         previous['provides']=[m for m in previous['provides'] if not m['runner_id'].startswith('reviewed.') and not m['method_id'].startswith('linked-')]+methods
+        if path.exists() and json.loads(path.read_text(encoding='utf-8')) == previous:
+            continue
         path.write_text(json.dumps(previous,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     (ROOT/'bakend/resources/reviewed_execution.json').write_text(json.dumps(dict(schema_version=1,methods=METHODS),ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     print(f'{len(METHODS)} reviewed implementations across {len(manifests)} skills')

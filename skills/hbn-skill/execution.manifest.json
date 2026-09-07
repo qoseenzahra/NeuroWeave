@@ -6,7 +6,7 @@
       "capability": "skill.hbn-skill",
       "method_id": "reviewed-extract-hbn-phenotype-hbn-skill",
       "label": "hbn 表型/刺激提取",
-      "description": "使用已审核实现执行 hbn 表型/刺激提取；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/hbn-skill/scripts/extract_hbn_phenotype.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.hbn-skill.extract-hbn-phenotype",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -64,7 +64,13 @@
         {
           "path": "skills/hbn-skill/scripts/extract_hbn_phenotype.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -73,7 +79,7 @@
       "capability": "skill.hbn-skill",
       "method_id": "reviewed-hbn-qc-summary-hbn-skill",
       "label": "hbn 质控汇总",
-      "description": "使用已审核实现执行 hbn 质控汇总；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/hbn-skill/scripts/hbn_qc_summary.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.hbn-skill.hbn-qc-summary",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -139,7 +145,13 @@
         {
           "path": "skills/hbn-skill/scripts/hbn_qc_summary.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -148,7 +160,7 @@
       "capability": "skill.hbn-skill",
       "method_id": "reviewed-reorganize-hbn-hbn-skill",
       "label": "hbn 复制整理为 BIDS 目录",
-      "description": "使用已审核实现执行 hbn 复制整理为 BIDS 目录；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/hbn-skill/scripts/reorganize_hbn.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.hbn-skill.reorganize-hbn",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -186,7 +198,13 @@
         {
           "path": "skills/hbn-skill/scripts/reorganize_hbn.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]

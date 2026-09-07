@@ -86,8 +86,6 @@ class CapabilityRegistry:
                 None,
             )
             if operation is None:
-                if method.execution_mode == 'planning' and reviewed:
-                    continue
                 expanded.append(method)
                 continue
 

@@ -6,7 +6,7 @@
       "capability": "skill.camcan-skill",
       "method_id": "reviewed-camcan-qc-summary-camcan-skill",
       "label": "camcan 质控汇总",
-      "description": "使用已审核实现执行 camcan 质控汇总；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/camcan-skill/scripts/camcan_qc_summary.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.camcan-skill.camcan-qc-summary",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -68,7 +68,13 @@
         {
           "path": "skills/camcan-skill/scripts/camcan_qc_summary.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -77,7 +83,7 @@
       "capability": "skill.camcan-skill",
       "method_id": "reviewed-extract-camcan-phenotype-camcan-skill",
       "label": "camcan 表型/刺激提取",
-      "description": "使用已审核实现执行 camcan 表型/刺激提取；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/camcan-skill/scripts/extract_camcan_phenotype.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.camcan-skill.extract-camcan-phenotype",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -140,7 +146,13 @@
         {
           "path": "skills/camcan-skill/scripts/extract_camcan_phenotype.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -149,7 +161,7 @@
       "capability": "skill.camcan-skill",
       "method_id": "reviewed-validate-camcan-camcan-skill",
       "label": "camcan 数据校验",
-      "description": "使用已审核实现执行 camcan 数据校验；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/camcan-skill/scripts/validate_camcan.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.camcan-skill.validate-camcan",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -194,7 +206,13 @@
         {
           "path": "skills/camcan-skill/scripts/validate_camcan.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]

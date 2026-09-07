@@ -6,7 +6,7 @@
       "capability": "skill.ucla-cnp-skill",
       "method_id": "reviewed-extract-ucla-cnp-phenotype-ucla-cnp-skill",
       "label": "ucla-cnp 表型/刺激提取",
-      "description": "使用已审核实现执行 ucla-cnp 表型/刺激提取；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/ucla-cnp-skill/scripts/extract_ucla_cnp_phenotype.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.ucla-cnp-skill.extract-ucla-cnp-phenotype",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -69,7 +69,13 @@
         {
           "path": "skills/ucla-cnp-skill/scripts/extract_ucla_cnp_phenotype.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -78,7 +84,7 @@
       "capability": "skill.ucla-cnp-skill",
       "method_id": "reviewed-ucla-cnp-qc-summary-ucla-cnp-skill",
       "label": "ucla-cnp 质控汇总",
-      "description": "使用已审核实现执行 ucla-cnp 质控汇总；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/ucla-cnp-skill/scripts/ucla_cnp_qc_summary.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.ucla-cnp-skill.ucla-cnp-qc-summary",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -144,7 +150,13 @@
         {
           "path": "skills/ucla-cnp-skill/scripts/ucla_cnp_qc_summary.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -153,7 +165,7 @@
       "capability": "skill.ucla-cnp-skill",
       "method_id": "reviewed-validate-ucla-cnp-ucla-cnp-skill",
       "label": "ucla-cnp 数据校验",
-      "description": "使用已审核实现执行 ucla-cnp 数据校验；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/ucla-cnp-skill/scripts/validate_ucla_cnp.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.ucla-cnp-skill.validate-ucla-cnp",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -198,7 +210,13 @@
         {
           "path": "skills/ucla-cnp-skill/scripts/validate_ucla_cnp.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]

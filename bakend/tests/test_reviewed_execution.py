@@ -7,8 +7,9 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 import tempfile
+import sys
 
-from app.execution.runners.reviewed import ReviewedRunner, specifications, ROOT
+from app.execution.runners.reviewed import ReviewedRunner, specifications, probe, ROOT
 from app.workflow_models import InputBinding
 from app.workflow_models import WorkflowStep
 from app.run_models import RunArtifact
@@ -69,6 +70,47 @@ class ReviewedExecutionTests(unittest.TestCase):
         runner=ReviewedRunner(specifications()['reviewed.temporal-models.train'])
         self.context.step.selected_parameters={'operation':'unknown'}
         with self.assertRaises(ValueError):runner.parameters(self.context)
+
+    def test_withdrawn_interfaces_cannot_execute_or_hide_original_plans(self):
+        from app.capability_registry import CapabilityRegistry
+        from app.execution.runner_registry import RunnerRegistry
+        from app.skill_loader import SkillLoader
+        retired=set(json.loads((ROOT/'bakend/resources/withdrawn_execution.json').read_text(encoding='utf-8'))['runner_ids'])
+        runners=RunnerRegistry();registry=CapabilityRegistry(ROOT/'skills')
+        self.assertTrue(retired.isdisjoint(runners.ids()))
+        self.assertFalse(any(m.runner_id in retired for m in registry.all_methods()))
+        for skill in ['bnt','brainnetcnn','combraintf','connectome-discovery']:
+            methods=registry.selectable_methods_for('skill.'+skill)
+            self.assertTrue(methods)
+            self.assertTrue(all(m.execution_mode=='planning' for m in methods))
+        skills={skill.name:skill for skill in SkillLoader(ROOT/'skills').load_all()}
+        self.assertEqual(skills['bnt'].structure_mode,'planning')
+        self.assertTrue(any(m.execution_mode=='planning' for m in registry.selectable_methods_for('skill.cnn3d')))
+
+    def test_runtime_checks_actual_api_and_rejects_changed_source(self):
+        self.assertTrue(probe(sys.executable, ('math',), (('math','sqrt'),))[0])
+        self.assertFalse(probe(sys.executable, ('math',), (('math','not_an_existing_algorithm'),))[0])
+        spec=copy.deepcopy(self.spec)
+        spec['implementation_files'][0]['sha256']='0'*64
+        with patch('app.execution.runners.reviewed.probe',return_value=(True,'available')):
+            status=ReviewedRunner(spec).runtime_status()
+        self.assertFalse(status['available'])
+        self.assertIn('实现源码已变化',status['reason'])
+
+    def test_sources_are_recorded_for_every_enabled_adapter(self):
+        sources=json.loads((ROOT/'bakend/resources/existing_implementation_sources.json').read_text(encoding='utf-8'))['files']
+        for spec in specifications().values():
+            with self.subTest(runner=spec['runner_id']):
+                origin=spec['implementation_source']
+                self.assertTrue(origin['entrypoints'])
+                if origin['kind']=='existing_project_script':
+                    self.assertIn(spec['script'],sources)
+                elif origin['kind']=='library_api':
+                    self.assertTrue(spec['required_apis'])
+                else:
+                    self.assertEqual(origin['kind'],'software_command')
+                    self.assertTrue(spec['executables'])
+                self.assertTrue(spec['implementation_files'])
 
     def test_upstream_uses_exact_output_slot_and_rejects_missing_slot(self):
         binding=InputBinding(slot_id='bold',source='upstream_output',artifact_type='bold_image',upstream_step_id='first',output_slot_id='cleaned')

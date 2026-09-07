@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import math
 import os
 import subprocess
@@ -18,20 +19,41 @@ CATALOG = ROOT / 'bakend/resources/reviewed_execution.json'
 
 @lru_cache(maxsize=1)
 def specifications() -> dict[str, dict]:
-    return {item['runner_id']: item for item in json.loads(CATALOG.read_text(encoding='utf-8'))['methods']}
+    retired = set(json.loads((ROOT/'bakend/resources/withdrawn_execution.json').read_text(encoding='utf-8'))['runner_ids'])
+    result = {}
+    for item in json.loads(CATALOG.read_text(encoding='utf-8'))['methods']:
+        if item['runner_id'] in retired:
+            raise ValueError('已撤回的接口不能重新注册：'+item['runner_id'])
+        if item.get('implementation_source', {}).get('kind') not in {'existing_project_script','library_api','software_command'}:
+            raise ValueError('方法缺少现有实现来源：'+item['runner_id'])
+        result[item['runner_id']] = item
+    return result
 
 
-@lru_cache(maxsize=64)
-def probe(python: str, modules: tuple[str, ...]) -> tuple[bool, str]:
+@lru_cache(maxsize=128)
+def probe(python: str, modules: tuple[str, ...], apis: tuple[tuple[str, str], ...] = ()) -> tuple[bool, str]:
     if not Path(python).is_file() or not os.access(python, os.X_OK):
         return False, 'Python 入口不存在：' + python
-    code = 'import importlib.util,json; print(json.dumps([m for m in ' + repr(list(modules)) + ' if importlib.util.find_spec(m) is None]))'
+    code = '''import importlib, importlib.util, json
+missing = []
+for module in MODULES:
+    try:
+        if importlib.util.find_spec(module) is None: missing.append(module)
+    except (ImportError, AttributeError, ValueError): missing.append(module)
+for module, symbol in APIS:
+    try:
+        value = importlib.import_module(module)
+        for name in symbol.split('.'): value = getattr(value, name)
+        if not callable(value): missing.append(module+'.'+symbol)
+    except Exception: missing.append(module+'.'+symbol)
+print(json.dumps(missing))
+'''.replace('MODULES', repr(list(modules))).replace('APIS', repr(list(apis)))
     try:
         result = subprocess.run([python, '-B', '-s', '-c', code], capture_output=True, text=True, timeout=20)
         missing = json.loads(result.stdout) if result.returncode == 0 else ['依赖探测失败']
     except (OSError, ValueError, subprocess.TimeoutExpired):
         return False, '无法探测 Python 依赖'
-    return (False, '缺少依赖：' + ', '.join(missing)) if missing else (True, '已审核实现与依赖可用；运行前仍检查输入')
+    return (False, '缺少依赖或现有 API：' + ', '.join(missing)) if missing else (True, '现有实现入口与依赖可用；运行前仍检查输入')
 
 
 class ReviewedRunner(ExternalCommandRunner):
@@ -44,7 +66,17 @@ class ReviewedRunner(ExternalCommandRunner):
         self.script = ROOT / spec['script']
 
     def runtime_status(self):
-        available, reason = probe(str(self.executable), tuple(self.spec.get('modules', [])))
+        available, reason = probe(str(self.executable), tuple(self.spec.get('modules', [])), tuple(tuple(api) for api in self.spec.get('required_apis', [])))
+        if not self.spec.get('implementation_files'):
+            available, reason = False, '缺少实现源码校验记录'
+        for item in self.spec.get('implementation_files', []):
+            path = (ROOT/item['path']).resolve()
+            if not path.is_relative_to(ROOT) or not path.is_file():
+                available, reason = False, '缺少记录的实现源码：'+item['path']
+                continue
+            actual = hashlib.sha256(path.read_text(encoding='utf-8-sig').encode('utf-8')).hexdigest()
+            if actual != item['sha256']:
+                available, reason = False, '实现源码已变化，需重新核对来源：'+item['path']
         if not self.script.is_file():
             available, reason = False, '缺少已审核实现：' + str(self.script)
         for path in self.spec.get('required_files', []):
@@ -55,7 +87,8 @@ class ReviewedRunner(ExternalCommandRunner):
                 available, reason = False, '缺少软件入口：' + path
         return {'available': available, 'reason': reason, 'executable': str(self.executable),
                 'script': str(self.script), 'environment_profile': self.spec.get('profile', 'scientific'),
-                'required_modules': self.spec.get('modules', [])}
+                'required_modules': self.spec.get('modules', []),
+                'implementation_source': self.spec.get('implementation_source', {})}
 
     def parameters(self, context):
         declared = {p['id']: p for p in self.spec.get('parameters', [])}

@@ -6,7 +6,7 @@
       "capability": "skill.nifd-skill",
       "method_id": "reviewed-extract-nifd-phenotype-nifd-skill",
       "label": "nifd 表型/刺激提取",
-      "description": "使用已审核实现执行 nifd 表型/刺激提取；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/nifd-skill/scripts/extract_nifd_phenotype.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.nifd-skill.extract-nifd-phenotype",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -69,7 +69,13 @@
         {
           "path": "skills/nifd-skill/scripts/extract_nifd_phenotype.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -78,7 +84,7 @@
       "capability": "skill.nifd-skill",
       "method_id": "reviewed-nifd-qc-summary-nifd-skill",
       "label": "nifd 质控汇总",
-      "description": "使用已审核实现执行 nifd 质控汇总；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/nifd-skill/scripts/nifd_qc_summary.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.nifd-skill.nifd-qc-summary",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -144,7 +150,13 @@
         {
           "path": "skills/nifd-skill/scripts/nifd_qc_summary.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -153,7 +165,7 @@
       "capability": "skill.nifd-skill",
       "method_id": "reviewed-validate-nifd-nifd-skill",
       "label": "nifd 数据校验",
-      "description": "使用已审核实现执行 nifd 数据校验；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/nifd-skill/scripts/validate_nifd.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.nifd-skill.validate-nifd",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -198,7 +210,13 @@
         {
           "path": "skills/nifd-skill/scripts/validate_nifd.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]

@@ -6,7 +6,7 @@
       "capability": "skill.ukb-skill",
       "method_id": "reviewed-survival-dataset-ukb-skill",
       "label": "UKB 生存分析数据表",
-      "description": "使用已审核实现执行 UKB 生存分析数据表；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/ukb-skill/scripts/build_ukb_survival.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.ukb-skill.survival-dataset",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -83,7 +83,13 @@
         {
           "path": "skills/ukb-skill/scripts/build_ukb_survival.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -92,7 +98,7 @@
       "capability": "skill.ukb-skill",
       "method_id": "reviewed-extract-ukb-cases-ukb-skill",
       "label": "ukb 表型/刺激提取",
-      "description": "使用已审核实现执行 ukb 表型/刺激提取；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/ukb-skill/scripts/extract_ukb_cases.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.ukb-skill.extract-ukb-cases",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -181,7 +187,13 @@
         {
           "path": "skills/ukb-skill/scripts/extract_ukb_cases.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -190,7 +202,7 @@
       "capability": "skill.ukb-skill",
       "method_id": "reviewed-extract-ukb-phenotype-ukb-skill",
       "label": "ukb 表型/刺激提取",
-      "description": "使用已审核实现执行 ukb 表型/刺激提取；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/ukb-skill/scripts/extract_ukb_phenotype.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.ukb-skill.extract-ukb-phenotype",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -275,7 +287,13 @@
         {
           "path": "skills/ukb-skill/scripts/extract_ukb_phenotype.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -284,7 +302,7 @@
       "capability": "skill.ukb-skill",
       "method_id": "reviewed-ukb-qc-summary-ukb-skill",
       "label": "ukb 质控汇总",
-      "description": "使用已审核实现执行 ukb 质控汇总；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/ukb-skill/scripts/ukb_qc_summary.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.ukb-skill.ukb-qc-summary",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -372,7 +390,13 @@
         {
           "path": "skills/ukb-skill/scripts/ukb_qc_summary.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]

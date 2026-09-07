@@ -6,7 +6,7 @@
       "capability": "skill.dipy-tool",
       "method_id": "reviewed-mask-dipy-tool",
       "label": "DWI 载入与脑掩膜",
-      "description": "使用已审核实现执行 DWI 载入与脑掩膜；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/dipy-tool/scripts/load_and_mask_reference.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.dipy-tool.mask",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -76,7 +76,13 @@
         {
           "path": "skills/dipy-tool/scripts/load_and_mask_reference.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -85,7 +91,7 @@
       "capability": "skill.dipy-tool",
       "method_id": "reviewed-roi-stats-dipy-tool",
       "label": "分区影像统计",
-      "description": "使用已审核实现执行 分区影像统计；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/dipy-tool/scripts/roi_stats_reference.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.dipy-tool.roi-stats",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -156,7 +162,13 @@
         {
           "path": "skills/dipy-tool/scripts/roi_stats_reference.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]

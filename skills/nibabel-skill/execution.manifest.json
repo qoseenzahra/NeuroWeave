@@ -98,7 +98,7 @@
       "capability": "skill.nibabel-skill",
       "method_id": "reviewed-atlas-coordinates-nibabel-skill",
       "label": "图谱坐标提取",
-      "description": "使用已审核实现执行 图谱坐标提取；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/nibabel-skill/scripts/atlas_coordinate_reference.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.nibabel-skill.atlas-coordinates",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -148,7 +148,13 @@
         {
           "path": "skills/nibabel-skill/scripts/atlas_coordinate_reference.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -157,7 +163,7 @@
       "capability": "skill.nibabel-skill",
       "method_id": "reviewed-inspect-nibabel-skill",
       "label": "NIfTI 头信息与空间检查",
-      "description": "使用已审核实现执行 NIfTI 头信息与空间检查；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：nibabel.load, nibabel.aff2axcodes。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.nibabel-skill.inspect",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -200,7 +206,13 @@
         {
           "path": "bakend/app/execution/image_summary_worker.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -209,7 +221,7 @@
       "capability": "skill.nibabel-skill",
       "method_id": "reviewed-surface-nibabel-skill",
       "label": "FreeSurfer 表面与分区读取",
-      "description": "使用已审核实现执行 FreeSurfer 表面与分区读取；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：nibabel.freesurfer.read_geometry, nibabel.freesurfer.read_annot。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.nibabel-skill.surface",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -259,7 +271,13 @@
         {
           "path": "bakend/app/execution/image_summary_worker.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]

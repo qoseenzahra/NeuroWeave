@@ -6,7 +6,7 @@
       "capability": "skill.fsl-tool",
       "method_id": "reviewed-bet-fsl-tool",
       "label": "FSL 脑提取",
-      "description": "使用已审核实现执行 FSL 脑提取；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：/opt/software/fsl/bin/bet。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.fsl-tool.bet",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -59,7 +59,13 @@
         {
           "path": "bakend/app/execution/native_worker.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -68,7 +74,7 @@
       "capability": "skill.fsl-tool",
       "method_id": "reviewed-fast-fsl-tool",
       "label": "FSL 组织分割",
-      "description": "使用已审核实现执行 FSL 组织分割；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：/opt/software/fsl/bin/fast。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.fsl-tool.fast",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -121,7 +127,13 @@
         {
           "path": "bakend/app/execution/native_worker.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -130,7 +142,7 @@
       "capability": "skill.fsl-tool",
       "method_id": "reviewed-mcflirt-fsl-tool",
       "label": "FSL 运动校正",
-      "description": "使用已审核实现执行 FSL 运动校正；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：/opt/software/fsl/bin/mcflirt。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.fsl-tool.mcflirt",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -171,7 +183,13 @@
         {
           "path": "bakend/app/execution/native_worker.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -180,7 +198,7 @@
       "capability": "skill.fsl-tool",
       "method_id": "reviewed-slicetimer-fsl-tool",
       "label": "FSL 层间时间校正",
-      "description": "使用已审核实现执行 FSL 层间时间校正；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：/opt/software/fsl/bin/slicetimer。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.fsl-tool.slicetimer",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -281,7 +299,13 @@
         {
           "path": "bakend/app/execution/native_worker.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -290,7 +314,7 @@
       "capability": "skill.fsl-tool",
       "method_id": "reviewed-fnirt-fsl-tool",
       "label": "FSL 非线性配准",
-      "description": "使用已审核实现执行 FSL 非线性配准；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：/opt/software/fsl/bin/fnirt。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.fsl-tool.fnirt",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -345,7 +369,13 @@
         {
           "path": "bakend/app/execution/native_worker.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -354,7 +384,7 @@
       "capability": "skill.fsl-tool",
       "method_id": "reviewed-applywarp-fsl-tool",
       "label": "FSL 应用形变",
-      "description": "使用已审核实现执行 FSL 应用形变；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：/opt/software/fsl/bin/applywarp。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.fsl-tool.applywarp",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -430,7 +460,13 @@
         {
           "path": "bakend/app/execution/native_worker.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]

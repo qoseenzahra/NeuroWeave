@@ -6,7 +6,7 @@
       "capability": "skill.hcpd-skill",
       "method_id": "reviewed-extract-hcpd-phenotype-hcpd-skill",
       "label": "hcpd 表型/刺激提取",
-      "description": "使用已审核实现执行 hcpd 表型/刺激提取；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/hcpd-skill/scripts/extract_hcpd_phenotype.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.hcpd-skill.extract-hcpd-phenotype",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -69,7 +69,13 @@
         {
           "path": "skills/hcpd-skill/scripts/extract_hcpd_phenotype.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -78,7 +84,7 @@
       "capability": "skill.hcpd-skill",
       "method_id": "reviewed-hcpd-qc-summary-hcpd-skill",
       "label": "hcpd 质控汇总",
-      "description": "使用已审核实现执行 hcpd 质控汇总；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/hcpd-skill/scripts/hcpd_qc_summary.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.hcpd-skill.hcpd-qc-summary",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -140,7 +146,13 @@
         {
           "path": "skills/hcpd-skill/scripts/hcpd_qc_summary.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -149,7 +161,7 @@
       "capability": "skill.hcpd-skill",
       "method_id": "reviewed-reorganize-hcpd-hcpd-skill",
       "label": "hcpd 复制整理为 BIDS 目录",
-      "description": "使用已审核实现执行 hcpd 复制整理为 BIDS 目录；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/hcpd-skill/scripts/reorganize_hcpd.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.hcpd-skill.reorganize-hcpd",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -187,7 +199,13 @@
         {
           "path": "skills/hcpd-skill/scripts/reorganize_hcpd.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]

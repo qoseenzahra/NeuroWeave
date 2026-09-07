@@ -6,7 +6,7 @@
       "capability": "skill.harmonization-tool",
       "method_id": "reviewed-site-covar-harmonization-tool",
       "label": "站点协变量校正",
-      "description": "使用已审核实现执行 站点协变量校正；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/harmonization-tool/scripts/harmonize.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.harmonization-tool.site-covar",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -120,7 +120,13 @@
         {
           "path": "skills/harmonization-tool/scripts/harmonize.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]

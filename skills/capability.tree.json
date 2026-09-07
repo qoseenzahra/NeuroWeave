@@ -1416,7 +1416,7 @@
                 "skill_ids": [
                   "bnt"
                 ],
-                "execution_level": "structured"
+                "execution_level": "planning"
               },
               {
                 "id": "skill.braingnn",
@@ -1447,7 +1447,7 @@
                 "skill_ids": [
                   "brainnetcnn"
                 ],
-                "execution_level": "structured"
+                "execution_level": "planning"
               },
               {
                 "id": "skill.cnn3d",
@@ -1480,7 +1480,7 @@
                 "skill_ids": [
                   "combraintf"
                 ],
-                "execution_level": "structured"
+                "execution_level": "planning"
               },
               {
                 "id": "skill.fm-app",
@@ -1848,7 +1848,7 @@
                 "skill_ids": [
                   "connectome-discovery"
                 ],
-                "execution_level": "structured"
+                "execution_level": "planning"
               },
               {
                 "id": "skill.kg-link-prediction",

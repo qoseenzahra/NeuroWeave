@@ -6,7 +6,7 @@
       "capability": "skill.rest-mneta-mdd-skill",
       "method_id": "reviewed-site-covar-harmonization-tool",
       "label": "站点协变量校正",
-      "description": "使用已审核实现执行 站点协变量校正；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/harmonization-tool/scripts/harmonize.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.harmonization-tool.site-covar",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -120,7 +120,13 @@
         {
           "path": "skills/harmonization-tool/scripts/harmonize.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -129,7 +135,7 @@
       "capability": "skill.rest-mneta-mdd-skill",
       "method_id": "reviewed-extract-rest-mdd-phenotype-rest-mneta-mdd-skill",
       "label": "rest-mneta-mdd 表型/刺激提取",
-      "description": "使用已审核实现执行 rest-mneta-mdd 表型/刺激提取；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/rest-mneta-mdd-skill/scripts/extract_rest_mdd_phenotype.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.rest-mneta-mdd-skill.extract-rest-mdd-phenotype",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -192,7 +198,13 @@
         {
           "path": "skills/rest-mneta-mdd-skill/scripts/extract_rest_mdd_phenotype.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -201,7 +213,7 @@
       "capability": "skill.rest-mneta-mdd-skill",
       "method_id": "reviewed-rest-mdd-qc-summary-rest-mneta-mdd-skill",
       "label": "rest-mneta-mdd 质控汇总",
-      "description": "使用已审核实现执行 rest-mneta-mdd 质控汇总；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/rest-mneta-mdd-skill/scripts/rest_mdd_qc_summary.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.rest-mneta-mdd-skill.rest-mdd-qc-summary",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -267,7 +279,13 @@
         {
           "path": "skills/rest-mneta-mdd-skill/scripts/rest_mdd_qc_summary.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -276,7 +294,7 @@
       "capability": "skill.rest-mneta-mdd-skill",
       "method_id": "reviewed-validate-rest-mdd-rest-mneta-mdd-skill",
       "label": "rest-mneta-mdd 数据校验",
-      "description": "使用已审核实现执行 rest-mneta-mdd 数据校验；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/rest-mneta-mdd-skill/scripts/validate_rest_mdd.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.rest-mneta-mdd-skill.validate-rest-mdd",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -321,7 +339,13 @@
         {
           "path": "skills/rest-mneta-mdd-skill/scripts/validate_rest_mdd.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]

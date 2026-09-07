@@ -6,7 +6,7 @@
       "capability": "skill.ixi-skill",
       "method_id": "reviewed-ixi-qc-summary-ixi-skill",
       "label": "ixi 质控汇总",
-      "description": "使用已审核实现执行 ixi 质控汇总；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/ixi-skill/scripts/ixi_qc_summary.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.ixi-skill.ixi-qc-summary",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -56,7 +56,13 @@
         {
           "path": "skills/ixi-skill/scripts/ixi_qc_summary.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -65,7 +71,7 @@
       "capability": "skill.ixi-skill",
       "method_id": "reviewed-reorganize-ixi-ixi-skill",
       "label": "ixi 复制整理为 BIDS 目录",
-      "description": "使用已审核实现执行 ixi 复制整理为 BIDS 目录；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/ixi-skill/scripts/reorganize_ixi.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.ixi-skill.reorganize-ixi",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -103,7 +109,13 @@
         {
           "path": "skills/ixi-skill/scripts/reorganize_ixi.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]

@@ -32,7 +32,8 @@ def main():
             state=runtime.get(method.runner_id)
             status='planning' if method.execution_mode!='runner' else 'ready' if state and state.get('available') else 'missing_runtime'
             reason='需要完成具体流程、数据或外部系统条件；可组合对应已就绪方法。' if status=='planning' else state['reason'] if state else '执行器未注册'
-            records.append(dict(capability=capability,skill=method.skill_id,method_id=method.method_id,label=method.label,runner_id=method.runner_id,status=status,reason=reason))
+            records.append(dict(capability=capability,skill=method.skill_id,method_id=method.method_id,label=method.label,runner_id=method.runner_id,status=status,reason=reason,
+                                implementation_source=state.get('implementation_source') if state else None))
     skills=[]
     for directory in sorted((ROOT/'skills').iterdir()):
         if not (directory/'SKILL.md').is_file():continue

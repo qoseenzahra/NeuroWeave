@@ -6,7 +6,7 @@
       "capability": "skill.adhd200-skill",
       "method_id": "reviewed-adhd200-qc-summary-adhd200-skill",
       "label": "adhd200 质控汇总",
-      "description": "使用已审核实现执行 adhd200 质控汇总；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/adhd200-skill/scripts/adhd200_qc_summary.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.adhd200-skill.adhd200-qc-summary",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -72,7 +72,13 @@
         {
           "path": "skills/adhd200-skill/scripts/adhd200_qc_summary.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -81,7 +87,7 @@
       "capability": "skill.adhd200-skill",
       "method_id": "reviewed-extract-adhd200-phenotype-adhd200-skill",
       "label": "adhd200 表型/刺激提取",
-      "description": "使用已审核实现执行 adhd200 表型/刺激提取；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/adhd200-skill/scripts/extract_adhd200_phenotype.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.adhd200-skill.extract-adhd200-phenotype",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -162,7 +168,13 @@
         {
           "path": "skills/adhd200-skill/scripts/extract_adhd200_phenotype.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -171,7 +183,7 @@
       "capability": "skill.adhd200-skill",
       "method_id": "reviewed-reorganize-adhd200-adhd200-skill",
       "label": "adhd200 复制整理为 BIDS 目录",
-      "description": "使用已审核实现执行 adhd200 复制整理为 BIDS 目录；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/adhd200-skill/scripts/reorganize_adhd200.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.adhd200-skill.reorganize-adhd200",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -216,7 +228,13 @@
         {
           "path": "skills/adhd200-skill/scripts/reorganize_adhd200.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]

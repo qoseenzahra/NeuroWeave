@@ -6,7 +6,7 @@
       "capability": "skill.abide-skill",
       "method_id": "reviewed-abide-qc-summary-abide-skill",
       "label": "abide 质控汇总",
-      "description": "使用已审核实现执行 abide 质控汇总；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/abide-skill/scripts/abide_qc_summary.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.abide-skill.abide-qc-summary",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -97,7 +97,13 @@
         {
           "path": "skills/abide-skill/scripts/abide_qc_summary.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -106,7 +112,7 @@
       "capability": "skill.abide-skill",
       "method_id": "reviewed-extract-abide-phenotype-abide-skill",
       "label": "abide 表型/刺激提取",
-      "description": "使用已审核实现执行 abide 表型/刺激提取；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/abide-skill/scripts/extract_abide_phenotype.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.abide-skill.extract-abide-phenotype",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -198,7 +204,13 @@
         {
           "path": "skills/abide-skill/scripts/extract_abide_phenotype.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -207,7 +219,7 @@
       "capability": "skill.abide-skill",
       "method_id": "reviewed-reorganize-abide-abide-skill",
       "label": "abide 复制整理为 BIDS 目录",
-      "description": "使用已审核实现执行 abide 复制整理为 BIDS 目录；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/abide-skill/scripts/reorganize_abide.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.abide-skill.reorganize-abide",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -264,7 +276,13 @@
         {
           "path": "skills/abide-skill/scripts/reorganize_abide.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]

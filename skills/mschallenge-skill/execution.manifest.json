@@ -6,7 +6,7 @@
       "capability": "skill.mschallenge-skill",
       "method_id": "reviewed-analyze-lesions-mschallenge-skill",
       "label": "病灶负荷统计",
-      "description": "使用已审核实现执行 病灶负荷统计；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/mschallenge-skill/scripts/analyze_lesions.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.mschallenge-skill.analyze-lesions",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -49,7 +49,13 @@
         {
           "path": "skills/mschallenge-skill/scripts/analyze_lesions.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -58,7 +64,7 @@
       "capability": "skill.mschallenge-skill",
       "method_id": "reviewed-longitudinal-lesion-mschallenge-skill",
       "label": "纵向病灶变化",
-      "description": "使用已审核实现执行 纵向病灶变化；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/mschallenge-skill/scripts/longitudinal_lesion.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.mschallenge-skill.longitudinal-lesion",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -101,7 +107,13 @@
         {
           "path": "skills/mschallenge-skill/scripts/longitudinal_lesion.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -110,7 +122,7 @@
       "capability": "skill.mschallenge-skill",
       "method_id": "reviewed-mschallenge-qc-summary-mschallenge-skill",
       "label": "mschallenge 质控汇总",
-      "description": "使用已审核实现执行 mschallenge 质控汇总；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/mschallenge-skill/scripts/mschallenge_qc_summary.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.mschallenge-skill.mschallenge-qc-summary",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -165,7 +177,13 @@
         {
           "path": "skills/mschallenge-skill/scripts/mschallenge_qc_summary.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -174,7 +192,7 @@
       "capability": "skill.mschallenge-skill",
       "method_id": "reviewed-validate-mschallenge-mschallenge-skill",
       "label": "mschallenge 数据校验",
-      "description": "使用已审核实现执行 mschallenge 数据校验；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/mschallenge-skill/scripts/validate_mschallenge.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.mschallenge-skill.validate-mschallenge",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -231,7 +249,13 @@
         {
           "path": "skills/mschallenge-skill/scripts/validate_mschallenge.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]

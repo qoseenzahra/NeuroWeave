@@ -6,7 +6,7 @@
       "capability": "skill.imaging-genetics-models",
       "method_id": "reviewed-association-imaging-genetics-models",
       "label": "影像遗传关联",
-      "description": "使用已审核实现执行 影像遗传关联；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/imaging-genetics-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.imaging-genetics-models.association",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -91,7 +91,13 @@
         {
           "path": "skills/imaging-genetics-models/scripts/train_reference.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]

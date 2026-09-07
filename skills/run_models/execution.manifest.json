@@ -6,7 +6,7 @@
       "capability": "skill.run-models",
       "method_id": "reviewed-classification-statistical-ml",
       "label": "统计学习：分类",
-      "description": "使用已审核实现执行 统计学习：分类；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.statistical-ml.classification",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -153,7 +153,13 @@
         {
           "path": "skills/statistical-ml/scripts/train_reference.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -162,7 +168,7 @@
       "capability": "skill.run-models",
       "method_id": "reviewed-regression-statistical-ml",
       "label": "统计学习：回归",
-      "description": "使用已审核实现执行 统计学习：回归；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.statistical-ml.regression",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -309,7 +315,13 @@
         {
           "path": "skills/statistical-ml/scripts/train_reference.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -318,7 +330,7 @@
       "capability": "skill.run-models",
       "method_id": "reviewed-train-cpm",
       "label": "连接组预测模型 CPM",
-      "description": "使用已审核实现执行 连接组预测模型 CPM；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/cpm/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.cpm.train",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -448,7 +460,13 @@
         {
           "path": "skills/cpm/scripts/train_reference.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -457,7 +475,7 @@
       "capability": "skill.run-models",
       "method_id": "reviewed-train-brain-age-modeling",
       "label": "脑龄预测与偏差校正",
-      "description": "使用已审核实现执行 脑龄预测与偏差校正；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/brain-age-modeling/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.brain-age-modeling.train",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -581,7 +599,13 @@
         {
           "path": "skills/brain-age-modeling/scripts/train_reference.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -590,7 +614,7 @@
       "capability": "skill.run-models",
       "method_id": "reviewed-cluster-subject-subtyping",
       "label": "受试者分型",
-      "description": "使用已审核实现执行 受试者分型；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/subject-subtyping/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.subject-subtyping.cluster",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -697,7 +721,13 @@
         {
           "path": "skills/subject-subtyping/scripts/train_reference.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -706,7 +736,7 @@
       "capability": "skill.run-models",
       "method_id": "reviewed-association-imaging-genetics-models",
       "label": "影像遗传关联",
-      "description": "使用已审核实现执行 影像遗传关联；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/imaging-genetics-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.imaging-genetics-models.association",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -791,7 +821,13 @@
         {
           "path": "skills/imaging-genetics-models/scripts/train_reference.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -800,7 +836,7 @@
       "capability": "skill.run-models",
       "method_id": "reviewed-train-temporal-models",
       "label": "时序模型训练",
-      "description": "使用已审核实现执行 时序模型训练；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/temporal-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.temporal-models.train",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -997,7 +1033,13 @@
         {
           "path": "skills/temporal-models/scripts/train_reference.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -1006,7 +1048,7 @@
       "capability": "skill.run-models",
       "method_id": "reviewed-train-cnn3d",
       "label": "3D CNN 训练",
-      "description": "使用已审核实现执行 3D CNN 训练；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/cnn3d/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.cnn3d.train",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -1164,7 +1206,13 @@
         {
           "path": "skills/cnn3d/scripts/train_reference.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -1173,7 +1221,7 @@
       "capability": "skill.run-models",
       "method_id": "reviewed-survival-scientific-survival-models",
       "label": "生存模型（scientific）",
-      "description": "使用已审核实现执行 生存模型（scientific）；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/survival-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.survival-models.survival-scientific",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -1335,7 +1383,13 @@
         {
           "path": "skills/survival-models/scripts/train_reference.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -1344,7 +1398,7 @@
       "capability": "skill.run-models",
       "method_id": "reviewed-survival-torch-survival-models",
       "label": "生存模型（torch）",
-      "description": "使用已审核实现执行 生存模型（torch）；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/survival-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.survival-models.survival-torch",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -1498,7 +1552,13 @@
         {
           "path": "skills/survival-models/scripts/train_reference.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -1507,7 +1567,7 @@
       "capability": "skill.run-models",
       "method_id": "reviewed-cate-causal-treatment-models",
       "label": "处理效应估计",
-      "description": "使用已审核实现执行 处理效应估计；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/causal-treatment-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.causal-treatment-models.cate",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -1689,592 +1749,13 @@
         {
           "path": "skills/causal-treatment-models/scripts/train_reference.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
           "line_start": 1
-        }
-      ]
-    },
-    {
-      "capability": "skill.run-models",
-      "method_id": "reviewed-train-brainnetcnn",
-      "label": "brainnetcnn 连接组模型训练",
-      "description": "使用已审核实现执行 brainnetcnn 连接组模型训练；输入保持只读，输出写入独立任务目录。",
-      "runner_id": "reviewed.brainnetcnn.train",
-      "execution_mode": "runner",
-      "structure_level": "reviewed",
-      "parameters": [
-        {
-          "id": "task",
-          "argument": "task",
-          "label": "task",
-          "type": "string",
-          "default": "classification",
-          "required": true,
-          "options": [
-            {
-              "value": "classification",
-              "label": "classification"
-            },
-            {
-              "value": "regression",
-              "label": "regression"
-            }
-          ],
-          "minimum": null,
-          "maximum": null
         },
         {
-          "id": "epochs",
-          "argument": "epochs",
-          "label": "epochs",
-          "type": "integer",
-          "default": 30,
-          "required": true,
-          "options": [],
-          "minimum": 1,
-          "maximum": 1000
-        },
-        {
-          "id": "batch_size",
-          "argument": "batch-size",
-          "label": "batch-size",
-          "type": "integer",
-          "default": 8,
-          "required": true,
-          "options": [],
-          "minimum": 1,
-          "maximum": 256
-        },
-        {
-          "id": "lr",
-          "argument": "lr",
-          "label": "lr",
-          "type": "number",
-          "default": 0.001,
-          "required": true,
-          "options": [],
-          "minimum": 1e-06,
-          "maximum": 0.1
-        },
-        {
-          "id": "hidden_size",
-          "argument": "hidden-size",
-          "label": "hidden-size",
-          "type": "integer",
-          "default": 128,
-          "required": true,
-          "options": [],
-          "minimum": 16,
-          "maximum": 2048
-        },
-        {
-          "id": "nhead",
-          "argument": "nhead",
-          "label": "nhead",
-          "type": "integer",
-          "default": 1,
-          "required": true,
-          "options": [
-            {
-              "value": 1,
-              "label": "1"
-            },
-            {
-              "value": 2,
-              "label": "2"
-            },
-            {
-              "value": 4,
-              "label": "4"
-            },
-            {
-              "value": 8,
-              "label": "8"
-            }
-          ],
-          "minimum": null,
-          "maximum": null
-        },
-        {
-          "id": "device",
-          "argument": "device",
-          "label": "device",
-          "type": "string",
-          "default": "auto",
-          "required": true,
-          "options": [
-            {
-              "value": "auto",
-              "label": "auto"
-            },
-            {
-              "value": "cpu",
-              "label": "cpu"
-            },
-            {
-              "value": "cuda",
-              "label": "cuda"
-            }
-          ],
-          "minimum": null,
-          "maximum": null
-        },
-        {
-          "id": "folds",
-          "argument": "folds",
-          "label": "folds",
-          "type": "integer",
-          "default": 5,
-          "required": true,
-          "options": [],
-          "minimum": 2,
-          "maximum": 20
-        },
-        {
-          "id": "seed",
-          "argument": "seed",
-          "label": "seed",
-          "type": "integer",
-          "default": 123,
-          "required": true,
-          "options": [],
-          "minimum": 0,
-          "maximum": 2147483647
-        }
-      ],
-      "input_slots": [
-        {
-          "id": "input",
-          "label": "NPZ（X、y，ComBrainTF 另需 community_ids）",
-          "required": true,
-          "binding": "file",
-          "type": "analysis_input"
-        }
-      ],
-      "output_slots": [
-        {
-          "id": "results",
-          "type": "generated_folder",
-          "label": "分析结果",
-          "primary": true,
-          "path_template": "results/"
-        },
-        {
-          "id": "file_metrics_json",
-          "type": "generated_file",
-          "label": "metrics.json",
-          "path_template": "results/metrics.json"
-        },
-        {
-          "id": "file_predictions_csv",
-          "type": "generated_file",
-          "label": "predictions.csv",
-          "path_template": "results/predictions.csv"
-        }
-      ],
-      "input_types": [
-        "analysis_input"
-      ],
-      "output_types": [
-        "generated_folder"
-      ],
-      "default_recommended": true,
-      "replaces_operations": [],
-      "source_references": [
-        {
-          "path": "models/connectome_training.py",
+          "path": "bakend/resources/existing_implementation_sources.json",
           "kind": "script",
-          "label": "已审核实现",
-          "line_start": 1
-        }
-      ]
-    },
-    {
-      "capability": "skill.run-models",
-      "method_id": "reviewed-train-bnt",
-      "label": "bnt 连接组模型训练",
-      "description": "使用已审核实现执行 bnt 连接组模型训练；输入保持只读，输出写入独立任务目录。",
-      "runner_id": "reviewed.bnt.train",
-      "execution_mode": "runner",
-      "structure_level": "reviewed",
-      "parameters": [
-        {
-          "id": "task",
-          "argument": "task",
-          "label": "task",
-          "type": "string",
-          "default": "classification",
-          "required": true,
-          "options": [
-            {
-              "value": "classification",
-              "label": "classification"
-            },
-            {
-              "value": "regression",
-              "label": "regression"
-            }
-          ],
-          "minimum": null,
-          "maximum": null
-        },
-        {
-          "id": "epochs",
-          "argument": "epochs",
-          "label": "epochs",
-          "type": "integer",
-          "default": 30,
-          "required": true,
-          "options": [],
-          "minimum": 1,
-          "maximum": 1000
-        },
-        {
-          "id": "batch_size",
-          "argument": "batch-size",
-          "label": "batch-size",
-          "type": "integer",
-          "default": 8,
-          "required": true,
-          "options": [],
-          "minimum": 1,
-          "maximum": 256
-        },
-        {
-          "id": "lr",
-          "argument": "lr",
-          "label": "lr",
-          "type": "number",
-          "default": 0.001,
-          "required": true,
-          "options": [],
-          "minimum": 1e-06,
-          "maximum": 0.1
-        },
-        {
-          "id": "hidden_size",
-          "argument": "hidden-size",
-          "label": "hidden-size",
-          "type": "integer",
-          "default": 128,
-          "required": true,
-          "options": [],
-          "minimum": 16,
-          "maximum": 2048
-        },
-        {
-          "id": "nhead",
-          "argument": "nhead",
-          "label": "nhead",
-          "type": "integer",
-          "default": 1,
-          "required": true,
-          "options": [
-            {
-              "value": 1,
-              "label": "1"
-            },
-            {
-              "value": 2,
-              "label": "2"
-            },
-            {
-              "value": 4,
-              "label": "4"
-            },
-            {
-              "value": 8,
-              "label": "8"
-            }
-          ],
-          "minimum": null,
-          "maximum": null
-        },
-        {
-          "id": "device",
-          "argument": "device",
-          "label": "device",
-          "type": "string",
-          "default": "auto",
-          "required": true,
-          "options": [
-            {
-              "value": "auto",
-              "label": "auto"
-            },
-            {
-              "value": "cpu",
-              "label": "cpu"
-            },
-            {
-              "value": "cuda",
-              "label": "cuda"
-            }
-          ],
-          "minimum": null,
-          "maximum": null
-        },
-        {
-          "id": "folds",
-          "argument": "folds",
-          "label": "folds",
-          "type": "integer",
-          "default": 5,
-          "required": true,
-          "options": [],
-          "minimum": 2,
-          "maximum": 20
-        },
-        {
-          "id": "seed",
-          "argument": "seed",
-          "label": "seed",
-          "type": "integer",
-          "default": 123,
-          "required": true,
-          "options": [],
-          "minimum": 0,
-          "maximum": 2147483647
-        }
-      ],
-      "input_slots": [
-        {
-          "id": "input",
-          "label": "NPZ（X、y，ComBrainTF 另需 community_ids）",
-          "required": true,
-          "binding": "file",
-          "type": "analysis_input"
-        }
-      ],
-      "output_slots": [
-        {
-          "id": "results",
-          "type": "generated_folder",
-          "label": "分析结果",
-          "primary": true,
-          "path_template": "results/"
-        },
-        {
-          "id": "file_metrics_json",
-          "type": "generated_file",
-          "label": "metrics.json",
-          "path_template": "results/metrics.json"
-        },
-        {
-          "id": "file_predictions_csv",
-          "type": "generated_file",
-          "label": "predictions.csv",
-          "path_template": "results/predictions.csv"
-        }
-      ],
-      "input_types": [
-        "analysis_input"
-      ],
-      "output_types": [
-        "generated_folder"
-      ],
-      "default_recommended": true,
-      "replaces_operations": [],
-      "source_references": [
-        {
-          "path": "models/connectome_training.py",
-          "kind": "script",
-          "label": "已审核实现",
-          "line_start": 1
-        }
-      ]
-    },
-    {
-      "capability": "skill.run-models",
-      "method_id": "reviewed-train-combraintf",
-      "label": "combraintf 连接组模型训练",
-      "description": "使用已审核实现执行 combraintf 连接组模型训练；输入保持只读，输出写入独立任务目录。",
-      "runner_id": "reviewed.combraintf.train",
-      "execution_mode": "runner",
-      "structure_level": "reviewed",
-      "parameters": [
-        {
-          "id": "task",
-          "argument": "task",
-          "label": "task",
-          "type": "string",
-          "default": "classification",
-          "required": true,
-          "options": [
-            {
-              "value": "classification",
-              "label": "classification"
-            },
-            {
-              "value": "regression",
-              "label": "regression"
-            }
-          ],
-          "minimum": null,
-          "maximum": null
-        },
-        {
-          "id": "epochs",
-          "argument": "epochs",
-          "label": "epochs",
-          "type": "integer",
-          "default": 30,
-          "required": true,
-          "options": [],
-          "minimum": 1,
-          "maximum": 1000
-        },
-        {
-          "id": "batch_size",
-          "argument": "batch-size",
-          "label": "batch-size",
-          "type": "integer",
-          "default": 8,
-          "required": true,
-          "options": [],
-          "minimum": 1,
-          "maximum": 256
-        },
-        {
-          "id": "lr",
-          "argument": "lr",
-          "label": "lr",
-          "type": "number",
-          "default": 0.001,
-          "required": true,
-          "options": [],
-          "minimum": 1e-06,
-          "maximum": 0.1
-        },
-        {
-          "id": "hidden_size",
-          "argument": "hidden-size",
-          "label": "hidden-size",
-          "type": "integer",
-          "default": 128,
-          "required": true,
-          "options": [],
-          "minimum": 16,
-          "maximum": 2048
-        },
-        {
-          "id": "nhead",
-          "argument": "nhead",
-          "label": "nhead",
-          "type": "integer",
-          "default": 1,
-          "required": true,
-          "options": [
-            {
-              "value": 1,
-              "label": "1"
-            },
-            {
-              "value": 2,
-              "label": "2"
-            },
-            {
-              "value": 4,
-              "label": "4"
-            },
-            {
-              "value": 8,
-              "label": "8"
-            }
-          ],
-          "minimum": null,
-          "maximum": null
-        },
-        {
-          "id": "device",
-          "argument": "device",
-          "label": "device",
-          "type": "string",
-          "default": "auto",
-          "required": true,
-          "options": [
-            {
-              "value": "auto",
-              "label": "auto"
-            },
-            {
-              "value": "cpu",
-              "label": "cpu"
-            },
-            {
-              "value": "cuda",
-              "label": "cuda"
-            }
-          ],
-          "minimum": null,
-          "maximum": null
-        },
-        {
-          "id": "folds",
-          "argument": "folds",
-          "label": "folds",
-          "type": "integer",
-          "default": 5,
-          "required": true,
-          "options": [],
-          "minimum": 2,
-          "maximum": 20
-        },
-        {
-          "id": "seed",
-          "argument": "seed",
-          "label": "seed",
-          "type": "integer",
-          "default": 123,
-          "required": true,
-          "options": [],
-          "minimum": 0,
-          "maximum": 2147483647
-        }
-      ],
-      "input_slots": [
-        {
-          "id": "input",
-          "label": "NPZ（X、y，ComBrainTF 另需 community_ids）",
-          "required": true,
-          "binding": "file",
-          "type": "analysis_input"
-        }
-      ],
-      "output_slots": [
-        {
-          "id": "results",
-          "type": "generated_folder",
-          "label": "分析结果",
-          "primary": true,
-          "path_template": "results/"
-        },
-        {
-          "id": "file_metrics_json",
-          "type": "generated_file",
-          "label": "metrics.json",
-          "path_template": "results/metrics.json"
-        },
-        {
-          "id": "file_predictions_csv",
-          "type": "generated_file",
-          "label": "predictions.csv",
-          "path_template": "results/predictions.csv"
-        }
-      ],
-      "input_types": [
-        "analysis_input"
-      ],
-      "output_types": [
-        "generated_folder"
-      ],
-      "default_recommended": true,
-      "replaces_operations": [],
-      "source_references": [
-        {
-          "path": "models/connectome_training.py",
-          "kind": "script",
-          "label": "已审核实现",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -2283,7 +1764,7 @@
       "capability": "skill.run-models",
       "method_id": "reviewed-mvpa-neuroimaging-decoding",
       "label": "ROI 多变量解码",
-      "description": "使用已审核实现执行 ROI 多变量解码；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/neuroimaging-decoding/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.neuroimaging-decoding.mvpa",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -2419,7 +1900,13 @@
         {
           "path": "skills/neuroimaging-decoding/scripts/train_reference.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -2428,7 +1915,7 @@
       "capability": "skill.run-models",
       "method_id": "reviewed-roi-glm-neuroimaging-decoding",
       "label": "ROI GLM 与 FDR",
-      "description": "使用已审核实现执行 ROI GLM 与 FDR；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/neuroimaging-decoding/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.neuroimaging-decoding.roi-glm",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -2499,7 +1986,13 @@
         {
           "path": "skills/neuroimaging-decoding/scripts/train_reference.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
@@ -2508,7 +2001,7 @@
       "capability": "skill.run-models",
       "method_id": "reviewed-searchlight-neuroimaging-decoding",
       "label": "SearchLight 分类",
-      "description": "使用已审核实现执行 SearchLight 分类；输入保持只读，输出写入独立任务目录。",
+      "description": "调用现有实现：skills/neuroimaging-decoding/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
       "runner_id": "reviewed.neuroimaging-decoding.searchlight",
       "execution_mode": "runner",
       "structure_level": "reviewed",
@@ -2597,7 +2090,13 @@
         {
           "path": "skills/neuroimaging-decoding/scripts/train_reference.py",
           "kind": "script",
-          "label": "已审核实现",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
           "line_start": 1
         }
       ]
