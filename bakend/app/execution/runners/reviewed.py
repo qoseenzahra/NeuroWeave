@@ -10,7 +10,7 @@ import re
 from functools import lru_cache
 from pathlib import Path
 
-from ..base import RunnerContext, RunnerResult
+from ..base import RunnerResult
 from ..external_command import ExternalCommandRunner
 
 ROOT = Path(__file__).resolve().parents[4]

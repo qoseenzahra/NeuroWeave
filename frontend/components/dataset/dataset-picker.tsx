@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
   Check,
@@ -38,6 +38,7 @@ import { Input } from '@/components/ui/input';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { responseError } from '@/lib/api-error';
 import type { DataRoot, Dataset, DirectoryListing } from '@/lib/dataset';
 
 type DatasetPickerProps = {
@@ -55,15 +56,6 @@ function formatBytes(value: number) {
   return `${(value / 1024 ** 3).toFixed(1)} GB`;
 }
 
-async function responseError(response: Response) {
-  try {
-    const payload = (await response.json()) as { detail?: string };
-    return payload.detail ?? `请求失败（${response.status}）`;
-  } catch {
-    return `请求失败（${response.status}）`;
-  }
-}
-
 export function DatasetPicker({ apiBase, selectedDataset, onSelected, disabled = false, disabledReason }: DatasetPickerProps) {
   const [open, setOpen] = useState(false);
   const [roots, setRoots] = useState<DataRoot[]>([]);
@@ -76,9 +68,11 @@ export function DatasetPicker({ apiBase, selectedDataset, onSelected, disabled =
   const [error, setError] = useState<string | null>(null);
   const selectionEpoch = useRef(0);
   const disabledRef = useRef(disabled);
-  disabledRef.current = disabled;
-  useEffect(() => {
+  useLayoutEffect(() => {
+    disabledRef.current = disabled;
     selectionEpoch.current += 1;
+    // 锁定由流程卡片触发；关闭外部已失效的选择窗口，同时淘汰仍在等待的扫描请求。
+    // eslint-disable-next-line react/react-compiler -- 同步关闭可防止解锁后重新弹出旧选择窗口。
     if (disabled) setOpen(false);
     return () => { selectionEpoch.current += 1; };
   }, [disabled]);

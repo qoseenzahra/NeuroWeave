@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   Archive,
   ArchiveRestore,
@@ -276,7 +276,10 @@ export default function Home() {
   const datasetLocked = Boolean(currentWorkflow?.locked_at || currentWorkflow?.status === 'confirmed');
   const datasetDisabled = datasetLocked || isSending || isConversationOpening || busyWorkflows.length > 0;
   const datasetContext = useRef({ workflow: currentWorkflow, blocked: datasetDisabled, conversationId });
-  datasetContext.current = { workflow: currentWorkflow, blocked: datasetDisabled, conversationId };
+  useLayoutEffect(() => {
+    // 异步选文件回调只读取已提交的页面状态，避免旧请求套用到另一条对话。
+    datasetContext.current = { workflow: currentWorkflow, blocked: datasetDisabled, conversationId };
+  }, [currentWorkflow, datasetDisabled, conversationId]);
   const datasetNotice = datasetLocked
     ? currentWorkflow?.status === 'confirmed'
       ? '流程已确认，数据集已固定；更换数据集请新建对话。'
@@ -858,9 +861,9 @@ export default function Home() {
                   </div>
                 )}
                 {isConversationOpening && (
-                  <div role="status" className="flex items-center gap-2 px-3 py-2 text-xs text-slate-500">
+                  <output className="flex items-center gap-2 px-3 py-2 text-xs text-slate-500">
                     <LoaderCircle className="size-4 animate-spin" /> 正在打开对话…
-                  </div>
+                  </output>
                 )}
                 {!isHistoryLoading && conversations.length === 0 && !historyError && (
                   <div className="px-4 py-12 text-center text-sm text-slate-400">
@@ -948,10 +951,10 @@ export default function Home() {
                 })}
                 <div ref={historyEndRef} className="h-px" aria-hidden="true" />
                 {isHistoryLoading && (
-                  <div role="status" className="flex items-center justify-center gap-2 py-6 text-sm text-slate-400">
+                  <output className="flex items-center justify-center gap-2 py-6 text-sm text-slate-400">
                     <LoaderCircle className="size-4 animate-spin" />
                     {conversations.length === 0 ? '正在读取对话…' : '正在加载更多…'}
-                  </div>
+                  </output>
                 )}
                 {!isHistoryLoading && hasMoreConversations && !historyError && (
                   <Button className="w-full text-xs text-slate-500" variant="ghost" onClick={() => void loadMoreConversations()}>
@@ -959,7 +962,7 @@ export default function Home() {
                   </Button>
                 )}
                 {!isHistoryLoading && !historyError && !hasMoreConversations && conversations.length > 0 && (
-                  <p role="status" className="py-4 text-center text-xs text-slate-400">已加载全部 {conversations.length} 条对话</p>
+                  <output className="block py-4 text-center text-xs text-slate-400">已加载全部 {conversations.length} 条对话</output>
                 )}
               </div>
             </ScrollArea>
@@ -1346,7 +1349,7 @@ export default function Home() {
                   : '只进行问答，不生成流程'}
               </p>
             </div>
-            {datasetNotice && <p role="status" className="mb-2 wrap-anywhere text-xs text-slate-500">{datasetNotice}</p>}
+            {datasetNotice && <output className="block mb-2 wrap-anywhere text-xs text-slate-500">{datasetNotice}</output>}
             {selectedDataset && (
               <div className="mb-2.5 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs">
                 <Database className="size-3.5 text-blue-600" />

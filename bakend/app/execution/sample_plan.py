@@ -9,6 +9,17 @@ from ..workflow_models import Workflow
 from .recipe_compiler import ExecutionUnit, RecipeCompilationError, RecipeCompiler
 
 
+def sample_parallel_limits(execution: RunExecutionOptions, sample_count: int) -> dict[str, int]:
+    """按持久化节点顺序轮流分配样本，资源校验和队列上限共用同一计算。"""
+    if execution.sample_mode != "per_sample":
+        return {}
+    node_count = len(execution.nodes)
+    return {
+        allocation.node: min(allocation.parallel_samples, (sample_count + node_count - 1 - index) // node_count)
+        for index, allocation in enumerate(execution.nodes)
+    }
+
+
 def schedule_units(workflow: Workflow, units: list[ExecutionUnit],
                    execution: RunExecutionOptions) -> list[ExecutionUnit]:
     if execution.sample_mode == "single":
@@ -34,8 +45,7 @@ def schedule_units(workflow: Workflow, units: list[ExecutionUnit],
         raise RecipeCompilationError("数据集样本标识重复，不能进行批量运行")
     if len(execution.nodes) > len(samples):
         raise RecipeCompilationError("选择的节点数不能多于样本数")
-    if sum(min(allocation.parallel_samples, (len(samples) + len(execution.nodes) - 1 - index) // len(execution.nodes))
-           for index, allocation in enumerate(execution.nodes)) > 128:
+    if sum(sample_parallel_limits(execution, len(samples)).values()) > 128:
         raise RecipeCompilationError("一次运行的实际并行样本数不能超过 128")
     root = Path(workflow.dataset.absolute_path).resolve(strict=True)
     roots = {}

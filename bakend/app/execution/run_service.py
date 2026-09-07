@@ -17,7 +17,7 @@ from .recipe_compiler import ExecutionUnit, RecipeCompilationError, RecipeCompil
 from .runner_registry import RunnerRegistry
 from .runners.freesurfer import FreeSurferReconAllRunner
 from .slurm_backend import SlurmBackend, TERMINAL_STATES
-from .sample_plan import schedule_units, workflow_for_unit
+from .sample_plan import sample_parallel_limits, schedule_units, workflow_for_unit
 from .sample_execution import execute_samples
 
 
@@ -125,12 +125,9 @@ class RunService:
             resolved = schedule_units(workflow, resolved, execution)
         except (RecipeCompilationError, OSError) as exc:
             raise RunConflict(str(exc)) from exc
-        parallel_limits = {}
-        if execution.sample_mode == "per_sample":
-            count = workflow.dataset.inspection.sample_count
-            for index, allocation in enumerate(execution.nodes):
-                assigned = (count + len(execution.nodes) - 1 - index) // len(execution.nodes)
-                parallel_limits[allocation.node] = min(allocation.parallel_samples, assigned)
+        parallel_limits = sample_parallel_limits(
+            execution, workflow.dataset.inspection.sample_count if workflow.dataset else 0,
+        )
         for unit in resolved:
             step, method = unit.step, unit.method
             if method.execution_mode != "runner":
@@ -581,6 +578,8 @@ class RunService:
 
     @staticmethod
     def _resolve_runtime_bindings(step: WorkflowStep, run: WorkflowRun) -> WorkflowStep:
+        # sample_plan 已为每个样本加上稳定步骤前缀；这里只接受该精确上游步骤的成功产物。
+        # 不按文件名或“最近生成的结果”匹配，避免并行样本互相取错输入。
         resolved = step.model_copy(deep=True)
         completed = {item.step_id: item for item in run.steps if item.status == "succeeded"}
         for slot_id, binding in list(resolved.input_bindings.items()):

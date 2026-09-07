@@ -1,8 +1,6 @@
 """Synthetic, isolated execution checks; never opens the production database."""
 from __future__ import annotations
 import argparse
-import datetime
-import hashlib
 import json
 import os
 from pathlib import Path
@@ -10,7 +8,6 @@ import sys
 import threading
 import time
 import traceback
-from uuid import uuid4
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'bakend'))

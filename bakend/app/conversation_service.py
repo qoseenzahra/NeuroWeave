@@ -13,7 +13,6 @@ from .chat_service import ChatService
 from .conversation_models import (
     ConversationListItem,
     ConversationMemoryStatus,
-    ConversationMessageRecord,
     ConversationPage,
     ConversationRecord,
     ConversationSnapshot,

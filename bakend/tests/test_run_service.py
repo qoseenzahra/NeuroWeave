@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import tempfile
@@ -99,7 +100,7 @@ class RunServiceTests(unittest.TestCase):
         report = json.loads(output.read_text(encoding="utf-8"))
         self.assertEqual(report["runner_id"], "dataset.inspect")
         self.assertEqual(report["file_count"], 2)
-        self.assertTrue(artifact.sha256)
+        self.assertEqual(artifact.sha256, hashlib.sha256(output.read_bytes()).hexdigest())
         events = self.service.events(run.run_id)
         self.assertIn("run_started", {item["event_type"] for item in events})
         self.assertIn("run_succeeded", {item["event_type"] for item in events})

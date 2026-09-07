@@ -144,20 +144,11 @@ function decodeOption(spec: ParameterSpec, key: string): ParameterValue {
   return spec.options.find((option) => optionKey(option.value) === key)?.value ?? key;
 }
 
-function isParameterVisible(spec: ParameterSpec, values: Record<string, ParameterValue>) {
-  return Object.entries(spec.visible_when ?? {}).every(([parameterId, allowed]) => {
-    const current = values[parameterId];
-    return (
-      current !== undefined && current !== null &&
-      allowed.some((candidate) => optionKey(candidate) === optionKey(current))
-    );
-  });
-}
-
 function conditionMatches(
   condition: Record<string, ParameterValue[]>,
   values: Record<string, ParameterValue>,
 ) {
+  // 保留 Manifest 值类型：布尔 false、字符串 "false" 和数字选项不能混为一项。
   return Object.entries(condition).every(([parameterId, allowed]) => {
     const current = values[parameterId];
     return current !== undefined && current !== null && allowed.some((item) => optionKey(item) === optionKey(current));
@@ -169,7 +160,12 @@ function inputRequired(slot: InputSlotSpec, values: Record<string, ParameterValu
     (Object.keys(slot.required_when).length > 0 && conditionMatches(slot.required_when, values));
 }
 
-export function WorkflowCard({ apiBase, workflow, onChange, disabled = false, onBusyChange }: WorkflowCardProps) {
+export function WorkflowCard(props: WorkflowCardProps) {
+  // 同一流程修改参数时保留界面状态；切换流程或服务器时一次性清空运行相关状态。
+  return <WorkflowCardState key={`${props.apiBase}:${props.workflow.workflow_id}`} {...props} />;
+}
+
+function WorkflowCardState({ apiBase, workflow, onChange, disabled = false, onBusyChange }: WorkflowCardProps) {
   const [busyAction, setBusyAction] = useState<string | null>(null);
   const [runBusy, setRunBusy] = useState<string | null>(null);
   const [run, setRun] = useState<WorkflowRun | null>(null);
@@ -243,9 +239,6 @@ export function WorkflowCard({ apiBase, workflow, onChange, disabled = false, on
 
   useEffect(() => {
     let current = true;
-    setRun(null);
-    setRunEvents([]);
-    setExecution(DEFAULT_EXECUTION);
     const loadLatestRun = async () => {
       try {
         const response = await fetch(
@@ -273,14 +266,15 @@ export function WorkflowCard({ apiBase, workflow, onChange, disabled = false, on
     };
   }, [apiBase, workflow.workflow_id]);
 
+  const monitoredRunId = run && ACTIVE_RUN_STATUSES.has(run.status) ? run.run_id : null;
   useEffect(() => {
-    if (!run || !ACTIVE_RUN_STATUSES.has(run.status)) return;
+    if (!monitoredRunId) return;
     let current = true;
     const refresh = async () => {
       try {
         const [runResponse, eventResponse] = await Promise.all([
-          fetch(`${apiBase}/api/runs/${run.run_id}`),
-          fetch(`${apiBase}/api/runs/${run.run_id}/events`),
+          fetch(`${apiBase}/api/runs/${monitoredRunId}`),
+          fetch(`${apiBase}/api/runs/${monitoredRunId}/events`),
         ]);
         if (runResponse.ok && current) setRun((await runResponse.json()) as WorkflowRun);
         if (eventResponse.ok && current) {
@@ -296,7 +290,7 @@ export function WorkflowCard({ apiBase, workflow, onChange, disabled = false, on
       current = false;
       window.clearInterval(timer);
     };
-  }, [apiBase, run?.run_id, run?.status]);
+  }, [apiBase, monitoredRunId]);
 
   const mutate = async (
     action: string,
@@ -1414,7 +1408,7 @@ function StepParameters({
       .map((spec) => [spec.id, selectedParameters[spec.id] ?? spec.default])
       .filter((entry): entry is [string, ParameterValue] => entry[1] !== null),
   );
-  const visible = method.parameters.filter((spec) => isParameterVisible(spec, values));
+  const visible = method.parameters.filter((spec) => conditionMatches(spec.visible_when ?? {}, values));
   const basic = visible.filter((spec) => spec.level !== 'advanced');
   const advanced = visible.filter((spec) => spec.level === 'advanced');
   const advancedGroups = Object.entries(

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useReducer, useRef } from 'react';
 
 export type ConversationListItem = {
   conversation_id: string;
@@ -25,11 +25,22 @@ type CachedHistory = {
   fetchedAt: number;
 };
 
+type HistoryView = {
+  conversations: ConversationListItem[];
+  isHistoryLoading: boolean;
+  nextCursor: string | null;
+  historyError: string | null;
+};
+const EMPTY_VIEW: HistoryView = {
+  conversations: [], isHistoryLoading: false, nextCursor: null, historyError: null,
+};
+
 export function useConversationHistory(apiBase: string, query: string, archived: boolean, enabled = true) {
-  const [conversations, setConversations] = useState<ConversationListItem[]>([]);
-  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
-  const [hasMoreConversations, setHasMoreConversations] = useState(false);
-  const [historyError, setHistoryError] = useState<string | null>(null);
+  // 一次更新列表视图，避免条目、翻页游标和错误状态分别维护时相互脱节。
+  const [view, updateView] = useReducer(
+    (previous: HistoryView, patch: Partial<HistoryView>) => ({ ...previous, ...patch }), EMPTY_VIEW,
+  );
+  const setHistoryError = useCallback((historyError: string | null) => updateView({ historyError }), []);
   const nextCursor = useRef<string | null>(null);
   const generation = useRef(0);
   const pending = useRef<AbortController | null>(null);
@@ -46,8 +57,7 @@ export function useConversationHistory(apiBase: string, query: string, archived:
     const requestGeneration = ++generation.current;
     pending.current = controller;
     failedAppend.current = append;
-    setIsHistoryLoading(true);
-    setHistoryError(null);
+    updateView({ isHistoryLoading: true, historyError: null });
     try {
       const parameters = new URLSearchParams({ limit: '20', archived: String(archived) });
       if (normalizedQuery) parameters.set('q', normalizedQuery);
@@ -65,16 +75,15 @@ export function useConversationHistory(apiBase: string, query: string, archived:
       cache.current.set(cacheKey, { conversations: merged, nextCursor: nextCursor.current, fetchedAt: Date.now() });
       // Bound cached search/filter scopes; each retains its loaded pages.
       while (cache.current.size > 6) cache.current.delete(cache.current.keys().next().value!);
-      setConversations(merged);
-      setHasMoreConversations(Boolean(nextCursor.current));
+      updateView({ conversations: merged, nextCursor: nextCursor.current });
     } catch (error) {
       if (!controller.signal.aborted && requestGeneration === generation.current) {
-        setHistoryError(error instanceof Error ? error.message : '无法读取对话列表');
+        updateView({ historyError: error instanceof Error ? error.message : '无法读取对话列表' });
       }
     } finally {
       if (requestGeneration === generation.current) {
         pending.current = null;
-        setIsHistoryLoading(false);
+        updateView({ isHistoryLoading: false });
       }
     }
   }, [apiBase, archived, cacheKey, enabled, normalizedQuery]);
@@ -86,17 +95,14 @@ export function useConversationHistory(apiBase: string, query: string, archived:
     pending.current = null;
     let timer: number | undefined;
     if (!enabled) {
-      setIsHistoryLoading(false);
+      updateView({ isHistoryLoading: false });
     } else {
       const saved = cache.current.get(cacheKey);
-      setConversations(saved?.conversations ?? []);
       nextCursor.current = saved?.nextCursor ?? null;
-      setHasMoreConversations(Boolean(nextCursor.current));
-      setHistoryError(null);
-      if (saved && Date.now() - saved.fetchedAt < 30_000) {
-        setIsHistoryLoading(false);
-      } else {
-        setIsHistoryLoading(true);
+      const fresh = Boolean(saved && Date.now() - saved.fetchedAt < 30_000);
+      updateView({ conversations: saved?.conversations ?? [], nextCursor: nextCursor.current,
+        historyError: null, isHistoryLoading: !fresh });
+      if (!fresh) {
         // Only search typing is debounced. Opening the list starts immediately.
         if (normalizedQuery) timer = window.setTimeout(() => void fetchPage(false), 250);
         else void fetchPage(false);
@@ -120,7 +126,7 @@ export function useConversationHistory(apiBase: string, query: string, archived:
   const retryConversations = useCallback(() => currentFetchPage.current?.(failedAppend.current), []);
 
   return {
-    conversations, isHistoryLoading, hasMoreConversations, historyError,
+    ...view, hasMoreConversations: Boolean(view.nextCursor),
     setHistoryError, loadConversations, loadMoreConversations, retryConversations,
   };
 }

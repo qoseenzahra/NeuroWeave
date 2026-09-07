@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass
 from pathlib import Path
 from threading import Event
@@ -47,6 +48,15 @@ class RunnerContext:
     def raise_if_cancelled(self) -> None:
         if self.cancel_event.is_set():
             raise ExecutionCancelled("任务已由用户取消")
+
+    def file_sha256(self, path: Path) -> str:
+        """共用分块校验逻辑，读取大文件时仍能响应取消，不一次性载入内存。"""
+        digest = hashlib.sha256()
+        with path.open("rb") as handle:
+            while chunk := handle.read(1024 * 1024):
+                self.raise_if_cancelled()
+                digest.update(chunk)
+        return digest.hexdigest()
 
 
 @dataclass(frozen=True)

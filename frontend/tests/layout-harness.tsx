@@ -20,6 +20,7 @@ function Harness() {
       <button onClick={() => setWorkflow({ ...fixture.workflow, status: 'awaiting_parameter_review',
         parameters_reviewed_at: null, can_review_parameters: true, confirmed_at: null })}>测试参数审核</button>
       <button onClick={() => setWorkflow(fixture.workflow)}>测试运行设置</button>
+      <button onClick={() => setWorkflow({ ...fixture.workflow, workflow_id: 'other-fixture' })}>测试其他流程</button>
     </div>
     <DatasetPicker apiBase="" selectedDataset={selected} onSelected={setSelected} />
     <ArtifactPathPicker apiBase="" disabled={false} dataset={fixture.dataset} workflowId="fixture"

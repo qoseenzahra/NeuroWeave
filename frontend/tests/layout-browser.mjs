@@ -163,6 +163,15 @@ try {
     assert.equal(submittedExecution.sample_mode, 'per_sample');
     assert.deepEqual(submittedExecution.nodes.map(({ node, parallel_samples, cpus }) => ({ node, parallel_samples, cpus })),
       [{ node: 'node01', parallel_samples: 2, cpus: 16 }, { node: 'node02', parallel_samples: 1, cpus: 32 }]);
+    await page.getByRole('button', { name: '测试运行设置', exact: true }).click();
+    assert.equal(await page.getByLabel('运行位置', { exact: true }).inputValue(), 'slurm',
+      'Updating the same workflow must retain execution settings');
+    await page.getByRole('button', { name: '测试其他流程', exact: true }).click();
+    assert.equal(await page.getByLabel('运行位置', { exact: true }).inputValue(), 'local',
+      'A different workflow must not inherit resources from the previous one');
+    assert.equal(await page.getByText('Synthetic submission captured', { exact: true }).count(), 0,
+      'A different workflow must not inherit the previous run error');
+    await page.getByRole('button', { name: '测试运行设置', exact: true }).click();
     for (const name of ['测试方法选择', '测试参数审核']) {
       await page.getByRole('button', { name, exact: true }).click();
       assert.equal(await page.getByLabel('运行位置', { exact: true }).count(), 0,

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import os
 import queue
 import signal
@@ -238,7 +237,7 @@ class ExternalCommandRunner:
             relative_path=path.relative_to(context.output_directory).as_posix(),
             media_type=media_type,
             size_bytes=path.stat().st_size,
-            sha256=ExternalCommandRunner.sha256(path, context),
+            sha256=context.file_sha256(path),
             metadata=metadata or {},
         )
 
@@ -265,15 +264,6 @@ class ExternalCommandRunner:
             size_bytes=sum(item.stat().st_size for item in path.rglob("*") if item.is_file()),
             metadata=metadata or {},
         )
-
-    @staticmethod
-    def sha256(path: Path, context: RunnerContext) -> str:
-        digest = hashlib.sha256()
-        with path.open("rb") as handle:
-            while chunk := handle.read(1024 * 1024):
-                context.raise_if_cancelled()
-                digest.update(chunk)
-        return digest.hexdigest()
 
     @staticmethod
     def _allowed_input(path: Path, run_root: Path | None = None) -> bool:

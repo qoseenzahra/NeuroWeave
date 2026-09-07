@@ -9,6 +9,7 @@ bakend/data/*.db-wal
 # Python caches
 __pycache__/
 .pytest_cache/
+.ruff_cache/
 *.py[cod]
 
 # Local frontend overrides

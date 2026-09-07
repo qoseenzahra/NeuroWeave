@@ -31,7 +31,7 @@ Slurm 执行已启用：主节点提交，三个 RTX 5060 计算节点执行 GPU
 
 当前目录共有 103 个 Skill（99 个 NeuroClaw 上游 Skill 和 4 个 NeuroWeave Skill），每个 Skill 都有 `planning.manifest.json`，因此都能进入任务卡并选择受约束参数。生成器会优先从 `SKILL.md` 的方法表、快速参考和命令块中提取操作选项，再补充适合该能力类别的常用与高级规划参数；当前 103 个 planning manifest 都有来源依据，60 个 Skill 提取出了方法级操作选项，共登记 330 条只读参考命令。运行时会把命中 Skill 的多值 `operation` 选项展开为独立候选方法，而不修改能力树或一次读取全部 Skill；当前 114 个能力、346 个原始方法可展开为 669 个可选择方法（包括同一实现的模型选项和跨 Skill 入口）。任务卡可以展开查看 Skill、脚本和命令的来源位置，参数下拉项也可以显示选项说明。
 
-平台只调用或管理原有项目实现、现有库 API 和已有软件命令；不根据方法名称、文档公式或基础库可用性补写算法。上一轮超出此范围的 12 个接口已撤回，缺少原始可用入口的内容保留规划。Manifest 的 `runner_id` 只是执行契约，不等于已经有执行代码。只有同时出现在后端可信 Runner 注册表、并通过服务器运行时探测的方法才会在 Dry-run 后标记为可执行。从文档提取的命令始终是只读参考，不会被模型或后端直接运行。当前显式注册 164 个经过审核的 Runner；服务器公共环境中 161 个已就绪。103 个 Skill 中，72 个至少有一项可运行方法，共 305 个就绪的候选方法入口；其余条目包含规划流程和缺少运行条件的方法。fMRIPrep、QSIPrep 和 nii2dcm 尚未配置执行入口，HCP Pipelines 仍无可执行适配。详细范围、输入要求及测试证据见 [Skill 执行配置](deploy/skill-runtime/README.md) 和 [逐方法清单](deploy/skill-runtime/readiness.json)。输入只读，本地结果写入 `LOCALFLOW_OUTPUT_ROOT/run_*/step/`，Slurm 结果写入共享的 `/home/data/neuroweave/runs/hipeson/run_*/step/`，并记录命令日志、进度、校验和与运行事件。
+平台只调用或管理原有项目实现、现有库 API 和已有软件命令；不根据方法名称、文档公式或基础库可用性补写算法。缺少原始可用入口的内容保留规划。Manifest 的 `runner_id` 只是执行契约，不等于已经有执行代码。只有同时出现在后端可信 Runner 注册表、并通过服务器运行时探测的方法才会在 Dry-run 后标记为可执行。从文档提取的命令始终是只读参考，不会被模型或后端直接运行。当前显式注册 164 个经过审核的 Runner；服务器公共环境中 161 个已就绪。103 个 Skill 中，72 个至少有一项可运行方法，共 305 个就绪的候选方法入口；其余条目包含规划流程和缺少运行条件的方法。fMRIPrep、QSIPrep 和 nii2dcm 尚未配置执行入口，HCP Pipelines 仍无可执行适配。详细范围、输入要求及测试证据见 [Skill 执行配置](deploy/skill-runtime/README.md) 和 [逐方法清单](deploy/skill-runtime/readiness.json)。输入只读，本地结果写入 `LOCALFLOW_OUTPUT_ROOT/run_*/step/`，Slurm 结果写入共享的 `/home/data/neuroweave/runs/hipeson/run_*/step/`，并记录命令日志、进度、校验和与运行事件。
 
 ## 目录
 
@@ -41,11 +41,38 @@ LocalFlow/
 ├─ models/                # 复用的模型代码、训练与评估实现
 ├─ bakend/                # FastAPI（保留了现有目录名）
 │  ├─ app/
-│  └─ data/localflow.db   # 运行后生成，不提交版本库
+│  └─ data/localflow.db   # 本地默认数据库；服务器使用 runtime/localflow.db
 ├─ skills/
 │  └─ <skill-name>/       # SKILL.md / workflow.manifest.json / tool.manifest.json
-├─ scripts/               # 上游 Skill 同步脚本
+├─ scripts/               # Skill 清单生成、环境检查、部署与合成数据验证
 └─ THIRD_PARTY_NOTICES/   # NeuroClaw MIT 许可证
+```
+
+## 代码维护
+
+- `bakend/app/workflow_service.py` 管理流程状态、输入绑定和审核；方法及算法参数以 `skills/*/*manifest.json` 的既有定义为准。
+- `bakend/app/execution/sample_plan.py` 分配样本并生成稳定步骤标识；`sample_execution.py` 限制每节点并行数量，恢复运行时沿用原步骤和 Slurm Job ID。
+- `bakend/app/execution/base.py` 定义 Runner 上下文和共用的可取消文件校验；各 Runner 只负责调用现有实现及整理结果。
+- `frontend/lib/use-conversation-history.ts` 管理列表缓存、翻页与过时请求；完整消息仍在打开对话时读取。
+- `frontend/components/workflow/workflow-card.tsx` 按流程 ID 隔离界面状态；参数编辑保留滚动和运行设置，切换流程才重新初始化。
+
+清理时保留 `skills/`、`models/`、`neuroclaw_compat/`、环境锁定文件、许可证和部署验证记录。
+这些内容分别用于方法发现、原始算法调用、兼容、环境复现和审计。数据库、研究输入、运行输出、
+日志、密钥及已安装环境均不属于构建缓存，不应随源码清理删除。
+
+常用检查（后端测试以临时合成数据为输入）：
+
+```powershell
+cd D:\reference_projects\LocalFlow
+$env:PYTHONPATH = Join-Path (Get-Location) 'bakend'
+python -m pytest bakend/tests -q
+cd frontend
+npm run lint
+npx tsc --noEmit
+npm run build
+# 已安装 Playwright 时运行；也可设置 LOCALFLOW_BROWSER_TOOLS 指向共享 node_modules。
+node tests/history-browser.mjs
+node tests/layout-browser.mjs
 ```
 
 ## 本地启动

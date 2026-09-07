@@ -45,6 +45,7 @@ import type { DataRoot, DirectoryListing } from '@/lib/dataset';
 import type { Dataset, DatasetPathPreview } from '@/lib/dataset';
 import type { InputSlotSpec } from '@/lib/workflow';
 import { cn } from '@/lib/utils';
+import { responseError } from '@/lib/api-error';
 
 type ArtifactPathPickerProps = {
   apiBase: string;
@@ -55,15 +56,6 @@ type ArtifactPathPickerProps = {
   slot: InputSlotSpec;
   onSelected: (rootId: string, relativePath: string) => void;
 };
-
-async function responseError(response: Response) {
-  try {
-    const payload = (await response.json()) as { detail?: string };
-    return payload.detail ?? `请求失败（${response.status}）`;
-  } catch {
-    return `请求失败（${response.status}）`;
-  }
-}
 
 export function ArtifactPathPicker({
   apiBase,

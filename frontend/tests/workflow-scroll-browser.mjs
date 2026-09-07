@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 
 export async function checkWorkflowScroll({ page, workflow, appUrl }) {
-  let current = structuredClone(workflow);
+  const current = structuredClone(workflow);
   Object.assign(current, { status: 'awaiting_parameter_review', confirmed_at: null,
     parameters_reviewed_at: null, dry_run_report: null, can_unlock: true, can_review_parameters: true });
   const method = current.steps[0].method_options[0];

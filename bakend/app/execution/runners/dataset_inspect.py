@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import gzip
-import hashlib
 import json
 import os
 import struct
@@ -100,7 +99,7 @@ class DatasetInspectRunner:
             total_bytes += size
             record: dict[str, Any] = {"path": relative, "size_bytes": size, "type": suffix}
             if compute_checksums:
-                digest = self._sha256(path, context)
+                digest = context.file_sha256(path)
                 checksums[relative] = digest
                 record["sha256"] = digest
             file_records.append(record)
@@ -173,7 +172,7 @@ class DatasetInspectRunner:
         context.output_directory.mkdir(parents=True, exist_ok=True)
         output = context.output_directory / "dataset_profile.json"
         output.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
-        digest = self._sha256(output, context)
+        digest = context.file_sha256(output)
         artifact = RunArtifact(
             artifact_id=f"artifact_{uuid4().hex[:12]}",
             step_id=context.step.id,
@@ -208,15 +207,6 @@ class DatasetInspectRunner:
     def _suffix(path: Path) -> str:
         lowered = path.name.lower()
         return ".nii.gz" if lowered.endswith(".nii.gz") else path.suffix.lower()
-
-    @staticmethod
-    def _sha256(path: Path, context: RunnerContext) -> str:
-        digest = hashlib.sha256()
-        with path.open("rb") as handle:
-            while chunk := handle.read(1024 * 1024):
-                context.raise_if_cancelled()
-                digest.update(chunk)
-        return digest.hexdigest()
 
     @staticmethod
     def _nifti_header(path: Path, root: Path) -> dict[str, Any]:
