@@ -28,6 +28,7 @@ import {
   Square,
   Terminal,
   TriangleAlert,
+  Trash2,
   UnlockKeyhole,
 } from 'lucide-react';
 
@@ -501,6 +502,14 @@ export function WorkflowCard({ apiBase, workflow, onChange }: WorkflowCardProps)
         ))}
 
         <div className="space-y-3">
+          {workflow.status !== 'confirmed' && (
+            <p className="text-sm leading-6 text-slate-600">
+              {locked
+                ? '需要精简流程时，先解锁，再移除不需要的步骤。'
+                : '可移除不需要的步骤。保留步骤所需的输入，可在锁定流程后选择已有文件。'}
+              {Boolean(workflow.excluded_capabilities?.length) && ' 已移除的步骤不会因重新规划或补全依赖而恢复。'}
+            </p>
+          )}
           {workflow.steps.map((step, index) => {
             const method = selectedMethod(step);
             const methodBusy = busyAction === `method:${step.id}`;
@@ -560,6 +569,23 @@ export function WorkflowCard({ apiBase, workflow, onChange }: WorkflowCardProps)
                           </Badge>
                         </div>
                       )}
+                      {!locked && workflow.status !== 'confirmed' && (
+                        <Button
+                          aria-label={`移除步骤：${step.title}`}
+                          disabled={controlsDisabled || workflow.steps.length <= 1}
+                          onClick={() => void mutate(
+                            `remove:${step.id}`,
+                            `/api/workflows/${workflow.workflow_id}/steps/${step.id}/remove`,
+                            'POST',
+                          )}
+                          size="sm"
+                          variant="outline"
+                          title={workflow.steps.length <= 1 ? '至少保留一个步骤' : '移除后可手动选择下游输入'}
+                        >
+                          {busyAction === `remove:${step.id}` ? <LoaderCircle className="animate-spin" /> : <Trash2 />}
+                          移除步骤
+                        </Button>
+                      )}
                     </div>
 
                     {!locked && step.method_options.length > 1 && (
@@ -614,11 +640,11 @@ export function WorkflowCard({ apiBase, workflow, onChange }: WorkflowCardProps)
 
                     {locked && method && <MethodEvidence method={method} />}
 
-                    {locked && method && ((method.input_slots?.length ?? 0) > 0 || (method.output_slots?.length ?? 0) > 0) && (
+                    {method && (locked || Boolean(step.manual_input_types?.length)) && ((method.input_slots?.length ?? 0) > 0 || (method.output_slots?.length ?? 0) > 0) && (
                       <MethodArtifacts
                         apiBase={apiBase}
                         busyAction={busyAction}
-                        disabled={controlsDisabled}
+                        disabled={controlsDisabled || !locked}
                         method={method}
                         onBind={(slotId, rootId, relativePath) =>
                           void bindInput(step.id, slotId, rootId, relativePath)
@@ -1220,7 +1246,8 @@ function MethodArtifacts({
   const missing = new Set(step.missing_required_inputs ?? []);
   const canCompleteUpstream = inputSlots.some(
     (slot) =>
-      missing.has(slot.id) && ['raw_dwi', 'bids_dwi', 'preprocessed_dwi'].includes(slot.type),
+      missing.has(slot.id) && !step.manual_input_types?.includes(slot.type) &&
+      ['raw_dwi', 'bids_dwi', 'preprocessed_dwi'].includes(slot.type),
   );
 
   return (
@@ -1250,7 +1277,7 @@ function MethodArtifacts({
         </div>
         <div className="space-y-2">
           {inputSlots.map((slot) => {
-            const required = inputRequired(slot, values);
+            const required = inputRequired(slot, values) || missing.has(slot.id);
             const binding = bindings[slot.id];
             const inputBusy = busyAction === `input:${step.id}:${slot.id}`;
             return (
@@ -1298,6 +1325,14 @@ function MethodArtifacts({
                     )}
                     {!binding && required && (
                       <p className="mt-2 text-[10px] text-amber-700">尚未找到满足条件的输入。</p>
+                    )}
+                    {!binding && step.manual_input_types?.includes(slot.type) && (
+                      <p className="mt-2 text-sm leading-5 text-amber-800">
+                        已移除生成此输入的步骤。
+                        {slot.source_options.includes('existing_path')
+                          ? workflow.locked_at ? '请选择已有文件。' : '锁定流程后，请在此选择已有文件。'
+                          : '当前方法不支持选择已有文件，请解锁并选择支持此输入的方法。'}
+                      </p>
                     )}
                   </div>
                   {slot.source_options.includes('existing_path') && (

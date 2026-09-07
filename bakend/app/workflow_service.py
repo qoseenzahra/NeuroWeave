@@ -170,8 +170,12 @@ class WorkflowService:
             raise RuntimeError("CapabilityTree 尚未配置")
 
         tree = self.capability_tree
-        heuristic_leaves = self._heuristic_capabilities(request, allowed_leaf_ids)
         intent = intent or {}
+        reused_inputs = existing_input_capabilities(request.message) | {
+            item for item in intent.get("input_capability_ids", []) if item in allowed_leaf_ids
+        }
+        allowed_leaf_ids = [item for item in allowed_leaf_ids if item not in reused_inputs]
+        heuristic_leaves = self._heuristic_capabilities(request, allowed_leaf_ids)
         semantic_leaves = [
             str(item)
             for item in intent.get("candidate_capability_ids") or []
@@ -218,7 +222,7 @@ class WorkflowService:
             "normalized_task": str(intent.get("task_brief") or request.message)[:600],
             "semantic_hints": semantic_leaves,
             "confidence": confidence,
-            "reused_input_capabilities": sorted(existing_input_capabilities(request.message)),
+            "reused_input_capabilities": sorted(reused_inputs),
         }
         if intent.get("needs_clarification") and not anchor_leaves:
             return {
@@ -389,6 +393,7 @@ class WorkflowService:
                 "intent_source": str(intent.get("source") or "unknown"),
                 "normalized_task": str(intent.get("task_brief") or request.message)[:600],
                 "semantic_hints": semantic_leaves,
+                "reused_input_capabilities": sorted(reused_inputs),
                 "confidence": confidence,
             },
         }
@@ -530,7 +535,11 @@ class WorkflowService:
             dataset_id=snapshot.dataset_id,
             interaction_mode="task",
         )
-        routing = await self.assess_task(request)
+        routing = ({
+            "recommend_workflow": True,
+            "capability_ids": snapshot.requested_capabilities,
+            "decision_source": "user_edited_scope",
+        } if snapshot.excluded_capabilities else await self.assess_task(request))
         if not routing.get("recommend_workflow"):
             raise ValueError("重新规划时没有匹配到可生成任务的能力")
         replacement, content = await self._build_dynamic(
@@ -592,6 +601,8 @@ class WorkflowService:
         previous_steps = {step.capability: step for step in snapshot.steps}
         for step in replacement.steps:
             previous = previous_steps.get(step.capability)
+            if previous is not None:
+                step.manual_input_types = list(previous.manual_input_types)
             if previous is None or previous.selected_method_id is None:
                 continue
             method = next(
@@ -666,6 +677,53 @@ class WorkflowService:
                 "method_selected",
                 {"step_id": step_id, "method_id": method_id},
             )
+            return workflow.model_copy(deep=True)
+
+    def remove_step(self, workflow_id: str, step_id: str, expected_revision: int) -> Workflow:
+        """Remove an operation, keeping downstream input requirements explicit."""
+        with self._lock:
+            workflow = self._require(workflow_id)
+            self._check_revision(workflow, expected_revision)
+            self._ensure_editable_chain(workflow)
+            removed = self._step(workflow, step_id)
+            if len(workflow.steps) == 1:
+                raise ValueError("流程至少需要保留一个步骤。")
+            position = workflow.steps.index(removed)
+            selected = next((m for m in removed.method_options if m.id == removed.selected_method_id), None)
+            producers = [selected] if selected else removed.method_options
+            output_types = {output.type for method in producers for output in method.output_slots
+                            if selected is None or self._output_generated(output, removed.selected_parameters)}
+            output_types.discard("execution_log")
+            for step in workflow.steps[position + 1:]:
+                # A direct binding is authoritative; before method selection,
+                # retain the hole for any method with a matching declared slot.
+                affected = {
+                    slot.type for method in step.method_options for slot in method.input_slots
+                    if slot.type in output_types and (
+                        not step.input_bindings.get(slot.id)
+                        or step.input_bindings[slot.id].upstream_step_id == removed.id
+                    )
+                }
+                step.manual_input_types = sorted(set(step.manual_input_types) | affected)
+                step.input_bindings = {key: binding for key, binding in step.input_bindings.items()
+                                       if binding.upstream_step_id != removed.id}
+            workflow.steps.remove(removed)
+            workflow.excluded_capabilities = list(dict.fromkeys([*workflow.excluded_capabilities, removed.capability]))
+            # The remaining visible chain becomes the user's chosen scope.
+            workflow.requested_capabilities = [step.capability for step in workflow.steps]
+            for index, step in enumerate(workflow.steps):
+                step.order = index + 1
+                step.depends_on = [workflow.steps[index - 1].id] if index else []
+                step.origin = "requested"
+            workflow.plan_kind = "atomic" if len(workflow.steps) == 1 else "composite"
+            workflow.template_id = "dynamic:" + "+".join(workflow.requested_capabilities)
+            workflow.title = " → ".join(step.title for step in workflow.steps)
+            workflow.summary = "按你的选择保留：" + " → ".join(step.title for step in workflow.steps)
+            self._clear_review(workflow)
+            self._revalidate_chain(workflow)
+            self._advance(workflow)
+            self._refresh(workflow)
+            self._save(workflow, "workflow_step_removed", {"step_id": removed.id, "capability": removed.capability})
             return workflow.model_copy(deep=True)
 
     def bind_input(
@@ -1036,16 +1094,29 @@ class WorkflowService:
             raise RuntimeError("CapabilityTree 尚未配置")
         dataset = self.dataset_service.get(request.dataset_id) if request.dataset_id else None
         initial_types = set(dataset.inspection.input_types if dataset else ["dataset_folder"])
+        excluded = set(existing.excluded_capabilities if existing else [])
+        reused_inputs = (set(existing.input_capabilities if existing else [])
+                         | set(routing.get("routing_trace", {}).get("reused_input_capabilities", []))
+                         | existing_input_capabilities(request.message))
+        if existing:
+            initial_types.update(value for step in existing.steps for value in step.manual_input_types)
         requested_capability_ids = [item for item in routing.get("capability_ids") or []
-                                    if item not in existing_input_capabilities(request.message)]
+                                    if item not in reused_inputs and item not in excluded]
         capability_ids = (
-            self._expand_and_order_capabilities(requested_capability_ids, initial_types)
+            self._expand_and_order_capabilities(requested_capability_ids, initial_types, excluded | reused_inputs)
             if dependency_policy == "complete"
             else requested_capability_ids
         )
         if not capability_ids:
             raise ValueError("能力路由没有返回可用任务")
         candidate_context = self._candidate_context(capability_ids)
+        for candidate in candidate_context:
+            candidate["methods"] = [
+                method for method in candidate["methods"]
+                if not (set(method.get("included_capabilities", [])) | {
+                    step["capability"] for step in (method.get("execution_recipe") or {}).get("steps", [])
+                }) & (excluded | reused_inputs)
+            ]
         planning = await self.chat_service.plan_capability_chain(
             request,
             candidate_context,
@@ -1068,6 +1139,9 @@ class WorkflowService:
             method_candidate_ids = list(
                 planning.get("method_candidates", {}).get(capability_id, [])
             )
+            previous_step = next((step for step in existing.steps if step.capability == capability_id), None) if existing else None
+            if method_candidate_ids and previous_step and previous_step.selected_method_id:
+                method_candidate_ids = list(dict.fromkeys([*method_candidate_ids, previous_step.selected_method_id]))
             definition_by_id = {
                 definition.method_id: definition for definition in all_definitions
             }
@@ -1080,6 +1154,8 @@ class WorkflowService:
                 self._option(method, available_types, features, dataset is not None)
                 for method in definitions
             ]
+            for option in options:
+                self._restrict_method_scope(option, excluded | reused_inputs)
             compatible = [option for option in options if option.compatible]
             requested_method = recommendations.get(capability_id)
             preferred = next(
@@ -1180,12 +1256,15 @@ class WorkflowService:
                 else "composite"
             ),
             requested_capabilities=requested_capability_ids,
+            excluded_capabilities=sorted(excluded),
+            input_capabilities=sorted(reused_inputs),
             dependency_policy=("complete" if dependency_policy == "complete" else "target_only"),
             steps=steps,
             warnings=warnings,
             created_at=existing.created_at if existing else now,
             updated_at=now,
         )
+        self._revalidate_chain(workflow)
         self._resolve_workflow_inputs(workflow)
         self._refresh(workflow)
         return workflow, planning["assistant_message"]
@@ -1478,9 +1557,10 @@ class WorkflowService:
         self,
         requested: list[str],
         initial_types: set[str],
+        excluded: set[str] | None = None,
     ) -> list[str]:
         """Add only required producer capabilities and return a validated linear DAG."""
-        allowed = set(self.registry.capabilities())
+        allowed = set(self.registry.capabilities()) - (excluded or set())
         result: list[str] = []
         available = set(initial_types)
         visiting: set[str] = set()
@@ -1517,7 +1597,7 @@ class WorkflowService:
                 }
                 producers: list[tuple[int, str]] = []
                 for producer_id in self.registry.capabilities():
-                    if producer_id == capability_id or producer_id in result:
+                    if producer_id not in allowed or producer_id == capability_id or producer_id in result:
                         continue
                     producer_methods = self.registry.methods_for(producer_id)
                     if not any(
@@ -1624,6 +1704,7 @@ class WorkflowService:
                                         "id": step.id,
                                         "title": step.title,
                                         "method_id": step.method_id,
+                                        "capability": step.capability,
                                     }
                                     for step in method.execution_recipe.steps
                                 ],
@@ -1631,6 +1712,7 @@ class WorkflowService:
                             if method.execution_recipe is not None
                             else None
                         ),
+                        "included_capabilities": method.included_capabilities,
                         "inputs": [
                             {
                                 "id": slot.id,
@@ -1728,13 +1810,29 @@ class WorkflowService:
             command_references=definition.command_references,
             delegate_skill_ids=definition.delegate_skill_ids,
             execution_recipe=definition.execution_recipe,
+            included_capabilities=definition.included_capabilities,
         )
+
+    def _restrict_method_scope(self, method: MethodOption, excluded: set[str]) -> None:
+        included = set(method.included_capabilities)
+        if method.execution_recipe:
+            included.update(item.capability for item in method.execution_recipe.steps)
+        conflicts = included & excluded
+        if conflicts:
+            method.compatible = False
+            labels = []
+            for capability in sorted(conflicts):
+                node = self.capability_tree.leaf(capability) if self.capability_tree else None
+                labels.append(node.label if node else capability)
+            method.blocked_reasons.append(
+                "此方法包含已排除的生成操作，请选择使用已有输入的方法：" + "、".join(labels))
 
     def _revalidate_chain(self, workflow: Workflow) -> None:
         available = set(
             workflow.dataset.inspection.input_types if workflow.dataset else ["dataset_folder"]
         )
         features = workflow.dataset.inspection.features if workflow.dataset else {}
+        excluded = set(workflow.excluded_capabilities) | set(workflow.input_capabilities)
         for step in workflow.steps:
             definitions = {
                 definition.method_id: definition
@@ -1744,6 +1842,7 @@ class WorkflowService:
                 definition = definitions.get(option.id)
                 if definition:
                     checked = self._option(definition, available, features, workflow.dataset is not None)
+                    self._restrict_method_scope(checked, excluded)
                     checked.recommended = option.recommended
                     checked.recommendation_reason = option.recommendation_reason
                     step.method_options[index] = checked
@@ -1827,7 +1926,19 @@ class WorkflowService:
                     and existing.source == "existing_path"
                     and self._binding_paths_exist(existing)
                 ):
+                    # Honor an existing-file binding when a declared source
+                    # selector controls whether software generates that input.
+                    for key, allowed in slot.required_when.items():
+                        spec = next((item for item in method.parameters if item.id == key), None)
+                        if (key.endswith("_source") and "existing" in allowed and spec
+                                and any(option.value == "existing" for option in spec.options)):
+                            step.selected_parameters[key] = "existing"
                     resolved[slot.id] = existing
+                    continue
+
+                if slot.type in step.manual_input_types:
+                    # A removed producer must not be silently replaced by a
+                    # different upstream output or an inferred dataset binding.
                     continue
 
                 upstream = next(
@@ -1860,7 +1971,10 @@ class WorkflowService:
             step.missing_required_inputs = [
                 slot.id
                 for slot in method.input_slots
-                if self._slot_required(slot, step.selected_parameters)
+                if (self._slot_required(slot, step.selected_parameters)
+                    or (slot.type in step.manual_input_types and self._condition_matches(
+                        {key: allowed for key, allowed in slot.required_when.items() if not key.endswith("_source")},
+                        step.selected_parameters)))
                 and slot.id not in resolved
             ]
             upstream_outputs.extend(

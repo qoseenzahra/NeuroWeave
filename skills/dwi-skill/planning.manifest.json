@@ -358,6 +358,7 @@
     {
       "capability": "dwi.tractography",
       "method_id": "mrtrix3-act-sift2",
+      "included_capabilities": ["dwi.response", "dwi.fod", "dwi.tractography"],
       "label": "MRtrix3 ACT + SIFT2",
       "description": "基于多组织 FOD、ACT 和 SIFT2 的纤维追踪与连接组规划。",
       "runner_id": "planning.mrtrix3-tractography",

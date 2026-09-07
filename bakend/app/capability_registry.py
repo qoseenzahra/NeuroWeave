@@ -47,6 +47,7 @@ class CapabilityMethod(BaseModel):
     command_references: list[CommandReference] = Field(default_factory=list)
     delegate_skill_ids: list[str] = Field(default_factory=list)
     execution_recipe: ExecutionRecipeSpec | None = None
+    included_capabilities: list[str] = Field(default_factory=list)
     replaces_operations: list[str] = Field(default_factory=list)
 
 

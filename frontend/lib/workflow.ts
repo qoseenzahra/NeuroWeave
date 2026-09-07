@@ -139,6 +139,7 @@ export type MethodOption = {
   command_references?: CommandReference[];
   delegate_skill_ids?: string[];
   execution_recipe?: ExecutionRecipe | null;
+  included_capabilities?: string[];
 };
 
 export type WorkflowStep = {
@@ -161,6 +162,7 @@ export type WorkflowStep = {
   selected_method_id: string | null;
   selected_parameters: Record<string, ParameterValue>;
   input_bindings?: Record<string, InputBinding>;
+  manual_input_types?: string[];
   missing_required_inputs?: string[];
   command_preview: string | null;
 };
@@ -195,6 +197,8 @@ export type Workflow = {
   execution_mode: 'planning' | 'runner' | 'mixed';
   plan_kind: 'atomic' | 'composite';
   requested_capabilities: string[];
+  excluded_capabilities?: string[];
+  input_capabilities?: string[];
   dependency_policy?: 'target_only' | 'complete';
   steps: WorkflowStep[];
   warnings: string[];

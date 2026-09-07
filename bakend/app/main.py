@@ -619,6 +619,18 @@ async def unlock_workflow(workflow_id: str, request: WorkflowMutationRequest) ->
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
+@app.post("/api/workflows/{workflow_id}/steps/{step_id}/remove", response_model=Workflow)
+def remove_workflow_step(workflow_id: str, step_id: str, request: WorkflowMutationRequest) -> Workflow:
+    try:
+        return workflow_service.remove_step(workflow_id, step_id, request.expected_revision)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Workflow or step not found") from exc
+    except RevisionConflict as exc:
+        raise _revision_http_error(exc) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
 @app.post("/api/workflows/{workflow_id}/replan", response_model=Workflow)
 async def replan_workflow(workflow_id: str, request: WorkflowMutationRequest) -> Workflow:
     try:

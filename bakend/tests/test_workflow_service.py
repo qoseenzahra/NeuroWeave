@@ -989,6 +989,144 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(intent["candidate_capability_ids"], ["dwi.tractography"])
         self.assertEqual(intent["source"], "model")
 
+    async def _editable_chain(self, capabilities: list[str], methods: dict[str, str]):
+        workflow, _ = await self.service.draft(
+            ChatRequest(message='按指定步骤分析数据', interaction_mode='task'),
+            {'recommend_workflow': True, 'capability_ids': capabilities, 'decision_source': 'test'},
+        )
+        for capability, method_id in methods.items():
+            step = next(s for s in workflow.steps if s.capability == capability)
+            workflow = self.service.select_method(workflow.workflow_id, step.id, method_id, workflow.revision)
+        return workflow
+
+    async def test_remove_producer_leaves_manual_input_and_preserves_other_bindings(self) -> None:
+        workflow = await self._editable_chain(
+            ['dwi.five_tt', 'dwi.fod', 'dwi.tractography'],
+            {'dwi.tractography': 'mrtrix3-existing-fod'},
+        )
+        workflow = self.service.lock_chain(workflow.workflow_id, workflow.revision)
+        with self.assertRaisesRegex(ValueError, '锁定'):
+            self.service.remove_step(workflow.workflow_id, 'dwi_fod', workflow.revision)
+        workflow = self.service.unlock_chain(workflow.workflow_id, workflow.revision)
+        stale = workflow.revision
+        workflow = self.service.remove_step(workflow.workflow_id, 'dwi_fod', stale)
+        with self.assertRaises(RevisionConflict):
+            self.service.remove_step(workflow.workflow_id, 'dwi_five_tt', stale)
+        tracking = workflow.steps[-1]
+        self.assertNotIn('fod', tracking.input_bindings)
+        self.assertIn('fod_image', tracking.manual_input_types)
+        self.assertEqual(tracking.input_bindings['five_tt'].upstream_step_id, 'dwi_five_tt')
+        self.assertEqual(tracking.depends_on, ['dwi_five_tt'])
+        self.assertEqual([step.order for step in workflow.steps], [1, 2])
+        self.assertIn('dwi.fod', workflow.excluded_capabilities)
+        self.assertEqual(workflow.requested_capabilities, ['dwi.five_tt', 'dwi.tractography'])
+        self.assertIsNone(workflow.dry_run_report)
+        self.assertIsNone(workflow.parameters_reviewed_at)
+        workflow = self.service.remove_step(workflow.workflow_id, 'dwi_five_tt', workflow.revision)
+        self.assertEqual(workflow.steps[0].depends_on, [])
+        self.assertEqual(workflow.plan_kind, 'atomic')
+        self.assertEqual(set(workflow.steps[0].manual_input_types), {'fod_image', 'five_tt_image'})
+        with self.assertRaisesRegex(ValueError, '至少'):
+            self.service.remove_step(workflow.workflow_id, workflow.steps[0].id, workflow.revision)
+        workflow = self.service.lock_chain(workflow.workflow_id, workflow.revision)
+        self.assertEqual(workflow.status, 'awaiting_input_binding')
+        self.assertFalse(workflow.can_dry_run)
+        root = self.dataset_service.roots()[0].root_id
+        for slot, name in [('fod', 'FOD.mif'), ('five_tt', '5TT.mif')]:
+            (self.dataset_folder / name).write_bytes(b'synthetic existing input')
+            workflow = self.service.bind_input(workflow.workflow_id, 'dwi_tractography', slot, root,
+                                               'bids-example/' + name, workflow.revision)
+        tracking = workflow.steps[0]
+        self.assertEqual(tracking.missing_required_inputs, [])
+        self.assertEqual(tracking.input_bindings['fod'].source, 'existing_path')
+        self.assertEqual(tracking.input_bindings['five_tt'].status, 'selected')
+        self.assertEqual(workflow.status, 'awaiting_parameter_review')
+        saved = self.store.get_workflow(workflow.workflow_id)
+        self.assertEqual(saved.excluded_capabilities, workflow.excluded_capabilities)
+        self.assertEqual(saved.steps[0].manual_input_types, tracking.manual_input_types)
+
+    async def test_replanning_and_dependencies_keep_the_user_edited_scope(self) -> None:
+        workflow = await self._editable_chain(
+            ['dwi.five_tt', 'dwi.fod', 'dwi.tractography'],
+            {'dwi.tractography': 'mrtrix3-existing-fod'},
+        )
+        for step in ('dwi_fod', 'dwi_five_tt'):
+            workflow = self.service.remove_step(workflow.workflow_id, step, workflow.revision)
+        with patch.object(self.service, 'assess_task', side_effect=AssertionError('Do not expand user-selected scope')):
+            workflow, _ = await self.service.replan(workflow.workflow_id, workflow.revision)
+        self.assertEqual([s.capability for s in workflow.steps], ['dwi.tractography'])
+        workflow = await self.service.complete_dependencies(workflow.workflow_id, workflow.revision)
+        self.assertEqual([s.capability for s in workflow.steps], ['dwi.tractography'])
+        self.assertEqual(workflow.steps[0].selected_method_id, 'mrtrix3-existing-fod')
+        self.assertEqual(set(workflow.steps[0].missing_required_inputs), {'fod', 'five_tt'})
+        self.assertEqual(set(workflow.excluded_capabilities), {'dwi.five_tt', 'dwi.fod'})
+        self.assertFalse(any(m.compatible for m in workflow.steps[0].method_options if m.id == 'mrtrix3-act-sift2'))
+        original_planner = self.service.chat_service.plan_capability_chain
+        async def narrow_methods(*args):
+            result = await original_planner(*args)
+            result['method_candidates']['dwi.tractography'] = ['mrtrix3-act-sift2']
+            return result
+        with patch.object(self.service.chat_service, 'plan_capability_chain', side_effect=narrow_methods):
+            workflow, _ = await self.service.replan(workflow.workflow_id, workflow.revision)
+        self.assertEqual(workflow.steps[0].selected_method_id, 'mrtrix3-existing-fod')
+        bundled = next(m for m in workflow.steps[0].method_options if m.id == 'mrtrix3-act-sift2')
+        self.assertFalse(bundled.compatible)
+        self.assertTrue(any('已排除' in reason for reason in bundled.blocked_reasons))
+
+    async def test_removed_optional_generation_requires_file_and_uses_existing_source_parameter(self) -> None:
+        workflow = await self._editable_chain(['dwi.five_tt', 'dwi.tractography'],
+                                              {'dwi.tractography': 'mrtrix3-act-sift2'})
+        workflow = self.service.remove_step(workflow.workflow_id, 'dwi_five_tt', workflow.revision)
+        workflow = self.service.lock_chain(workflow.workflow_id, workflow.revision)
+        self.assertIn('five_tt', workflow.steps[0].missing_required_inputs)
+        (self.dataset_folder / 'existing_5tt.mif').write_bytes(b'synthetic')
+        workflow = self.service.bind_input(workflow.workflow_id, 'dwi_tractography', 'five_tt',
+            self.dataset_service.roots()[0].root_id, 'bids-example/existing_5tt.mif', workflow.revision)
+        self.assertEqual(workflow.steps[0].selected_parameters['five_tt_source'], 'existing')
+        self.assertNotIn('five_tt', workflow.steps[0].missing_required_inputs)
+        self.assertNotIn('t1w', workflow.steps[0].missing_required_inputs)
+
+    async def test_removing_non_dwi_processing_keeps_glm_and_accepts_existing_bold(self) -> None:
+        workflow = await self._editable_chain(
+            ['skill.nilearn-tool', 'skill.glm'],
+            {'skill.nilearn-tool': 'reviewed-denoise-nilearn-tool', 'skill.glm': 'reviewed-task-glm-nilearn-tool'},
+        )
+        producer, analysis = workflow.steps
+        self.assertEqual(analysis.input_bindings['bold'].upstream_step_id, producer.id)
+        workflow = self.service.remove_step(workflow.workflow_id, producer.id, workflow.revision)
+        self.assertIn('bold_image', workflow.steps[0].manual_input_types)
+        self.assertIn('bold', workflow.steps[0].missing_required_inputs)
+        workflow = self.service.lock_chain(workflow.workflow_id, workflow.revision)
+        (self.dataset_folder / 'existing_bold.nii.gz').write_bytes(b'synthetic existing signal')
+        workflow = self.service.bind_input(workflow.workflow_id, analysis.id, 'bold',
+            self.dataset_service.roots()[0].root_id, 'bids-example/existing_bold.nii.gz', workflow.revision)
+        self.assertEqual(workflow.steps[0].input_bindings['bold'].source, 'existing_path')
+        with self.assertRaisesRegex(ValueError, '必需输入'):
+            self.service.review_parameters(workflow.workflow_id, workflow.revision)
+        with self.assertRaises(KeyError):
+            self.service.remove_step('missing', analysis.id, 1)
+
+    async def test_semantic_existing_inputs_apply_to_non_dwi_capabilities(self) -> None:
+        chat = self.service.chat_service
+        chat.base_url = 'https://model.invalid/v1'; chat.model = 'test-model'
+        request = ChatRequest(message='信号去噪已经完成，使用结果拟合GLM', interaction_mode='task')
+        payload = {'decision': 'task', 'candidate_capability_ids': ['skill.glm'],
+                   'input_capability_ids': ['skill.nilearn-tool', 'not.registered'],
+                   'confidence': 0.9, 'coverage': 'complete'}
+        allowed = [node.id for node in self.service.capability_tree.leaves()]
+        catalog = self.service._specific_intent_catalog(allowed, ['skill.glm', 'skill.nilearn-tool'])
+        with patch.object(chat, '_model_completion', new=AsyncMock(return_value=json.dumps(payload))):
+            intent = await chat.normalize_task_intent(request, catalog, ['skill.nilearn-tool', 'skill.glm'])
+        self.assertEqual(intent['input_capability_ids'], ['skill.nilearn-tool'])
+        self.assertEqual(intent['candidate_capability_ids'], ['skill.glm'])
+        routing = await self.service._route_capabilities_hierarchically(request, allowed, None, intent)
+        self.assertEqual(routing['capability_ids'], ['skill.glm'])
+        chat.base_url = ''; chat.model = ''
+        workflow, _ = await self.service.draft(request, {**routing, 'recommend_workflow': True})
+        self.assertEqual(workflow.input_capabilities, ['skill.nilearn-tool'])
+        self.assertEqual([s.capability for s in workflow.steps], ['skill.glm'])
+        self.assertTrue(any(method.compatible for method in workflow.steps[0].method_options))
+
     async def test_existing_5tt_is_input_while_fod_is_recomputed(self) -> None:
         original = '我想在这个数据集中，根据已有的dwi数据以及5tt分割结果，重新进行fod计算以及之后的纤维追踪'
         requests = [original,

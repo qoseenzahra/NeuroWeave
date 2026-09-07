@@ -171,6 +171,7 @@ class MethodOption(BaseModel):
     command_references: list[CommandReference] = Field(default_factory=list)
     delegate_skill_ids: list[str] = Field(default_factory=list)
     execution_recipe: ExecutionRecipeSpec | None = None
+    included_capabilities: list[str] = Field(default_factory=list)
 
 
 class WorkflowStep(BaseModel):
@@ -194,6 +195,7 @@ class WorkflowStep(BaseModel):
     selected_method_id: str | None = None
     selected_parameters: dict[str, Any] = Field(default_factory=dict)
     input_bindings: dict[str, InputBinding] = Field(default_factory=dict)
+    manual_input_types: list[str] = Field(default_factory=list)
     missing_required_inputs: list[str] = Field(default_factory=list)
     command_preview: str | None = None
 
@@ -230,6 +232,8 @@ class Workflow(BaseModel):
     execution_mode: Literal["planning", "runner", "mixed"] = "runner"
     plan_kind: Literal["atomic", "composite"] = "composite"
     requested_capabilities: list[str] = Field(default_factory=list)
+    excluded_capabilities: list[str] = Field(default_factory=list)
+    input_capabilities: list[str] = Field(default_factory=list)
     dependency_policy: Literal["target_only", "complete"] = "target_only"
     steps: list[WorkflowStep]
     warnings: list[str] = Field(default_factory=list)

@@ -396,6 +396,7 @@ context but is not by itself a reason to recommend a workflow.
             "task_brief": request.message.strip()[:600],
             "operations": [],
             "candidate_capability_ids": fallback_ids,
+            "input_capability_ids": sorted(reused_inputs),
             "confidence": 1.0 if fallback_ids else 0.0,
             "coverage": "complete" if fallback_ids else "none",
             "needs_clarification": False,
@@ -437,6 +438,7 @@ Return exactly one JSON object:
     }
   ],
   "candidate_capability_ids": ["zero to four ids from the catalog"],
+  "input_capability_ids": ["catalog ids whose results are existing inputs to reuse, not operations to run"],
   "confidence": 0.0,
   "coverage": "complete", "partial", or "none",
   "needs_clarification": false,
@@ -453,6 +455,12 @@ Rules:
 - Existing artifacts are inputs, not requests to produce them. For example, "根据已有 DWI 和
   5TT 重新计算 FOD 并追踪" requests FOD estimation and tractography only. Reuse the 5TT.
   Conversely, an explicit request to regenerate 5TT must be retained even when old 5TT exists.
+- Apply this distinction to every modality and software. Existing masks, registrations,
+  segmentations, preprocessed signals, features, and statistical results belong to inputs.
+  Put their producer ids in input_capability_ids, never candidate_capability_ids. Keep the
+  two lists disjoint. Explicitly requested regeneration belongs only in candidate_capability_ids.
+- Before returning, check each candidate against an action the user actually asked for.
+  Omit optional reports, QC, upstream processing, and standard pipeline steps unless requested.
 - Multiple methods that implement one operation are alternatives, not sequential workflow steps.
 - An explicit software or Skill name in the current message outranks history and UI selections.
 - UI-selected Skills are optional hints unless the current message refers to them.
@@ -494,6 +502,10 @@ Rules:
             fallback["source"] = "heuristic_after_model_error"
             return fallback
 
+        raw_inputs = payload.get("input_capability_ids")
+        if isinstance(raw_inputs, list):
+            reused_inputs.update(str(item) for item in raw_inputs if str(item) in allowed)
+        fallback_ids = [item for item in fallback_ids if item not in reused_inputs]
         raw_ids = payload.get("candidate_capability_ids")
         model_ids = (
             list(dict.fromkeys(str(item) for item in raw_ids if str(item) in allowed and str(item) not in reused_inputs))[:4]
@@ -538,6 +550,7 @@ Rules:
             ),
             "operations": operations[:6],
             "candidate_capability_ids": candidate_ids,
+            "input_capability_ids": sorted(reused_inputs),
             "confidence": confidence,
             "coverage": coverage,
             "needs_clarification": needs_clarification,

@@ -20,9 +20,13 @@ class ConversationApiTests(unittest.IsolatedAsyncioTestCase):
             with patch.dict(os.environ, {
                 "LOCALFLOW_DATABASE_PATH": str(root / "api.db"),
                 "LOCALFLOW_OUTPUT_ROOT": str(root / "outputs"),
+                "LOCALFLOW_DATA_ROOTS": str(root),
                 "LOCALFLOW_EXECUTION_ENABLED": "false",
             }):
-                main = importlib.import_module("app.main")
+                previous = sys.modules.get("app.main")
+                if previous is not None:
+                    previous.run_service.shutdown()
+                main = importlib.reload(previous) if previous is not None else importlib.import_module("app.main")
             try:
                 async with httpx.AsyncClient(
                     transport=httpx.ASGITransport(app=main.app), base_url="http://test",
@@ -58,6 +62,39 @@ class ConversationApiTests(unittest.IsolatedAsyncioTestCase):
                     self.assertEqual(light.status_code, 200)
                     self.assertNotIn('runners', light.json()['execution'])
                     self.assertNotIn('summary', page['conversations'][0])
+
+                    from app.models import ChatRequest
+                    with patch.object(main.workflow_service, 'runner_registry', None), patch.object(main.chat_service, 'base_url', ''):
+                        workflow, _ = await main.workflow_service.draft(
+                            ChatRequest(message='计算FOD并追踪', interaction_mode='task'),
+                            {'recommend_workflow': True, 'capability_ids': ['dwi.fod', 'dwi.tractography']},
+                        )
+                        workflow = main.workflow_service.select_method(workflow.workflow_id, 'dwi_tractography',
+                            'mrtrix3-existing-fod', workflow.revision)
+                        remove_url = f'/api/workflows/{workflow.workflow_id}/steps/dwi_fod/remove'
+                        conflict = await client.post(remove_url, json={'expected_revision': workflow.revision - 1})
+                        self.assertEqual(conflict.status_code, 409)
+                        self.assertEqual(conflict.json()['detail']['current']['revision'], workflow.revision)
+                        removed = await client.post(remove_url, json={'expected_revision': workflow.revision})
+                        self.assertEqual(removed.status_code, 200)
+                        edited = removed.json()
+                        self.assertEqual(edited['excluded_capabilities'], ['dwi.fod'])
+                        self.assertEqual(edited['steps'][0]['manual_input_types'], ['fod_image'])
+                        locked = await client.post(f'/api/workflows/{workflow.workflow_id}/lock',
+                            json={'expected_revision': edited['revision']})
+                        self.assertEqual(locked.status_code, 200)
+                        (root / 'existing_fod.mif').write_bytes(b'synthetic')
+                        bound = await client.patch(
+                            f'/api/workflows/{workflow.workflow_id}/steps/dwi_tractography/inputs/fod',
+                            json={'expected_revision': locked.json()['revision'],
+                                  'root_id': main.dataset_service.roots()[0].root_id,
+                                  'relative_path': 'existing_fod.mif'})
+                        self.assertEqual(bound.status_code, 200)
+                        self.assertEqual(bound.json()['steps'][0]['input_bindings']['fod']['source'], 'existing_path')
+                        frozen = await client.post(remove_url, json={'expected_revision': bound.json()['revision']})
+                        self.assertEqual(frozen.status_code, 409)
+                        absent = await client.post('/api/workflows/missing/steps/missing/remove', json={'expected_revision': 1})
+                        self.assertEqual(absent.status_code, 404)
 
                     entered, released, timed_out = Event(), Event(), Event()
                     def slow_skill(skill, *_args):
