@@ -84,8 +84,8 @@ def reorganize_subject(subject_dir: Path, output_dir: Path, dry_run: bool = Fals
             if not bold_candidates:
                 bold_candidates = list(task_dir.glob("*.nii.gz"))
 
-            for bold_src in bold_candidates:
-                run_label = "01"
+            for run_index, bold_src in enumerate(sorted(bold_candidates), start=1):
+                run_label = f"{run_index:02d}"
                 bids_task = task_info["label"]
                 dst_name = f"{bids_id}_task-{bids_task}_run-{run_label}_bold.nii.gz"
                 dst = sub_dir / "func" / dst_name
@@ -98,8 +98,9 @@ def reorganize_subject(subject_dir: Path, output_dir: Path, dry_run: bool = Fals
     if dmri_dir.exists():
         for suffix in ["data.nii.gz", "bval", "bvec"]:
             src = dmri_dir / suffix
+            if not src.exists() and suffix in {"bval", "bvec"}: src = dmri_dir / (suffix+"s")
             if src.exists():
-                bids_suffix = suffix.replace("data.nii.gz", "dwi.nii.gz")
+                bids_suffix = {"data.nii.gz":"dwi.nii.gz", "bval":"dwi.bval", "bvec":"dwi.bvec"}[suffix]
                 dst = sub_dir / "dwi" / f"{bids_id}_{bids_suffix}"
                 if not dry_run:
                     shutil.copy2(src, dst)
@@ -113,7 +114,8 @@ def create_dataset_description(output_dir: Path, n_subjects: int):
     desc = {
         "Name": "HCP Young Adult (HCP1200)",
         "BIDSVersion": "1.8.0",
-        "DatasetType": "raw",
+        "DatasetType": "derivative",
+        "GeneratedBy": [{"Name": "NeuroWeave HCP layout adapter", "Description": "Copies existing HCP processed images; does not restore raw data or perform registration."}],
         "License": "HCP Data Use Terms",
         "Authors": ["Human Connectome Project"],
         "Acknowledgements": "WU-Minn HCP Consortium",

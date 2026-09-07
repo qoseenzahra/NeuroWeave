@@ -30,7 +30,7 @@ def run_dictlearning(input_list: Path, output_dir: Path, n_components: int, mask
 
     frames = []
     for index, image_path in enumerate(images):
-        series = model.transform(image_path)
+        series = model.transform([image_path])[0]
         frame = pd.DataFrame(series)
         frame.insert(0, "subject_index", index)
         frame.to_csv(output_dir / f"subject_{index:03d}_timeseries.csv", index=False)

@@ -1,0 +1,129 @@
+{
+  "schema_version": 1,
+  "skill_id": "harmonization-tool",
+  "provides": [
+    {
+      "capability": "skill.harmonization-tool",
+      "method_id": "reviewed-site-covar-harmonization-tool",
+      "label": "站点协变量校正",
+      "description": "使用已审核实现执行 站点协变量校正；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.harmonization-tool.site-covar",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "batch",
+          "argument": "batch",
+          "label": "batch",
+          "type": "string",
+          "default": "site",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "protected",
+          "argument": "protected",
+          "label": "protected",
+          "type": "string",
+          "default": "age,sex",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "split",
+          "argument": "split",
+          "label": "split",
+          "type": "string",
+          "default": "site-stratified",
+          "required": true,
+          "options": [
+            {
+              "value": "none",
+              "label": "none"
+            },
+            {
+              "value": "site-stratified",
+              "label": "site-stratified"
+            },
+            {
+              "value": "leave-site-out",
+              "label": "leave-site-out"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "seed",
+          "argument": "seed",
+          "label": "seed",
+          "type": "integer",
+          "default": 123,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 2147483647
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "features",
+          "label": "NPY 特征矩阵",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "meta",
+          "label": "样本协变量 CSV",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_harmonized_features_npy",
+          "type": "generated_file",
+          "label": "harmonized_features.npy",
+          "path_template": "results/harmonized_features.npy"
+        },
+        {
+          "id": "file_manifest_json",
+          "type": "generated_file",
+          "label": "manifest.json",
+          "path_template": "results/manifest.json"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "site-covar"
+      ],
+      "source_references": [
+        {
+          "path": "skills/harmonization-tool/scripts/harmonize.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    }
+  ]
+}

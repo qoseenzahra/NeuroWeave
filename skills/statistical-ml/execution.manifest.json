@@ -1,0 +1,318 @@
+{
+  "schema_version": 1,
+  "skill_id": "statistical-ml",
+  "provides": [
+    {
+      "capability": "skill.statistical-ml",
+      "method_id": "reviewed-classification-statistical-ml",
+      "label": "统计学习：分类",
+      "description": "使用已审核实现执行 统计学习：分类；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.statistical-ml.classification",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "operation",
+          "argument": "operation",
+          "label": "模型",
+          "type": "string",
+          "default": "logistic",
+          "required": true,
+          "options": [
+            {
+              "value": "logistic",
+              "label": "logistic"
+            },
+            {
+              "value": "ridge",
+              "label": "ridge"
+            },
+            {
+              "value": "elastic_net",
+              "label": "elastic_net"
+            },
+            {
+              "value": "svm",
+              "label": "svm"
+            },
+            {
+              "value": "random_forest",
+              "label": "random_forest"
+            },
+            {
+              "value": "extra_trees",
+              "label": "extra_trees"
+            },
+            {
+              "value": "hist_gradient_boosting",
+              "label": "hist_gradient_boosting"
+            },
+            {
+              "value": "xgboost",
+              "label": "xgboost"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "target",
+          "argument": "target",
+          "label": "目标列",
+          "type": "string",
+          "default": null,
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "group_col",
+          "argument": "group-col",
+          "label": "group-col",
+          "type": "string",
+          "default": null,
+          "required": false,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "folds",
+          "argument": "folds",
+          "label": "folds",
+          "type": "integer",
+          "default": 5,
+          "required": true,
+          "options": [],
+          "minimum": 2,
+          "maximum": 20
+        },
+        {
+          "id": "seed",
+          "argument": "seed",
+          "label": "seed",
+          "type": "integer",
+          "default": 123,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        {
+          "id": "subject_col",
+          "argument": "subject-col",
+          "label": "subject-col",
+          "type": "string",
+          "default": "subject_id",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "features",
+          "label": "特征 CSV",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_metrics_json",
+          "type": "generated_file",
+          "label": "metrics.json",
+          "path_template": "results/metrics.json"
+        },
+        {
+          "id": "file_predictions_csv",
+          "type": "generated_file",
+          "label": "predictions.csv",
+          "path_template": "results/predictions.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "skills/statistical-ml/scripts/train_reference.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.statistical-ml",
+      "method_id": "reviewed-regression-statistical-ml",
+      "label": "统计学习：回归",
+      "description": "使用已审核实现执行 统计学习：回归；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.statistical-ml.regression",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "operation",
+          "argument": "operation",
+          "label": "模型",
+          "type": "string",
+          "default": "ols",
+          "required": true,
+          "options": [
+            {
+              "value": "ols",
+              "label": "ols"
+            },
+            {
+              "value": "ridge",
+              "label": "ridge"
+            },
+            {
+              "value": "elastic_net",
+              "label": "elastic_net"
+            },
+            {
+              "value": "svm",
+              "label": "svm"
+            },
+            {
+              "value": "random_forest",
+              "label": "random_forest"
+            },
+            {
+              "value": "extra_trees",
+              "label": "extra_trees"
+            },
+            {
+              "value": "hist_gradient_boosting",
+              "label": "hist_gradient_boosting"
+            },
+            {
+              "value": "xgboost",
+              "label": "xgboost"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "target",
+          "argument": "target",
+          "label": "目标列",
+          "type": "string",
+          "default": null,
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "group_col",
+          "argument": "group-col",
+          "label": "group-col",
+          "type": "string",
+          "default": null,
+          "required": false,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "folds",
+          "argument": "folds",
+          "label": "folds",
+          "type": "integer",
+          "default": 5,
+          "required": true,
+          "options": [],
+          "minimum": 2,
+          "maximum": 20
+        },
+        {
+          "id": "seed",
+          "argument": "seed",
+          "label": "seed",
+          "type": "integer",
+          "default": 123,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        {
+          "id": "subject_col",
+          "argument": "subject-col",
+          "label": "subject-col",
+          "type": "string",
+          "default": "subject_id",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "features",
+          "label": "特征 CSV",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_metrics_json",
+          "type": "generated_file",
+          "label": "metrics.json",
+          "path_template": "results/metrics.json"
+        },
+        {
+          "id": "file_predictions_csv",
+          "type": "generated_file",
+          "label": "predictions.csv",
+          "path_template": "results/predictions.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "skills/statistical-ml/scripts/train_reference.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    }
+  ]
+}

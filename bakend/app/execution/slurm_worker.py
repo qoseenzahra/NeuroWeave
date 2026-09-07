@@ -17,7 +17,7 @@ from typing import Any
 # Explicit names, never a LOCALFLOW_* wildcard: API keys and service settings
 # must not be copied from the API process into shared job files or child tools.
 RUNTIME_ENV_ALLOWLIST = frozenset({
-    "LOCALFLOW_RUN_INPUT_ROOTS", "LOCALFLOW_SKILL_PYTHON", "LOCALFLOW_DIPY_PYTHON",
+    "LOCALFLOW_RUN_INPUT_ROOTS", "LOCALFLOW_SKILL_PYTHON", "LOCALFLOW_DIPY_PYTHON", "LOCALFLOW_TORCH_PYTHON",
     "LOCALFLOW_FSL_ROOT", "LOCALFLOW_MRTRIX_ROOT", "LOCALFLOW_MRTRIX_LIBPNG",
     "LOCALFLOW_ANTS_ROOT", "LOCALFLOW_DCM2NIIX", "LOCALFLOW_FMRIPREP_EXECUTABLE",
     "LOCALFLOW_QSIPREP_EXECUTABLE", "LOCALFLOW_NII2DCM_EXECUTABLE",
@@ -91,6 +91,11 @@ def run_payload(payload_path: Path) -> int:
                        "HOME": str(job_directory / "home"),
                        "TMPDIR": str(job_directory / "tmp")})
     os.environ.update(runtime)
+    if int(payload['options'].get('gpus', 0)) == 0:
+        # CPU jobs on GPU hosts must not let torch's auto mode use an unrequested GPU.
+        for name in ('CUDA_VISIBLE_DEVICES', 'GPU_DEVICE_ORDINAL', 'ROCR_VISIBLE_DEVICES', 'HIP_VISIBLE_DEVICES'):
+            os.environ[name] = ''
+        os.environ['NVIDIA_VISIBLE_DEVICES'] = 'void'
     if os.name == "nt":
         # Enables isolated worker regression tests on Windows development hosts.
         os.environ["USERPROFILE"] = os.environ["HOME"]

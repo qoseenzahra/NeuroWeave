@@ -47,7 +47,7 @@ def reorganize_subject(subject_dir: Path, output_dir: Path, dry_run: bool = Fals
     for suffix in ["T1w.nii.gz", "T2w.nii.gz"]:
         src = mninonlinear / suffix
         if src.exists():
-            modality = suffix.split(".")[0].lower()
+            modality = suffix.split(".")[0]
             dst = sub_dir / "anat" / f"{bids_id}_{modality}.nii.gz"
             if not dry_run:
                 shutil.copy2(src, dst)
@@ -63,8 +63,8 @@ def reorganize_subject(subject_dir: Path, output_dir: Path, dry_run: bool = Fals
             bold_candidates = list(task_dir.glob("*_bold.nii.gz"))
             if not bold_candidates:
                 bold_candidates = list(task_dir.glob("*.nii.gz"))
-            for bold_src in bold_candidates:
-                dst_name = f"{bids_id}_task-{task_info['label']}_run-01_bold.nii.gz"
+            for run_index, bold_src in enumerate(sorted(bold_candidates), start=1):
+                dst_name = f"{bids_id}_task-{task_info['label']}_run-{run_index:02d}_bold.nii.gz"
                 dst = sub_dir / "func" / dst_name
                 if not dry_run:
                     shutil.copy2(bold_src, dst)
@@ -74,8 +74,9 @@ def reorganize_subject(subject_dir: Path, output_dir: Path, dry_run: bool = Fals
     if dmri_dir.exists():
         for suffix in ["data.nii.gz", "bval", "bvec"]:
             src = dmri_dir / suffix
+            if not src.exists() and suffix in {"bval", "bvec"}: src = dmri_dir / (suffix+"s")
             if src.exists():
-                bids_suffix = suffix.replace("data.nii.gz", "dwi.nii.gz")
+                bids_suffix = {"data.nii.gz":"dwi.nii.gz", "bval":"dwi.bval", "bvec":"dwi.bvec"}[suffix]
                 dst = sub_dir / "dwi" / f"{bids_id}_{bids_suffix}"
                 if not dry_run:
                     shutil.copy2(src, dst)
@@ -88,7 +89,8 @@ def create_dataset_description(output_dir: Path, n_subjects: int):
     desc = {
         "Name": "HCP Development",
         "BIDSVersion": "1.8.0",
-        "DatasetType": "raw",
+        "DatasetType": "derivative",
+        "GeneratedBy": [{"Name": "NeuroWeave HCP layout adapter", "Description": "Copies existing HCP processed images; does not restore raw data or perform registration."}],
         "License": "HCP Data Use Terms",
         "Authors": ["Human Connectome Project"],
         "HowToAcknowledge": "Please cite the HCP Development project.",

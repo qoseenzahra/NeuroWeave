@@ -1,0 +1,173 @@
+{
+  "schema_version": 1,
+  "skill_id": "cnn3d",
+  "provides": [
+    {
+      "capability": "skill.cnn3d",
+      "method_id": "reviewed-train-cnn3d",
+      "label": "3D CNN 训练",
+      "description": "使用已审核实现执行 3D CNN 训练；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.cnn3d.train",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "task",
+          "argument": "task",
+          "label": "task",
+          "type": "string",
+          "default": "classification",
+          "required": true,
+          "options": [
+            {
+              "value": "classification",
+              "label": "classification"
+            },
+            {
+              "value": "regression",
+              "label": "regression"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "epochs",
+          "argument": "epochs",
+          "label": "epochs",
+          "type": "integer",
+          "default": 20,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 1000
+        },
+        {
+          "id": "batch_size",
+          "argument": "batch-size",
+          "label": "batch-size",
+          "type": "integer",
+          "default": 4,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 256
+        },
+        {
+          "id": "lr",
+          "argument": "lr",
+          "label": "lr",
+          "type": "number",
+          "default": 0.001,
+          "required": true,
+          "options": [],
+          "minimum": 1e-06,
+          "maximum": 0.1
+        },
+        {
+          "id": "device",
+          "argument": "device",
+          "label": "device",
+          "type": "string",
+          "default": "auto",
+          "required": true,
+          "options": [
+            {
+              "value": "auto",
+              "label": "auto"
+            },
+            {
+              "value": "cpu",
+              "label": "cpu"
+            },
+            {
+              "value": "cuda",
+              "label": "cuda"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "folds",
+          "argument": "folds",
+          "label": "folds",
+          "type": "integer",
+          "default": 5,
+          "required": true,
+          "options": [],
+          "minimum": 2,
+          "maximum": 20
+        },
+        {
+          "id": "seed",
+          "argument": "seed",
+          "label": "seed",
+          "type": "integer",
+          "default": 123,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        {
+          "id": "base_channels",
+          "argument": "base-channels",
+          "label": "base-channels",
+          "type": "integer",
+          "default": 8,
+          "required": true,
+          "options": [],
+          "minimum": 2,
+          "maximum": 64
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "NPZ 训练数据（X、y）",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_metrics_json",
+          "type": "generated_file",
+          "label": "metrics.json",
+          "path_template": "results/metrics.json"
+        },
+        {
+          "id": "file_predictions_csv",
+          "type": "generated_file",
+          "label": "predictions.csv",
+          "path_template": "results/predictions.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "skills/cnn3d/scripts/train_reference.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    }
+  ]
+}

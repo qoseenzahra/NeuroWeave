@@ -5,6 +5,7 @@ Converts IXI directory layout (e.g., IXI002/, IXI002-T1.nii.gz, IXI002-T2.nii.gz
 to BIDS-compliant structure (sub-IXI002/anat/).
 """
 import argparse
+import csv
 import json
 import shutil
 import sys
@@ -35,7 +36,7 @@ def find_subjects(input_dir: Path) -> list:
     """Find IXI subject files."""
     # IXI files are typically named IXI002-T1.nii.gz, IXI002-T2.nii.gz, etc.
     subjects = set()
-    for f in input_dir.glob("IXI*-*.nii.gz"):
+    for f in input_dir.rglob("IXI*-*.nii.gz"):
         # Extract subject ID (e.g., IXI002 from IXI002-T1.nii.gz)
         parts = f.stem.split("-")
         if len(parts) >= 2:
@@ -62,9 +63,9 @@ def reorganize_subject(input_dir: Path, subject_id: str, output_dir: Path, dry_r
     }
 
     for ixi_suffix, bids_suffix in modality_map.items():
-        src_candidates = list(input_dir.glob(f"{subject_id}-{ixi_suffix}.nii.gz"))
+        src_candidates = list(input_dir.rglob(f"{subject_id}-*{ixi_suffix}.nii.gz"))
         if not src_candidates:
-            src_candidates = list(input_dir.glob(f"{subject_id}-{ixi_suffix.lower()}.nii.gz"))
+            src_candidates = list(input_dir.rglob(f"{subject_id}-*{ixi_suffix.lower()}.nii.gz"))
 
         for src in src_candidates:
             if bids_suffix == "dwi":
@@ -105,7 +106,7 @@ def create_dataset_description(output_dir: Path, n_subjects: int, sites: dict):
 def create_participants_tsv(output_dir: Path, subjects: list, input_dir: Path):
     """Create participants.tsv with site information."""
     with open(output_dir / "participants.tsv", "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=["participant_id", "site", "scanner", "field_strength"])
+        writer = csv.DictWriter(f, fieldnames=["participant_id", "site", "scanner", "field_strength"], delimiter="\t")
         writer.writeheader()
         for subj in subjects:
             site = detect_site(subj)

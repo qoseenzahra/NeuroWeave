@@ -116,9 +116,9 @@ def merge_phenotype_tables(
         df = read_phenotype_file(f)
         if df is not None and len(df) > 0:
             # Standardize ID column name
-            if "src_subject_id" in df.columns:
+            if "subject_id" not in df.columns and "src_subject_id" in df.columns:
                 df = df.rename(columns={"src_subject_id": "subject_id"})
-            elif "SUBJECTKEY" in df.columns:
+            elif "subject_id" not in df.columns and "SUBJECTKEY" in df.columns:
                 df = df.rename(columns={"SUBJECTKEY": "subject_id"})
             dataframes.append(df)
 

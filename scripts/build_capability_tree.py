@@ -415,7 +415,7 @@ def _skill_node(skill: Skill) -> dict[str, Any]:
         "description": _description(skill),
         "keywords": _keywords(skill),
         "skill_ids": [skill.name],
-        "execution_level": "planning",
+        "execution_level": "structured" if skill.structure_mode == "runner" else "planning",
     }
 
 

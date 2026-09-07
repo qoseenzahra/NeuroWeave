@@ -1,0 +1,2606 @@
+{
+  "schema_version": 1,
+  "skill_id": "run_models",
+  "provides": [
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-classification-statistical-ml",
+      "label": "统计学习：分类",
+      "description": "使用已审核实现执行 统计学习：分类；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.statistical-ml.classification",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "operation",
+          "argument": "operation",
+          "label": "模型",
+          "type": "string",
+          "default": "logistic",
+          "required": true,
+          "options": [
+            {
+              "value": "logistic",
+              "label": "logistic"
+            },
+            {
+              "value": "ridge",
+              "label": "ridge"
+            },
+            {
+              "value": "elastic_net",
+              "label": "elastic_net"
+            },
+            {
+              "value": "svm",
+              "label": "svm"
+            },
+            {
+              "value": "random_forest",
+              "label": "random_forest"
+            },
+            {
+              "value": "extra_trees",
+              "label": "extra_trees"
+            },
+            {
+              "value": "hist_gradient_boosting",
+              "label": "hist_gradient_boosting"
+            },
+            {
+              "value": "xgboost",
+              "label": "xgboost"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "target",
+          "argument": "target",
+          "label": "目标列",
+          "type": "string",
+          "default": null,
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "group_col",
+          "argument": "group-col",
+          "label": "group-col",
+          "type": "string",
+          "default": null,
+          "required": false,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "folds",
+          "argument": "folds",
+          "label": "folds",
+          "type": "integer",
+          "default": 5,
+          "required": true,
+          "options": [],
+          "minimum": 2,
+          "maximum": 20
+        },
+        {
+          "id": "seed",
+          "argument": "seed",
+          "label": "seed",
+          "type": "integer",
+          "default": 123,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        {
+          "id": "subject_col",
+          "argument": "subject-col",
+          "label": "subject-col",
+          "type": "string",
+          "default": "subject_id",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "features",
+          "label": "特征 CSV",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_metrics_json",
+          "type": "generated_file",
+          "label": "metrics.json",
+          "path_template": "results/metrics.json"
+        },
+        {
+          "id": "file_predictions_csv",
+          "type": "generated_file",
+          "label": "predictions.csv",
+          "path_template": "results/predictions.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "skills/statistical-ml/scripts/train_reference.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-regression-statistical-ml",
+      "label": "统计学习：回归",
+      "description": "使用已审核实现执行 统计学习：回归；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.statistical-ml.regression",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "operation",
+          "argument": "operation",
+          "label": "模型",
+          "type": "string",
+          "default": "ols",
+          "required": true,
+          "options": [
+            {
+              "value": "ols",
+              "label": "ols"
+            },
+            {
+              "value": "ridge",
+              "label": "ridge"
+            },
+            {
+              "value": "elastic_net",
+              "label": "elastic_net"
+            },
+            {
+              "value": "svm",
+              "label": "svm"
+            },
+            {
+              "value": "random_forest",
+              "label": "random_forest"
+            },
+            {
+              "value": "extra_trees",
+              "label": "extra_trees"
+            },
+            {
+              "value": "hist_gradient_boosting",
+              "label": "hist_gradient_boosting"
+            },
+            {
+              "value": "xgboost",
+              "label": "xgboost"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "target",
+          "argument": "target",
+          "label": "目标列",
+          "type": "string",
+          "default": null,
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "group_col",
+          "argument": "group-col",
+          "label": "group-col",
+          "type": "string",
+          "default": null,
+          "required": false,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "folds",
+          "argument": "folds",
+          "label": "folds",
+          "type": "integer",
+          "default": 5,
+          "required": true,
+          "options": [],
+          "minimum": 2,
+          "maximum": 20
+        },
+        {
+          "id": "seed",
+          "argument": "seed",
+          "label": "seed",
+          "type": "integer",
+          "default": 123,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        {
+          "id": "subject_col",
+          "argument": "subject-col",
+          "label": "subject-col",
+          "type": "string",
+          "default": "subject_id",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "features",
+          "label": "特征 CSV",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_metrics_json",
+          "type": "generated_file",
+          "label": "metrics.json",
+          "path_template": "results/metrics.json"
+        },
+        {
+          "id": "file_predictions_csv",
+          "type": "generated_file",
+          "label": "predictions.csv",
+          "path_template": "results/predictions.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "skills/statistical-ml/scripts/train_reference.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-train-cpm",
+      "label": "连接组预测模型 CPM",
+      "description": "使用已审核实现执行 连接组预测模型 CPM；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.cpm.train",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "task",
+          "argument": "task",
+          "label": "task",
+          "type": "string",
+          "default": "regression",
+          "required": true,
+          "options": [
+            {
+              "value": "regression",
+              "label": "regression"
+            },
+            {
+              "value": "classification",
+              "label": "classification"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "target",
+          "argument": "target",
+          "label": "目标列",
+          "type": "string",
+          "default": null,
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "p_threshold",
+          "argument": "p-threshold",
+          "label": "p-threshold",
+          "type": "number",
+          "default": 0.01,
+          "required": true,
+          "options": [],
+          "minimum": 1e-06,
+          "maximum": 1
+        },
+        {
+          "id": "folds",
+          "argument": "folds",
+          "label": "folds",
+          "type": "integer",
+          "default": 5,
+          "required": true,
+          "options": [],
+          "minimum": 2,
+          "maximum": 20
+        },
+        {
+          "id": "seed",
+          "argument": "seed",
+          "label": "seed",
+          "type": "integer",
+          "default": 123,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        {
+          "id": "subject_col",
+          "argument": "subject-col",
+          "label": "subject-col",
+          "type": "string",
+          "default": "subject_id",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "connectomes",
+          "label": "NPZ 连接矩阵（X、subject_id）",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "labels",
+          "label": "标签 CSV",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_metrics_json",
+          "type": "generated_file",
+          "label": "metrics.json",
+          "path_template": "results/metrics.json"
+        },
+        {
+          "id": "file_predictions_csv",
+          "type": "generated_file",
+          "label": "predictions.csv",
+          "path_template": "results/predictions.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "skills/cpm/scripts/train_reference.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-train-brain-age-modeling",
+      "label": "脑龄预测与偏差校正",
+      "description": "使用已审核实现执行 脑龄预测与偏差校正；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.brain-age-modeling.train",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "model",
+          "argument": "model",
+          "label": "model",
+          "type": "string",
+          "default": "ridge",
+          "required": true,
+          "options": [
+            {
+              "value": "ridge",
+              "label": "ridge"
+            },
+            {
+              "value": "svm",
+              "label": "svm"
+            },
+            {
+              "value": "random_forest",
+              "label": "random_forest"
+            },
+            {
+              "value": "extra_trees",
+              "label": "extra_trees"
+            },
+            {
+              "value": "hist_gradient_boosting",
+              "label": "hist_gradient_boosting"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "age_col",
+          "argument": "age-col",
+          "label": "age-col",
+          "type": "string",
+          "default": "age",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "folds",
+          "argument": "folds",
+          "label": "folds",
+          "type": "integer",
+          "default": 5,
+          "required": true,
+          "options": [],
+          "minimum": 2,
+          "maximum": 20
+        },
+        {
+          "id": "seed",
+          "argument": "seed",
+          "label": "seed",
+          "type": "integer",
+          "default": 123,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        {
+          "id": "subject_col",
+          "argument": "subject-col",
+          "label": "subject-col",
+          "type": "string",
+          "default": "subject_id",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "features",
+          "label": "特征 CSV",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_metrics_json",
+          "type": "generated_file",
+          "label": "metrics.json",
+          "path_template": "results/metrics.json"
+        },
+        {
+          "id": "file_predictions_csv",
+          "type": "generated_file",
+          "label": "predictions.csv",
+          "path_template": "results/predictions.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "skills/brain-age-modeling/scripts/train_reference.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-cluster-subject-subtyping",
+      "label": "受试者分型",
+      "description": "使用已审核实现执行 受试者分型；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.subject-subtyping.cluster",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "operation",
+          "argument": "operation",
+          "label": "分型方法",
+          "type": "string",
+          "default": "kmeans",
+          "required": true,
+          "options": [
+            {
+              "value": "kmeans",
+              "label": "kmeans"
+            },
+            {
+              "value": "gmm",
+              "label": "gmm"
+            },
+            {
+              "value": "spectral",
+              "label": "spectral"
+            },
+            {
+              "value": "nmf",
+              "label": "nmf"
+            },
+            {
+              "value": "consensus",
+              "label": "consensus"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "n_clusters",
+          "argument": "n-clusters",
+          "label": "n-clusters",
+          "type": "integer",
+          "default": 2,
+          "required": true,
+          "options": [],
+          "minimum": 2,
+          "maximum": 100
+        },
+        {
+          "id": "subject_col",
+          "argument": "subject-col",
+          "label": "subject-col",
+          "type": "string",
+          "default": "subject_id",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "seed",
+          "argument": "seed",
+          "label": "seed",
+          "type": "integer",
+          "default": 123,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 2147483647
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "features",
+          "label": "特征 CSV",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_metrics_json",
+          "type": "generated_file",
+          "label": "metrics.json",
+          "path_template": "results/metrics.json"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "skills/subject-subtyping/scripts/train_reference.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-association-imaging-genetics-models",
+      "label": "影像遗传关联",
+      "description": "使用已审核实现执行 影像遗传关联；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.imaging-genetics-models.association",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "operation",
+          "argument": "operation",
+          "label": "关联方法",
+          "type": "string",
+          "default": "association",
+          "required": true,
+          "options": [
+            {
+              "value": "association",
+              "label": "association"
+            },
+            {
+              "value": "lmm",
+              "label": "lmm"
+            },
+            {
+              "value": "prs",
+              "label": "prs"
+            },
+            {
+              "value": "cca",
+              "label": "cca"
+            },
+            {
+              "value": "pls",
+              "label": "pls"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "components",
+          "argument": "components",
+          "label": "components",
+          "type": "integer",
+          "default": 2,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 100
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "NPZ 矩阵数据",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_metrics_json",
+          "type": "generated_file",
+          "label": "metrics.json",
+          "path_template": "results/metrics.json"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "skills/imaging-genetics-models/scripts/train_reference.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-train-temporal-models",
+      "label": "时序模型训练",
+      "description": "使用已审核实现执行 时序模型训练；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.temporal-models.train",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "operation",
+          "argument": "operation",
+          "label": "时序模型",
+          "type": "string",
+          "default": "gru",
+          "required": true,
+          "options": [
+            {
+              "value": "lstm",
+              "label": "lstm"
+            },
+            {
+              "value": "gru",
+              "label": "gru"
+            },
+            {
+              "value": "tcn",
+              "label": "tcn"
+            },
+            {
+              "value": "transformer",
+              "label": "transformer"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "task",
+          "argument": "task",
+          "label": "task",
+          "type": "string",
+          "default": "classification",
+          "required": true,
+          "options": [
+            {
+              "value": "classification",
+              "label": "classification"
+            },
+            {
+              "value": "regression",
+              "label": "regression"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "epochs",
+          "argument": "epochs",
+          "label": "epochs",
+          "type": "integer",
+          "default": 20,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 1000
+        },
+        {
+          "id": "batch_size",
+          "argument": "batch-size",
+          "label": "batch-size",
+          "type": "integer",
+          "default": 4,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 256
+        },
+        {
+          "id": "lr",
+          "argument": "lr",
+          "label": "lr",
+          "type": "number",
+          "default": 0.001,
+          "required": true,
+          "options": [],
+          "minimum": 1e-06,
+          "maximum": 0.1
+        },
+        {
+          "id": "device",
+          "argument": "device",
+          "label": "device",
+          "type": "string",
+          "default": "auto",
+          "required": true,
+          "options": [
+            {
+              "value": "auto",
+              "label": "auto"
+            },
+            {
+              "value": "cpu",
+              "label": "cpu"
+            },
+            {
+              "value": "cuda",
+              "label": "cuda"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "folds",
+          "argument": "folds",
+          "label": "folds",
+          "type": "integer",
+          "default": 5,
+          "required": true,
+          "options": [],
+          "minimum": 2,
+          "maximum": 20
+        },
+        {
+          "id": "seed",
+          "argument": "seed",
+          "label": "seed",
+          "type": "integer",
+          "default": 123,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        {
+          "id": "hidden_dim",
+          "argument": "hidden-dim",
+          "label": "hidden-dim",
+          "type": "integer",
+          "default": 32,
+          "required": true,
+          "options": [],
+          "minimum": 4,
+          "maximum": 512
+        },
+        {
+          "id": "layers",
+          "argument": "layers",
+          "label": "layers",
+          "type": "integer",
+          "default": 1,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 8
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "NPZ 训练数据（X、y）",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_metrics_json",
+          "type": "generated_file",
+          "label": "metrics.json",
+          "path_template": "results/metrics.json"
+        },
+        {
+          "id": "file_predictions_csv",
+          "type": "generated_file",
+          "label": "predictions.csv",
+          "path_template": "results/predictions.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "skills/temporal-models/scripts/train_reference.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-train-cnn3d",
+      "label": "3D CNN 训练",
+      "description": "使用已审核实现执行 3D CNN 训练；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.cnn3d.train",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "task",
+          "argument": "task",
+          "label": "task",
+          "type": "string",
+          "default": "classification",
+          "required": true,
+          "options": [
+            {
+              "value": "classification",
+              "label": "classification"
+            },
+            {
+              "value": "regression",
+              "label": "regression"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "epochs",
+          "argument": "epochs",
+          "label": "epochs",
+          "type": "integer",
+          "default": 20,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 1000
+        },
+        {
+          "id": "batch_size",
+          "argument": "batch-size",
+          "label": "batch-size",
+          "type": "integer",
+          "default": 4,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 256
+        },
+        {
+          "id": "lr",
+          "argument": "lr",
+          "label": "lr",
+          "type": "number",
+          "default": 0.001,
+          "required": true,
+          "options": [],
+          "minimum": 1e-06,
+          "maximum": 0.1
+        },
+        {
+          "id": "device",
+          "argument": "device",
+          "label": "device",
+          "type": "string",
+          "default": "auto",
+          "required": true,
+          "options": [
+            {
+              "value": "auto",
+              "label": "auto"
+            },
+            {
+              "value": "cpu",
+              "label": "cpu"
+            },
+            {
+              "value": "cuda",
+              "label": "cuda"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "folds",
+          "argument": "folds",
+          "label": "folds",
+          "type": "integer",
+          "default": 5,
+          "required": true,
+          "options": [],
+          "minimum": 2,
+          "maximum": 20
+        },
+        {
+          "id": "seed",
+          "argument": "seed",
+          "label": "seed",
+          "type": "integer",
+          "default": 123,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        {
+          "id": "base_channels",
+          "argument": "base-channels",
+          "label": "base-channels",
+          "type": "integer",
+          "default": 8,
+          "required": true,
+          "options": [],
+          "minimum": 2,
+          "maximum": 64
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "NPZ 训练数据（X、y）",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_metrics_json",
+          "type": "generated_file",
+          "label": "metrics.json",
+          "path_template": "results/metrics.json"
+        },
+        {
+          "id": "file_predictions_csv",
+          "type": "generated_file",
+          "label": "predictions.csv",
+          "path_template": "results/predictions.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "skills/cnn3d/scripts/train_reference.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-survival-scientific-survival-models",
+      "label": "生存模型（scientific）",
+      "description": "使用已审核实现执行 生存模型（scientific）；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.survival-models.survival-scientific",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "operation",
+          "argument": "operation",
+          "label": "生存模型",
+          "type": "string",
+          "default": "cox",
+          "required": true,
+          "options": [
+            {
+              "value": "cox",
+              "label": "cox"
+            },
+            {
+              "value": "rsf",
+              "label": "rsf"
+            },
+            {
+              "value": "xgb_cox",
+              "label": "xgb_cox"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "duration_col",
+          "argument": "duration-col",
+          "label": "随访时间列",
+          "type": "string",
+          "default": null,
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "event_col",
+          "argument": "event-col",
+          "label": "事件列",
+          "type": "string",
+          "default": null,
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "epochs",
+          "argument": "epochs",
+          "label": "epochs",
+          "type": "integer",
+          "default": 50,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 1000
+        },
+        {
+          "id": "device",
+          "argument": "device",
+          "label": "device",
+          "type": "string",
+          "default": "auto",
+          "required": true,
+          "options": [
+            {
+              "value": "auto",
+              "label": "auto"
+            },
+            {
+              "value": "cpu",
+              "label": "cpu"
+            },
+            {
+              "value": "cuda",
+              "label": "cuda"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "folds",
+          "argument": "folds",
+          "label": "folds",
+          "type": "integer",
+          "default": 5,
+          "required": true,
+          "options": [],
+          "minimum": 2,
+          "maximum": 20
+        },
+        {
+          "id": "seed",
+          "argument": "seed",
+          "label": "seed",
+          "type": "integer",
+          "default": 123,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        {
+          "id": "subject_col",
+          "argument": "subject-col",
+          "label": "subject-col",
+          "type": "string",
+          "default": "subject_id",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "features",
+          "label": "特征 CSV",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_metrics_json",
+          "type": "generated_file",
+          "label": "metrics.json",
+          "path_template": "results/metrics.json"
+        },
+        {
+          "id": "file_predictions_csv",
+          "type": "generated_file",
+          "label": "predictions.csv",
+          "path_template": "results/predictions.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "skills/survival-models/scripts/train_reference.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-survival-torch-survival-models",
+      "label": "生存模型（torch）",
+      "description": "使用已审核实现执行 生存模型（torch）；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.survival-models.survival-torch",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "operation",
+          "argument": "operation",
+          "label": "生存模型",
+          "type": "string",
+          "default": "deepsurv",
+          "required": true,
+          "options": [
+            {
+              "value": "deepsurv",
+              "label": "deepsurv"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "duration_col",
+          "argument": "duration-col",
+          "label": "随访时间列",
+          "type": "string",
+          "default": null,
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "event_col",
+          "argument": "event-col",
+          "label": "事件列",
+          "type": "string",
+          "default": null,
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "epochs",
+          "argument": "epochs",
+          "label": "epochs",
+          "type": "integer",
+          "default": 50,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 1000
+        },
+        {
+          "id": "device",
+          "argument": "device",
+          "label": "device",
+          "type": "string",
+          "default": "auto",
+          "required": true,
+          "options": [
+            {
+              "value": "auto",
+              "label": "auto"
+            },
+            {
+              "value": "cpu",
+              "label": "cpu"
+            },
+            {
+              "value": "cuda",
+              "label": "cuda"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "folds",
+          "argument": "folds",
+          "label": "folds",
+          "type": "integer",
+          "default": 5,
+          "required": true,
+          "options": [],
+          "minimum": 2,
+          "maximum": 20
+        },
+        {
+          "id": "seed",
+          "argument": "seed",
+          "label": "seed",
+          "type": "integer",
+          "default": 123,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        {
+          "id": "subject_col",
+          "argument": "subject-col",
+          "label": "subject-col",
+          "type": "string",
+          "default": "subject_id",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "features",
+          "label": "特征 CSV",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_metrics_json",
+          "type": "generated_file",
+          "label": "metrics.json",
+          "path_template": "results/metrics.json"
+        },
+        {
+          "id": "file_predictions_csv",
+          "type": "generated_file",
+          "label": "predictions.csv",
+          "path_template": "results/predictions.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "skills/survival-models/scripts/train_reference.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-cate-causal-treatment-models",
+      "label": "处理效应估计",
+      "description": "使用已审核实现执行 处理效应估计；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.causal-treatment-models.cate",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "operation",
+          "argument": "operation",
+          "label": "效应估计方法",
+          "type": "string",
+          "default": "t_learner",
+          "required": true,
+          "options": [
+            {
+              "value": "ipw",
+              "label": "ipw"
+            },
+            {
+              "value": "s_learner",
+              "label": "s_learner"
+            },
+            {
+              "value": "t_learner",
+              "label": "t_learner"
+            },
+            {
+              "value": "x_learner",
+              "label": "x_learner"
+            },
+            {
+              "value": "doubly_robust",
+              "label": "doubly_robust"
+            },
+            {
+              "value": "policy_learner",
+              "label": "policy_learner"
+            },
+            {
+              "value": "tarnet",
+              "label": "tarnet"
+            },
+            {
+              "value": "dragonnet",
+              "label": "dragonnet"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "treatment_col",
+          "argument": "treatment-col",
+          "label": "处理列（0/1）",
+          "type": "string",
+          "default": null,
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "outcome_col",
+          "argument": "outcome-col",
+          "label": "结局列",
+          "type": "string",
+          "default": null,
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "epochs",
+          "argument": "epochs",
+          "label": "epochs",
+          "type": "integer",
+          "default": 50,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 1000
+        },
+        {
+          "id": "device",
+          "argument": "device",
+          "label": "device",
+          "type": "string",
+          "default": "auto",
+          "required": true,
+          "options": [
+            {
+              "value": "auto",
+              "label": "auto"
+            },
+            {
+              "value": "cpu",
+              "label": "cpu"
+            },
+            {
+              "value": "cuda",
+              "label": "cuda"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "folds",
+          "argument": "folds",
+          "label": "folds",
+          "type": "integer",
+          "default": 5,
+          "required": true,
+          "options": [],
+          "minimum": 2,
+          "maximum": 20
+        },
+        {
+          "id": "seed",
+          "argument": "seed",
+          "label": "seed",
+          "type": "integer",
+          "default": 123,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        {
+          "id": "subject_col",
+          "argument": "subject-col",
+          "label": "subject-col",
+          "type": "string",
+          "default": "subject_id",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "features",
+          "label": "特征 CSV",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_metrics_json",
+          "type": "generated_file",
+          "label": "metrics.json",
+          "path_template": "results/metrics.json"
+        },
+        {
+          "id": "file_predictions_csv",
+          "type": "generated_file",
+          "label": "predictions.csv",
+          "path_template": "results/predictions.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "skills/causal-treatment-models/scripts/train_reference.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-train-brainnetcnn",
+      "label": "brainnetcnn 连接组模型训练",
+      "description": "使用已审核实现执行 brainnetcnn 连接组模型训练；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.brainnetcnn.train",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "task",
+          "argument": "task",
+          "label": "task",
+          "type": "string",
+          "default": "classification",
+          "required": true,
+          "options": [
+            {
+              "value": "classification",
+              "label": "classification"
+            },
+            {
+              "value": "regression",
+              "label": "regression"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "epochs",
+          "argument": "epochs",
+          "label": "epochs",
+          "type": "integer",
+          "default": 30,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 1000
+        },
+        {
+          "id": "batch_size",
+          "argument": "batch-size",
+          "label": "batch-size",
+          "type": "integer",
+          "default": 8,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 256
+        },
+        {
+          "id": "lr",
+          "argument": "lr",
+          "label": "lr",
+          "type": "number",
+          "default": 0.001,
+          "required": true,
+          "options": [],
+          "minimum": 1e-06,
+          "maximum": 0.1
+        },
+        {
+          "id": "hidden_size",
+          "argument": "hidden-size",
+          "label": "hidden-size",
+          "type": "integer",
+          "default": 128,
+          "required": true,
+          "options": [],
+          "minimum": 16,
+          "maximum": 2048
+        },
+        {
+          "id": "nhead",
+          "argument": "nhead",
+          "label": "nhead",
+          "type": "integer",
+          "default": 1,
+          "required": true,
+          "options": [
+            {
+              "value": 1,
+              "label": "1"
+            },
+            {
+              "value": 2,
+              "label": "2"
+            },
+            {
+              "value": 4,
+              "label": "4"
+            },
+            {
+              "value": 8,
+              "label": "8"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "device",
+          "argument": "device",
+          "label": "device",
+          "type": "string",
+          "default": "auto",
+          "required": true,
+          "options": [
+            {
+              "value": "auto",
+              "label": "auto"
+            },
+            {
+              "value": "cpu",
+              "label": "cpu"
+            },
+            {
+              "value": "cuda",
+              "label": "cuda"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "folds",
+          "argument": "folds",
+          "label": "folds",
+          "type": "integer",
+          "default": 5,
+          "required": true,
+          "options": [],
+          "minimum": 2,
+          "maximum": 20
+        },
+        {
+          "id": "seed",
+          "argument": "seed",
+          "label": "seed",
+          "type": "integer",
+          "default": 123,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 2147483647
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "NPZ（X、y，ComBrainTF 另需 community_ids）",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_metrics_json",
+          "type": "generated_file",
+          "label": "metrics.json",
+          "path_template": "results/metrics.json"
+        },
+        {
+          "id": "file_predictions_csv",
+          "type": "generated_file",
+          "label": "predictions.csv",
+          "path_template": "results/predictions.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "models/connectome_training.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-train-bnt",
+      "label": "bnt 连接组模型训练",
+      "description": "使用已审核实现执行 bnt 连接组模型训练；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.bnt.train",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "task",
+          "argument": "task",
+          "label": "task",
+          "type": "string",
+          "default": "classification",
+          "required": true,
+          "options": [
+            {
+              "value": "classification",
+              "label": "classification"
+            },
+            {
+              "value": "regression",
+              "label": "regression"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "epochs",
+          "argument": "epochs",
+          "label": "epochs",
+          "type": "integer",
+          "default": 30,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 1000
+        },
+        {
+          "id": "batch_size",
+          "argument": "batch-size",
+          "label": "batch-size",
+          "type": "integer",
+          "default": 8,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 256
+        },
+        {
+          "id": "lr",
+          "argument": "lr",
+          "label": "lr",
+          "type": "number",
+          "default": 0.001,
+          "required": true,
+          "options": [],
+          "minimum": 1e-06,
+          "maximum": 0.1
+        },
+        {
+          "id": "hidden_size",
+          "argument": "hidden-size",
+          "label": "hidden-size",
+          "type": "integer",
+          "default": 128,
+          "required": true,
+          "options": [],
+          "minimum": 16,
+          "maximum": 2048
+        },
+        {
+          "id": "nhead",
+          "argument": "nhead",
+          "label": "nhead",
+          "type": "integer",
+          "default": 1,
+          "required": true,
+          "options": [
+            {
+              "value": 1,
+              "label": "1"
+            },
+            {
+              "value": 2,
+              "label": "2"
+            },
+            {
+              "value": 4,
+              "label": "4"
+            },
+            {
+              "value": 8,
+              "label": "8"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "device",
+          "argument": "device",
+          "label": "device",
+          "type": "string",
+          "default": "auto",
+          "required": true,
+          "options": [
+            {
+              "value": "auto",
+              "label": "auto"
+            },
+            {
+              "value": "cpu",
+              "label": "cpu"
+            },
+            {
+              "value": "cuda",
+              "label": "cuda"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "folds",
+          "argument": "folds",
+          "label": "folds",
+          "type": "integer",
+          "default": 5,
+          "required": true,
+          "options": [],
+          "minimum": 2,
+          "maximum": 20
+        },
+        {
+          "id": "seed",
+          "argument": "seed",
+          "label": "seed",
+          "type": "integer",
+          "default": 123,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 2147483647
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "NPZ（X、y，ComBrainTF 另需 community_ids）",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_metrics_json",
+          "type": "generated_file",
+          "label": "metrics.json",
+          "path_template": "results/metrics.json"
+        },
+        {
+          "id": "file_predictions_csv",
+          "type": "generated_file",
+          "label": "predictions.csv",
+          "path_template": "results/predictions.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "models/connectome_training.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-train-combraintf",
+      "label": "combraintf 连接组模型训练",
+      "description": "使用已审核实现执行 combraintf 连接组模型训练；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.combraintf.train",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "task",
+          "argument": "task",
+          "label": "task",
+          "type": "string",
+          "default": "classification",
+          "required": true,
+          "options": [
+            {
+              "value": "classification",
+              "label": "classification"
+            },
+            {
+              "value": "regression",
+              "label": "regression"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "epochs",
+          "argument": "epochs",
+          "label": "epochs",
+          "type": "integer",
+          "default": 30,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 1000
+        },
+        {
+          "id": "batch_size",
+          "argument": "batch-size",
+          "label": "batch-size",
+          "type": "integer",
+          "default": 8,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 256
+        },
+        {
+          "id": "lr",
+          "argument": "lr",
+          "label": "lr",
+          "type": "number",
+          "default": 0.001,
+          "required": true,
+          "options": [],
+          "minimum": 1e-06,
+          "maximum": 0.1
+        },
+        {
+          "id": "hidden_size",
+          "argument": "hidden-size",
+          "label": "hidden-size",
+          "type": "integer",
+          "default": 128,
+          "required": true,
+          "options": [],
+          "minimum": 16,
+          "maximum": 2048
+        },
+        {
+          "id": "nhead",
+          "argument": "nhead",
+          "label": "nhead",
+          "type": "integer",
+          "default": 1,
+          "required": true,
+          "options": [
+            {
+              "value": 1,
+              "label": "1"
+            },
+            {
+              "value": 2,
+              "label": "2"
+            },
+            {
+              "value": 4,
+              "label": "4"
+            },
+            {
+              "value": 8,
+              "label": "8"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "device",
+          "argument": "device",
+          "label": "device",
+          "type": "string",
+          "default": "auto",
+          "required": true,
+          "options": [
+            {
+              "value": "auto",
+              "label": "auto"
+            },
+            {
+              "value": "cpu",
+              "label": "cpu"
+            },
+            {
+              "value": "cuda",
+              "label": "cuda"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "folds",
+          "argument": "folds",
+          "label": "folds",
+          "type": "integer",
+          "default": 5,
+          "required": true,
+          "options": [],
+          "minimum": 2,
+          "maximum": 20
+        },
+        {
+          "id": "seed",
+          "argument": "seed",
+          "label": "seed",
+          "type": "integer",
+          "default": 123,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 2147483647
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "NPZ（X、y，ComBrainTF 另需 community_ids）",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_metrics_json",
+          "type": "generated_file",
+          "label": "metrics.json",
+          "path_template": "results/metrics.json"
+        },
+        {
+          "id": "file_predictions_csv",
+          "type": "generated_file",
+          "label": "predictions.csv",
+          "path_template": "results/predictions.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "models/connectome_training.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-mvpa-neuroimaging-decoding",
+      "label": "ROI 多变量解码",
+      "description": "使用已审核实现执行 ROI 多变量解码；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.neuroimaging-decoding.mvpa",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "task",
+          "argument": "task",
+          "label": "task",
+          "type": "string",
+          "default": "classification",
+          "required": true,
+          "options": [
+            {
+              "value": "classification",
+              "label": "classification"
+            },
+            {
+              "value": "regression",
+              "label": "regression"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "target",
+          "argument": "target",
+          "label": "目标列",
+          "type": "string",
+          "default": null,
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "model",
+          "argument": "model",
+          "label": "model",
+          "type": "string",
+          "default": "svm",
+          "required": true,
+          "options": [
+            {
+              "value": "svm",
+              "label": "svm"
+            },
+            {
+              "value": "ridge",
+              "label": "ridge"
+            },
+            {
+              "value": "random_forest",
+              "label": "random_forest"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "folds",
+          "argument": "folds",
+          "label": "folds",
+          "type": "integer",
+          "default": 5,
+          "required": true,
+          "options": [],
+          "minimum": 2,
+          "maximum": 20
+        },
+        {
+          "id": "seed",
+          "argument": "seed",
+          "label": "seed",
+          "type": "integer",
+          "default": 123,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        {
+          "id": "subject_col",
+          "argument": "subject-col",
+          "label": "subject-col",
+          "type": "string",
+          "default": "subject_id",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "features",
+          "label": "特征 CSV",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_metrics_json",
+          "type": "generated_file",
+          "label": "metrics.json",
+          "path_template": "results/metrics.json"
+        },
+        {
+          "id": "file_predictions_csv",
+          "type": "generated_file",
+          "label": "predictions.csv",
+          "path_template": "results/predictions.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "skills/neuroimaging-decoding/scripts/train_reference.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-roi-glm-neuroimaging-decoding",
+      "label": "ROI GLM 与 FDR",
+      "description": "使用已审核实现执行 ROI GLM 与 FDR；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.neuroimaging-decoding.roi-glm",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "subject_col",
+          "argument": "subject-col",
+          "label": "subject-col",
+          "type": "string",
+          "default": "subject_id",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "contrast_index",
+          "argument": "contrast-index",
+          "label": "contrast-index",
+          "type": "integer",
+          "default": 1,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 100
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "features",
+          "label": "特征 CSV",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "design",
+          "label": "设计矩阵 CSV",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_roi_glm_results_csv",
+          "type": "generated_file",
+          "label": "roi_glm_results.csv",
+          "path_template": "results/roi_glm_results.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "skills/neuroimaging-decoding/scripts/train_reference.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-searchlight-neuroimaging-decoding",
+      "label": "SearchLight 分类",
+      "description": "使用已审核实现执行 SearchLight 分类；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.neuroimaging-decoding.searchlight",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "target",
+          "argument": "target",
+          "label": "标签列",
+          "type": "string",
+          "default": null,
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "folds",
+          "argument": "folds",
+          "label": "folds",
+          "type": "integer",
+          "default": 5,
+          "required": true,
+          "options": [],
+          "minimum": 2,
+          "maximum": 20
+        },
+        {
+          "id": "seed",
+          "argument": "seed",
+          "label": "seed",
+          "type": "integer",
+          "default": 123,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 2147483647
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "images_list",
+          "label": "影像路径清单",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "features",
+          "label": "特征 CSV",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "mask",
+          "label": "脑掩膜",
+          "required": true,
+          "binding": "file",
+          "type": "brain_mask"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_searchlight_scores_nii_gz",
+          "type": "generated_file",
+          "label": "searchlight_scores.nii.gz",
+          "path_template": "results/searchlight_scores.nii.gz"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "skills/neuroimaging-decoding/scripts/train_reference.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,188 @@
+{
+  "schema_version": 1,
+  "skill_id": "bold5000-skill",
+  "provides": [
+    {
+      "capability": "skill.bold5000-skill",
+      "method_id": "reviewed-bold5000-qc-summary-bold5000-skill",
+      "label": "bold5000 质控汇总",
+      "description": "使用已审核实现执行 bold5000 质控汇总；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.bold5000-skill.bold5000-qc-summary",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "fd_threshold",
+          "argument": "fd-threshold",
+          "label": "fd-threshold",
+          "type": "number",
+          "default": 0.3,
+          "required": false,
+          "options": [],
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        {
+          "id": "max_fd_threshold",
+          "argument": "max-fd-threshold",
+          "label": "max-fd-threshold",
+          "type": "number",
+          "default": 5.0,
+          "required": false,
+          "options": [],
+          "minimum": 0,
+          "maximum": 1000000
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "fmriprep_dir",
+          "label": "Path to fMRIPrep output directory",
+          "required": false,
+          "binding": "folder",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_output_csv",
+          "type": "generated_file",
+          "label": "output.csv",
+          "path_template": "results/output.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "qc-summary"
+      ],
+      "source_references": [
+        {
+          "path": "skills/bold5000-skill/scripts/bold5000_qc_summary.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.bold5000-skill",
+      "method_id": "reviewed-extract-bold5000-stimulus-bold5000-skill",
+      "label": "bold5000 表型/刺激提取",
+      "description": "使用已审核实现执行 bold5000 表型/刺激提取；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.bold5000-skill.extract-bold5000-stimulus",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [],
+      "input_slots": [
+        {
+          "id": "stimulus_dir",
+          "label": "Path to BOLD5000 stimuli directory",
+          "required": true,
+          "binding": "folder",
+          "type": "analysis_input"
+        },
+        {
+          "id": "events_dir",
+          "label": "Path to BOLD5000 events directory",
+          "required": false,
+          "binding": "folder",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_output_csv",
+          "type": "generated_file",
+          "label": "output.csv",
+          "path_template": "results/output.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "phenotype-extraction",
+        "stimulus-extraction"
+      ],
+      "source_references": [
+        {
+          "path": "skills/bold5000-skill/scripts/extract_bold5000_stimulus.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.bold5000-skill",
+      "method_id": "reviewed-reorganize-bold5000-bold5000-skill",
+      "label": "bold5000 复制整理为 BIDS 目录",
+      "description": "使用已审核实现执行 bold5000 复制整理为 BIDS 目录；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.bold5000-skill.reorganize-bold5000",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "Path to BOLD5000 data directory",
+          "required": true,
+          "binding": "folder",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "bids-reorganization",
+        "data-reorganization"
+      ],
+      "source_references": [
+        {
+          "path": "skills/bold5000-skill/scripts/reorganize_bold5000.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,329 @@
+{
+  "schema_version": 1,
+  "skill_id": "neuroimaging-decoding",
+  "provides": [
+    {
+      "capability": "skill.neuroimaging-decoding",
+      "method_id": "reviewed-mvpa-neuroimaging-decoding",
+      "label": "ROI 多变量解码",
+      "description": "使用已审核实现执行 ROI 多变量解码；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.neuroimaging-decoding.mvpa",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "task",
+          "argument": "task",
+          "label": "task",
+          "type": "string",
+          "default": "classification",
+          "required": true,
+          "options": [
+            {
+              "value": "classification",
+              "label": "classification"
+            },
+            {
+              "value": "regression",
+              "label": "regression"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "target",
+          "argument": "target",
+          "label": "目标列",
+          "type": "string",
+          "default": null,
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "model",
+          "argument": "model",
+          "label": "model",
+          "type": "string",
+          "default": "svm",
+          "required": true,
+          "options": [
+            {
+              "value": "svm",
+              "label": "svm"
+            },
+            {
+              "value": "ridge",
+              "label": "ridge"
+            },
+            {
+              "value": "random_forest",
+              "label": "random_forest"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "folds",
+          "argument": "folds",
+          "label": "folds",
+          "type": "integer",
+          "default": 5,
+          "required": true,
+          "options": [],
+          "minimum": 2,
+          "maximum": 20
+        },
+        {
+          "id": "seed",
+          "argument": "seed",
+          "label": "seed",
+          "type": "integer",
+          "default": 123,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        {
+          "id": "subject_col",
+          "argument": "subject-col",
+          "label": "subject-col",
+          "type": "string",
+          "default": "subject_id",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "features",
+          "label": "特征 CSV",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_metrics_json",
+          "type": "generated_file",
+          "label": "metrics.json",
+          "path_template": "results/metrics.json"
+        },
+        {
+          "id": "file_predictions_csv",
+          "type": "generated_file",
+          "label": "predictions.csv",
+          "path_template": "results/predictions.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "skills/neuroimaging-decoding/scripts/train_reference.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.neuroimaging-decoding",
+      "method_id": "reviewed-roi-glm-neuroimaging-decoding",
+      "label": "ROI GLM 与 FDR",
+      "description": "使用已审核实现执行 ROI GLM 与 FDR；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.neuroimaging-decoding.roi-glm",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "subject_col",
+          "argument": "subject-col",
+          "label": "subject-col",
+          "type": "string",
+          "default": "subject_id",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "contrast_index",
+          "argument": "contrast-index",
+          "label": "contrast-index",
+          "type": "integer",
+          "default": 1,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 100
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "features",
+          "label": "特征 CSV",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "design",
+          "label": "设计矩阵 CSV",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_roi_glm_results_csv",
+          "type": "generated_file",
+          "label": "roi_glm_results.csv",
+          "path_template": "results/roi_glm_results.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "skills/neuroimaging-decoding/scripts/train_reference.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.neuroimaging-decoding",
+      "method_id": "reviewed-searchlight-neuroimaging-decoding",
+      "label": "SearchLight 分类",
+      "description": "使用已审核实现执行 SearchLight 分类；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.neuroimaging-decoding.searchlight",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "target",
+          "argument": "target",
+          "label": "标签列",
+          "type": "string",
+          "default": null,
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "folds",
+          "argument": "folds",
+          "label": "folds",
+          "type": "integer",
+          "default": 5,
+          "required": true,
+          "options": [],
+          "minimum": 2,
+          "maximum": 20
+        },
+        {
+          "id": "seed",
+          "argument": "seed",
+          "label": "seed",
+          "type": "integer",
+          "default": 123,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 2147483647
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "images_list",
+          "label": "影像路径清单",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "features",
+          "label": "特征 CSV",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "mask",
+          "label": "脑掩膜",
+          "required": true,
+          "binding": "file",
+          "type": "brain_mask"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_searchlight_scores_nii_gz",
+          "type": "generated_file",
+          "label": "searchlight_scores.nii.gz",
+          "path_template": "results/searchlight_scores.nii.gz"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "skills/neuroimaging-decoding/scripts/train_reference.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    }
+  ]
+}

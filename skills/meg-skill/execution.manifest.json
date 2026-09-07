@@ -1,0 +1,1173 @@
+{
+  "schema_version": 1,
+  "skill_id": "meg-skill",
+  "provides": [
+    {
+      "capability": "skill.meg-skill",
+      "method_id": "reviewed-inspect-mne-eeg-tool",
+      "label": "EEG/MEG 数据检查",
+      "description": "使用已审核实现执行 EEG/MEG 数据检查；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.mne-eeg-tool.inspect",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "EEG/MEG 原始文件（FIF/EDF/BDF/SET）",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_processed_raw_fif",
+          "type": "generated_file",
+          "label": "processed-raw.fif",
+          "path_template": "results/processed-raw.fif"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "loadeeg",
+        "load-validation",
+        "load-basic-validation"
+      ],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/eeg_worker.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.meg-skill",
+      "method_id": "reviewed-filter-mne-eeg-tool",
+      "label": "EEG/MEG 滤波与降采样",
+      "description": "使用已审核实现执行 EEG/MEG 滤波与降采样；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.mne-eeg-tool.filter",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "high_pass",
+          "argument": "high-pass",
+          "label": "high-pass",
+          "type": "number",
+          "default": 0.5,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 100
+        },
+        {
+          "id": "low_pass",
+          "argument": "low-pass",
+          "label": "low-pass",
+          "type": "number",
+          "default": 40.0,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 1000
+        },
+        {
+          "id": "notch",
+          "argument": "notch",
+          "label": "notch",
+          "type": "number",
+          "default": 0.0,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 120
+        },
+        {
+          "id": "sfreq",
+          "argument": "sfreq",
+          "label": "sfreq",
+          "type": "number",
+          "default": 0.0,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 10000
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "EEG/MEG 原始文件（FIF/EDF/BDF/SET）",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_processed_raw_fif",
+          "type": "generated_file",
+          "label": "processed-raw.fif",
+          "path_template": "results/processed-raw.fif"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "preprocessfiltering",
+        "downsampling-filtering",
+        "filtering"
+      ],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/eeg_worker.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.meg-skill",
+      "method_id": "reviewed-ica-mne-eeg-tool",
+      "label": "ICA 分解与指定成分去除",
+      "description": "使用已审核实现执行 ICA 分解与指定成分去除；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.mne-eeg-tool.ica",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "components",
+          "argument": "components",
+          "label": "components",
+          "type": "integer",
+          "default": 10,
+          "required": true,
+          "options": [],
+          "minimum": 2,
+          "maximum": 200
+        },
+        {
+          "id": "exclude_components",
+          "argument": "exclude-components",
+          "label": "exclude-components",
+          "type": "string",
+          "default": "",
+          "required": false,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "EEG/MEG 原始文件（FIF/EDF/BDF/SET）",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_processed_raw_fif",
+          "type": "generated_file",
+          "label": "processed-raw.fif",
+          "path_template": "results/processed-raw.fif"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "removeartifacts",
+        "artifact-removal",
+        "ica-artifact-removal"
+      ],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/eeg_worker.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.meg-skill",
+      "method_id": "reviewed-clean-mne-eeg-tool",
+      "label": "连续 EEG/MEG 清理",
+      "description": "使用已审核实现执行 连续 EEG/MEG 清理；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.mne-eeg-tool.clean",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "high_pass",
+          "argument": "high-pass",
+          "label": "high-pass",
+          "type": "number",
+          "default": 0.5,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 100
+        },
+        {
+          "id": "low_pass",
+          "argument": "low-pass",
+          "label": "low-pass",
+          "type": "number",
+          "default": 40.0,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 1000
+        },
+        {
+          "id": "notch",
+          "argument": "notch",
+          "label": "notch",
+          "type": "number",
+          "default": 0.0,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 120
+        },
+        {
+          "id": "sfreq",
+          "argument": "sfreq",
+          "label": "sfreq",
+          "type": "number",
+          "default": 0.0,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 10000
+        },
+        {
+          "id": "components",
+          "argument": "components",
+          "label": "components",
+          "type": "integer",
+          "default": 10,
+          "required": true,
+          "options": [],
+          "minimum": 2,
+          "maximum": 200
+        },
+        {
+          "id": "exclude_components",
+          "argument": "exclude-components",
+          "label": "exclude-components",
+          "type": "string",
+          "default": "",
+          "required": false,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "EEG/MEG 原始文件（FIF/EDF/BDF/SET）",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_processed_raw_fif",
+          "type": "generated_file",
+          "label": "processed-raw.fif",
+          "path_template": "results/processed-raw.fif"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "continuousdatacleaning",
+        "continuous-data-cleaning"
+      ],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/eeg_worker.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.meg-skill",
+      "method_id": "reviewed-epoch-mne-eeg-tool",
+      "label": "重参考与分段",
+      "description": "使用已审核实现执行 重参考与分段；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.mne-eeg-tool.epoch",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "epoch_seconds",
+          "argument": "epoch-seconds",
+          "label": "epoch-seconds",
+          "type": "number",
+          "default": 2.0,
+          "required": true,
+          "options": [],
+          "minimum": 0.1,
+          "maximum": 60
+        },
+        {
+          "id": "tmin",
+          "argument": "tmin",
+          "label": "tmin",
+          "type": "number",
+          "default": -0.2,
+          "required": true,
+          "options": [],
+          "minimum": -10,
+          "maximum": 0
+        },
+        {
+          "id": "tmax",
+          "argument": "tmax",
+          "label": "tmax",
+          "type": "number",
+          "default": 0.8,
+          "required": true,
+          "options": [],
+          "minimum": 0.01,
+          "maximum": 60
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "EEG/MEG 原始文件（FIF/EDF/BDF/SET）",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "events",
+          "label": "MNE 事件文件",
+          "required": false,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_processed_epo_fif",
+          "type": "generated_file",
+          "label": "processed-epo.fif",
+          "path_template": "results/processed-epo.fif"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "rereferenceandepoch",
+        "re-referencing-epoching",
+        "epoching"
+      ],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/eeg_worker.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.meg-skill",
+      "method_id": "reviewed-autoreject-mne-eeg-tool",
+      "label": "Epoch AutoReject 自动质控",
+      "description": "使用已审核实现执行 Epoch AutoReject 自动质控；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.mne-eeg-tool.autoreject",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "epoch_seconds",
+          "argument": "epoch-seconds",
+          "label": "epoch-seconds",
+          "type": "number",
+          "default": 2.0,
+          "required": true,
+          "options": [],
+          "minimum": 0.1,
+          "maximum": 60
+        },
+        {
+          "id": "tmin",
+          "argument": "tmin",
+          "label": "tmin",
+          "type": "number",
+          "default": -0.2,
+          "required": true,
+          "options": [],
+          "minimum": -10,
+          "maximum": 0
+        },
+        {
+          "id": "tmax",
+          "argument": "tmax",
+          "label": "tmax",
+          "type": "number",
+          "default": 0.8,
+          "required": true,
+          "options": [],
+          "minimum": 0.01,
+          "maximum": 60
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "EEG/MEG 原始文件（FIF/EDF/BDF/SET）",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "events",
+          "label": "MNE 事件文件",
+          "required": false,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_processed_epo_fif",
+          "type": "generated_file",
+          "label": "processed-epo.fif",
+          "path_template": "results/processed-epo.fif"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/eeg_worker.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.meg-skill",
+      "method_id": "reviewed-bands-mne-eeg-tool",
+      "label": "EEG/MEG 频带功率",
+      "description": "使用已审核实现执行 EEG/MEG 频带功率；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.mne-eeg-tool.bands",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "epoch_seconds",
+          "argument": "epoch-seconds",
+          "label": "epoch-seconds",
+          "type": "number",
+          "default": 2.0,
+          "required": true,
+          "options": [],
+          "minimum": 0.1,
+          "maximum": 60
+        },
+        {
+          "id": "tmin",
+          "argument": "tmin",
+          "label": "tmin",
+          "type": "number",
+          "default": -0.2,
+          "required": true,
+          "options": [],
+          "minimum": -10,
+          "maximum": 0
+        },
+        {
+          "id": "tmax",
+          "argument": "tmax",
+          "label": "tmax",
+          "type": "number",
+          "default": 0.8,
+          "required": true,
+          "options": [],
+          "minimum": 0.01,
+          "maximum": 60
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "EEG/MEG 原始文件（FIF/EDF/BDF/SET）",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "events",
+          "label": "MNE 事件文件",
+          "required": false,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_features_csv",
+          "type": "generated_file",
+          "label": "features.csv",
+          "path_template": "results/features.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "extractfrequencybands",
+        "frequency-band-energy-extraction"
+      ],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/eeg_worker.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.meg-skill",
+      "method_id": "reviewed-features-mne-eeg-tool",
+      "label": "EEG/MEG 功率与 Hjorth 特征",
+      "description": "使用已审核实现执行 EEG/MEG 功率与 Hjorth 特征；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.mne-eeg-tool.features",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "epoch_seconds",
+          "argument": "epoch-seconds",
+          "label": "epoch-seconds",
+          "type": "number",
+          "default": 2.0,
+          "required": true,
+          "options": [],
+          "minimum": 0.1,
+          "maximum": 60
+        },
+        {
+          "id": "tmin",
+          "argument": "tmin",
+          "label": "tmin",
+          "type": "number",
+          "default": -0.2,
+          "required": true,
+          "options": [],
+          "minimum": -10,
+          "maximum": 0
+        },
+        {
+          "id": "tmax",
+          "argument": "tmax",
+          "label": "tmax",
+          "type": "number",
+          "default": 0.8,
+          "required": true,
+          "options": [],
+          "minimum": 0.01,
+          "maximum": 60
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "EEG/MEG 原始文件（FIF/EDF/BDF/SET）",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "events",
+          "label": "MNE 事件文件",
+          "required": false,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_features_csv",
+          "type": "generated_file",
+          "label": "features.csv",
+          "path_template": "results/features.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "extractfeatures",
+        "feature-extraction-core"
+      ],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/eeg_worker.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.meg-skill",
+      "method_id": "reviewed-connectivity-mne-eeg-tool",
+      "label": "传感器 PLV/相干/wPLI",
+      "description": "使用已审核实现执行 传感器 PLV/相干/wPLI；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.mne-eeg-tool.connectivity",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "epoch_seconds",
+          "argument": "epoch-seconds",
+          "label": "epoch-seconds",
+          "type": "number",
+          "default": 2.0,
+          "required": true,
+          "options": [],
+          "minimum": 0.1,
+          "maximum": 60
+        },
+        {
+          "id": "tmin",
+          "argument": "tmin",
+          "label": "tmin",
+          "type": "number",
+          "default": -0.2,
+          "required": true,
+          "options": [],
+          "minimum": -10,
+          "maximum": 0
+        },
+        {
+          "id": "tmax",
+          "argument": "tmax",
+          "label": "tmax",
+          "type": "number",
+          "default": 0.8,
+          "required": true,
+          "options": [],
+          "minimum": 0.01,
+          "maximum": 60
+        },
+        {
+          "id": "freq_min",
+          "argument": "freq-min",
+          "label": "freq-min",
+          "type": "number",
+          "default": 8.0,
+          "required": true,
+          "options": [],
+          "minimum": 0.1,
+          "maximum": 1000
+        },
+        {
+          "id": "freq_max",
+          "argument": "freq-max",
+          "label": "freq-max",
+          "type": "number",
+          "default": 13.0,
+          "required": true,
+          "options": [],
+          "minimum": 0.2,
+          "maximum": 2000
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "EEG/MEG 原始文件（FIF/EDF/BDF/SET）",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "events",
+          "label": "MNE 事件文件",
+          "required": false,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_connectivity_npz",
+          "type": "generated_file",
+          "label": "connectivity.npz",
+          "path_template": "results/connectivity.npz"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "computeconnectivity",
+        "sensor-level-connectivity"
+      ],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/eeg_worker.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.meg-skill",
+      "method_id": "reviewed-erp-mne-eeg-tool",
+      "label": "事件相关响应与峰值",
+      "description": "使用已审核实现执行 事件相关响应与峰值；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.mne-eeg-tool.erp",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "epoch_seconds",
+          "argument": "epoch-seconds",
+          "label": "epoch-seconds",
+          "type": "number",
+          "default": 2.0,
+          "required": true,
+          "options": [],
+          "minimum": 0.1,
+          "maximum": 60
+        },
+        {
+          "id": "tmin",
+          "argument": "tmin",
+          "label": "tmin",
+          "type": "number",
+          "default": -0.2,
+          "required": true,
+          "options": [],
+          "minimum": -10,
+          "maximum": 0
+        },
+        {
+          "id": "tmax",
+          "argument": "tmax",
+          "label": "tmax",
+          "type": "number",
+          "default": 0.8,
+          "required": true,
+          "options": [],
+          "minimum": 0.01,
+          "maximum": 60
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "EEG/MEG 原始文件（FIF/EDF/BDF/SET）",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "events",
+          "label": "MNE 事件文件",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_erp_csv",
+          "type": "generated_file",
+          "label": "erp.csv",
+          "path_template": "results/erp.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "extracterpfeatures",
+        "evoked-responses"
+      ],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/eeg_worker.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.meg-skill",
+      "method_id": "reviewed-time-frequency-mne-eeg-tool",
+      "label": "Morlet 时频功率与 ITC",
+      "description": "使用已审核实现执行 Morlet 时频功率与 ITC；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.mne-eeg-tool.time-frequency",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "epoch_seconds",
+          "argument": "epoch-seconds",
+          "label": "epoch-seconds",
+          "type": "number",
+          "default": 2.0,
+          "required": true,
+          "options": [],
+          "minimum": 0.1,
+          "maximum": 60
+        },
+        {
+          "id": "tmin",
+          "argument": "tmin",
+          "label": "tmin",
+          "type": "number",
+          "default": -0.2,
+          "required": true,
+          "options": [],
+          "minimum": -10,
+          "maximum": 0
+        },
+        {
+          "id": "tmax",
+          "argument": "tmax",
+          "label": "tmax",
+          "type": "number",
+          "default": 0.8,
+          "required": true,
+          "options": [],
+          "minimum": 0.01,
+          "maximum": 60
+        },
+        {
+          "id": "freq_min",
+          "argument": "freq-min",
+          "label": "freq-min",
+          "type": "number",
+          "default": 8.0,
+          "required": true,
+          "options": [],
+          "minimum": 0.1,
+          "maximum": 1000
+        },
+        {
+          "id": "freq_max",
+          "argument": "freq-max",
+          "label": "freq-max",
+          "type": "number",
+          "default": 13.0,
+          "required": true,
+          "options": [],
+          "minimum": 0.2,
+          "maximum": 2000
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "EEG/MEG 原始文件（FIF/EDF/BDF/SET）",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "events",
+          "label": "MNE 事件文件",
+          "required": false,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_time_frequency_npz",
+          "type": "generated_file",
+          "label": "time_frequency.npz",
+          "path_template": "results/time_frequency.npz"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "time-frequency-analysis"
+      ],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/eeg_worker.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.meg-skill",
+      "method_id": "reviewed-maxwell-mne-eeg-tool",
+      "label": "MEG Maxwell 滤波",
+      "description": "使用已审核实现执行 MEG Maxwell 滤波；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.mne-eeg-tool.maxwell",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "EEG/MEG 原始文件（FIF/EDF/BDF/SET）",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_processed_raw_fif",
+          "type": "generated_file",
+          "label": "processed-raw.fif",
+          "path_template": "results/processed-raw.fif"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "maxwell-filtering"
+      ],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/eeg_worker.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.meg-skill",
+      "method_id": "reviewed-source-mne-eeg-tool",
+      "label": "dSPM 源定位（需前向模型和噪声协方差）",
+      "description": "使用已审核实现执行 dSPM 源定位（需前向模型和噪声协方差）；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.mne-eeg-tool.source",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "EEG/MEG 原始文件（FIF/EDF/BDF/SET）",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "forward",
+          "label": "前向模型 FIF",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "noise_cov",
+          "label": "噪声协方差 FIF",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_source_npz",
+          "type": "generated_file",
+          "label": "source.npz",
+          "path_template": "results/source.npz"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "source-localization"
+      ],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/eeg_worker.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    }
+  ]
+}

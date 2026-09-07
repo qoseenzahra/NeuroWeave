@@ -1,0 +1,533 @@
+{
+  "schema_version": 1,
+  "skill_id": "fmri-skill",
+  "provides": [
+    {
+      "capability": "skill.fmri-skill",
+      "method_id": "reviewed-connectome-nilearn-tool",
+      "label": "ROI 时间序列与功能连接",
+      "description": "使用已审核实现执行 ROI 时间序列与功能连接；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.nilearn-tool.connectome",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "tr",
+          "argument": "tr",
+          "label": "TR（秒）",
+          "type": "number",
+          "default": 2.0,
+          "required": true,
+          "options": [],
+          "minimum": 0.01,
+          "maximum": 100
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "bold",
+          "label": "预处理 BOLD 影像",
+          "required": true,
+          "binding": "file",
+          "type": "bold_image"
+        },
+        {
+          "id": "atlas",
+          "label": "分区图谱",
+          "required": true,
+          "binding": "file",
+          "type": "label_image"
+        },
+        {
+          "id": "labels",
+          "label": "图谱标签",
+          "required": false,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_connectome_npy",
+          "type": "connectome_matrix",
+          "label": "connectome.npy",
+          "path_template": "results/connectome.npy"
+        },
+        {
+          "id": "file_roi_timeseries_csv",
+          "type": "roi_timeseries",
+          "label": "roi_timeseries.csv",
+          "path_template": "results/roi_timeseries.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "roi-time-series-extraction",
+        "functional-connectivity-clean"
+      ],
+      "source_references": [
+        {
+          "path": "skills/nilearn-tool/scripts/connectome_reference.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.fmri-skill",
+      "method_id": "reviewed-task-glm-nilearn-tool",
+      "label": "任务态一级 GLM",
+      "description": "使用已审核实现执行 任务态一级 GLM；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.nilearn-tool.task-glm",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "tr",
+          "argument": "tr",
+          "label": "TR（秒）",
+          "type": "number",
+          "default": 2.0,
+          "required": true,
+          "options": [],
+          "minimum": 0.01,
+          "maximum": 100
+        },
+        {
+          "id": "contrast",
+          "argument": "contrast",
+          "label": "对比表达式",
+          "type": "string",
+          "default": null,
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "bold",
+          "label": "预处理 BOLD 影像",
+          "required": true,
+          "binding": "file",
+          "type": "bold_image"
+        },
+        {
+          "id": "events",
+          "label": "事件表",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "confounds",
+          "label": "混杂变量",
+          "required": false,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "mask",
+          "label": "脑掩膜",
+          "required": false,
+          "binding": "file",
+          "type": "brain_mask"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_z_map_nii_gz",
+          "type": "z_stat_map",
+          "label": "z_map.nii.gz",
+          "path_template": "results/z_map.nii.gz"
+        },
+        {
+          "id": "file_effect_map_nii_gz",
+          "type": "contrast_image",
+          "label": "effect_map.nii.gz",
+          "path_template": "results/effect_map.nii.gz"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "first-level-glm-task-based"
+      ],
+      "source_references": [
+        {
+          "path": "skills/nilearn-tool/scripts/task_glm_reference.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.fmri-skill",
+      "method_id": "reviewed-group-glm-nilearn-tool",
+      "label": "组水平 GLM",
+      "description": "使用已审核实现执行 组水平 GLM；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.nilearn-tool.group-glm",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "contrast",
+          "argument": "contrast",
+          "label": "对比表达式",
+          "type": "string",
+          "default": null,
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "contrast_maps",
+          "label": "对比影像路径清单",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "design_matrix",
+          "label": "组设计矩阵",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "mask",
+          "label": "脑掩膜",
+          "required": false,
+          "binding": "file",
+          "type": "brain_mask"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_second_level_z_map_nii_gz",
+          "type": "generated_file",
+          "label": "second_level_z_map.nii.gz",
+          "path_template": "results/second_level_z_map.nii.gz"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "group-level-analysis"
+      ],
+      "source_references": [
+        {
+          "path": "skills/nilearn-tool/scripts/second_level_glm_reference.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.fmri-skill",
+      "method_id": "reviewed-mcflirt-fsl-tool",
+      "label": "FSL 运动校正",
+      "description": "使用已审核实现执行 FSL 运动校正；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.fsl-tool.mcflirt",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "输入影像",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_image_nii_gz",
+          "type": "generated_file",
+          "label": "image.nii.gz",
+          "path_template": "results/image.nii.gz"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/native_worker.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.fmri-skill",
+      "method_id": "reviewed-slicetimer-fsl-tool",
+      "label": "FSL 层间时间校正",
+      "description": "使用已审核实现执行 FSL 层间时间校正；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.fsl-tool.slicetimer",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "tr",
+          "argument": "tr",
+          "label": "tr",
+          "type": "number",
+          "default": 2.0,
+          "required": true,
+          "options": [],
+          "minimum": 0.01,
+          "maximum": 100
+        },
+        {
+          "id": "slice_axis",
+          "argument": "slice-axis",
+          "label": "slice-axis",
+          "type": "integer",
+          "default": 3,
+          "required": true,
+          "options": [
+            {
+              "value": 1,
+              "label": "1"
+            },
+            {
+              "value": 2,
+              "label": "2"
+            },
+            {
+              "value": 3,
+              "label": "3"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "slice_order",
+          "argument": "slice-order",
+          "label": "slice-order",
+          "type": "string",
+          "default": "ascending",
+          "required": true,
+          "options": [
+            {
+              "value": "ascending",
+              "label": "ascending"
+            },
+            {
+              "value": "descending",
+              "label": "descending"
+            },
+            {
+              "value": "interleaved",
+              "label": "interleaved"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "输入影像",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_image_nii_gz",
+          "type": "generated_file",
+          "label": "image.nii.gz",
+          "path_template": "results/image.nii.gz"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/native_worker.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.fmri-skill",
+      "method_id": "reviewed-zalff-nilearn-tool",
+      "label": "ALFF 振幅与 zALFF 区域汇总",
+      "description": "使用已审核实现执行 ALFF 振幅与 zALFF 区域汇总；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.nilearn-tool.zalff",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "tr",
+          "argument": "tr",
+          "label": "tr",
+          "type": "number",
+          "default": 2.0,
+          "required": true,
+          "options": [],
+          "minimum": 0.01,
+          "maximum": 4.9
+        },
+        {
+          "id": "top_n",
+          "argument": "top-n",
+          "label": "top-n",
+          "type": "integer",
+          "default": 10,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 1000
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "bold",
+          "label": "同空间 BOLD",
+          "required": true,
+          "binding": "file",
+          "type": "bold_image"
+        },
+        {
+          "id": "atlas",
+          "label": "同空间图谱",
+          "required": true,
+          "binding": "file",
+          "type": "label_image"
+        },
+        {
+          "id": "mask",
+          "label": "同空间脑掩膜",
+          "required": true,
+          "binding": "file",
+          "type": "brain_mask"
+        },
+        {
+          "id": "labels",
+          "label": "图谱名称文本",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_zalff_nii_gz",
+          "type": "generated_file",
+          "label": "zalff.nii.gz",
+          "path_template": "results/zalff.nii.gz"
+        },
+        {
+          "id": "file_all_regions_csv",
+          "type": "generated_file",
+          "label": "all_regions.csv",
+          "path_template": "results/all_regions.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "zalff-regional-activation"
+      ],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/image_summary_worker.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    }
+  ]
+}

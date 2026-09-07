@@ -1424,7 +1424,7 @@ class WorkflowService:
         }
         advisory_matches: list[tuple[int, str]] = []
         for node in (self.capability_tree.leaves() if self.capability_tree else []):
-            if node.id not in allowed or node.execution_level not in {"advisory", "planning"}:
+            if node.id not in allowed or not node.id.startswith("skill."):
                 continue
             skill_name = node.skill_ids[0] if node.skill_ids else ""
             parts = [

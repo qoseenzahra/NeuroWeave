@@ -41,29 +41,11 @@ def compute_tfr_morlet(
         power: Average TFR power (EvokedArray).
         itc: Inter-trial coherence (EvokedArray) or None.
     """
-    # Compute TFR for each epoch
-    tfr = epochs.compute_tfr(
-        method="morlet",
-        freqs=freqs,
-        n_cycles=n_cycles,
-        return_itc=False,
-        average=False,
-    )
-
-    # Average power across epochs
-    power = tfr.copy().average()
-
-    # Apply baseline correction
+    result = epochs.compute_tfr(method="morlet", freqs=freqs,
+                                n_cycles=n_cycles, return_itc=return_itc, average=True)
+    power, itc = result if return_itc else (result, None)
     if baseline is not None:
         power.apply_baseline(baseline=baseline)
-
-    itc = None
-    if return_itc:
-        # ITC = |mean(exp(j * phase))| across epochs
-        data = tfr.data  # (n_epochs, n_channels, n_freqs, n_times)
-        itc_data = np.abs(np.mean(np.exp(1j * np.angle(data)), axis=0))
-        itc = power.copy()
-        itc.data = itc_data
 
     return power, itc
 
@@ -88,7 +70,7 @@ def compute_tfr_multitaper(
     tfr = epochs.compute_tfr(
         method="multitaper",
         freqs=freqs,
-        bandwidth=bandwidth,
+        time_bandwidth=bandwidth,
         return_itc=False,
         average=False,
     )

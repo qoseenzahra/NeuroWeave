@@ -75,6 +75,7 @@ def _local_method_candidates(
     for triggers, terms in _METHOD_CONCEPTS:
         if any(trigger in lowered for trigger in triggers):
             query_terms.update(terms)
+            query_terms.update(triggers)
 
     methods = candidate.get("methods", [])
     # Reviewed methods registered independently under one precise capability are
@@ -124,6 +125,7 @@ def _local_method_candidates(
             continue
         document_terms = set(re.findall(r"[a-z][a-z0-9]+", document))
         score = float(len(query_terms.intersection(document_terms)))
+        score += sum(2.0 for term in query_terms if re.search(r"[\u3400-\u9fff]",term) and term in document)
         if any(
             phrase in document and len(phrase) >= 2
             for phrase in re.findall(r"[\u3400-\u9fff]{2,}", lowered)

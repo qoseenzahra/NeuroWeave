@@ -346,40 +346,17 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
             ),
             decision,
         )
-        self.assertEqual(workflow.execution_mode, "planning")
-        self.assertEqual(workflow.status, "chain_ready")
+        self.assertEqual(workflow.execution_mode, "runner")
         self.assertEqual(workflow.steps[0].capability, "skill.eeg-skill")
-        method = workflow.steps[0].method_options[0]
-        self.assertTrue(
-            any(
-                workflow.steps[0].title in warning
-                and method.label in warning
-                and "仅支持规划" in warning
-                for warning in workflow.warnings
-            )
-        )
-        self.assertEqual(method.execution_mode, "planning")
-        self.assertEqual(method.structure_level, "evidence")
+        method = next(m for m in workflow.steps[0].method_options if m.runner_id.startswith("reviewed."))
+        self.assertEqual(method.execution_mode, "runner")
         self.assertTrue(method.source_references)
-        self.assertEqual(
-            [parameter.id for parameter in method.parameters if parameter.level == "basic"],
-            ["operation", "workflow_scope", "quality_control"],
-        )
-        self.assertGreaterEqual(
-            len([parameter for parameter in method.parameters if parameter.level == "advanced"]),
-            4,
-        )
-
+        self.assertTrue(any(slot.required for slot in method.input_slots))
+        workflow = self.service.select_method(workflow.workflow_id, workflow.steps[0].id, method.id, workflow.revision)
         workflow = self.service.lock_chain(workflow.workflow_id, workflow.revision)
-        workflow = self.service.review_parameters(workflow.workflow_id, workflow.revision)
-        workflow = self.service.dry_run(workflow.workflow_id, workflow.revision)
-        self.assertTrue(workflow.dry_run_report and workflow.dry_run_report.valid)
-        self.assertEqual(
-            workflow.dry_run_report.commands[0].execution_mode
-            if workflow.dry_run_report
-            else None,
-            "planning",
-        )
+        self.assertEqual(workflow.status, "awaiting_input_binding")
+        with self.assertRaises(ValueError):
+            self.service.review_parameters(workflow.workflow_id, workflow.revision)
 
     def test_capability_tree_covers_every_loaded_skill(self) -> None:
         tree = self.service.capability_tree
@@ -389,8 +366,8 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(set(tree.covered_skill_ids()), loaded)
         stats = tree.stats()
         self.assertEqual(stats["skills_covered"], 103)
-        self.assertEqual(stats["structured"], 10)
-        self.assertEqual(stats["planning"], 104)
+        self.assertEqual(stats["structured"], 90)
+        self.assertEqual(stats["planning"], 24)
         self.assertEqual(stats["advisory"], 0)
         self.assertEqual(stats["capabilities"], 114)
         self.assertEqual(
@@ -399,11 +376,11 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
         )
         registry_stats = self.service.registry.stats()
         self.assertEqual(registry_stats["capabilities"], 114)
-        self.assertEqual(registry_stats["methods"], 128)
+        self.assertEqual(registry_stats["methods"], 374)
         self.assertEqual(registry_stats["planning_methods"], 105)
-        self.assertEqual(registry_stats["runner_methods"], 23)
-        self.assertEqual(registry_stats["evidence_backed_methods"], 128)
-        self.assertEqual(registry_stats["artifact_types"], 31)
+        self.assertEqual(registry_stats["runner_methods"], 269)
+        self.assertEqual(registry_stats["evidence_backed_methods"], 374)
+        self.assertEqual(registry_stats["artifact_types"], 39)
         self.assertGreaterEqual(registry_stats["reference_commands"], 300)
         for method in self.service.registry.all_methods():
             self.assertIn(method.structure_level, {"evidence", "reviewed"})
@@ -435,7 +412,7 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
             methods = self.service.registry.methods_for(capability_id)
             expected = (
                 "structured"
-                if all(method.execution_mode == "runner" for method in methods)
+                if (capability_id.startswith("skill.") and any(method.execution_mode == "runner" for method in methods)) or all(method.execution_mode == "runner" for method in methods)
                 else "planning"
             )
             self.assertEqual(node.execution_level if node else None, expected)
@@ -711,7 +688,8 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
 
         raw_methods = self.service.registry.methods_for("skill.smri-skill")
         selectable = self.service.registry.selectable_methods_for("skill.smri-skill")
-        self.assertEqual([method.method_id for method in raw_methods], ["smri-skill-guided"])
+        self.assertIn("smri-skill-guided", [method.method_id for method in raw_methods])
+        self.assertTrue(any(method.runner_id == "reviewed.fsl-tool.fast" for method in selectable))
         self.assertGreater(len(selectable), 1)
         self.assertIsNone(self.service.capability_tree.node("smri.tissue-segmentation"))
 
@@ -723,23 +701,13 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(step.selection, "user")
         self.assertIsNone(step.selected_method_id)
         self.assertIn("备选方法", message)
-        self.assertEqual(
-            {method.label for method in step.method_options},
-            {
-                "Fast structural preprocessing",
-                "FreeSurfer Autorecon2 (subcortical segmentation & surface extraction)",
-            },
-        )
-        self.assertNotIn(
-            "WMH lesion segmentation",
-            {method.label for method in step.method_options},
-        )
+        self.assertTrue(any(method.runner_id == "reviewed.fsl-tool.fast" for method in step.method_options))
+        self.assertNotIn("WMH lesion segmentation", {method.label for method in step.method_options})
         for method in step.method_options:
-            operation = next(
-                parameter for parameter in method.parameters if parameter.id == "operation"
-            )
-            self.assertEqual(len(operation.options), 1)
-            self.assertEqual(operation.default, operation.options[0].value)
+            operation = next((p for p in method.parameters if p.id == "operation"), None)
+            if operation is not None:
+                self.assertEqual(len(operation.options), 1)
+                self.assertEqual(operation.default, operation.options[0].value)
 
     async def test_explicit_freesurfer_english_request_overrides_stale_wmh(self) -> None:
         request = ChatRequest(

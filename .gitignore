@@ -26,3 +26,6 @@ outputs/
 datasets/
 deploy/native-backend.env
 .conda/
+
+# Isolated development test scratch
+.test-tmp/

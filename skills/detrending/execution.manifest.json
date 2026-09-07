@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "skill_id": "detrending",
+  "provides": [
+    {
+      "capability": "skill.detrending",
+      "method_id": "reviewed-denoise-nilearn-tool",
+      "label": "混杂回归与去趋势",
+      "description": "使用已审核实现执行 混杂回归与去趋势；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.nilearn-tool.denoise",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "tr",
+          "argument": "tr",
+          "label": "TR（秒）",
+          "type": "number",
+          "default": 2.0,
+          "required": true,
+          "options": [],
+          "minimum": 0.01,
+          "maximum": 100
+        },
+        {
+          "id": "detrend",
+          "argument": "detrend",
+          "label": "detrend",
+          "type": "boolean",
+          "default": true,
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "no_standardize",
+          "argument": "no-standardize",
+          "label": "no-standardize",
+          "type": "boolean",
+          "default": false,
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "bold",
+          "label": "预处理 BOLD 影像",
+          "required": true,
+          "binding": "file",
+          "type": "bold_image"
+        },
+        {
+          "id": "confounds",
+          "label": "混杂变量表",
+          "required": false,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "mask",
+          "label": "脑掩膜",
+          "required": false,
+          "binding": "file",
+          "type": "brain_mask"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_cleaned_bold_nii_gz",
+          "type": "bold_image",
+          "label": "cleaned_bold.nii.gz",
+          "path_template": "results/cleaned_bold.nii.gz"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "skills/nilearn-tool/scripts/denoise_timeseries_reference.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    }
+  ]
+}

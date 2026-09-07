@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "skill_id": "connectome-discovery",
+  "provides": [
+    {
+      "capability": "skill.connectome-discovery",
+      "method_id": "reviewed-rank-connectome-discovery",
+      "label": "连接图相似度与置换检验（需交换性假设）",
+      "description": "使用已审核实现执行 连接图相似度与置换检验（需交换性假设）；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.connectome-discovery.rank",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "atlas",
+          "argument": "atlas",
+          "label": "图谱与节点顺序说明",
+          "type": "string",
+          "default": null,
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "space",
+          "argument": "space",
+          "label": "坐标空间",
+          "type": "string",
+          "default": null,
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "permutations",
+          "argument": "permutations",
+          "label": "permutations",
+          "type": "integer",
+          "default": 1000,
+          "required": true,
+          "options": [],
+          "minimum": 10,
+          "maximum": 100000
+        },
+        {
+          "id": "seed",
+          "argument": "seed",
+          "label": "seed",
+          "type": "integer",
+          "default": 123,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 2147483647
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "NPZ（reference、candidates、target_names）",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_ranking_csv",
+          "type": "generated_file",
+          "label": "ranking.csv",
+          "path_template": "results/ranking.csv"
+        },
+        {
+          "id": "file_method_json",
+          "type": "generated_file",
+          "label": "method.json",
+          "path_template": "results/method.json"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "models/connectome_discovery/run.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    }
+  ]
+}

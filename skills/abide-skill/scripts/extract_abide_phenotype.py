@@ -53,7 +53,7 @@ def read_phenotype_file(file_path: Path) -> Optional["pd.DataFrame"]:
     """Read an ABIDE phenotype file."""
     try:
         # Try tab first, then comma
-        df = pd.read_csv(file_path, sep=None, engine="python", low_memory=False)
+        df = pd.read_csv(file_path, sep=None, engine="python")
         return df
     except Exception as e:
         print(f"[WARN] Failed to read {file_path}: {e}", file=sys.stderr)

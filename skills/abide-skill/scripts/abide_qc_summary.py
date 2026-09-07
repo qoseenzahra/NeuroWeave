@@ -122,7 +122,7 @@ def collect_freesurfer_qc(freesurfer_dir: Path) -> Dict[str, Dict[str, float]]:
         metrics = {"completed": completed}
 
         # Try to read aseg.stats
-        aseg_matches = list(freesurfer_dir.rglob(f"{subject_id}**/aseg.stats"))
+        aseg_matches = list(freesurfer_dir.rglob(f"{subject_id}/**/aseg.stats"))
         if aseg_matches:
             try:
                 with open(aseg_matches[0], "r", encoding="utf-8", errors="ignore") as f:
@@ -156,7 +156,7 @@ def collect_abide_native_qc(phenotype_file: Path) -> Dict[str, Dict[str, float]]
         return qc
 
     try:
-        df = pd.read_csv(phenotype_file, sep=None, engine="python", low_memory=False)
+        df = pd.read_csv(phenotype_file, sep=None, engine="python")
     except Exception as e:
         print(f"[WARN] Failed to read {phenotype_file}: {e}", file=sys.stderr)
         return qc

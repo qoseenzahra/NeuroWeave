@@ -37,7 +37,7 @@ def normalize_subject_id(raw_id) -> str:
 
 def read_phenotype_file(file_path: Path) -> Optional["pd.DataFrame"]:
     try:
-        return pd.read_csv(file_path, sep=None, engine="python", low_memory=False)
+        return pd.read_csv(file_path, sep=None, engine="python")
     except Exception as e:
         print(f"[WARN] Failed to read {file_path}: {e}", file=sys.stderr)
         return None

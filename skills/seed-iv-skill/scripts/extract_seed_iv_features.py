@@ -67,7 +67,7 @@ def compute_psd_features(data: np.ndarray, sfreq: float = 200.0) -> np.ndarray:
         freqs, psd = welch(signal, fs=sfreq, nperseg=min(256, len(signal)))
         for j, (band_name, (low, high)) in enumerate(bands.items()):
             mask = (freqs >= low) & (freqs <= high)
-            psd_features[ch, j] = np.trapz(psd[mask], freqs[mask]) if mask.any() else 0.0
+            psd_features[ch, j] = np.trapezoid(psd[mask], freqs[mask]) if mask.any() else 0.0
 
     return psd_features
 

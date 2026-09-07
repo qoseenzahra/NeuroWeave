@@ -1,0 +1,186 @@
+{
+  "schema_version": 1,
+  "skill_id": "glm",
+  "provides": [
+    {
+      "capability": "skill.glm",
+      "method_id": "reviewed-task-glm-nilearn-tool",
+      "label": "任务态一级 GLM",
+      "description": "使用已审核实现执行 任务态一级 GLM；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.nilearn-tool.task-glm",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "tr",
+          "argument": "tr",
+          "label": "TR（秒）",
+          "type": "number",
+          "default": 2.0,
+          "required": true,
+          "options": [],
+          "minimum": 0.01,
+          "maximum": 100
+        },
+        {
+          "id": "contrast",
+          "argument": "contrast",
+          "label": "对比表达式",
+          "type": "string",
+          "default": null,
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "bold",
+          "label": "预处理 BOLD 影像",
+          "required": true,
+          "binding": "file",
+          "type": "bold_image"
+        },
+        {
+          "id": "events",
+          "label": "事件表",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "confounds",
+          "label": "混杂变量",
+          "required": false,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "mask",
+          "label": "脑掩膜",
+          "required": false,
+          "binding": "file",
+          "type": "brain_mask"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_z_map_nii_gz",
+          "type": "z_stat_map",
+          "label": "z_map.nii.gz",
+          "path_template": "results/z_map.nii.gz"
+        },
+        {
+          "id": "file_effect_map_nii_gz",
+          "type": "contrast_image",
+          "label": "effect_map.nii.gz",
+          "path_template": "results/effect_map.nii.gz"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "first-level-glm-task-based"
+      ],
+      "source_references": [
+        {
+          "path": "skills/nilearn-tool/scripts/task_glm_reference.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.glm",
+      "method_id": "reviewed-group-glm-nilearn-tool",
+      "label": "组水平 GLM",
+      "description": "使用已审核实现执行 组水平 GLM；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.nilearn-tool.group-glm",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "contrast",
+          "argument": "contrast",
+          "label": "对比表达式",
+          "type": "string",
+          "default": null,
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "contrast_maps",
+          "label": "对比影像路径清单",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "design_matrix",
+          "label": "组设计矩阵",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "mask",
+          "label": "脑掩膜",
+          "required": false,
+          "binding": "file",
+          "type": "brain_mask"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_second_level_z_map_nii_gz",
+          "type": "generated_file",
+          "label": "second_level_z_map.nii.gz",
+          "path_template": "results/second_level_z_map.nii.gz"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "group-level-analysis"
+      ],
+      "source_references": [
+        {
+          "path": "skills/nilearn-tool/scripts/second_level_glm_reference.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    }
+  ]
+}

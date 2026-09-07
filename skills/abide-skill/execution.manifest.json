@@ -1,0 +1,273 @@
+{
+  "schema_version": 1,
+  "skill_id": "abide-skill",
+  "provides": [
+    {
+      "capability": "skill.abide-skill",
+      "method_id": "reviewed-abide-qc-summary-abide-skill",
+      "label": "abide 质控汇总",
+      "description": "使用已审核实现执行 abide 质控汇总；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.abide-skill.abide-qc-summary",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "fd_threshold",
+          "argument": "fd-threshold",
+          "label": "fd-threshold",
+          "type": "number",
+          "default": 0.3,
+          "required": false,
+          "options": [],
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        {
+          "id": "max_fd_threshold",
+          "argument": "max-fd-threshold",
+          "label": "max-fd-threshold",
+          "type": "number",
+          "default": 5.0,
+          "required": false,
+          "options": [],
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        {
+          "id": "coverage_threshold",
+          "argument": "coverage-threshold",
+          "label": "coverage-threshold",
+          "type": "number",
+          "default": 0.8,
+          "required": false,
+          "options": [],
+          "minimum": 0,
+          "maximum": 1000000
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "fmriprep_dir",
+          "label": "Path to fMRIPrep output directory",
+          "required": false,
+          "binding": "folder",
+          "type": "analysis_input"
+        },
+        {
+          "id": "freesurfer_dir",
+          "label": "Path to FreeSurfer output directory",
+          "required": false,
+          "binding": "folder",
+          "type": "analysis_input"
+        },
+        {
+          "id": "raw_qc",
+          "label": "Path to ABIDE phenotype CSV with QC flags",
+          "required": false,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_output_csv",
+          "type": "generated_file",
+          "label": "output.csv",
+          "path_template": "results/output.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "qc-summary"
+      ],
+      "source_references": [
+        {
+          "path": "skills/abide-skill/scripts/abide_qc_summary.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.abide-skill",
+      "method_id": "reviewed-extract-abide-phenotype-abide-skill",
+      "label": "abide 表型/刺激提取",
+      "description": "使用已审核实现执行 abide 表型/刺激提取；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.abide-skill.extract-abide-phenotype",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "columns",
+          "argument": "columns",
+          "label": "columns",
+          "type": "string",
+          "default": null,
+          "required": false,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "missing_threshold",
+          "argument": "missing-threshold",
+          "label": "missing-threshold",
+          "type": "number",
+          "default": 0.5,
+          "required": false,
+          "options": [],
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        {
+          "id": "abide_version",
+          "argument": "abide-version",
+          "label": "abide-version",
+          "type": "string",
+          "default": "I",
+          "required": false,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "phenotype_dir",
+          "label": "Directory containing ABIDE phenotype CSV files",
+          "required": false,
+          "binding": "folder",
+          "type": "analysis_input"
+        },
+        {
+          "id": "phenotype_file",
+          "label": "Direct path to ABIDE phenotype CSV file",
+          "required": false,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "imaging_ids",
+          "label": "Path to BIDS participants.tsv or file with imaging subject IDs",
+          "required": false,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_output_csv",
+          "type": "generated_file",
+          "label": "output.csv",
+          "path_template": "results/output.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "phenotype-extraction",
+        "stimulus-extraction"
+      ],
+      "source_references": [
+        {
+          "path": "skills/abide-skill/scripts/extract_abide_phenotype.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.abide-skill",
+      "method_id": "reviewed-reorganize-abide-abide-skill",
+      "label": "abide 复制整理为 BIDS 目录",
+      "description": "使用已审核实现执行 abide 复制整理为 BIDS 目录；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.abide-skill.reorganize-abide",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "version",
+          "argument": "version",
+          "label": "version",
+          "type": "string",
+          "default": "I",
+          "required": false,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "Path to ABIDE raw data directory",
+          "required": true,
+          "binding": "folder",
+          "type": "analysis_input"
+        },
+        {
+          "id": "phenotype",
+          "label": "Path to ABIDE phenotype CSV file",
+          "required": false,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "bids-reorganization",
+        "data-reorganization"
+      ],
+      "source_references": [
+        {
+          "path": "skills/abide-skill/scripts/reorganize_abide.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    }
+  ]
+}

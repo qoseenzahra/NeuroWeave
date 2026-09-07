@@ -60,7 +60,7 @@ def main() -> int:
     dataframes = []
     for f in phenotype_files:
         try:
-            df = pd.read_csv(f, sep=None, engine="python", low_memory=False)
+            df = pd.read_csv(f, sep=None, engine="python")
             rename = {k: v for k, v in COLUMN_MAP.items() if k in df.columns and v not in df.columns}
             df = df.rename(columns=rename)
             dataframes.append(df)

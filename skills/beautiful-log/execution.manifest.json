@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "skill_id": "beautiful-log",
+  "provides": [
+    {
+      "capability": "skill.beautiful-log",
+      "method_id": "reviewed-beautiful-log-beautiful-log",
+      "label": "beautiful-log 日志报告",
+      "description": "使用已审核实现执行 beautiful-log 日志报告；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.beautiful-log.beautiful-log",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "title",
+          "argument": "title",
+          "label": "title",
+          "type": "string",
+          "default": "NeuroClaw Conversation Log",
+          "required": false,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "Input transcript file (.json, .jsonl, .md, .txt)",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_output_html",
+          "type": "generated_file",
+          "label": "output.html",
+          "path_template": "results/output.html"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "phenotype-extraction",
+        "stimulus-extraction"
+      ],
+      "source_references": [
+        {
+          "path": "skills/beautiful-log/scripts/beautiful_log.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    }
+  ]
+}

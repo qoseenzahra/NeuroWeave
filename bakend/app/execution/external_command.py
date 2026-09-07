@@ -138,6 +138,10 @@ class ExternalCommandRunner:
             try:
                 for line in process.stdout:
                     lines.put(line.rstrip())
+            except (OSError, ValueError):
+                # Cancellation can close the pipe while the reader is waiting.
+                if not context.cancel_event.is_set():
+                    raise
             finally:
                 lines.put(None)
 
@@ -173,6 +177,7 @@ class ExternalCommandRunner:
         finally:
             if process.poll() is None:
                 self._terminate(process)
+            reader.join(timeout=2)
             if process.stdout is not None:
                 process.stdout.close()
             if log_handle is not None:

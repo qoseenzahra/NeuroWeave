@@ -25,6 +25,7 @@ from .runners.modality_scripts import AslCbfRunner, NiftiInspectRunner, PetSuvrR
 from .runners.nii2dcm import Nii2DcmRunner
 from .runners.report import ReportBuilderRunner
 from .runners.table_clean import TableCleanRunner
+from .runners.reviewed import ReviewedRunner, specifications
 
 
 class RunnerRegistry:
@@ -55,6 +56,7 @@ class RunnerRegistry:
             ReportBuilderRunner(),
             TableCleanRunner(),
         ]
+        runners.extend(ReviewedRunner(spec) for spec in specifications().values())
         self._runners = {runner.runner_id: runner for runner in runners}
 
     def ids(self) -> set[str]:

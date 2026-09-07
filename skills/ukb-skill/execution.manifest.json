@@ -1,0 +1,381 @@
+{
+  "schema_version": 1,
+  "skill_id": "ukb-skill",
+  "provides": [
+    {
+      "capability": "skill.ukb-skill",
+      "method_id": "reviewed-survival-dataset-ukb-skill",
+      "label": "UKB 生存分析数据表",
+      "description": "使用已审核实现执行 UKB 生存分析数据表；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.ukb-skill.survival-dataset",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "disease",
+          "argument": "disease",
+          "label": "疾病名称/ICD 前缀",
+          "type": "string",
+          "default": null,
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "censor_date",
+          "argument": "censor-date",
+          "label": "censor-date",
+          "type": "string",
+          "default": "2023-10-31",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "baseline_col",
+          "argument": "baseline-col",
+          "label": "baseline-col",
+          "type": "string",
+          "default": "p53_i0",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "UKB 原始表",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_survival_csv",
+          "type": "generated_file",
+          "label": "survival.csv",
+          "path_template": "results/survival.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "survival-dataset"
+      ],
+      "source_references": [
+        {
+          "path": "skills/ukb-skill/scripts/build_ukb_survival.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.ukb-skill",
+      "method_id": "reviewed-extract-ukb-cases-ukb-skill",
+      "label": "ukb 表型/刺激提取",
+      "description": "使用已审核实现执行 ukb 表型/刺激提取；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.ukb-skill.extract-ukb-cases",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "disease",
+          "argument": "disease",
+          "label": "disease",
+          "type": "string",
+          "default": null,
+          "required": false,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "custom_icd",
+          "argument": "custom-icd",
+          "label": "custom-icd",
+          "type": "string",
+          "default": null,
+          "required": false,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "sources",
+          "argument": "sources",
+          "label": "sources",
+          "type": "string",
+          "default": "ICD10,ICD9,Death",
+          "required": false,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "list_diseases",
+          "argument": "list-diseases",
+          "label": "list-diseases",
+          "type": "boolean",
+          "default": false,
+          "required": false,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "Path to UKB raw CSV",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_output_csv",
+          "type": "generated_file",
+          "label": "output.csv",
+          "path_template": "results/output.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "phenotype-extraction",
+        "stimulus-extraction"
+      ],
+      "source_references": [
+        {
+          "path": "skills/ukb-skill/scripts/extract_ukb_cases.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.ukb-skill",
+      "method_id": "reviewed-extract-ukb-phenotype-ukb-skill",
+      "label": "ukb 表型/刺激提取",
+      "description": "使用已审核实现执行 ukb 表型/刺激提取；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.ukb-skill.extract-ukb-phenotype",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "variables",
+          "argument": "variables",
+          "label": "variables",
+          "type": "string",
+          "default": null,
+          "required": false,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "drop_missing",
+          "argument": "drop-missing",
+          "label": "drop-missing",
+          "type": "boolean",
+          "default": false,
+          "required": false,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "list_variables",
+          "argument": "list-variables",
+          "label": "list-variables",
+          "type": "boolean",
+          "default": false,
+          "required": false,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "Path to UKB raw CSV",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "custom_mapping",
+          "label": "JSON file with custom variable mappings",
+          "required": false,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_output_csv",
+          "type": "generated_file",
+          "label": "output.csv",
+          "path_template": "results/output.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "phenotype-extraction",
+        "stimulus-extraction"
+      ],
+      "source_references": [
+        {
+          "path": "skills/ukb-skill/scripts/extract_ukb_phenotype.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.ukb-skill",
+      "method_id": "reviewed-ukb-qc-summary-ukb-skill",
+      "label": "ukb 质控汇总",
+      "description": "使用已审核实现执行 ukb 质控汇总；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.ukb-skill.ukb-qc-summary",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "imaging_check",
+          "argument": "imaging-check",
+          "label": "imaging-check",
+          "type": "boolean",
+          "default": false,
+          "required": false,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "age_min",
+          "argument": "age-min",
+          "label": "age-min",
+          "type": "number",
+          "default": null,
+          "required": false,
+          "options": [],
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        {
+          "id": "age_max",
+          "argument": "age-max",
+          "label": "age-max",
+          "type": "number",
+          "default": null,
+          "required": false,
+          "options": [],
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        {
+          "id": "required_cols",
+          "argument": "required-cols",
+          "label": "required-cols",
+          "type": "string",
+          "default": null,
+          "required": false,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "Path to UKB raw CSV",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_output_csv",
+          "type": "generated_file",
+          "label": "output.csv",
+          "path_template": "results/output.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "qc-summary"
+      ],
+      "source_references": [
+        {
+          "path": "skills/ukb-skill/scripts/ukb_qc_summary.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    }
+  ]
+}

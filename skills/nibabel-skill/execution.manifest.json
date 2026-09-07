@@ -10,24 +10,258 @@
       "description": "读取 NIfTI 头、维度、数据类型、体素尺寸与仿射矩阵，并可保存规范化副本。",
       "runner_id": "nibabel.inspect",
       "execution_mode": "runner",
-      "input_types": ["dataset_folder", "imaging_input"],
-      "output_types": ["execution_log", "generated_file"],
+      "input_types": [
+        "dataset_folder",
+        "imaging_input"
+      ],
+      "output_types": [
+        "execution_log",
+        "generated_file"
+      ],
       "default_recommended": true,
       "default_reason": "轻量检查不会修改输入影像，适合在处理前确认文件空间信息。",
       "parameters": [
-        {"id": "save_copy", "argument": "copy-output", "label": "保存 NIfTI 副本", "description": "使用 nibabel 重新写出一份影像到隔离输出目录；默认只检查。", "type": "boolean", "control": "switch", "level": "basic", "group": "输出", "required": true, "default": false}
+        {
+          "id": "save_copy",
+          "argument": "copy-output",
+          "label": "保存 NIfTI 副本",
+          "description": "使用 nibabel 重新写出一份影像到隔离输出目录；默认只检查。",
+          "type": "boolean",
+          "control": "switch",
+          "level": "basic",
+          "group": "输出",
+          "required": true,
+          "default": false
+        }
       ],
       "input_slots": [
-        {"id": "image", "type": "imaging_input", "label": "NIfTI 影像", "description": "要检查的 .nii 或 .nii.gz 文件。", "required": true, "binding": "file", "formats": [".nii", ".nii.gz"], "source_options": ["dataset", "existing_path", "upstream_output"], "validation": ["path_exists"]}
+        {
+          "id": "image",
+          "type": "imaging_input",
+          "label": "NIfTI 影像",
+          "description": "要检查的 .nii 或 .nii.gz 文件。",
+          "required": true,
+          "binding": "file",
+          "formats": [
+            ".nii",
+            ".nii.gz"
+          ],
+          "source_options": [
+            "dataset",
+            "existing_path",
+            "upstream_output"
+          ],
+          "validation": [
+            "path_exists"
+          ]
+        }
       ],
       "output_slots": [
-        {"id": "inspection", "type": "execution_log", "label": "NIfTI 头信息", "description": "头、维度、数据类型、体素尺寸和仿射矩阵。", "primary": true, "path_template": "nifti-inspection.log"},
-        {"id": "copy", "type": "generated_file", "label": "NIfTI 副本", "description": "可选重新写出的影像。", "path_template": "nifti-copy.nii.gz", "generated_when": {"save_copy": [true]}}
+        {
+          "id": "inspection",
+          "type": "execution_log",
+          "label": "NIfTI 头信息",
+          "description": "头、维度、数据类型、体素尺寸和仿射矩阵。",
+          "primary": true,
+          "path_template": "nifti-inspection.log"
+        },
+        {
+          "id": "copy",
+          "type": "generated_file",
+          "label": "NIfTI 副本",
+          "description": "可选重新写出的影像。",
+          "path_template": "nifti-copy.nii.gz",
+          "generated_when": {
+            "save_copy": [
+              true
+            ]
+          }
+        }
       ],
       "structure_level": "reviewed",
       "source_references": [
-        {"path": "skills/nibabel-skill/scripts/nifti_inspection_reference.py", "label": "Nibabel 实现脚本", "kind": "script", "line_start": 1},
-        {"path": "skills/nibabel-skill/SKILL.md", "label": "Nibabel Skill", "kind": "skill", "line_start": 1}
+        {
+          "path": "skills/nibabel-skill/scripts/nifti_inspection_reference.py",
+          "label": "Nibabel 实现脚本",
+          "kind": "script",
+          "line_start": 1
+        },
+        {
+          "path": "skills/nibabel-skill/SKILL.md",
+          "label": "Nibabel Skill",
+          "kind": "skill",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.nibabel-skill",
+      "method_id": "reviewed-atlas-coordinates-nibabel-skill",
+      "label": "图谱坐标提取",
+      "description": "使用已审核实现执行 图谱坐标提取；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.nibabel-skill.atlas-coordinates",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [],
+      "input_slots": [
+        {
+          "id": "atlas",
+          "label": "分区图谱",
+          "required": true,
+          "binding": "file",
+          "type": "label_image"
+        },
+        {
+          "id": "labels",
+          "label": "图谱标签文本",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_coordinates_csv",
+          "type": "generated_file",
+          "label": "coordinates.csv",
+          "path_template": "results/coordinates.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "atlas-coordinate-extraction"
+      ],
+      "source_references": [
+        {
+          "path": "skills/nibabel-skill/scripts/atlas_coordinate_reference.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.nibabel-skill",
+      "method_id": "reviewed-inspect-nibabel-skill",
+      "label": "NIfTI 头信息与空间检查",
+      "description": "使用已审核实现执行 NIfTI 头信息与空间检查；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.nibabel-skill.inspect",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [],
+      "input_slots": [
+        {
+          "id": "image",
+          "label": "NIfTI",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_inspection_json",
+          "type": "generated_file",
+          "label": "inspection.json",
+          "path_template": "results/inspection.json"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "nifti-inspection"
+      ],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/image_summary_worker.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.nibabel-skill",
+      "method_id": "reviewed-surface-nibabel-skill",
+      "label": "FreeSurfer 表面与分区读取",
+      "description": "使用已审核实现执行 FreeSurfer 表面与分区读取；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.nibabel-skill.surface",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [],
+      "input_slots": [
+        {
+          "id": "surf",
+          "label": "表面",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "annot",
+          "label": "标注",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_surface_npz",
+          "type": "generated_file",
+          "label": "surface.npz",
+          "path_template": "results/surface.npz"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "freesurfer-io"
+      ],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/image_summary_worker.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
       ]
     }
   ]

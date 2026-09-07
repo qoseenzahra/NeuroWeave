@@ -1,0 +1,240 @@
+{
+  "schema_version": 1,
+  "skill_id": "mschallenge-skill",
+  "provides": [
+    {
+      "capability": "skill.mschallenge-skill",
+      "method_id": "reviewed-analyze-lesions-mschallenge-skill",
+      "label": "病灶负荷统计",
+      "description": "使用已审核实现执行 病灶负荷统计；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.mschallenge-skill.analyze-lesions",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "病灶影像目录",
+          "required": true,
+          "binding": "folder",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_lesions_csv",
+          "type": "generated_file",
+          "label": "lesions.csv",
+          "path_template": "results/lesions.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "lesion-analysis"
+      ],
+      "source_references": [
+        {
+          "path": "skills/mschallenge-skill/scripts/analyze_lesions.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.mschallenge-skill",
+      "method_id": "reviewed-longitudinal-lesion-mschallenge-skill",
+      "label": "纵向病灶变化",
+      "description": "使用已审核实现执行 纵向病灶变化；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.mschallenge-skill.longitudinal-lesion",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "病灶影像目录",
+          "required": true,
+          "binding": "folder",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_lesions_csv",
+          "type": "generated_file",
+          "label": "lesions.csv",
+          "path_template": "results/lesions.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "longitudinal-analysis"
+      ],
+      "source_references": [
+        {
+          "path": "skills/mschallenge-skill/scripts/longitudinal_lesion.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.mschallenge-skill",
+      "method_id": "reviewed-mschallenge-qc-summary-mschallenge-skill",
+      "label": "mschallenge 质控汇总",
+      "description": "使用已审核实现执行 mschallenge 质控汇总；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.mschallenge-skill.mschallenge-qc-summary",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "no_ground_truth",
+          "argument": "no-ground-truth",
+          "label": "no-ground-truth",
+          "type": "boolean",
+          "default": false,
+          "required": false,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "Path to MS Challenge directory",
+          "required": true,
+          "binding": "folder",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_output_csv",
+          "type": "generated_file",
+          "label": "output.csv",
+          "path_template": "results/output.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "qc-summary"
+      ],
+      "source_references": [
+        {
+          "path": "skills/mschallenge-skill/scripts/mschallenge_qc_summary.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.mschallenge-skill",
+      "method_id": "reviewed-validate-mschallenge-mschallenge-skill",
+      "label": "mschallenge 数据校验",
+      "description": "使用已审核实现执行 mschallenge 数据校验；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.mschallenge-skill.validate-mschallenge",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "no_ground_truth",
+          "argument": "no-ground-truth",
+          "label": "no-ground-truth",
+          "type": "boolean",
+          "default": false,
+          "required": false,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "Path to MS Challenge directory",
+          "required": true,
+          "binding": "folder",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_output_csv",
+          "type": "generated_file",
+          "label": "output.csv",
+          "path_template": "results/output.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "bids-validation",
+        "data-validation",
+        "eeg-validation"
+      ],
+      "source_references": [
+        {
+          "path": "skills/mschallenge-skill/scripts/validate_mschallenge.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    }
+  ]
+}

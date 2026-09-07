@@ -157,7 +157,8 @@ def main() -> int:
 
                     if args.feature_type in ("ratio", "both"):
                         ratios = compute_vigilance_ratio(epoch_data, sfreq)
-                        row = {"subject": subj, "file": eeg_file.name, "epoch": epoch_idx, "feature": "ratio"}
+                        row = all_results.pop() if args.feature_type == "both" else {"subject": subj, "file": eeg_file.name, "epoch": epoch_idx}
+                        row["feature"] = args.feature_type
                         for ch_idx in range(ratios.shape[0]):
                             for ratio_idx, ratio_name in enumerate(ratio_names):
                                 row[f"ch{ch_idx}_{ratio_name}"] = f"{ratios[ch_idx, ratio_idx]:.6f}"

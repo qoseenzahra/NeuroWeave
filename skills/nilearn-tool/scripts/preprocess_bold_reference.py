@@ -5,8 +5,7 @@ from pathlib import Path
 
 import nibabel as nib
 import numpy as np
-from nilearn.datasets import load_mni152_template
-from nilearn.image import resample_to_img, smooth_img
+from nilearn.image import smooth_img
 from scipy.signal import butter, filtfilt
 
 
@@ -19,6 +18,8 @@ def bandpass_filter(image: nib.spatialimages.SpatialImage, tr: float, high_pass:
     data = image.get_fdata()
     n_timepoints = data.shape[3]
     nyquist = 0.5 / tr
+    if not 0 < high_pass < low_pass < nyquist:
+        raise ValueError('Require 0 < high_pass < low_pass < Nyquist (0.5 / TR)')
     b_coef, a_coef = butter(2, [high_pass / nyquist, low_pass / nyquist], btype="band")
 
     flat = data.reshape(-1, n_timepoints)
@@ -38,12 +39,13 @@ def preprocess_bold(
     n_dummies: int,
 ) -> None:
     image = nib.load(str(bold_path))
+    if len(image.shape) != 4 or not 0 <= n_dummies < image.shape[-1] - 15:
+        raise ValueError('Require 4D BOLD and at least 16 retained volumes')
     processed = drop_dummies(image, n_dummies=n_dummies)
     processed = smooth_img(processed, fwhm=fwhm)
     processed = bandpass_filter(processed, tr=tr, high_pass=high_pass, low_pass=low_pass)
 
-    template = load_mni152_template(resolution=2)
-    processed = resample_to_img(processed, template, interpolation="linear")
+    # Filtering/smoothing preserves the input space. Resampling alone is not registration.
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     nib.save(processed, str(output_path))

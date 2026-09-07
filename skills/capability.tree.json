@@ -245,7 +245,7 @@
                 "skill_ids": [
                   "abcd-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.aomic-skill",
@@ -265,7 +265,7 @@
                 "skill_ids": [
                   "aomic-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.camcan-skill",
@@ -286,7 +286,7 @@
                 "skill_ids": [
                   "camcan-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.hbn-skill",
@@ -306,7 +306,7 @@
                 "skill_ids": [
                   "hbn-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.hcpa-skill",
@@ -324,7 +324,7 @@
                 "skill_ids": [
                   "hcpa-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.hcpd-skill",
@@ -342,7 +342,7 @@
                 "skill_ids": [
                   "hcpd-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.hcpya-skill",
@@ -362,7 +362,7 @@
                 "skill_ids": [
                   "hcpya-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.ixi-skill",
@@ -383,7 +383,7 @@
                 "skill_ids": [
                   "ixi-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.pnc-skill",
@@ -402,7 +402,7 @@
                 "skill_ids": [
                   "pnc-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.ukb-skill",
@@ -419,7 +419,7 @@
                 "skill_ids": [
                   "ukb-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               }
             ]
           },
@@ -447,7 +447,7 @@
                 "skill_ids": [
                   "abide-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.adhd200-skill",
@@ -463,7 +463,7 @@
                 "skill_ids": [
                   "adhd200-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.adni-skill",
@@ -482,7 +482,7 @@
                 "skill_ids": [
                   "adni-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.aibl-skill",
@@ -503,7 +503,7 @@
                 "skill_ids": [
                   "aibl-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.cobre-skill",
@@ -519,7 +519,7 @@
                 "skill_ids": [
                   "cobre-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.hcpep-skill",
@@ -538,7 +538,7 @@
                 "skill_ids": [
                   "hcpep-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.mnd-skill",
@@ -559,7 +559,7 @@
                 "skill_ids": [
                   "mnd-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.mschallenge-skill",
@@ -580,7 +580,7 @@
                 "skill_ids": [
                   "mschallenge-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.nifd-skill",
@@ -600,7 +600,7 @@
                 "skill_ids": [
                   "nifd-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.oasis-skill",
@@ -621,7 +621,7 @@
                 "skill_ids": [
                   "oasis-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.ppmi-skill",
@@ -642,7 +642,7 @@
                 "skill_ids": [
                   "ppmi-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.rest-mneta-mdd-skill",
@@ -663,7 +663,7 @@
                 "skill_ids": [
                   "rest-mneta-mdd-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.tcp-skill",
@@ -683,7 +683,7 @@
                 "skill_ids": [
                   "tcp-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.ucla-cnp-skill",
@@ -704,7 +704,7 @@
                 "skill_ids": [
                   "ucla-cnp-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               }
             ]
           },
@@ -727,7 +727,7 @@
                 "skill_ids": [
                   "bold5000-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.dmt-har-med-skill",
@@ -743,7 +743,7 @@
                 "skill_ids": [
                   "dmt-har-med-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.nsd-skill",
@@ -764,7 +764,7 @@
                 "skill_ids": [
                   "nsd-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.scan-skill",
@@ -780,7 +780,7 @@
                 "skill_ids": [
                   "scan-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               }
             ]
           },
@@ -806,7 +806,7 @@
                 "skill_ids": [
                   "seed-iv-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.seed-vig-skill",
@@ -826,7 +826,7 @@
                 "skill_ids": [
                   "seed-vig-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               }
             ]
           }
@@ -862,7 +862,7 @@
                 "skill_ids": [
                   "asl-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.dwi-skill",
@@ -886,7 +886,7 @@
                 "skill_ids": [
                   "dwi-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.eeg-skill",
@@ -904,7 +904,7 @@
                 "skill_ids": [
                   "eeg-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.fmri-skill",
@@ -926,7 +926,7 @@
                 "skill_ids": [
                   "fmri-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.meg-skill",
@@ -945,7 +945,7 @@
                 "skill_ids": [
                   "meg-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.pet-skill",
@@ -966,7 +966,7 @@
                 "skill_ids": [
                   "pet-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.smri-skill",
@@ -989,7 +989,7 @@
                 "skill_ids": [
                   "smri-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               }
             ]
           }
@@ -1020,7 +1020,7 @@
                 "skill_ids": [
                   "dataset-inspector"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.table-cleaning",
@@ -1038,7 +1038,7 @@
                 "skill_ids": [
                   "table-cleaning"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.image-batch-processing",
@@ -1051,7 +1051,7 @@
                 "skill_ids": [
                   "image-batch-processing"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               }
             ]
           },
@@ -1081,7 +1081,7 @@
                 "skill_ids": [
                   "bids-organizer"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.dcm2nii",
@@ -1101,7 +1101,7 @@
                 "skill_ids": [
                   "dcm2nii"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.nii2dcm",
@@ -1119,7 +1119,7 @@
                 "skill_ids": [
                   "nii2dcm"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.nibabel-skill",
@@ -1138,7 +1138,7 @@
                 "skill_ids": [
                   "nibabel-skill"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               }
             ]
           }
@@ -1170,7 +1170,7 @@
                 "skill_ids": [
                   "fmriprep-tool"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.freesurfer-tool",
@@ -1191,7 +1191,7 @@
                 "skill_ids": [
                   "freesurfer-tool"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.fsl-tool",
@@ -1214,7 +1214,7 @@
                 "skill_ids": [
                   "fsl-tool"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.hcppipeline-tool",
@@ -1232,7 +1232,7 @@
                 "skill_ids": [
                   "hcppipeline-tool"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.qsiprep-tool",
@@ -1255,7 +1255,7 @@
                 "skill_ids": [
                   "qsiprep-tool"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               }
             ]
           },
@@ -1302,7 +1302,7 @@
                 "skill_ids": [
                   "dipy-tool"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.mne-eeg-tool",
@@ -1322,7 +1322,7 @@
                 "skill_ids": [
                   "mne-eeg-tool"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.nilearn-tool",
@@ -1343,7 +1343,7 @@
                 "skill_ids": [
                   "nilearn-tool"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               }
             ]
           },
@@ -1367,7 +1367,7 @@
                 "skill_ids": [
                   "harmonization-tool"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.wmh-segmentation",
@@ -1416,7 +1416,7 @@
                 "skill_ids": [
                   "bnt"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.braingnn",
@@ -1447,7 +1447,7 @@
                 "skill_ids": [
                   "brainnetcnn"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.cnn3d",
@@ -1462,7 +1462,7 @@
                 "skill_ids": [
                   "cnn3d"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.combraintf",
@@ -1480,7 +1480,7 @@
                 "skill_ids": [
                   "combraintf"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.fm-app",
@@ -1571,7 +1571,7 @@
                 "skill_ids": [
                   "brain-age-modeling"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.causal-treatment-models",
@@ -1588,7 +1588,7 @@
                 "skill_ids": [
                   "causal-treatment-models"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.cpm",
@@ -1605,7 +1605,7 @@
                 "skill_ids": [
                   "cpm"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.glm",
@@ -1623,7 +1623,7 @@
                 "skill_ids": [
                   "glm"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.imaging-genetics-models",
@@ -1642,7 +1642,7 @@
                 "skill_ids": [
                   "imaging-genetics-models"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.spacenet",
@@ -1657,7 +1657,7 @@
                 "skill_ids": [
                   "spacenet"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.statistical-ml",
@@ -1678,7 +1678,7 @@
                 "skill_ids": [
                   "statistical-ml"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.subject-subtyping",
@@ -1694,7 +1694,7 @@
                 "skill_ids": [
                   "subject-subtyping"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.survival-models",
@@ -1714,7 +1714,7 @@
                 "skill_ids": [
                   "survival-models"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.temporal-models",
@@ -1732,7 +1732,7 @@
                 "skill_ids": [
                   "temporal-models"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               }
             ]
           },
@@ -1753,7 +1753,7 @@
                 "skill_ids": [
                   "detrending"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.dictlearning",
@@ -1768,7 +1768,7 @@
                 "skill_ids": [
                   "dictlearning"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.filtering",
@@ -1782,7 +1782,7 @@
                 "skill_ids": [
                   "filtering"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.hierarchical",
@@ -1796,7 +1796,7 @@
                 "skill_ids": [
                   "hierarchical"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.ica",
@@ -1811,7 +1811,7 @@
                 "skill_ids": [
                   "ica"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.kmeans",
@@ -1827,7 +1827,7 @@
                 "skill_ids": [
                   "kmeans"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               }
             ]
           },
@@ -1848,7 +1848,7 @@
                 "skill_ids": [
                   "connectome-discovery"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.kg-link-prediction",
@@ -1866,7 +1866,7 @@
                 "skill_ids": [
                   "kg-link-prediction"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.neuroimaging-decoding",
@@ -1884,7 +1884,7 @@
                 "skill_ids": [
                   "neuroimaging-decoding"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.run-models",
@@ -1898,7 +1898,7 @@
                 "skill_ids": [
                   "run_models"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               }
             ]
           }
@@ -2061,7 +2061,7 @@
                 "skill_ids": [
                   "brain-visualization"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.report-builder",
@@ -2074,7 +2074,7 @@
                 "skill_ids": [
                   "report-builder"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               }
             ]
           }
@@ -2240,7 +2240,7 @@
                 "skill_ids": [
                   "beautiful-log"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               }
             ]
           }

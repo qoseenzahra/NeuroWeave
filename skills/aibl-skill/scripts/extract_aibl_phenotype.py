@@ -182,7 +182,12 @@ def merge_phenotype_tables(
         df = read_phenotype_file(f)
         if df is not None and len(df) > 0:
             # Apply column name mapping
-            rename_map = {k: v for k, v in COLUMN_MAP.items() if k in df.columns}
+            rename_map = {}
+            destinations = set(df.columns)
+            for source, target in COLUMN_MAP.items():
+                if source in df.columns and target not in destinations:
+                    rename_map[source] = target
+                    destinations.add(target)
             if rename_map:
                 df = df.rename(columns=rename_map)
             dataframes.append(df)

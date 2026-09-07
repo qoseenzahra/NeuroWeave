@@ -19,7 +19,7 @@ def run_denoising(
 ) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    confounds = pd.read_csv(confounds_path, sep=None, engine="python") if confounds_path is not None else None
+    confounds = pd.read_csv(confounds_path, sep='\t' if confounds_path.suffix.lower()=='.tsv' else ',') if confounds_path is not None else None
     cleaned = image.clean_img(
         str(bold_path),
         confounds=confounds,

@@ -1,0 +1,207 @@
+{
+  "schema_version": 1,
+  "skill_id": "ucla-cnp-skill",
+  "provides": [
+    {
+      "capability": "skill.ucla-cnp-skill",
+      "method_id": "reviewed-extract-ucla-cnp-phenotype-ucla-cnp-skill",
+      "label": "ucla-cnp 表型/刺激提取",
+      "description": "使用已审核实现执行 ucla-cnp 表型/刺激提取；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.ucla-cnp-skill.extract-ucla-cnp-phenotype",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "columns",
+          "argument": "columns",
+          "label": "columns",
+          "type": "string",
+          "default": null,
+          "required": false,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "phenotype_files",
+          "label": "文件路径清单（每行一项）",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "imaging_ids",
+          "label": "imaging-ids",
+          "required": false,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_output_csv",
+          "type": "generated_file",
+          "label": "output.csv",
+          "path_template": "results/output.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "phenotype-extraction",
+        "stimulus-extraction"
+      ],
+      "source_references": [
+        {
+          "path": "skills/ucla-cnp-skill/scripts/extract_ucla_cnp_phenotype.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.ucla-cnp-skill",
+      "method_id": "reviewed-ucla-cnp-qc-summary-ucla-cnp-skill",
+      "label": "ucla-cnp 质控汇总",
+      "description": "使用已审核实现执行 ucla-cnp 质控汇总；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.ucla-cnp-skill.ucla-cnp-qc-summary",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "fd_threshold",
+          "argument": "fd-threshold",
+          "label": "fd-threshold",
+          "type": "number",
+          "default": 0.3,
+          "required": false,
+          "options": [],
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        {
+          "id": "diagnosis_file",
+          "argument": "diagnosis-file",
+          "label": "diagnosis-file",
+          "type": "string",
+          "default": null,
+          "required": false,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "fmriprep_dir",
+          "label": "Path to fMRIPrep output directory",
+          "required": false,
+          "binding": "folder",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_output_csv",
+          "type": "generated_file",
+          "label": "output.csv",
+          "path_template": "results/output.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "qc-summary"
+      ],
+      "source_references": [
+        {
+          "path": "skills/ucla-cnp-skill/scripts/ucla_cnp_qc_summary.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.ucla-cnp-skill",
+      "method_id": "reviewed-validate-ucla-cnp-ucla-cnp-skill",
+      "label": "ucla-cnp 数据校验",
+      "description": "使用已审核实现执行 ucla-cnp 数据校验；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.ucla-cnp-skill.validate-ucla-cnp",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "input",
+          "required": true,
+          "binding": "folder",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_output_csv",
+          "type": "generated_file",
+          "label": "output.csv",
+          "path_template": "results/output.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "bids-validation",
+        "data-validation",
+        "eeg-validation"
+      ],
+      "source_references": [
+        {
+          "path": "skills/ucla-cnp-skill/scripts/validate_ucla_cnp.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    }
+  ]
+}

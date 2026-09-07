@@ -9,7 +9,13 @@ import numpy as np
 
 def export_colored_ply(surf_path: Path, annot_path: Path, output_path: Path) -> None:
     coords, faces = fs.read_geometry(str(surf_path))
-    labels, color_table, _ = fs.read_annot(str(annot_path))
+    if annot_path is not None:
+        labels, color_table, _ = fs.read_annot(str(annot_path))
+        if len(labels) != len(coords):
+            raise ValueError('Annotation vertex count does not match surface')
+    else:
+        labels = np.zeros(len(coords), dtype=int)
+        color_table = np.array([[128,128,128]])
 
     vertex_colors = np.zeros((len(coords), 3), dtype=np.uint8)
     for index, label in enumerate(labels):
@@ -42,7 +48,7 @@ def export_colored_ply(surf_path: Path, annot_path: Path, output_path: Path) -> 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Reference script for exporting FreeSurfer surfaces to colored PLY.")
     parser.add_argument("--surf", type=Path, required=True, help="FreeSurfer surface file such as lh.pial or rh.pial.")
-    parser.add_argument("--annot", type=Path, required=True, help="FreeSurfer annotation file such as lh.aparc.annot.")
+    parser.add_argument("--annot", type=Path, default=None, help="Optional FreeSurfer annotation; gray surface when omitted.")
     parser.add_argument("--output", type=Path, required=True, help="Output PLY path.")
     args = parser.parse_args()
 

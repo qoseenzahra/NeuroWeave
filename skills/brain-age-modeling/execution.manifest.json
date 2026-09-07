@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "skill_id": "brain-age-modeling",
+  "provides": [
+    {
+      "capability": "skill.brain-age-modeling",
+      "method_id": "reviewed-train-brain-age-modeling",
+      "label": "脑龄预测与偏差校正",
+      "description": "使用已审核实现执行 脑龄预测与偏差校正；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.brain-age-modeling.train",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "model",
+          "argument": "model",
+          "label": "model",
+          "type": "string",
+          "default": "ridge",
+          "required": true,
+          "options": [
+            {
+              "value": "ridge",
+              "label": "ridge"
+            },
+            {
+              "value": "svm",
+              "label": "svm"
+            },
+            {
+              "value": "random_forest",
+              "label": "random_forest"
+            },
+            {
+              "value": "extra_trees",
+              "label": "extra_trees"
+            },
+            {
+              "value": "hist_gradient_boosting",
+              "label": "hist_gradient_boosting"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "age_col",
+          "argument": "age-col",
+          "label": "age-col",
+          "type": "string",
+          "default": "age",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "folds",
+          "argument": "folds",
+          "label": "folds",
+          "type": "integer",
+          "default": 5,
+          "required": true,
+          "options": [],
+          "minimum": 2,
+          "maximum": 20
+        },
+        {
+          "id": "seed",
+          "argument": "seed",
+          "label": "seed",
+          "type": "integer",
+          "default": 123,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        {
+          "id": "subject_col",
+          "argument": "subject-col",
+          "label": "subject-col",
+          "type": "string",
+          "default": "subject_id",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "features",
+          "label": "特征 CSV",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_metrics_json",
+          "type": "generated_file",
+          "label": "metrics.json",
+          "path_template": "results/metrics.json"
+        },
+        {
+          "id": "file_predictions_csv",
+          "type": "generated_file",
+          "label": "predictions.csv",
+          "path_template": "results/predictions.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "skills/brain-age-modeling/scripts/train_reference.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    }
+  ]
+}

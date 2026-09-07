@@ -1,0 +1,268 @@
+{
+  "schema_version": 1,
+  "skill_id": "brain-visualization",
+  "provides": [
+    {
+      "capability": "skill.brain-visualization",
+      "method_id": "reviewed-connectome-brain-visualization",
+      "label": "脑连接图",
+      "description": "使用已审核实现执行 脑连接图；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.brain-visualization.connectome",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "top_k",
+          "argument": "top-k",
+          "label": "top-k",
+          "type": "integer",
+          "default": 20,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 100000
+        },
+        {
+          "id": "node_size",
+          "argument": "node-size",
+          "label": "node-size",
+          "type": "integer",
+          "default": 30,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 1000
+        },
+        {
+          "id": "brain_opacity",
+          "argument": "brain-opacity",
+          "label": "brain-opacity",
+          "type": "number",
+          "default": 0.2,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 1
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "atlas",
+          "label": "分区图谱",
+          "required": true,
+          "binding": "file",
+          "type": "label_image"
+        },
+        {
+          "id": "template",
+          "label": "背景模板",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "matrix",
+          "label": "连接矩阵",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_connectome_png",
+          "type": "generated_file",
+          "label": "connectome.png",
+          "path_template": "results/connectome.png"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "3d-connectome-figure",
+        "publication-ready-snapshots"
+      ],
+      "source_references": [
+        {
+          "path": "skills/brain-visualization/scripts/connectome_reference.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.brain-visualization",
+      "method_id": "reviewed-surface-ply-brain-visualization",
+      "label": "FreeSurfer 表面导出 PLY",
+      "description": "使用已审核实现执行 FreeSurfer 表面导出 PLY；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.brain-visualization.surface-ply",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [],
+      "input_slots": [
+        {
+          "id": "surf",
+          "label": "FreeSurfer 表面",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "annot",
+          "label": "分区标注",
+          "required": false,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_surface_ply",
+          "type": "generated_file",
+          "label": "surface.ply",
+          "path_template": "results/surface.ply"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "freesurfer-surface-export"
+      ],
+      "source_references": [
+        {
+          "path": "skills/brain-visualization/scripts/freesurfer_ply_reference.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.brain-visualization",
+      "method_id": "reviewed-zalff-nilearn-tool",
+      "label": "ALFF 振幅与 zALFF 区域汇总",
+      "description": "使用已审核实现执行 ALFF 振幅与 zALFF 区域汇总；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.nilearn-tool.zalff",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "tr",
+          "argument": "tr",
+          "label": "tr",
+          "type": "number",
+          "default": 2.0,
+          "required": true,
+          "options": [],
+          "minimum": 0.01,
+          "maximum": 4.9
+        },
+        {
+          "id": "top_n",
+          "argument": "top-n",
+          "label": "top-n",
+          "type": "integer",
+          "default": 10,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 1000
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "bold",
+          "label": "同空间 BOLD",
+          "required": true,
+          "binding": "file",
+          "type": "bold_image"
+        },
+        {
+          "id": "atlas",
+          "label": "同空间图谱",
+          "required": true,
+          "binding": "file",
+          "type": "label_image"
+        },
+        {
+          "id": "mask",
+          "label": "同空间脑掩膜",
+          "required": true,
+          "binding": "file",
+          "type": "brain_mask"
+        },
+        {
+          "id": "labels",
+          "label": "图谱名称文本",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_zalff_nii_gz",
+          "type": "generated_file",
+          "label": "zalff.nii.gz",
+          "path_template": "results/zalff.nii.gz"
+        },
+        {
+          "id": "file_all_regions_csv",
+          "type": "generated_file",
+          "label": "all_regions.csv",
+          "path_template": "results/all_regions.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "zalff-regional-activation"
+      ],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/image_summary_worker.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    }
+  ]
+}

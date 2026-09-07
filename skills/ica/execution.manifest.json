@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "skill_id": "ica",
+  "provides": [
+    {
+      "capability": "skill.ica",
+      "method_id": "reviewed-ica-nilearn-tool",
+      "label": "静息态 ICA",
+      "description": "使用已审核实现执行 静息态 ICA；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.nilearn-tool.ica",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "n_components",
+          "argument": "n-components",
+          "label": "n-components",
+          "type": "integer",
+          "default": 10,
+          "required": true,
+          "options": [],
+          "minimum": 2,
+          "maximum": 200
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input_list",
+          "label": "影像路径清单",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "mask",
+          "label": "脑掩膜",
+          "required": false,
+          "binding": "file",
+          "type": "brain_mask"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_components_nii_gz",
+          "type": "generated_file",
+          "label": "components.nii.gz",
+          "path_template": "results/components.nii.gz"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "skills/nilearn-tool/scripts/rest_ica_reference.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    }
+  ]
+}

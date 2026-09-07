@@ -21,7 +21,7 @@ def run_ica(input_list: Path, output_dir: Path, n_components: int, mask_path: Pa
     model = CanICA(
         n_components=n_components,
         mask=mask_path,
-        threshold=3.0,
+        threshold=min(3.0, float(n_components)),
         random_state=0,
         memory="nilearn_cache",
         memory_level=1,
@@ -33,7 +33,7 @@ def run_ica(input_list: Path, output_dir: Path, n_components: int, mask_path: Pa
 
     time_series_frames = []
     for index, image_path in enumerate(images):
-        series = model.transform(image_path)
+        series = model.transform([image_path])[0]
         frame = pd.DataFrame(series)
         frame.insert(0, "subject_index", index)
         frame.to_csv(output_dir / f"subject_{index:03d}_timeseries.csv", index=False)

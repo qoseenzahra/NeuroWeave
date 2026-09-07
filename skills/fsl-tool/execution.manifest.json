@@ -1,0 +1,1295 @@
+{
+  "schema_version": 1,
+  "skill_id": "fsl-tool",
+  "provides": [
+    {
+      "capability": "skill.fsl-tool",
+      "method_id": "reviewed-bet-fsl-tool",
+      "label": "FSL 脑提取",
+      "description": "使用已审核实现执行 FSL 脑提取；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.fsl-tool.bet",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "fraction",
+          "argument": "fraction",
+          "label": "fraction",
+          "type": "number",
+          "default": 0.5,
+          "required": true,
+          "options": [],
+          "minimum": 0.01,
+          "maximum": 0.99
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "输入影像",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_image_nii_gz",
+          "type": "generated_file",
+          "label": "image.nii.gz",
+          "path_template": "results/image.nii.gz"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/native_worker.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.fsl-tool",
+      "method_id": "reviewed-fast-fsl-tool",
+      "label": "FSL 组织分割",
+      "description": "使用已审核实现执行 FSL 组织分割；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.fsl-tool.fast",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "classes",
+          "argument": "classes",
+          "label": "classes",
+          "type": "integer",
+          "default": 3,
+          "required": true,
+          "options": [],
+          "minimum": 2,
+          "maximum": 6
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "输入影像",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_tissue_seg_nii_gz",
+          "type": "generated_file",
+          "label": "tissue_seg.nii.gz",
+          "path_template": "results/tissue_seg.nii.gz"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/native_worker.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.fsl-tool",
+      "method_id": "reviewed-mcflirt-fsl-tool",
+      "label": "FSL 运动校正",
+      "description": "使用已审核实现执行 FSL 运动校正；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.fsl-tool.mcflirt",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "输入影像",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_image_nii_gz",
+          "type": "generated_file",
+          "label": "image.nii.gz",
+          "path_template": "results/image.nii.gz"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/native_worker.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.fsl-tool",
+      "method_id": "reviewed-slicetimer-fsl-tool",
+      "label": "FSL 层间时间校正",
+      "description": "使用已审核实现执行 FSL 层间时间校正；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.fsl-tool.slicetimer",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "tr",
+          "argument": "tr",
+          "label": "tr",
+          "type": "number",
+          "default": 2.0,
+          "required": true,
+          "options": [],
+          "minimum": 0.01,
+          "maximum": 100
+        },
+        {
+          "id": "slice_axis",
+          "argument": "slice-axis",
+          "label": "slice-axis",
+          "type": "integer",
+          "default": 3,
+          "required": true,
+          "options": [
+            {
+              "value": 1,
+              "label": "1"
+            },
+            {
+              "value": 2,
+              "label": "2"
+            },
+            {
+              "value": 3,
+              "label": "3"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "slice_order",
+          "argument": "slice-order",
+          "label": "slice-order",
+          "type": "string",
+          "default": "ascending",
+          "required": true,
+          "options": [
+            {
+              "value": "ascending",
+              "label": "ascending"
+            },
+            {
+              "value": "descending",
+              "label": "descending"
+            },
+            {
+              "value": "interleaved",
+              "label": "interleaved"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "输入影像",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_image_nii_gz",
+          "type": "generated_file",
+          "label": "image.nii.gz",
+          "path_template": "results/image.nii.gz"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/native_worker.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.fsl-tool",
+      "method_id": "reviewed-fnirt-fsl-tool",
+      "label": "FSL 非线性配准",
+      "description": "使用已审核实现执行 FSL 非线性配准；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.fsl-tool.fnirt",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "输入影像",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "reference",
+          "label": "参考影像",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "transform",
+          "label": "变换/形变场",
+          "required": false,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_image_nii_gz",
+          "type": "generated_file",
+          "label": "image.nii.gz",
+          "path_template": "results/image.nii.gz"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/native_worker.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.fsl-tool",
+      "method_id": "reviewed-applywarp-fsl-tool",
+      "label": "FSL 应用形变",
+      "description": "使用已审核实现执行 FSL 应用形变；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.fsl-tool.applywarp",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "interp",
+          "argument": "interp",
+          "label": "interp",
+          "type": "string",
+          "default": "linear",
+          "required": true,
+          "options": [
+            {
+              "value": "linear",
+              "label": "linear"
+            },
+            {
+              "value": "nearest",
+              "label": "nearest"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "输入影像",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "reference",
+          "label": "参考影像",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "transform",
+          "label": "变换/形变场",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_image_nii_gz",
+          "type": "generated_file",
+          "label": "image.nii.gz",
+          "path_template": "results/image.nii.gz"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/native_worker.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.fsl-tool",
+      "method_id": "linked-fsl_eddy",
+      "label": "FSL topup / eddy",
+      "description": "使用 FSL eddy_cpu 或 eddy_cuda 完成涡流、运动与离群值校正；topup 输出可以按需接入。",
+      "runner_id": "fsl.eddy",
+      "input_types": [
+        "raw_dwi",
+        "bids_dwi"
+      ],
+      "output_types": [
+        "preprocessed_dwi",
+        "gradient_table",
+        "preprocess_qc",
+        "execution_log"
+      ],
+      "input_slots": [
+        {
+          "id": "dwi",
+          "type": "raw_dwi",
+          "label": "DWI 影像",
+          "description": "待校正的 4D DWI NIfTI。",
+          "required": true,
+          "binding": "file",
+          "formats": [
+            ".nii",
+            ".nii.gz"
+          ],
+          "source_options": [
+            "dataset",
+            "existing_path",
+            "upstream_output"
+          ],
+          "validation": [
+            "path_exists"
+          ]
+        },
+        {
+          "id": "mask",
+          "type": "brain_mask",
+          "label": "DWI 脑 Mask",
+          "description": "与 DWI 第一至三维一致的二值脑掩膜。",
+          "required": true,
+          "binding": "file",
+          "formats": [
+            ".nii",
+            ".nii.gz"
+          ],
+          "source_options": [
+            "dataset",
+            "existing_path",
+            "upstream_output"
+          ],
+          "validation": [
+            "path_exists"
+          ]
+        },
+        {
+          "id": "acqp",
+          "type": "analysis_input",
+          "label": "acqp 参数文件",
+          "description": "每种相位编码方向与总读出时间，每行 4 列。",
+          "required": true,
+          "binding": "file",
+          "formats": [
+            ".txt"
+          ],
+          "source_options": [
+            "dataset",
+            "existing_path",
+            "upstream_output"
+          ],
+          "validation": [
+            "path_exists"
+          ]
+        },
+        {
+          "id": "index",
+          "type": "analysis_input",
+          "label": "index 文件",
+          "description": "为每个 DWI 体积指定 acqp 行号。",
+          "required": true,
+          "binding": "file",
+          "formats": [
+            ".txt"
+          ],
+          "source_options": [
+            "dataset",
+            "existing_path",
+            "upstream_output"
+          ],
+          "validation": [
+            "path_exists"
+          ]
+        },
+        {
+          "id": "bvecs",
+          "type": "gradient_table",
+          "label": "bvec 梯度方向",
+          "description": "与 DWI 体积顺序一致的 FSL 格式 bvec。",
+          "required": true,
+          "binding": "file",
+          "formats": [
+            ".bvec",
+            ".txt"
+          ],
+          "source_options": [
+            "dataset",
+            "existing_path",
+            "upstream_output"
+          ],
+          "validation": [
+            "path_exists"
+          ]
+        },
+        {
+          "id": "bvals",
+          "type": "gradient_table",
+          "label": "bval 梯度强度",
+          "description": "与 DWI 体积顺序一致的 bval。",
+          "required": true,
+          "binding": "file",
+          "formats": [
+            ".bval",
+            ".txt"
+          ],
+          "source_options": [
+            "dataset",
+            "existing_path",
+            "upstream_output"
+          ],
+          "validation": [
+            "path_exists"
+          ]
+        },
+        {
+          "id": "topup_fieldcoef",
+          "type": "analysis_input",
+          "label": "Topup fieldcoef（可选）",
+          "description": "topup 生成的 *_fieldcoef.nii.gz；同目录必须存在对应 *_movpar.txt。",
+          "required": false,
+          "required_when": {
+            "susceptibility_correction": [
+              "topup"
+            ]
+          },
+          "binding": "file",
+          "formats": [
+            ".nii.gz"
+          ],
+          "source_options": [
+            "dataset",
+            "existing_path",
+            "upstream_output"
+          ],
+          "validation": [
+            "path_exists"
+          ]
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "preprocessed_dwi",
+          "type": "preprocessed_dwi",
+          "label": "FSL 预处理 DWI",
+          "description": "完成 topup/eddy 校正后的 DWI 数据。",
+          "primary": true,
+          "path_template": "eddy_corrected.nii.gz"
+        },
+        {
+          "id": "rotated_bvecs",
+          "type": "gradient_table",
+          "label": "旋转后的 bvec",
+          "description": "按照 eddy 运动估计旋转后的梯度方向。",
+          "path_template": "eddy_corrected.eddy_rotated_bvecs"
+        },
+        {
+          "id": "preprocess_qc",
+          "type": "preprocess_qc",
+          "label": "Eddy QC",
+          "description": "运动、离群切片和校正质量指标。",
+          "path_template": "eddy_corrected.eddy_*"
+        },
+        {
+          "id": "log",
+          "type": "execution_log",
+          "label": "Eddy 日志",
+          "description": "完整标准输出与错误输出。",
+          "path_template": "eddy.log"
+        }
+      ],
+      "default_recommended": false,
+      "default_reason": "当需要手动控制校正细节或已有 FSL 环境时更合适。",
+      "parameters": [
+        {
+          "id": "backend",
+          "argument": "backend",
+          "label": "Eddy 计算后端",
+          "description": "选择 CPU 或 CUDA 加速实现；执行前仍需环境检查。",
+          "type": "string",
+          "control": "select",
+          "level": "basic",
+          "group": "常用参数",
+          "required": true,
+          "default": "cpu",
+          "options": [
+            {
+              "value": "cpu",
+              "label": "CPU"
+            },
+            {
+              "value": "cuda",
+              "label": "CUDA GPU"
+            }
+          ]
+        },
+        {
+          "id": "outlier_replacement",
+          "argument": "outlier-replacement",
+          "label": "离群值替换",
+          "description": "启用 slice 离群值检测与替换。",
+          "type": "boolean",
+          "control": "switch",
+          "level": "basic",
+          "group": "常用参数",
+          "required": true,
+          "default": true,
+          "options": [
+            {
+              "value": true,
+              "label": "启用"
+            },
+            {
+              "value": false,
+              "label": "关闭"
+            }
+          ]
+        },
+        {
+          "id": "susceptibility_correction",
+          "argument": "susceptibility-correction",
+          "label": "磁敏感畸变校正",
+          "description": "根据反向相位编码数据使用 topup，或跳过该步骤。",
+          "type": "string",
+          "control": "select",
+          "level": "advanced",
+          "group": "畸变校正",
+          "required": true,
+          "default": "auto",
+          "options": [
+            {
+              "value": "auto",
+              "label": "自动检测"
+            },
+            {
+              "value": "topup",
+              "label": "强制使用 topup"
+            },
+            {
+              "value": "none",
+              "label": "不校正"
+            }
+          ]
+        },
+        {
+          "id": "slice_to_volume",
+          "argument": "slice-to-volume",
+          "label": "Slice-to-volume 校正阶数",
+          "description": "0 表示关闭；大于 0 时启用切片到体积运动校正。",
+          "type": "integer",
+          "control": "number",
+          "level": "advanced",
+          "group": "运动与离群值",
+          "required": true,
+          "default": 0,
+          "minimum": 0,
+          "maximum": 16,
+          "step": 1,
+          "options": []
+        },
+        {
+          "id": "iterations",
+          "argument": "iterations",
+          "label": "优化迭代次数",
+          "description": "eddy 多尺度优化的迭代次数。",
+          "type": "integer",
+          "control": "number",
+          "level": "advanced",
+          "group": "运动与离群值",
+          "required": true,
+          "default": 5,
+          "minimum": 1,
+          "maximum": 20,
+          "step": 1,
+          "options": []
+        },
+        {
+          "id": "spatial_model",
+          "argument": "spatial-model",
+          "label": "场空间模型",
+          "description": "运动与涡流场的空间模型。",
+          "type": "string",
+          "control": "select",
+          "level": "advanced",
+          "group": "优化模型",
+          "required": true,
+          "default": "quadratic",
+          "options": [
+            {
+              "value": "linear",
+              "label": "线性"
+            },
+            {
+              "value": "quadratic",
+              "label": "二次"
+            },
+            {
+              "value": "movement_by_susceptibility",
+              "label": "运动×磁敏感"
+            }
+          ]
+        },
+        {
+          "id": "data_is_shelled",
+          "argument": "data-is-shelled",
+          "label": "按壳层建模",
+          "description": "声明数据由离散 b-value 壳层构成。",
+          "type": "boolean",
+          "control": "switch",
+          "level": "advanced",
+          "group": "优化模型",
+          "required": true,
+          "default": true,
+          "options": [
+            {
+              "value": true,
+              "label": "按壳层"
+            },
+            {
+              "value": false,
+              "label": "连续 b-value"
+            }
+          ]
+        },
+        {
+          "id": "threads",
+          "argument": "threads",
+          "label": "CPU 线程数",
+          "description": "CPU 后端使用的线程数量。",
+          "type": "integer",
+          "control": "number",
+          "level": "advanced",
+          "group": "计算资源",
+          "required": true,
+          "default": 4,
+          "minimum": 1,
+          "maximum": 128,
+          "step": 1,
+          "visible_when": {
+            "backend": [
+              "cpu"
+            ]
+          },
+          "options": []
+        }
+      ]
+    },
+    {
+      "capability": "skill.fsl-tool",
+      "method_id": "linked-fsl_dtifit",
+      "label": "FSL dtifit",
+      "description": "复用 FSL 环境完成经典 DTI 张量拟合。",
+      "runner_id": "fsl.dtifit",
+      "input_types": [
+        "preprocessed_dwi"
+      ],
+      "output_types": [
+        "diffusion_metrics"
+      ],
+      "input_slots": [
+        {
+          "id": "dwi",
+          "type": "preprocessed_dwi",
+          "label": "预处理 DWI 影像",
+          "description": "完成运动/涡流校正且体积顺序与 bval/bvec 一致的 4D NIfTI。",
+          "required": true,
+          "binding": "file",
+          "formats": [
+            ".nii",
+            ".nii.gz"
+          ],
+          "source_options": [
+            "dataset",
+            "existing_path",
+            "upstream_output"
+          ],
+          "validation": [
+            "path_exists"
+          ]
+        },
+        {
+          "id": "mask",
+          "type": "brain_mask",
+          "label": "DWI 脑掩膜",
+          "description": "与 DWI 空间、矩阵和体素尺寸一致的二值 mask。",
+          "required": true,
+          "binding": "file",
+          "formats": [
+            ".nii",
+            ".nii.gz"
+          ],
+          "source_options": [
+            "dataset",
+            "existing_path",
+            "upstream_output"
+          ],
+          "validation": [
+            "path_exists"
+          ]
+        },
+        {
+          "id": "bvecs",
+          "type": "gradient_table",
+          "label": "bvec 梯度方向",
+          "description": "与 DWI 第四维体积逐一对应的 FSL 格式 bvec 文件。",
+          "required": true,
+          "binding": "file",
+          "formats": [
+            ".bvec",
+            ".txt"
+          ],
+          "source_options": [
+            "dataset",
+            "existing_path",
+            "upstream_output"
+          ],
+          "validation": [
+            "path_exists"
+          ]
+        },
+        {
+          "id": "bvals",
+          "type": "gradient_table",
+          "label": "bval 梯度强度",
+          "description": "与 DWI 第四维体积逐一对应的 bval 文件。",
+          "required": true,
+          "binding": "file",
+          "formats": [
+            ".bval",
+            ".txt"
+          ],
+          "source_options": [
+            "dataset",
+            "existing_path",
+            "upstream_output"
+          ],
+          "validation": [
+            "path_exists"
+          ]
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "metrics",
+          "type": "diffusion_metrics",
+          "label": "DTI 指标影像",
+          "description": "至少包含 FA、MD、L1、L2 和 L3 指标。",
+          "primary": true,
+          "path_template": "dti_*.nii.gz"
+        }
+      ],
+      "default_recommended": false,
+      "default_reason": "预处理已经采用 FSL 时可以减少工具切换。",
+      "parameters": [
+        {
+          "id": "weighted_least_squares",
+          "argument": "weighted-least-squares",
+          "label": "加权最小二乘",
+          "description": "使用加权最小二乘完成张量拟合。",
+          "type": "boolean",
+          "control": "switch",
+          "level": "basic",
+          "group": "常用参数",
+          "required": true,
+          "default": true,
+          "options": [
+            {
+              "value": true,
+              "label": "启用"
+            },
+            {
+              "value": false,
+              "label": "关闭"
+            }
+          ]
+        },
+        {
+          "id": "save_tensor",
+          "argument": "save-tensor",
+          "label": "保存完整张量",
+          "description": "除 FA/MD 外同时保存张量分量。",
+          "type": "boolean",
+          "control": "switch",
+          "level": "basic",
+          "group": "常用参数",
+          "required": true,
+          "default": false,
+          "options": [
+            {
+              "value": true,
+              "label": "保存"
+            },
+            {
+              "value": false,
+              "label": "不保存（推荐）"
+            }
+          ]
+        },
+        {
+          "id": "save_sse",
+          "argument": "save-sse",
+          "label": "保存残差平方和",
+          "description": "保存每个体素的拟合残差平方和图。",
+          "type": "boolean",
+          "control": "switch",
+          "level": "advanced",
+          "group": "质量控制",
+          "required": true,
+          "default": true,
+          "options": [
+            {
+              "value": true,
+              "label": "保存"
+            },
+            {
+              "value": false,
+              "label": "不保存"
+            }
+          ]
+        },
+        {
+          "id": "kurtosis",
+          "argument": "kurtosis",
+          "label": "估计 Mean Kurtosis",
+          "description": "数据满足采集要求时额外估计简单平均峰度指标。",
+          "type": "boolean",
+          "control": "switch",
+          "level": "advanced",
+          "group": "输出",
+          "required": true,
+          "default": false,
+          "options": [
+            {
+              "value": true,
+              "label": "估计"
+            },
+            {
+              "value": false,
+              "label": "不估计"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "capability": "skill.fsl-tool",
+      "method_id": "linked-fsl_flirt",
+      "label": "FSL FLIRT",
+      "description": "复用现有 FSL Skill 完成刚体或仿射线性配准，并输出变换矩阵。",
+      "runner_id": "fsl.flirt",
+      "input_types": [
+        "dataset_folder",
+        "nifti_image",
+        "bids_anat"
+      ],
+      "output_types": [
+        "registered_image",
+        "transform_matrix"
+      ],
+      "input_slots": [
+        {
+          "id": "moving_image",
+          "type": "imaging_input",
+          "label": "移动影像",
+          "description": "需要被重采样到参考空间的 NIfTI 影像。",
+          "required": true,
+          "binding": "file",
+          "formats": [
+            ".nii",
+            ".nii.gz"
+          ],
+          "source_options": [
+            "dataset",
+            "existing_path",
+            "upstream_output"
+          ],
+          "validation": [
+            "path_exists"
+          ]
+        },
+        {
+          "id": "reference_image",
+          "type": "imaging_input",
+          "label": "参考影像",
+          "description": "定义目标空间、矩阵和体素网格的 NIfTI 影像。",
+          "required": true,
+          "binding": "file",
+          "formats": [
+            ".nii",
+            ".nii.gz"
+          ],
+          "source_options": [
+            "dataset",
+            "existing_path",
+            "upstream_output"
+          ],
+          "validation": [
+            "path_exists"
+          ]
+        },
+        {
+          "id": "moving_mask",
+          "type": "brain_mask",
+          "label": "移动影像权重 Mask",
+          "description": "可选；启用 Mask 时限制移动影像的代价函数计算区域。",
+          "required": false,
+          "required_when": {
+            "use_masks": [
+              true
+            ]
+          },
+          "binding": "file",
+          "formats": [
+            ".nii",
+            ".nii.gz"
+          ],
+          "source_options": [
+            "dataset",
+            "existing_path",
+            "upstream_output"
+          ],
+          "validation": [
+            "path_exists"
+          ]
+        },
+        {
+          "id": "reference_mask",
+          "type": "brain_mask",
+          "label": "参考影像权重 Mask",
+          "description": "可选；启用 Mask 时限制参考影像的代价函数计算区域。",
+          "required": false,
+          "required_when": {
+            "use_masks": [
+              true
+            ]
+          },
+          "binding": "file",
+          "formats": [
+            ".nii",
+            ".nii.gz"
+          ],
+          "source_options": [
+            "dataset",
+            "existing_path",
+            "upstream_output"
+          ],
+          "validation": [
+            "path_exists"
+          ]
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "registered",
+          "type": "registered_image",
+          "label": "配准后影像",
+          "description": "按照参考影像网格重采样的结果。",
+          "primary": true,
+          "path_template": "registered.nii.gz"
+        },
+        {
+          "id": "matrix",
+          "type": "transform_matrix",
+          "label": "FLIRT 变换矩阵",
+          "description": "从移动影像到参考影像的 4×4 线性变换。",
+          "path_template": "transform.mat"
+        }
+      ],
+      "default_recommended": false,
+      "default_reason": "适合常见的刚体或仿射线性配准，参数清晰且执行时间较短。",
+      "parameters": [
+        {
+          "id": "transform",
+          "argument": "transform",
+          "label": "变换模型",
+          "description": "刚体配准保留形状，仿射配准额外允许缩放和剪切。",
+          "type": "string",
+          "control": "select",
+          "level": "basic",
+          "group": "常用参数",
+          "required": true,
+          "default": "rigid",
+          "options": [
+            {
+              "value": "rigid",
+              "label": "刚体（6 DOF）"
+            },
+            {
+              "value": "affine",
+              "label": "仿射（12 DOF）"
+            }
+          ]
+        },
+        {
+          "id": "interpolation",
+          "argument": "interpolation",
+          "label": "插值方法",
+          "description": "连续强度影像通常使用三线性插值；标签图应使用最近邻。",
+          "type": "string",
+          "control": "select",
+          "level": "basic",
+          "group": "常用参数",
+          "required": true,
+          "default": "trilinear",
+          "options": [
+            {
+              "value": "trilinear",
+              "label": "三线性"
+            },
+            {
+              "value": "nearestneighbour",
+              "label": "最近邻"
+            },
+            {
+              "value": "sinc",
+              "label": "Sinc"
+            }
+          ]
+        },
+        {
+          "id": "cost_function",
+          "argument": "cost-function",
+          "label": "代价函数",
+          "description": "跨模态配准通常使用 mutual information，单模态可使用 correlation ratio。",
+          "type": "string",
+          "control": "select",
+          "level": "advanced",
+          "group": "优化目标",
+          "required": true,
+          "default": "corratio",
+          "options": [
+            {
+              "value": "corratio",
+              "label": "Correlation Ratio"
+            },
+            {
+              "value": "mutualinfo",
+              "label": "Mutual Information"
+            },
+            {
+              "value": "normmi",
+              "label": "Normalized MI"
+            },
+            {
+              "value": "normcorr",
+              "label": "Normalized Correlation"
+            },
+            {
+              "value": "leastsq",
+              "label": "Least Squares"
+            }
+          ]
+        },
+        {
+          "id": "search_degrees",
+          "argument": "search-degrees",
+          "label": "旋转搜索范围",
+          "description": "三个轴方向初始旋转搜索的正负角度范围。",
+          "type": "number",
+          "control": "number",
+          "level": "advanced",
+          "group": "搜索范围",
+          "unit": "°",
+          "required": true,
+          "default": 90,
+          "minimum": 0,
+          "maximum": 180,
+          "step": 1,
+          "options": []
+        },
+        {
+          "id": "bins",
+          "argument": "bins",
+          "label": "直方图 Bin 数",
+          "description": "信息论代价函数使用的直方图分箱数量。",
+          "type": "integer",
+          "control": "number",
+          "level": "advanced",
+          "group": "优化目标",
+          "required": true,
+          "default": 256,
+          "minimum": 16,
+          "maximum": 1024,
+          "step": 16,
+          "options": []
+        },
+        {
+          "id": "use_masks",
+          "argument": "use-masks",
+          "label": "使用权重 Mask",
+          "description": "为移动影像和参考影像应用配准权重 mask。",
+          "type": "boolean",
+          "control": "switch",
+          "level": "advanced",
+          "group": "空间约束",
+          "required": true,
+          "default": false,
+          "options": [
+            {
+              "value": true,
+              "label": "使用"
+            },
+            {
+              "value": false,
+              "label": "不使用"
+            }
+          ]
+        },
+        {
+          "id": "output_dtype",
+          "argument": "output-dtype",
+          "label": "输出数据类型",
+          "description": "控制重采样影像的数据类型。",
+          "type": "string",
+          "control": "select",
+          "level": "advanced",
+          "group": "输出",
+          "required": true,
+          "default": "float",
+          "options": [
+            {
+              "value": "input",
+              "label": "保持输入类型"
+            },
+            {
+              "value": "float",
+              "label": "Float32"
+            },
+            {
+              "value": "double",
+              "label": "Float64"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

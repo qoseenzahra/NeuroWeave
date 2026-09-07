@@ -47,6 +47,7 @@ class CapabilityMethod(BaseModel):
     command_references: list[CommandReference] = Field(default_factory=list)
     delegate_skill_ids: list[str] = Field(default_factory=list)
     execution_recipe: ExecutionRecipeSpec | None = None
+    replaces_operations: list[str] = Field(default_factory=list)
 
 
 class CapabilityRegistry:
@@ -72,7 +73,10 @@ class CapabilityRegistry:
         in-memory method variants without changing the capability tree or source Skill.
         """
         expanded: list[CapabilityMethod] = []
-        for method in self.methods_for(capability):
+        candidates = self.methods_for(capability)
+        reviewed = [m for m in candidates if m.runner_id.startswith('reviewed.')]
+        replaced = {value for m in reviewed for value in m.replaces_operations}
+        for method in candidates:
             operation = next(
                 (
                     parameter
@@ -82,10 +86,14 @@ class CapabilityRegistry:
                 None,
             )
             if operation is None:
+                if method.execution_mode == 'planning' and reviewed:
+                    continue
                 expanded.append(method)
                 continue
 
             for option in operation.options:
+                if method.execution_mode == 'planning' and str(option.value) in replaced:
+                    continue
                 option_slug = re.sub(
                     r"[^a-z0-9]+",
                     "-",

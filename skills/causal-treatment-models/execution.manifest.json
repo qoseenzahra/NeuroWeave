@@ -1,0 +1,197 @@
+{
+  "schema_version": 1,
+  "skill_id": "causal-treatment-models",
+  "provides": [
+    {
+      "capability": "skill.causal-treatment-models",
+      "method_id": "reviewed-cate-causal-treatment-models",
+      "label": "处理效应估计",
+      "description": "使用已审核实现执行 处理效应估计；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.causal-treatment-models.cate",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "operation",
+          "argument": "operation",
+          "label": "效应估计方法",
+          "type": "string",
+          "default": "t_learner",
+          "required": true,
+          "options": [
+            {
+              "value": "ipw",
+              "label": "ipw"
+            },
+            {
+              "value": "s_learner",
+              "label": "s_learner"
+            },
+            {
+              "value": "t_learner",
+              "label": "t_learner"
+            },
+            {
+              "value": "x_learner",
+              "label": "x_learner"
+            },
+            {
+              "value": "doubly_robust",
+              "label": "doubly_robust"
+            },
+            {
+              "value": "policy_learner",
+              "label": "policy_learner"
+            },
+            {
+              "value": "tarnet",
+              "label": "tarnet"
+            },
+            {
+              "value": "dragonnet",
+              "label": "dragonnet"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "treatment_col",
+          "argument": "treatment-col",
+          "label": "处理列（0/1）",
+          "type": "string",
+          "default": null,
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "outcome_col",
+          "argument": "outcome-col",
+          "label": "结局列",
+          "type": "string",
+          "default": null,
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "epochs",
+          "argument": "epochs",
+          "label": "epochs",
+          "type": "integer",
+          "default": 50,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 1000
+        },
+        {
+          "id": "device",
+          "argument": "device",
+          "label": "device",
+          "type": "string",
+          "default": "auto",
+          "required": true,
+          "options": [
+            {
+              "value": "auto",
+              "label": "auto"
+            },
+            {
+              "value": "cpu",
+              "label": "cpu"
+            },
+            {
+              "value": "cuda",
+              "label": "cuda"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "folds",
+          "argument": "folds",
+          "label": "folds",
+          "type": "integer",
+          "default": 5,
+          "required": true,
+          "options": [],
+          "minimum": 2,
+          "maximum": 20
+        },
+        {
+          "id": "seed",
+          "argument": "seed",
+          "label": "seed",
+          "type": "integer",
+          "default": 123,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        {
+          "id": "subject_col",
+          "argument": "subject-col",
+          "label": "subject-col",
+          "type": "string",
+          "default": "subject_id",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "features",
+          "label": "特征 CSV",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_metrics_json",
+          "type": "generated_file",
+          "label": "metrics.json",
+          "path_template": "results/metrics.json"
+        },
+        {
+          "id": "file_predictions_csv",
+          "type": "generated_file",
+          "label": "predictions.csv",
+          "path_template": "results/predictions.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "skills/causal-treatment-models/scripts/train_reference.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    }
+  ]
+}

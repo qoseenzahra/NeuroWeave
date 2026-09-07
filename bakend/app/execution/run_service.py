@@ -131,9 +131,9 @@ class RunService:
                     requested = step.selected_parameters.get(name)
                     if isinstance(requested, (int, float)) and (requested < 1 or requested > execution.cpus):
                         raise RunConflict(f"步骤 {step.title} 的 {name} 超过分配的 CPU，请调整资源或参数")
-                if step.selected_parameters.get("backend") == "cuda" and not execution.gpus:
+                if (step.selected_parameters.get("backend") == "cuda" or step.selected_parameters.get("device") == "cuda") and not execution.gpus:
                     raise RunConflict("CUDA 方法需要申请至少一张 GPU")
-            elif (step.selected_parameters.get("backend") == "cuda"
+            elif ((step.selected_parameters.get("backend") == "cuda" or step.selected_parameters.get("device") == "cuda")
                   and not self.runner_registry.get(method.runner_id).runtime_status().get("cuda_available")):
                 raise RunConflict("当前主节点没有可用 CUDA 设备，请选择 Slurm 并申请 GPU")
 
@@ -563,7 +563,7 @@ class RunService:
                 for artifact in candidates
                 if artifact.metadata.get("output_slot_id") == binding.output_slot_id
             ]
-            artifact = next(iter(exact or candidates), None)
+            artifact = next(iter(exact if binding.output_slot_id else candidates), None)
             if artifact is None:
                 raise RuntimeError(
                     f"上游步骤 {producer.title} 没有生成输入 {slot_id} 所需的"
@@ -589,6 +589,10 @@ class RunService:
     ) -> None:
         remaining = list(method.output_slots)
         for artifact in artifacts:
+            declared_id = artifact.metadata.get('output_slot_id')
+            if declared_id:
+                remaining = [slot for slot in remaining if slot.id != declared_id]
+                continue
             matching = next(
                 (slot for slot in remaining if slot.type == artifact.artifact_type),
                 None,

@@ -159,7 +159,7 @@ def collect_freesurfer_qc(freesurfer_dir: Path) -> Dict[str, Dict[str, float]]:
                 pass
 
         # Try to read aseg.stats for volume metrics
-        aseg_matches = list(freesurfer_dir.rglob(f"{subject_id}**/aseg.stats"))
+        aseg_matches = list(freesurfer_dir.rglob(f"{subject_id}/**/aseg.stats"))
         total_brain_vol = None
         etiv = None
 

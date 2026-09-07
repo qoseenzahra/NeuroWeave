@@ -1,0 +1,203 @@
+{
+  "schema_version": 1,
+  "skill_id": "seed-vig-skill",
+  "provides": [
+    {
+      "capability": "skill.seed-vig-skill",
+      "method_id": "reviewed-features-seed-vig-skill",
+      "label": "SEED 频带特征提取",
+      "description": "使用已审核实现执行 SEED 频带特征提取；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.seed-vig-skill.features",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "epoch_duration",
+          "argument": "epoch-duration",
+          "label": "epoch-duration",
+          "type": "number",
+          "default": 4.0,
+          "required": true,
+          "options": [],
+          "minimum": 0.5,
+          "maximum": 60
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "EEG 数据目录",
+          "required": true,
+          "binding": "folder",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_seed_vig_features_both_csv",
+          "type": "generated_file",
+          "label": "seed_vig_features_both.csv",
+          "path_template": "results/seed_vig_features_both.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "feature-extraction"
+      ],
+      "source_references": [
+        {
+          "path": "skills/seed-vig-skill/scripts/extract_seed_vig_features.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.seed-vig-skill",
+      "method_id": "reviewed-classify-seed-vig-skill",
+      "label": "SEED 按受试者留一交叉验证",
+      "description": "使用已审核实现执行 SEED 按受试者留一交叉验证；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.seed-vig-skill.classify",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "method",
+          "argument": "method",
+          "label": "method",
+          "type": "string",
+          "default": "both",
+          "required": true,
+          "options": [
+            {
+              "value": "svm",
+              "label": "svm"
+            },
+            {
+              "value": "rf",
+              "label": "rf"
+            },
+            {
+              "value": "both",
+              "label": "both"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "特征与标签 CSV",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_metrics_json",
+          "type": "generated_file",
+          "label": "metrics.json",
+          "path_template": "results/metrics.json"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "classification",
+        "vigilance-classification",
+        "emotion-classification"
+      ],
+      "source_references": [
+        {
+          "path": "skills/seed-vig-skill/scripts/classify_seed_vig.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.seed-vig-skill",
+      "method_id": "reviewed-validate-seed-vig-seed-vig-skill",
+      "label": "seed-vig 数据校验",
+      "description": "使用已审核实现执行 seed-vig 数据校验；输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.seed-vig-skill.validate-seed-vig",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "input",
+          "required": true,
+          "binding": "folder",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_output_csv",
+          "type": "generated_file",
+          "label": "output.csv",
+          "path_template": "results/output.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [
+        "bids-validation",
+        "data-validation",
+        "eeg-validation"
+      ],
+      "source_references": [
+        {
+          "path": "skills/seed-vig-skill/scripts/validate_seed_vig.py",
+          "kind": "script",
+          "label": "已审核实现",
+          "line_start": 1
+        }
+      ]
+    }
+  ]
+}

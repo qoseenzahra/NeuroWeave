@@ -20,8 +20,8 @@ def run_task_glm(
 ) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    events = pd.read_csv(events_path, sep=None, engine="python")
-    confounds = pd.read_csv(confounds_path, sep=None, engine="python") if confounds_path is not None else None
+    events = pd.read_csv(events_path, sep='\t' if events_path.suffix.lower()=='.tsv' else ',')
+    confounds = pd.read_csv(confounds_path, sep='\t' if confounds_path.suffix.lower()=='.tsv' else ',') if confounds_path is not None else None
 
     model = FirstLevelModel(t_r=tr, mask_img=str(mask_path) if mask_path is not None else None)
     model = model.fit(str(bold_path), events=events, confounds=confounds)
