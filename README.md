@@ -6,6 +6,9 @@ NeuroWeave 是以 NeuroClaw 为上游能力库的本地神经影像智能工作�
 
 当前功能：
 
+2026-09-07 已新增 `/opt/neuroweave/envs/` 公共 Python 环境，覆盖科学计算、神经影像、EEG
+和 PyTorch CUDA；环境安装与 Slurm 实测状态见 [公共环境与调度说明](deploy/python-environments/README.md)。
+
 - Web 对话工作台
 - 普通对话与任务两种交互模式
 - 从 `skills/*/SKILL.md` 自动发现、搜索并选择 Skill

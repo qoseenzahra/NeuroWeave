@@ -33,3 +33,15 @@
 这些变量由 `deploy/native-backend.env` 和各 Runner 显式构造，不依赖用户的交互式 shell。
 已有 Conda `base`、`midcc`、`sp` 及 FSL 自带 Python 环境保持不变；NeuroWeave 仅使用自己的
 后端环境运行 FastAPI，再按 Runner 配置调用上表程序。
+
+## 公共 Python 环境（2026-09-07 新增）
+
+| 用途 | 路径 | 验证结果 |
+| --- | --- | --- |
+| 科学计算、统计、神经影像、EEG | `/opt/neuroweave/envs/scientific-py311/bin/python` | 主要库导入和合成数据测试通过；Slurm 作业 8 成功 |
+| PyTorch CUDA 12.8 深度学习 | `/opt/neuroweave/envs/torch-cu128-py311/bin/python` | PyTorch 2.11.0、CPU测试通过；Slurm 作业 9 成功；三个计算节点均能识别CUDA设备 |
+
+环境由 `hipeson` 维护，其他用户可读取/执行。`/opt` 已通过 NFS 共享到 `node01–03`。
+每个计算节点有一张 RTX 5060（约8GB），但 Slurm 节点当前为 DOWN 且未登记 GPU GRES，
+尚不能提交 GPU 作业。本次未更改生产 Runner 的解释器配置或 Slurm 配置。
+依赖锁定、验证记录和调度接入说明见 [公共环境文档](python-environments/README.md)。
