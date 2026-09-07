@@ -14,6 +14,8 @@
 
 ## 尚待管理员步骤与实际调度验证
 
+更新：管理员已在四台主机应用 GPU 配置并重启相应服务。最终核查原先因 mgr 多一个空行而误报；已修复空白行比较、内核版本 `#` 字符解析，以及未启用 GPU 记账时对 `CfgTRES` 的误判。新增 12 项测试、15 个子测试通过。修正脚本已同步，三个节点的 `--check-finalize` 全部通过；尚待执行 `sudo python3 /opt/neuroweave/admin/configure_slurm_gpu.py --finalize` 恢复调度。以下原发布状态及后续测试命令保留作为记录。
+
 本次最后检查时，三个 GPU 节点仍为 DOWN 且未登记 GPU GRES。因此生产 `LOCALFLOW_SLURM_ENABLED=false`，网页暂不允许提交 Slurm 作业。未将模拟测试、只读 GPU 检测或 Worker 导入检查当作真实 GPU 调度通过。
 
 已将管理员脚本同步到 `/opt/neuroweave/admin/` 并通过语法检查。由 hipeson 在 mgr 交互终端执行：
@@ -32,12 +34,10 @@ LOCALFLOW_SLURM_PYTHON=/opt/neuroweave/envs/scientific-py311/bin/python \
 /opt/neuroweave/envs/scientific-py311/bin/python -B scripts/smoke_slurm_execution.py
 ```
 
-脚本验证成功、输入缺失、取消排队作业、重启后同一 Job ID 恢复四种情况，保存 `/home/data/neuroweave/smoke/<时间标记>/evidence.json`。测试通过且生产无活动任务后，以同一发布脚本加 `--enable-slurm` 更新配置，再核查网页分区和 GPU 可用状态：
+脚本验证成功、输入缺失、取消排队作业、重启后同一 Job ID 恢复四种情况，保存 `/home/data/neuroweave/smoke/<时间标记>/evidence.json`。测试通过且生产无活动任务后，备份现有 `deploy/native-backend.env`，仅将 `LOCALFLOW_SLURM_ENABLED` 改为 `true`，保留固定 Worker 路径及其他设置，然后重启原生后端并核查网页分区和 GPU 可用状态：
 
 ```bash
-python3 /home/hipeson/LocalFlow/scripts/deploy_slurm_release.py \
-  --source /home/hipeson/.cache/neuroweave/releases/c58b1858c0f5f74b5b3b3e63785d2efd7fe24f02 \
-  --revision c58b1858c0f5f74b5b3b3e63785d2efd7fe24f02 --enable-slurm
+systemctl --user restart localflow-backend.service
 ```
 
 使用方式、共享路径、GPU 训练模板和规划型 Skill 的执行边界见 [Slurm 执行文档](slurm-execution.md)。

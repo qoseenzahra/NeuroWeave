@@ -43,12 +43,23 @@ def digest(data):
     return hashlib.sha256(data).hexdigest()
 
 
+def config_fingerprint(data):
+    """Ignore blank lines only; preserve every nonempty configuration line."""
+    return digest(b'\n'.join(line for line in data.splitlines() if line.strip()))
+
+
 def fields(line):
     return dict(re.findall(r'(?i)(\w+)\s*=\s*([^\s#]+)', line.split('#', 1)[0]))
 
 
 def lower_fields(line):
     return {key.lower(): value for key, value in fields(line).items()}
+
+
+def status_fields(text):
+    # scontrol's OS build string contains '#'; it is data, not a config comment.
+    return {key.lower(): value for key, value in
+            re.findall(r'(?:^|\s)([A-Za-z][A-Za-z0-9_]*)=(\S+)', text)}
 
 
 def hostlist(value):
@@ -253,10 +264,33 @@ def verify_node():
     gpu = run(['nvidia-smi', '--query-gpu=index,name', '--format=csv,noheader'])
     require(len(gpu.splitlines()) == 1 and '5060' in gpu, 'Expected one RTX 5060 GPU.')
     print(json.dumps({'host': host, 'conf_sha256': digest(CONF.read_bytes()),
+                      'conf_nonblank_sha256': config_fingerprint(CONF.read_bytes()),
                       'started': started, 'gpu': gpu}))
 
 
-def finalize(host, ssh_user):
+def verify_registration(node, status, probe, expected):
+    require(probe['host'] == node and probe['conf_nonblank_sha256'] == expected,
+            node + ': nonempty slurm.conf lines differ from mgr.')
+    state = status.get('state', '')
+    require(set(re.split(r'[+*~#]', state)) <= {'DOWN', 'IDLE'},
+            node + ': unexpected state ' + state + '; inspect slurmd logs first.')
+    require(status.get('gres') == 'gpu:1',
+            node + ': controller has not registered one GPU.')
+    # GRES scheduling works without GPU accounting. This cluster's Slurm 21.08
+    # omits gres/gpu from CfgTRES when AccountingStorageTRES does not track it.
+    tres = dict(item.split('=', 1) for item in status.get('cfgtres', '').split(',') if '=' in item)
+    require('gres/gpu' not in tres or tres['gres/gpu'] == '1',
+            node + ': GPU accounting count contradicts registered GRES.')
+    registered = status.get('slurmdstarttime', '')
+    try:
+        registered_time = dt.datetime.fromisoformat(registered).timestamp()
+    except ValueError:
+        raise RuntimeError(node + ': missing SlurmdStartTime; node is not registered.')
+    require(abs(registered_time - probe['started']) < 120,
+            node + ': controller registration is stale; check clocks and slurmd logs.')
+
+
+def finalize(host, ssh_user, *, resume=True):
     require(host == 'mgr', '--finalize is only permitted on mgr.')
     require(re.fullmatch(r'[a-z_][a-z0-9_-]*', ssh_user), 'Invalid SSH user.')
     require(all(before == after for before, after in planned_files(host).values()),
@@ -265,29 +299,23 @@ def finalize(host, ssh_user):
     config = run(['scontrol', 'show', 'config'])
     match = re.search(r'^\s*GresTypes\s*=\s*(\S+)', config, re.M)
     require(match and 'gpu' in match.group(1).split(','), 'Controller has not loaded GresTypes=gpu.')
-    expected = digest(CONF.read_bytes())
+    expected = config_fingerprint(CONF.read_bytes())
     for node in NODES:
         command = ['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10', node,
                    'python3 ' + SCRIPT + ' --verify-node']
-        if ssh_user != 'root':
+        if os.geteuid() == 0 and ssh_user != 'root':
             command = ['runuser', '-u', ssh_user, '--'] + command
+        elif os.geteuid() != 0:
+            import pwd
+            require(pwd.getpwuid(os.geteuid()).pw_name == ssh_user,
+                    'Read-only verification must use the current SSH account.')
         probe = json.loads(run(command))
-        require(probe['host'] == node and probe['conf_sha256'] == expected,
-                node + ': slurm.conf differs from mgr.')
-        status = lower_fields(run(['scontrol', 'show', 'node', node, '--oneliner']))
-        state = status.get('state', '')
-        require(set(re.split(r'[+*~#]', state)) <= {'DOWN', 'IDLE'},
-                node + ': unexpected state ' + state + '; inspect slurmd logs first.')
-        require(status.get('gres') == 'gpu:1' and 'gres/gpu=1' in status.get('cfgtres', ''),
-                node + ': controller has not registered one GPU.')
-        registered = status.get('slurmdstarttime', '')
-        try:
-            registered_time = dt.datetime.fromisoformat(registered).timestamp()
-        except ValueError:
-            raise RuntimeError(node + ': missing SlurmdStartTime; node is not registered.')
-        require(abs(registered_time - probe['started']) < 120,
-                node + ': controller registration is stale; check clocks and slurmd logs.')
+        status = status_fields(run(['scontrol', 'show', 'node', node, '--oneliner']))
+        verify_registration(node, status, probe, expected)
         print(node + ': configuration, GPU, daemon restart and registration verified.')
+    if not resume:
+        print('CHECK PASSED: all finalization checks passed; no node state changed. Run with sudo and --finalize to RESUME.')
+        return
     queue_empty()
     run(['scontrol', 'update', 'NodeName=node[01-03]', 'State=RESUME'])
     print(run(['sinfo', '--Node', '--format=%N %t %G']))
@@ -299,6 +327,7 @@ def main():
     action = parser.add_mutually_exclusive_group()
     action.add_argument('--apply', action='store_true', help='Back up and atomically write reviewed GPU settings.')
     action.add_argument('--finalize', action='store_true', help='Verify all GPU nodes, then explicitly RESUME them (mgr only).')
+    action.add_argument('--check-finalize', action='store_true', help='Run all finalization checks without sudo or node state changes.')
     action.add_argument('--rollback', metavar='BACKUP_DIRECTORY')
     action.add_argument('--verify-node', action='store_true', help=argparse.SUPPRESS)
     parser.add_argument('--ssh-user', default='hipeson', help='Existing SSH identity used by mgr finalization (default: hipeson).')
@@ -306,12 +335,12 @@ def main():
     if args.verify_node:
         verify_node()
         return
-    host = check_host(require_device=not args.rollback)
+    host = check_host(root=not args.check_finalize, require_device=not args.rollback)
     if args.rollback:
         rollback(host, args.rollback)
         return
-    if args.finalize:
-        finalize(host, args.ssh_user)
+    if args.finalize or args.check_finalize:
+        finalize(host, args.ssh_user, resume=not args.check_finalize)
         return
     queue_empty()
     changes = {path: pair for path, pair in planned_files(host).items() if pair[0] != pair[1]}

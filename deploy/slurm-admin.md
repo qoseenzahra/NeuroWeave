@@ -25,7 +25,7 @@ ssh -t node02 sudo python3 /opt/neuroweave/admin/configure_slurm_gpu.py
 ssh -t node03 sudo python3 /opt/neuroweave/admin/configure_slurm_gpu.py
 ```
 
-默认 dry-run，不写配置、不重启服务、不恢复 DOWN 节点。预期只增加全局 `GresTypes=gpu`、三个计算节点各自的 `Gres=gpu:1`，以及计算节点 `/etc/slurm/gres.conf` 的 `Name=gpu File=/dev/nvidia0`。已有非预期 GPU 配置会被拒绝，不会被覆盖。所有主机最终的 `slurm.conf` 必须完全一致。
+默认 dry-run，不写配置、不重启服务、不恢复 DOWN 节点。预期只增加全局 `GresTypes=gpu`、三个计算节点各自的 `Gres=gpu:1`，以及计算节点 `/etc/slurm/gres.conf` 的 `Name=gpu File=/dev/nvidia0`。已有非预期 GPU 配置会被拒绝，不会被覆盖。所有主机最终的 `slurm.conf` 非空行必须一致；额外空白行不影响 Slurm 配置，不作为差异拒绝。
 
 ## 2. 备份并应用
 
@@ -61,7 +61,15 @@ scontrol show node 'node[01-03]'
 sudo python3 /opt/neuroweave/admin/configure_slurm_gpu.py --finalize
 ```
 
-该命令仅允许 mgr 执行。它以 `hipeson` 的 SSH 身份验证每个节点的配置哈希、GPU 设备与型号、slurmd 活跃且在配置写入后启动、控制器已登记同一 slurmd 实例和 `gpu:1`。仅接受 `DOWN` 或 `IDLE` 状态；全部通过且队列仍为空后，才执行 `scontrol update NodeName=node[01-03] State=RESUME`。注册信息不完整时可以等数秒重新执行，脚本不会越过检查。
+该命令仅允许 mgr 执行。它以 `hipeson` 的 SSH 身份验证每个节点配置的非空行指纹、GPU 设备与型号、slurmd 活跃且在配置写入后启动、控制器已登记同一 slurmd 实例和 `gpu:1`。仅接受 `DOWN` 或 `IDLE` 状态；全部通过且队列仍为空后，才执行 `scontrol update NodeName=node[01-03] State=RESUME`。注册信息不完整时可以等数秒重新执行，脚本不会越过检查。
+
+配置和服务重启已经完成时，不必重跑完整 wrapper。先用普通账号执行全部最终检查，再执行上面的 `sudo ... --finalize`：
+
+```bash
+python3 /opt/neuroweave/admin/configure_slurm_gpu.py --check-finalize
+```
+
+`--check-finalize` 不更改节点状态。校验保留所有非空配置行，仅忽略空白行；解析 `scontrol` 输出时，Linux 内核版本中的 `#` 不视为注释。GPU 登记根据 `Gres=gpu:1` 判断；当前未配置 `AccountingStorageTRES=gres/gpu`，因此 `CfgTRES` 未显示 GPU 不代表 GRES 调度未配置。若 `CfgTRES` 显式包含 GPU 数量，则必须与 GRES 一致。
 
 ## 4. 从 mgr 提交 GPU 实测
 
