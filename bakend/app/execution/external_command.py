@@ -43,6 +43,10 @@ class ExternalCommandRunner:
         if not status.get("available"):
             problems.append(str(status.get("reason") or "运行环境不可用"))
         for slot_id, binding in context.step.input_bindings.items():
+            if binding.source == "upstream_output":
+                if not context.input_is_deferred(slot_id):
+                    problems.append(f"输入 {slot_id} 的上游输出尚未解析为实际文件")
+                continue
             for path in self.binding_paths(binding):
                 if not path.exists():
                     problems.append(f"输入 {slot_id} 不存在：{path}")

@@ -118,13 +118,17 @@ class ReviewedRunner(ExternalCommandRunner):
             result[name] = value
         return result
 
-    def checked_inputs(self, context):
+    def checked_inputs(self, context, *, allow_deferred=False):
         result = {}
+        deferred = set()
         declared = {item['id']: item for item in self.spec['inputs']}
         if set(context.step.input_bindings) - set(declared):
             raise ValueError('存在未审核的输入绑定')
         for name, definition in declared.items():
             binding = context.step.input_bindings.get(name)
+            if allow_deferred and context.input_is_deferred(name):
+                deferred.add(name)
+                continue
             paths = self.binding_paths(binding) if binding else []
             if not paths and not definition.get('required', True):
                 continue
@@ -153,7 +157,7 @@ class ReviewedRunner(ExternalCommandRunner):
                     if not nested.is_file() or not self._allowed_input(nested, context.output_directory.parent):
                         raise ValueError('影像清单含未授权路径：' + value)
             result[name] = path
-        if self.spec.get('require_any_input', True) and not result:
+        if self.spec.get('require_any_input', True) and not result and not deferred:
             raise ValueError('至少绑定一项分析输入')
         return result
 
@@ -161,7 +165,7 @@ class ReviewedRunner(ExternalCommandRunner):
         problems = self.common_preflight(context)
         try:
             self.parameters(context)
-            self.checked_inputs(context)
+            self.checked_inputs(context, allow_deferred=context.is_dry_run)
         except (ValueError, OSError) as exc:
             problems.append(str(exc))
         return problems

@@ -165,7 +165,10 @@ class FslEddyRunner(ExternalCommandRunner):
         if str(self.parameter(context, "susceptibility_correction", "auto")) == "topup":
             if context.step.input_bindings.get("topup_fieldcoef") is None:
                 problems.append("强制使用 topup 时必须绑定 topup fieldcoef 输出")
-        topup = self.optional_binding(context, "topup_fieldcoef")
+        topup = (
+            None if context.input_is_deferred("topup_fieldcoef")
+            else self.optional_binding(context, "topup_fieldcoef")
+        )
         if topup is not None:
             base = self._topup_base(topup)
             if not Path(str(base) + "_movpar.txt").is_file():

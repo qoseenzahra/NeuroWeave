@@ -169,7 +169,35 @@ class RecipeCompiler:
                     resolved[1],
                 )
 
+        self._validate_upstream_inputs(units)
         return units
+
+    @staticmethod
+    def _validate_upstream_inputs(units: list[ExecutionUnit]) -> None:
+        # Validate expanded recipes as well as ordinary workflow links before
+        # dry-run defers file checks, and again before a real run is created.
+        available: dict[tuple[str, str], str] = {}
+        for unit in units:
+            input_types = {slot.id: slot.type for slot in unit.method.input_slots}
+            for slot_id, binding in unit.step.input_bindings.items():
+                if binding.source != "upstream_output":
+                    continue
+                source = (binding.upstream_step_id or "", binding.output_slot_id or "")
+                artifact_type = available.get(source)
+                if artifact_type is None:
+                    raise RecipeCompilationError(
+                        f"步骤 {unit.step.title} 的输入 {slot_id} 引用了不可用的上游输出："
+                        f"{source[0]}.{source[1]}"
+                    )
+                if artifact_type != input_types.get(slot_id) or artifact_type != binding.artifact_type:
+                    raise RecipeCompilationError(
+                        f"步骤 {unit.step.title} 的输入 {slot_id} 与上游输出类型不匹配"
+                    )
+            parameters = RecipeCompiler._default_parameters(unit.method)
+            parameters.update(unit.step.selected_parameters)
+            for output in unit.method.output_slots:
+                if all(parameters.get(key) in values for key, values in output.generated_when.items()):
+                    available[(unit.step.id, output.id)] = output.type
 
     @staticmethod
     def _rewrite_upstream_bindings(

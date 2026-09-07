@@ -107,5 +107,9 @@ class RunnerRegistry:
                 cancel_event=Event(),
                 log=lambda _message, _progress, _level: None,
                 remote_gpu_available=remote_gpu_available,
+                is_dry_run=True,
             )
-            return runner.preflight(context)
+            try:
+                return runner.preflight(context)
+            except (RuntimeError, ValueError, OSError) as exc:
+                return [f"输入或运行环境检查失败：{exc}"]

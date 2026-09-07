@@ -31,6 +31,18 @@ class RunnerContext:
     log: LogCallback
     detach_event: Event | None = None
     remote_gpu_available: bool = False
+    is_dry_run: bool = False
+
+    def input_is_deferred(self, slot_id: str) -> bool:
+        """Only a dry-run may inspect a graph before its upstream files exist."""
+        binding = self.step.input_bindings.get(slot_id)
+        return bool(
+            self.is_dry_run
+            and binding is not None
+            and binding.source == "upstream_output"
+            and binding.upstream_step_id
+            and binding.output_slot_id
+        )
 
     def raise_if_cancelled(self) -> None:
         if self.cancel_event.is_set():

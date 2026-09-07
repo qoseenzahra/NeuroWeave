@@ -25,7 +25,9 @@ class BidsPrepareRunner:
         problems: list[str] = []
         binding = context.step.input_bindings.get("source_dataset")
         paths = ExternalCommandRunner.binding_paths(binding) if binding else []
-        if len(paths) != 1 or not paths[0].is_dir():
+        if context.input_is_deferred("source_dataset"):
+            pass  # Inspect the upstream directory once it has been produced.
+        elif len(paths) != 1 or not paths[0].is_dir():
             problems.append("必须绑定一个可读的源数据目录")
         elif not ExternalCommandRunner._allowed_input(paths[0]):
             problems.append("源数据目录超出允许运行的数据根")

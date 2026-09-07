@@ -41,25 +41,34 @@ class MrtrixTckgenRunner(ExternalCommandRunner):
         problems = self.common_preflight(context)
         if context.step.input_bindings.get("fod") is None:
             problems.append("缺少必需的 FOD 影像")
-        else:
+        elif not context.input_is_deferred("fod"):
             try:
-                fod = self.required_binding(context, "fod")
-                checked = subprocess.run(  # noqa: S603 - fixed reviewed executable and argv
-                    [str(self.mrstats_executable), str(fod), "-output", "max"],
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    text=True,
-                    errors="replace",
-                    timeout=90,
-                    check=False,
-                    env={**os.environ, **self._environment()},
+                paths = (
+                    self.binding_paths(context.step.input_bindings["fod"])
+                    if context.is_dry_run else [self.required_binding(context, "fod")]
                 )
-                maxima = [float(token) for token in checked.stdout.split()]
-                if checked.returncode != 0 or not maxima:
-                    problems.append("无法读取 FOD 数值统计，请检查文件格式")
-                elif max(maxima) <= 0:
-                    problems.append("FOD 所有系数均为 0，不能用于纤维追踪")
-            except (OSError, ValueError, subprocess.TimeoutExpired) as exc:
+                if not paths:
+                    raise ValueError("FOD 输入尚未绑定实际文件")
+                for path in paths:
+                    fod = path.resolve(strict=True)
+                    if not self._allowed_input(fod, context.output_directory.parent):
+                        continue  # common_preflight already reports the invalid root.
+                    checked = subprocess.run(  # noqa: S603 - fixed reviewed executable and argv
+                        [str(self.mrstats_executable), str(fod), "-output", "max"],
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        text=True,
+                        errors="replace",
+                        timeout=90,
+                        check=False,
+                        env={**os.environ, **self._environment()},
+                    )
+                    maxima = [float(token) for token in checked.stdout.split()]
+                    if checked.returncode != 0 or not maxima:
+                        problems.append("无法读取 FOD 数值统计，请检查文件格式")
+                    elif max(maxima) <= 0:
+                        problems.append("FOD 所有系数均为 0，不能用于纤维追踪")
+            except (RuntimeError, OSError, ValueError, subprocess.TimeoutExpired) as exc:
                 problems.append(f"FOD 内容检查失败：{exc}")
         if bool(self.parameter(context, "act_enabled", True)) and context.step.input_bindings.get("five_tt") is None:
             problems.append("启用 ACT 时必须绑定 5TT 影像")

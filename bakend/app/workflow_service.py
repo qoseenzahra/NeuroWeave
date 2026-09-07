@@ -996,6 +996,13 @@ class WorkflowService:
                         workflow, step, method
                     )
                     messages.extend(preflight_problems)
+                    for slot_id, binding in step.input_bindings.items():
+                        if binding.source == "upstream_output":
+                            messages.append(
+                                f"输入 {slot_id} 将由上游步骤 {binding.upstream_step_id} "
+                                f"的输出 {binding.output_slot_id} 提供；"
+                                "流程连接已校验，实际文件及内容将在执行该步骤前检查。"
+                            )
                     if not preflight_problems and step.selected_parameters.get("backend") == "cuda":
                         messages.append("CUDA 方法将在实际执行节点再次检测 GPU；无显卡的主节点请使用 Slurm 并申请 GPU")
                     command_valid = command_valid and not preflight_problems

@@ -4,10 +4,12 @@ import os
 import unittest
 import tempfile
 from pathlib import Path
+from threading import Event
 from types import SimpleNamespace
 from unittest.mock import patch
 
 from app.execution.runners.freesurfer import FreeSurferReconAllRunner
+from app.execution.base import RunnerContext
 from app.execution.runners.fsl import FslEddyRunner
 from app.execution.runners.mrtrix_pipeline import MrtrixFiveTtGenRunner
 
@@ -28,7 +30,12 @@ class RunnerEnvironmentTests(unittest.TestCase):
                                                    ("dry-run", False, False),
                                                    ("run_actual", True, False)):
                     with self.subTest(run_id=run_id, remote=remote):
-                        context = SimpleNamespace(run_id=run_id, step=step, remote_gpu_available=remote)
+                        context = RunnerContext(
+                            run_id=run_id, workflow=SimpleNamespace(), step=step,
+                            method=SimpleNamespace(), output_directory=Path(temporary),
+                            cancel_event=Event(), log=lambda *_: None,
+                            remote_gpu_available=remote, is_dry_run=run_id == "dry-run",
+                        )
                         self.assertEqual(not runner.preflight(context), should_pass)
 
     def test_freesurfer_environment_contains_delegated_tool_paths(self) -> None:
