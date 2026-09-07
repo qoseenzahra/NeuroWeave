@@ -2,14 +2,35 @@ from __future__ import annotations
 
 import os
 import unittest
+import tempfile
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from app.execution.runners.freesurfer import FreeSurferReconAllRunner
+from app.execution.runners.fsl import FslEddyRunner
 from app.execution.runners.mrtrix_pipeline import MrtrixFiveTtGenRunner
 
 
 class RunnerEnvironmentTests(unittest.TestCase):
+    def test_remote_gpu_deferral_is_only_allowed_during_dry_run(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            runner = FslEddyRunner()
+            runner.cuda_executable = Path(temporary) / "eddy_cuda"
+            runner.cuda_executable.write_bytes(b"placeholder")
+            step = SimpleNamespace(selected_parameters={"backend": "cuda"}, input_bindings={
+                name: object() for name in ("dwi", "mask", "acqp", "index", "bvecs", "bvals")
+            })
+            with patch.object(runner, "common_preflight", return_value=[]), \
+                    patch.object(runner, "optional_binding", return_value=None), \
+                    patch.object(runner, "runtime_status", return_value={"cuda_available": False}):
+                for run_id, remote, should_pass in (("dry-run", True, True),
+                                                   ("dry-run", False, False),
+                                                   ("run_actual", True, False)):
+                    with self.subTest(run_id=run_id, remote=remote):
+                        context = SimpleNamespace(run_id=run_id, step=step, remote_gpu_available=remote)
+                        self.assertEqual(not runner.preflight(context), should_pass)
+
     def test_freesurfer_environment_contains_delegated_tool_paths(self) -> None:
         home = Path("/opt/test/freesurfer")
         with patch.dict(

@@ -38,7 +38,7 @@ GPU 验证必须在分配到 GPU 的计算节点上执行 `--profile torch --req
 模板、图谱、预训练权重和用户数据不在依赖安装过程中自动下载；需要按具体方法准备。
 TensorFlow 不混装进 PyTorch 环境，避免不同 CUDA 依赖互相替换。
 
-### 已完成的安装与验证（2026-09-07）
+### 首次安装验证记录（2026-09-07，Slurm 接入前）
 
 - 两个环境安装完成并通过 `pip check`；科学环境约 2.6GB，PyTorch 环境约 7.8GB。
 - 科学环境主要库导入通过，合成回归、NIfTI 读写、MNE 数据对象检查通过。
@@ -54,8 +54,10 @@ TensorFlow 不混装进 PyTorch 环境，避免不同 CUDA 依赖互相替换。
   `/home/hipeson/LocalFlow/runtime/environment-install/`，Slurm 测试日志位于
   `/opt/neuroweave/jobs/hipeson/gpu-probe/`。
 
-本次仅安装独立环境与完成验证，未修改现有 Runner 环境配置或重启 FastAPI；
-后续接入时可将经过验证的 Python Runner 指向相应入口。未修改 Slurm 管理配置。
+以上为首次环境安装时的状态。后续 Slurm 接入和运行说明见
+[Slurm 执行文档](../slurm-execution.md)，管理员 GPU 配置见
+[管理员步骤](../slurm-admin.md)。科学环境还补齐了 Worker 使用的 Pydantic 与
+python-dotenv，并同步更新 `locks/scientific-py311-pip.txt`。
 
 ## 2026-09-07 集群只读检查结果
 

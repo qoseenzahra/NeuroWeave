@@ -232,6 +232,26 @@ export type RunArtifact = {
   metadata: Record<string, unknown>;
 };
 
+export type ExecutionOptions = {
+  backend: 'local' | 'slurm';
+  partition: string;
+  cpus: number;
+  memory_gb: number;
+  gpus: number;
+  time_minutes: number;
+};
+
+export type ExecutionBackends = {
+  local: { available: boolean };
+  slurm: {
+    enabled: boolean;
+    available: boolean;
+    reason?: string;
+    partitions: string[];
+    gpu_available: boolean;
+  };
+};
+
 export type RunStep = {
   step_id: string;
   title: string;
@@ -245,12 +265,20 @@ export type RunStep = {
   error_message: string;
   started_at: string | null;
   finished_at: string | null;
+  scheduler?: {
+    job_id?: string | number;
+    state?: string;
+    node_list?: string;
+    reason?: string;
+    [key: string]: unknown;
+  };
 };
 
 export type WorkflowRun = {
   run_id: string;
   workflow_id: string;
   workflow_revision: number;
+  execution?: ExecutionOptions;
   status: RunStatus;
   progress: number;
   current_step_id: string | null;

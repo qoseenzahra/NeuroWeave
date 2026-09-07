@@ -10,12 +10,13 @@ from uuid import uuid4
 
 from ..capability_registry import CapabilityRegistry
 from ..local_store import LocalStore
-from ..run_models import RunArtifact, RunStep, WorkflowRun
+from ..run_models import RunArtifact, RunStep, WorkflowRun, RunExecutionOptions
 from ..workflow_models import MethodOption, Workflow, WorkflowStep
-from .base import ExecutionCancelled, RunnerContext
+from .base import ExecutionCancelled, ExecutionDetached, RunnerContext
 from .recipe_compiler import ExecutionUnit, RecipeCompilationError, RecipeCompiler
 from .runner_registry import RunnerRegistry
 from .runners.freesurfer import FreeSurferReconAllRunner
+from .slurm_backend import SlurmBackend, TERMINAL_STATES
 
 
 class RunConflict(RuntimeError):
@@ -46,17 +47,57 @@ class RunService:
         self._lock = RLock()
         self._cancel_events: dict[str, Event] = {}
         self._futures: dict[str, Future[None]] = {}
+        self._detach_event = Event()
+        self.slurm_backend = SlurmBackend()
+        self.slurm_output_root = Path(os.getenv(
+            "LOCALFLOW_SLURM_OUTPUT_ROOT", "/home/data/neuroweave/runs/hipeson"
+        )).resolve()
         self.store.fail_incomplete_runs(
             self._now(),
             "backend_restarted",
             "后端重启时任务仍处于运行状态；请确认输出后重新运行。",
+            preserve_slurm=True,
         )
+        self._recover_slurm_runs()
 
     @property
     def enabled(self) -> bool:
         return bool(self.runner_registry.available_ids())
 
-    def create(self, workflow_id: str, expected_revision: int) -> WorkflowRun:
+    def execution_backends(self) -> dict[str, Any]:
+        return {"local": {"available": True}, "slurm": self.slurm_backend.status()}
+
+    def create(self, workflow_id: str, expected_revision: int,
+               execution: RunExecutionOptions | None = None) -> WorkflowRun:
+        # The deployment uses one API process. Serialize check-and-insert and
+        # all run writes with cancel so a stale snapshot cannot erase a Job ID.
+        with self._lock:
+            return self._create(workflow_id, expected_revision, execution)
+
+    def _save_run(self, run: WorkflowRun, **kwargs: Any) -> None:
+        with self._lock:
+            cancellation = self._cancel_events.get(run.run_id)
+            if cancellation is not None and cancellation.is_set():
+                run.cancellation_requested = True
+                if run.status == "succeeded":
+                    raise ExecutionCancelled("任务完成登记前已收到取消请求")
+                if run.status in {"queued", "running"}:
+                    run.status = "cancel_requested"
+            self.store.save_run(run, **kwargs)
+
+    def _create(self, workflow_id: str, expected_revision: int,
+                execution: RunExecutionOptions | None = None) -> WorkflowRun:
+        execution = execution or RunExecutionOptions()
+        if execution.backend == "slurm":
+            status = self.slurm_backend.status()
+            if not status.get("available"):
+                raise RunConflict(str(status.get("reason") or "Slurm 不可用"))
+            if execution.partition not in status.get("partitions", []):
+                raise RunConflict("Slurm 分区不在可用白名单中")
+            if execution.gpus and not status.get("gpu_available"):
+                raise RunConflict("Slurm 暂无可调度 GPU")
+        elif execution.gpus:
+            raise RunConflict("GPU 资源请求必须使用 Slurm 执行方式")
         workflow = self.store.get_workflow(workflow_id)
         if workflow is None:
             raise KeyError(workflow_id)
@@ -85,10 +126,23 @@ class RunService:
                 raise RunConflict(f"步骤 {step.title} 仍是规划型方法，不能执行")
             if self.runner_registry.get(method.runner_id) is None:
                 raise RunConflict(f"步骤 {step.title} 的 runner 尚未注册：{method.runner_id}")
+            if execution.backend == "slurm":
+                for name in ("threads", "omp_threads", "n_jobs"):
+                    requested = step.selected_parameters.get(name)
+                    if isinstance(requested, (int, float)) and (requested < 1 or requested > execution.cpus):
+                        raise RunConflict(f"步骤 {step.title} 的 {name} 超过分配的 CPU，请调整资源或参数")
+                if step.selected_parameters.get("backend") == "cuda" and not execution.gpus:
+                    raise RunConflict("CUDA 方法需要申请至少一张 GPU")
+            elif (step.selected_parameters.get("backend") == "cuda"
+                  and not self.runner_registry.get(method.runner_id).runtime_status().get("cuda_available")):
+                raise RunConflict("当前主节点没有可用 CUDA 设备，请选择 Slurm 并申请 GPU")
 
         now = self._now()
         run_id = f"run_{uuid4().hex[:12]}"
-        output_directory = self._safe_run_directory(run_id)
+        output_directory = self._safe_run_directory(run_id, execution.backend)
+        if execution.backend == "slurm":
+            self.slurm_output_root.mkdir(parents=True, exist_ok=True, mode=0o700)
+            output_directory.mkdir(mode=0o700)
         run = WorkflowRun(
             run_id=run_id,
             workflow_id=workflow.workflow_id,
@@ -109,11 +163,12 @@ class RunService:
             ],
             created_at=now,
             updated_at=now,
+            execution=execution,
         )
-        self.store.save_run(
+        self._save_run(
             run,
             event_type="run_queued",
-            event_message="任务已进入本地执行队列",
+            event_message="任务已进入 Slurm 提交队列" if execution.backend == "slurm" else "任务已进入本地执行队列",
         )
         cancel_event = Event()
         with self._lock:
@@ -125,6 +180,44 @@ class RunService:
                 resolved,
                 cancel_event,
             )
+        return self.get(run_id)
+
+    def _recover_slurm_runs(self) -> None:
+        for run in self.store.incomplete_runs():
+            if run.execution.backend != "slurm":
+                continue
+            try:
+                self.resume_slurm_monitoring(run.run_id)
+            except Exception as exc:
+                # Do not lose a potentially live remote job just because a new
+                # deployment cannot reconstruct its old recipe. Keep its Job ID.
+                self.store.append_run_event(run.run_id, event_type="slurm_recovery_blocked",
+                                            message=str(exc), level="error")
+
+    def resume_slurm_monitoring(self, run_id: str) -> WorkflowRun:
+        with self._lock:
+            run = self.get(run_id)
+            if run.execution.backend != "slurm" or run.status not in {"queued", "running", "cancel_requested"}:
+                raise RunConflict("只有未结束的 Slurm 任务可以恢复监控")
+            if run_id in self._futures:
+                return run
+            if self._detach_event.is_set():
+                raise RunConflict("后端正在关闭，请在启动后恢复监控")
+            workflow = Workflow.model_validate(run.plan_snapshot)
+            if Path(run.output_directory).resolve() != self._safe_run_directory(run_id, "slurm"):
+                raise RunConflict("共享输出根目录与原任务不一致，请恢复原 Slurm 输出配置")
+            units = self.recipe_compiler.compile(workflow)
+            if ([u.step.id for u in units] != [s.step_id for s in run.steps]
+                    or any(u.method.runner_id != s.runner_id or u.method.id != s.method_id
+                           for u, s in zip(units, run.steps))):
+                raise RunConflict("恢复时的执行配方与持久快照不一致")
+            first = next((i for i, s in enumerate(run.steps) if s.status != "succeeded"), len(units))
+            event = Event()
+            if run.cancellation_requested or run.status == "cancel_requested":
+                event.set()
+            self._cancel_events[run_id] = event
+            self._futures[run_id] = self._executor.submit(
+                self._execute, run_id, workflow, units, event, first)
         return self.get(run_id)
 
     def get(self, run_id: str) -> WorkflowRun:
@@ -141,6 +234,8 @@ class RunService:
         """
         with self._lock:
             run = self.get(run_id)
+            if run.execution.backend != "local":
+                raise RunConflict("该专项恢复只适用于本地 FreeSurfer 任务")
             if (run.status != "failed" or run.cancellation_requested
                     or run_id in self._futures):
                 raise RunConflict("只能恢复已结束且未取消的失败任务")
@@ -210,7 +305,7 @@ class RunService:
             run.error_code = run.error_message = ""
             run.finished_at = None
             run.updated_at = self._now()
-            self.store.save_run(run, event_type="freesurfer_stage_recovered",
+            self._save_run(run, event_type="freesurfer_stage_recovered",
                                 event_message=failed.message, step_id=failed.step_id,
                                 event_payload={**report, "previous_error": previous_error})
             cancel_event = Event()
@@ -238,18 +333,22 @@ class RunService:
             run.status = "cancel_requested"
             run.cancellation_requested = True
             run.updated_at = self._now()
-            self.store.save_run(
+            self._save_run(
                 run,
                 event_type="cancellation_requested",
                 event_message="已请求取消任务，正在等待当前安全检查点",
                 level="warning",
             )
+            if event is None and run.execution.backend == "slurm":
+                self.resume_slurm_monitoring(run_id)
         return run
 
     def shutdown(self) -> None:
+        self._detach_event.set()
         with self._lock:
-            for event in self._cancel_events.values():
-                event.set()
+            for run_id, event in self._cancel_events.items():
+                if self.get(run_id).execution.backend != "slurm":
+                    event.set()
         self._executor.shutdown(wait=False, cancel_futures=True)
 
     def _execute(
@@ -262,28 +361,30 @@ class RunService:
     ) -> None:
         run = self.get(run_id)
         try:
-            run.status = "running"
+            run.status = "cancel_requested" if cancel_event.is_set() else "running"
             run.started_at = run.started_at or self._now()
             run.updated_at = self._now()
-            self.store.save_run(
+            self._save_run(
                 run,
                 event_type="run_resumed" if start_index else "run_started",
-                event_message="本地 Worker 已开始执行",
+                event_message="Slurm Worker 开始提交或恢复监控" if run.execution.backend == "slurm" else "本地 Worker 已开始执行",
             )
             step_total = max(len(resolved), 1)
             for step_index, unit in enumerate(resolved):
                 if step_index < start_index:
                     continue
                 workflow_step, method = unit.step, unit.method
-                if cancel_event.is_set():
-                    raise ExecutionCancelled("任务在步骤开始前被取消")
                 step_run = run.steps[step_index]
+                if run.execution.backend == "slurm" and self._detach_event.is_set():
+                    raise ExecutionDetached("后端停止监控，Slurm 作业保留并在启动后恢复")
+                if cancel_event.is_set() and not (run.execution.backend == "slurm" and step_run.scheduler):
+                    raise ExecutionCancelled("任务在步骤开始前被取消")
                 step_run.status = "running"
-                step_run.started_at = self._now()
+                step_run.started_at = step_run.started_at or self._now()
                 step_run.message = "正在执行"
                 run.current_step_id = step_run.step_id
                 run.updated_at = step_run.started_at
-                self.store.save_run(
+                self._save_run(
                     run,
                     event_type="step_started",
                     event_message=f"开始执行：{step_run.title}",
@@ -293,10 +394,10 @@ class RunService:
                 runner = self.runner_registry.get(method.runner_id)
                 if runner is None:
                     raise RuntimeError(f"未注册 runner：{method.runner_id}")
-                step_directory = self._safe_step_directory(run_id, unit.workspace_key)
+                step_directory = self._safe_step_directory(run_id, unit.workspace_key, run.execution.backend)
 
                 def log(message: str, progress: float | None, level: str) -> None:
-                    if cancel_event.is_set():
+                    if cancel_event.is_set() and run.execution.backend != "slurm":
                         raise ExecutionCancelled("任务已由用户取消")
                     if progress is not None:
                         step_run.progress = max(0.0, min(float(progress), 100.0))
@@ -305,7 +406,10 @@ class RunService:
                         )
                     step_run.message = message
                     run.updated_at = self._now()
-                    self.store.save_run(run)
+                    if cancel_event.is_set():
+                        run.status = "cancel_requested"
+                        run.cancellation_requested = True
+                    self._save_run(run)
                     self.store.append_run_event(
                         run_id,
                         event_type="runner_log",
@@ -324,11 +428,25 @@ class RunService:
                     output_directory=step_directory,
                     cancel_event=cancel_event,
                     log=log,
+                    detach_event=self._detach_event if run.execution.backend == "slurm" else None,
                 )
-                problems = runner.preflight(context)
-                if problems:
-                    raise RuntimeError("；".join(problems))
-                result = runner.run(context)
+                if run.execution.backend == "slurm":
+                    def on_job(state: dict[str, Any]) -> None:
+                        step_run.scheduler = state
+                        run.updated_at = self._now()
+                        if cancel_event.is_set():
+                            run.status = "cancel_requested"
+                            run.cancellation_requested = True
+                        self._save_run(run, event_type="slurm_job_state",
+                                            event_message=f"Slurm {state.get('job_id', '')}: {state.get('state', '提交中')}",
+                                            step_id=step_run.step_id, event_payload=state)
+                    result = self.slurm_backend.execute(context, run.execution.model_dump(),
+                                                        step_run.scheduler or None, on_job)
+                else:
+                    problems = runner.preflight(context)
+                    if problems:
+                        raise RuntimeError("；".join(problems))
+                    result = runner.run(context)
                 if cancel_event.is_set():
                     raise ExecutionCancelled("任务在步骤完成时被用户取消")
                 step_run.status = "succeeded"
@@ -340,7 +458,7 @@ class RunService:
                 run.artifacts.extend(result.artifacts)
                 run.progress = (step_index + 1) / step_total * 100.0
                 run.updated_at = step_run.finished_at
-                self.store.save_run(
+                self._save_run(
                     run,
                     event_type="step_succeeded",
                     event_message=result.message,
@@ -355,18 +473,32 @@ class RunService:
             run.current_step_id = None
             run.finished_at = self._now()
             run.updated_at = run.finished_at
-            self.store.save_run(
+            self._save_run(
                 run,
                 event_type="run_succeeded",
                 event_message=f"任务完成，共生成 {len(run.artifacts)} 个制品",
             )
         except ExecutionCancelled as exc:
             self._finish_cancelled(run, str(exc))
+        except ExecutionDetached as exc:
+            self.store.append_run_event(run_id, event_type="slurm_monitor_detached",
+                                        message=str(exc), level="info")
         except Exception as exc:  # noqa: BLE001 - persist runner failures as structured state
             active_step = next(
                 (step for step in run.steps if step.status == "running"),
                 None,
             )
+            if (run.execution.backend == "slurm" and active_step is not None
+                    and active_step.scheduler
+                    and active_step.scheduler.get("state") not in TERMINAL_STATES | {"SUBMISSION_FAILED"}):
+                # Even an unexpected NFS/logging failure must not release the
+                # workflow for resubmission while its remote job may be alive.
+                active_step.message = "监控中断，请恢复监控或取消后核查 Slurm 作业"
+                active_step.scheduler["reason"] = "monitoring_unavailable"
+                run.updated_at = self._now()
+                self._save_run(run, event_type="slurm_monitor_detached",
+                               event_message=str(exc), level="error")
+                return
             if active_step is not None:
                 active_step.status = "failed"
                 active_step.error_code = "runner_failed"
@@ -378,7 +510,7 @@ class RunService:
             run.error_message = str(exc)
             run.finished_at = self._now()
             run.updated_at = run.finished_at
-            self.store.save_run(
+            self._save_run(
                 run,
                 event_type="run_failed",
                 event_message=str(exc),
@@ -402,7 +534,7 @@ class RunService:
         run.error_message = message
         run.finished_at = self._now()
         run.updated_at = run.finished_at
-        self.store.save_run(
+        self._save_run(
             run,
             event_type="run_cancelled",
             event_message=message,
@@ -466,15 +598,17 @@ class RunService:
             artifact.metadata.setdefault("output_slot_id", matching.id)
             remaining.remove(matching)
 
-    def _safe_run_directory(self, run_id: str) -> Path:
-        candidate = (self.output_root / run_id).resolve()
-        candidate.relative_to(self.output_root)
+    def _safe_run_directory(self, run_id: str, backend: str = "local") -> Path:
+        root = self.slurm_output_root if backend == "slurm" else self.output_root
+        candidate = (root / run_id).resolve()
+        candidate.relative_to(root)
         return candidate
 
-    def _safe_step_directory(self, run_id: str, step_id: str) -> Path:
+    def _safe_step_directory(self, run_id: str, step_id: str, backend: str = "local") -> Path:
         safe_step = "".join(char if char.isalnum() or char in "-_" else "_" for char in step_id)
-        candidate = (self._safe_run_directory(run_id) / safe_step).resolve()
-        candidate.relative_to(self.output_root)
+        root = self._safe_run_directory(run_id, backend)
+        candidate = (root / safe_step).resolve()
+        candidate.relative_to(root)
         return candidate
 
     @staticmethod

@@ -755,12 +755,12 @@ async def confirm_workflow(workflow_id: str, request: WorkflowMutationRequest) -
 
 
 @app.post("/api/workflows/{workflow_id}/runs", response_model=WorkflowRun)
-async def start_workflow_run(
+def start_workflow_run(
     workflow_id: str,
     request: RunCreateRequest,
 ) -> WorkflowRun:
     try:
-        return run_service.create(workflow_id, request.expected_revision)
+        return run_service.create(workflow_id, request.expected_revision, request.execution)
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="Workflow not found") from exc
     except RunConflict as exc:
@@ -773,6 +773,11 @@ async def list_runs(
     limit: int = 50,
 ) -> dict[str, list[WorkflowRun]]:
     return {"runs": run_service.list(workflow_id=workflow_id, limit=limit)}
+
+
+@app.get("/api/execution/backends")
+def execution_backends() -> dict[str, Any]:
+    return run_service.execution_backends()
 
 
 @app.get("/api/runs/{run_id}", response_model=WorkflowRun)
@@ -810,6 +815,16 @@ async def recover_freesurfer_run(
     try:
         return run_service.recover_freesurfer(
             run_id, request.expected_revision, dry_run=dry_run)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Run not found") from exc
+    except RunConflict as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
+@app.post("/api/runs/{run_id}/resume-monitoring", response_model=WorkflowRun)
+async def resume_slurm_monitoring(run_id: str) -> WorkflowRun:
+    try:
+        return run_service.resume_slurm_monitoring(run_id)
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="Run not found") from exc
     except RunConflict as exc:

@@ -91,6 +91,10 @@ class RunnerRegistry:
         runner = self.get(method.runner_id)
         if runner is None:
             return [f"runner 尚未注册：{method.runner_id}"]
+        remote_gpu_available = False
+        if step.selected_parameters.get("backend") == "cuda":
+            from .slurm_backend import SlurmBackend
+            remote_gpu_available = bool(SlurmBackend().status().get("gpu_available"))
         with tempfile.TemporaryDirectory(prefix="localflow-dryrun-") as temporary:
             context = RunnerContext(
                 run_id="dry-run",
@@ -100,5 +104,6 @@ class RunnerRegistry:
                 output_directory=Path(temporary),
                 cancel_event=Event(),
                 log=lambda _message, _progress, _level: None,
+                remote_gpu_available=remote_gpu_available,
             )
             return runner.preflight(context)

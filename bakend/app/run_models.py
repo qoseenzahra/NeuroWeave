@@ -43,6 +43,16 @@ class RunStep(BaseModel):
     error_message: str = ""
     started_at: str | None = None
     finished_at: str | None = None
+    scheduler: dict[str, Any] = Field(default_factory=dict)
+
+
+class RunExecutionOptions(BaseModel):
+    backend: Literal["local", "slurm"] = "local"
+    partition: str = Field(default="all", pattern=r"^[A-Za-z0-9_-]{1,64}$")
+    cpus: int = Field(default=4, ge=1, le=64)
+    memory_gb: int = Field(default=8, ge=1, le=256)
+    gpus: int = Field(default=0, ge=0, le=1)
+    time_minutes: int = Field(default=60, ge=1, le=1440)
 
 
 class WorkflowRun(BaseModel):
@@ -63,10 +73,12 @@ class WorkflowRun(BaseModel):
     started_at: str | None = None
     finished_at: str | None = None
     updated_at: str
+    execution: RunExecutionOptions = Field(default_factory=RunExecutionOptions)
 
 
 class RunCreateRequest(BaseModel):
     expected_revision: int = Field(ge=1)
+    execution: RunExecutionOptions = Field(default_factory=RunExecutionOptions)
 
 
 class RunEvent(BaseModel):

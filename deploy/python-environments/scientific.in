@@ -41,3 +41,5 @@ psutil>=6
 PyYAML>=6,<7
 tqdm>=4,<5
 pytest>=8,<10
+pydantic>=2,<3
+python-dotenv>=1,<2

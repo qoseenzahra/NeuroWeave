@@ -714,6 +714,13 @@ class LocalStore:
             ).fetchone()
         return WorkflowRun.model_validate_json(row["payload_json"]) if row else None
 
+    def incomplete_runs(self) -> list[WorkflowRun]:
+        with self._connect() as connection:
+            rows = connection.execute(
+                "SELECT payload_json FROM runs WHERE status IN ('queued','running','cancel_requested')"
+            ).fetchall()
+        return [WorkflowRun.model_validate_json(row["payload_json"]) for row in rows]
+
     def run_events(self, run_id: str, *, after_event_id: int = 0) -> list[dict[str, Any]]:
         with self._connect() as connection:
             rows = connection.execute(
@@ -746,6 +753,8 @@ class LocalStore:
         updated_at: str,
         error_code: str,
         error_message: str,
+        *,
+        preserve_slurm: bool = False,
     ) -> int:
         with self._connect() as connection:
             rows = connection.execute(
@@ -756,6 +765,8 @@ class LocalStore:
                 """
             ).fetchall()
         runs = [WorkflowRun.model_validate_json(row["payload_json"]) for row in rows]
+        if preserve_slurm:
+            runs = [run for run in runs if run.execution.backend != "slurm"]
         for run in runs:
             run.status = "failed"
             run.error_code = error_code

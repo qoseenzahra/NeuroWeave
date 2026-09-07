@@ -157,7 +157,10 @@ class FslEddyRunner(ExternalCommandRunner):
             if context.step.input_bindings.get(slot_id) is None:
                 problems.append(f"缺少必需输入：{slot_id}")
         backend = str(self.parameter(context, "backend", "cpu"))
-        if backend == "cuda" and not self.runtime_status().get("cuda_available"):
+        if backend == "cuda" and not self.cuda_executable.is_file():
+            problems.append("缺少 CUDA eddy 可执行文件")
+        elif (backend == "cuda" and not self.runtime_status().get("cuda_available")
+              and not (context.run_id == "dry-run" and context.remote_gpu_available)):
             problems.append("选择了 CUDA eddy，但当前 Worker 未检测到 NVIDIA 设备")
         if str(self.parameter(context, "susceptibility_correction", "auto")) == "topup":
             if context.step.input_bindings.get("topup_fieldcoef") is None:

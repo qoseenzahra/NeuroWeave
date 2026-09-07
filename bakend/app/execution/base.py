@@ -13,6 +13,10 @@ class ExecutionCancelled(RuntimeError):
     pass
 
 
+class ExecutionDetached(RuntimeError):
+    """The API worker stopped observing a durable remote job during shutdown."""
+
+
 LogCallback = Callable[[str, float | None, str], None]
 
 
@@ -25,6 +29,8 @@ class RunnerContext:
     output_directory: Path
     cancel_event: Event
     log: LogCallback
+    detach_event: Event | None = None
+    remote_gpu_available: bool = False
 
     def raise_if_cancelled(self) -> None:
         if self.cancel_event.is_set():

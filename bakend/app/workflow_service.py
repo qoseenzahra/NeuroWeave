@@ -926,6 +926,8 @@ class WorkflowService:
                         workflow, step, method
                     )
                     messages.extend(preflight_problems)
+                    if not preflight_problems and step.selected_parameters.get("backend") == "cuda":
+                        messages.append("CUDA 方法将在实际执行节点再次检测 GPU；无显卡的主节点请使用 Slurm 并申请 GPU")
                     command_valid = command_valid and not preflight_problems
                 commands.append(
                     DryRunCommand(

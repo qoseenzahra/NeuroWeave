@@ -56,6 +56,8 @@ import { Progress, ProgressLabel, ProgressValue } from '@/components/ui/progress
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import type {
+  ExecutionBackends,
+  ExecutionOptions,
   MethodOption,
   InputSlotSpec,
   ParameterOption,
@@ -102,6 +104,30 @@ const ACTIVE_RUN_STATUSES = new Set<WorkflowRun['status']>([
   'cancel_requested',
 ]);
 
+const DEFAULT_EXECUTION: ExecutionOptions = {
+  backend: 'local',
+  partition: 'all',
+  cpus: 4,
+  memory_gb: 8,
+  gpus: 0,
+  time_minutes: 60,
+};
+
+const SCHEDULER_STATUS_COPY: Record<string, string> = {
+  PENDING: '排队中',
+  CONFIGURING: '正在分配资源',
+  RUNNING: '正在计算',
+  COMPLETING: '正在结束',
+  COMPLETED: '已完成',
+  CANCELLED: '已取消',
+  FAILED: '失败',
+  TIMEOUT: '超出时限',
+  OUT_OF_MEMORY: '内存不足',
+  NODE_FAIL: '节点故障',
+  PREEMPTED: '被抢占',
+  SUSPENDED: '已暂停',
+};
+
 function selectedMethod(step: WorkflowStep) {
   return step.method_options.find((method) => method.id === step.selected_method_id);
 }
@@ -145,11 +171,86 @@ export function WorkflowCard({ apiBase, workflow, onChange }: WorkflowCardProps)
   const [run, setRun] = useState<WorkflowRun | null>(null);
   const [runEvents, setRunEvents] = useState<RunEvent[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [execution, setExecution] = useState<ExecutionOptions>(DEFAULT_EXECUTION);
+  const [backendRefresh, setBackendRefresh] = useState(0);
+  const backendKey = `${apiBase}:${workflow.workflow_id}:${workflow.status}:${backendRefresh}`;
+  const [backendSnapshot, setBackendSnapshot] = useState<{
+    key: string;
+    backends: ExecutionBackends | null;
+    error: string | null;
+  } | null>(null);
+  const backends = backendSnapshot?.key === backendKey ? backendSnapshot.backends : null;
+  const backendError = backendSnapshot?.key === backendKey ? backendSnapshot.error : null;
+
+  useEffect(() => {
+    if (workflow.status !== 'confirmed') return;
+    const controller = new AbortController();
+    let current = true;
+    const timeout = window.setTimeout(() => controller.abort(), 15000);
+    const loadBackends = async () => {
+      try {
+        const response = await fetch(`${apiBase}/api/execution/backends`, {
+          signal: controller.signal,
+        });
+        if (!response.ok) throw new Error('暂时无法查询 Slurm 状态');
+        const payload = (await response.json()) as ExecutionBackends;
+        if (!payload.slurm || !Array.isArray(payload.slurm.partitions)) {
+          throw new Error('服务器尚未提供 Slurm 配置');
+        }
+        if (!current) return;
+        setBackendSnapshot({ key: backendKey, backends: payload, error: null });
+        setExecution((previous) => ({
+          ...previous,
+          partition: payload.slurm.partitions.includes(previous.partition)
+            ? previous.partition
+            : payload.slurm.partitions[0] ?? '',
+          gpus: payload.slurm.gpu_available ? previous.gpus : 0,
+        }));
+      } catch (requestError) {
+        if (current) {
+          setBackendSnapshot({
+            key: backendKey,
+            backends: null,
+            error: requestError instanceof Error && requestError.name !== 'AbortError'
+              ? requestError.message
+              : 'Slurm 状态查询超时，请重试',
+          });
+        }
+      } finally {
+        window.clearTimeout(timeout);
+      }
+    };
+    void loadBackends();
+    return () => {
+      current = false;
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [apiBase, workflow.status, backendKey]);
+
+  const slurmReady = Boolean(
+    backends && backends.slurm.enabled !== false && backends.slurm.available && backends.slurm.partitions.length,
+  );
+  const slurmReason = backendError ?? (backends
+    ? backends.slurm.reason || (slurmReady ? '' : 'Slurm 未启用或没有可用分区')
+    : '正在检查 Slurm 状态…');
+  const resourceValuesValid = [
+    [execution.cpus, 1, 64],
+    [execution.memory_gb, 1, 256],
+    [execution.gpus, 0, 1],
+    [execution.time_minutes, 1, 1440],
+  ].every(([value, minimum, maximum]) => Number.isInteger(value) && value >= minimum && value <= maximum);
+  const executionBlocked = execution.backend === 'slurm' && (
+    !slurmReady || !resourceValuesValid ||
+    !backends?.slurm.partitions.includes(execution.partition) ||
+    (execution.gpus > 0 && !backends?.slurm.gpu_available)
+  );
 
   useEffect(() => {
     let current = true;
     setRun(null);
     setRunEvents([]);
+    setExecution(DEFAULT_EXECUTION);
     const loadLatestRun = async () => {
       try {
         const response = await fetch(
@@ -258,6 +359,10 @@ export function WorkflowCard({ apiBase, workflow, onChange }: WorkflowCardProps)
     );
 
   const startRun = async () => {
+    if (executionBlocked) {
+      setError(!slurmReady ? slurmReason : '请检查 Slurm 分区及资源申请');
+      return;
+    }
     setRunBusy('start');
     setError(null);
     try {
@@ -266,7 +371,10 @@ export function WorkflowCard({ apiBase, workflow, onChange }: WorkflowCardProps)
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ expected_revision: workflow.revision }),
+          body: JSON.stringify({
+            expected_revision: workflow.revision,
+            execution: execution.backend === 'slurm' ? execution : { backend: 'local' },
+          }),
         },
       );
       const payload = (await response.json()) as WorkflowRun | ApiError;
@@ -289,22 +397,23 @@ export function WorkflowCard({ apiBase, workflow, onChange }: WorkflowCardProps)
     }
   };
 
-  const cancelRun = async () => {
+  const controlRun = async (action: 'cancel' | 'resume-monitoring') => {
     if (!run) return;
-    setRunBusy('cancel');
+    setRunBusy(action);
     setError(null);
+    const failureMessage = action === 'cancel' ? '无法取消运行' : '无法恢复监控';
     try {
-      const response = await fetch(`${apiBase}/api/runs/${run.run_id}/cancel`, {
+      const response = await fetch(`${apiBase}/api/runs/${run.run_id}/${action}`, {
         method: 'POST',
       });
       const payload = (await response.json()) as WorkflowRun | ApiError;
       if (!response.ok || !('run_id' in payload)) {
         const detail = (payload as ApiError).detail;
-        throw new Error(typeof detail === 'string' ? detail : '无法取消运行');
+        throw new Error(typeof detail === 'string' ? detail : failureMessage);
       }
       setRun(payload);
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : '无法取消运行');
+      setError(requestError instanceof Error ? requestError.message : failureMessage);
     } finally {
       setRunBusy(null);
     }
@@ -597,6 +706,85 @@ export function WorkflowCard({ apiBase, workflow, onChange }: WorkflowCardProps)
       </CardContent>
 
       <CardFooter className="flex-wrap justify-between gap-3 bg-slate-50/80">
+        {workflow.status === 'confirmed' && workflow.dry_run_report?.execution_enabled && !runActive && (
+          <div className="w-full space-y-3 rounded-lg border border-slate-200 bg-white p-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <Label htmlFor={`execution-${workflow.workflow_id}`}>运行位置</Label>
+              <NativeSelect
+                disabled={Boolean(runBusy)}
+                id={`execution-${workflow.workflow_id}`}
+                onChange={(event) => setExecution((previous) => ({
+                  ...previous,
+                  backend: event.target.value as ExecutionOptions['backend'],
+                }))}
+                value={execution.backend}
+              >
+                <NativeSelectOption value="local">本地服务器</NativeSelectOption>
+                <NativeSelectOption disabled={!slurmReady} value="slurm">Slurm 计算节点</NativeSelectOption>
+              </NativeSelect>
+              <Button
+                disabled={Boolean(runBusy) || (!backends && !backendError)}
+                onClick={() => setBackendRefresh((previous) => previous + 1)}
+                size="sm"
+                variant="ghost"
+              >
+                <RefreshCw className="size-3.5" />
+                刷新可用资源
+              </Button>
+            </div>
+            {!slurmReady && <output className="block text-xs text-slate-500">Slurm：{slurmReason}</output>}
+            {execution.backend === 'slurm' && (
+              <>
+                <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                  <div className="space-y-1.5">
+                    <Label htmlFor={`partition-${workflow.workflow_id}`}>分区</Label>
+                    <NativeSelect
+                      className="w-full"
+                      disabled={Boolean(runBusy) || !slurmReady}
+                      id={`partition-${workflow.workflow_id}`}
+                      onChange={(event) => setExecution((previous) => ({ ...previous, partition: event.target.value }))}
+                      value={execution.partition}
+                    >
+                      {(backends?.slurm.partitions ?? []).map((partition) => (
+                        <NativeSelectOption key={partition} value={partition}>{partition}</NativeSelectOption>
+                      ))}
+                    </NativeSelect>
+                  </div>
+                  {([
+                    ['cpus', 'CPU 核数', 1, 64],
+                    ['memory_gb', '内存 (GB)', 1, 256],
+                    ['gpus', 'GPU 数量', 0, 1],
+                    ['time_minutes', '时限 (分钟)', 1, 1440],
+                  ] as const).map(([key, label, minimum, maximum]) => (
+                    <div className="space-y-1.5" key={key}>
+                      <Label htmlFor={`${key}-${workflow.workflow_id}`}>{label}</Label>
+                      <Input
+                        disabled={Boolean(runBusy) || (key === 'gpus' && !backends?.slurm.gpu_available)}
+                        id={`${key}-${workflow.workflow_id}`}
+                        max={maximum}
+                        min={minimum}
+                        onChange={(event) => setExecution((previous) => ({
+                          ...previous,
+                          [key]: event.target.value === '' ? Number.NaN : Number(event.target.value),
+                        }))}
+                        step={1}
+                        type="number"
+                        value={Number.isNaN(execution[key]) ? '' : execution[key]}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-slate-500">
+                  资源按每个步骤申请；提交后由 Slurm 排队调度。
+                  {!backends?.slurm.gpu_available && ' 当前没有可申请的 GPU。'}
+                </p>
+                {!resourceValuesValid && (
+                  <p className="text-xs text-red-700" role="alert">请输入整数：CPU 1–64 核，内存 1–256 GB，GPU 0–1 张，时限 1–1440 分钟。</p>
+                )}
+              </>
+            )}
+          </div>
+        )}
         <div className="flex items-center gap-2 text-xs text-slate-500">
           {workflow.status === 'confirmed' ? (
             <CheckCircle2 className="size-4 text-emerald-600" />
@@ -717,7 +905,7 @@ export function WorkflowCard({ apiBase, workflow, onChange }: WorkflowCardProps)
           {workflow.status === 'confirmed' && workflow.dry_run_report?.execution_enabled && !runActive && (
             <Button
               className="gap-2 bg-blue-600 hover:bg-blue-700"
-              disabled={Boolean(runBusy)}
+              disabled={Boolean(runBusy) || executionBlocked}
               onClick={() => void startRun()}
               size="sm"
             >
@@ -729,12 +917,23 @@ export function WorkflowCard({ apiBase, workflow, onChange }: WorkflowCardProps)
             <Button
               className="gap-2"
               disabled={Boolean(runBusy) || run?.status === 'cancel_requested'}
-              onClick={() => void cancelRun()}
+              onClick={() => void controlRun('cancel')}
               size="sm"
               variant="outline"
             >
               {runBusy === 'cancel' ? <LoaderCircle className="animate-spin" /> : <Square />}
               取消运行
+            </Button>
+          )}
+          {runActive && run?.execution?.backend === 'slurm' && (
+            <Button
+              disabled={Boolean(runBusy)}
+              onClick={() => void controlRun('resume-monitoring')}
+              size="sm"
+              variant="outline"
+            >
+              {runBusy === 'resume-monitoring' && <LoaderCircle className="animate-spin" />}
+              恢复监控
             </Button>
           )}
         </div>
@@ -761,6 +960,11 @@ function RunPanel({ events, run }: { events: RunEvent[]; run: WorkflowRun }) {
           <Badge variant="outline" className="rounded-md bg-white font-mono text-[10px]">
             {run.run_id.slice(0, 12)}
           </Badge>
+          {run.execution?.backend === 'slurm' && (
+            <Badge variant="outline" className="rounded-md bg-white text-xs">
+              Slurm · {run.execution.partition}
+            </Badge>
+          )}
         </div>
         <span className="text-xs tabular-nums text-slate-500">{Math.round(run.progress)}%</span>
       </div>
@@ -777,6 +981,18 @@ function RunPanel({ events, run }: { events: RunEvent[]; run: WorkflowRun }) {
               <span className="text-slate-500">{Math.round(step.progress)}%</span>
             </div>
             <p className="mt-1 text-[11px] text-slate-500">{step.message}</p>
+            {step.scheduler?.job_id && (
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-blue-700">
+                <span className="font-mono">Job {step.scheduler.job_id}</span>
+                {step.scheduler.state && (
+                  <span title={step.scheduler.state}>
+                    {SCHEDULER_STATUS_COPY[step.scheduler.state.toUpperCase()] ?? step.scheduler.state}
+                  </span>
+                )}
+                {step.scheduler.node_list && <span>节点：{step.scheduler.node_list}</span>}
+                {step.scheduler.reason && <span>原因：{step.scheduler.reason}</span>}
+              </div>
+            )}
             {step.error_message && (
               <p className="mt-1 text-[11px] text-red-700">{step.error_message}</p>
             )}
