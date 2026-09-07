@@ -39,9 +39,11 @@
 | 用途 | 路径 | 验证结果 |
 | --- | --- | --- |
 | 科学计算、统计、神经影像、EEG | `/opt/neuroweave/envs/scientific-py311/bin/python` | 主要库导入和合成数据测试通过；Slurm 作业 8 成功 |
-| PyTorch CUDA 12.8 深度学习 | `/opt/neuroweave/envs/torch-cu128-py311/bin/python` | PyTorch 2.11.0、CPU测试通过；Slurm 作业 9 成功；三个计算节点均能识别CUDA设备 |
+| PyTorch CUDA 12.8 深度学习 | `/opt/neuroweave/envs/torch-cu128-py311/bin/python` | PyTorch 2.11.0；GPU 作业 12、13、14 分别在三个计算节点完成 CUDA 运算，均 ExitCode=0:0 |
 
 环境由 `hipeson` 维护，其他用户可读取/执行。`/opt` 已通过 NFS 共享到 `node01–03`。
-每个计算节点有一张 RTX 5060（约8GB），但 Slurm 节点当前为 DOWN 且未登记 GPU GRES，
-尚不能提交 GPU 作业。本次未更改生产 Runner 的解释器配置或 Slurm 配置。
+每个计算节点有一张 RTX 5060（约8GB），三个节点均已登记 `gpu:1` 并恢复调度。
+生产 Python Runner 已接入公共科学环境；Slurm 网页提交已启用，分区为 `all`。
+固定 Worker 位于 `/opt/neuroweave/worker/c58b1858c0f5f74b5b3b3e63785d2efd7fe24f02`，
+共享输出位于 `/home/data/neuroweave/runs/hipeson`。平台 GPU 作业 19 已在 node01 完成。
 依赖锁定、验证记录和调度接入说明见 [公共环境文档](python-environments/README.md)。

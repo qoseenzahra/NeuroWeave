@@ -1,5 +1,9 @@
 # NeuroWeave 公共 Python 环境与 Slurm 接入
 
+**当前状态（2026-09-07）：两个公共环境已安装，生产 Python Runner 已接入；Slurm 提交已启用。**
+`all` 分区的 node01–03 均已登记 `gpu:1`，作业 12、13、14 分别在三个节点通过实际 CUDA 运算。
+平台提交、失败、取消、重启恢复及 GPU 请求也通过了真实测试。见 [验证记录](../slurm-verification.md)。
+
 ## 环境安装
 
 目标目录由管理员创建一次，然后由 `hipeson` 维护，其他用户仅可读取/执行：
@@ -49,7 +53,7 @@ TensorFlow 不混装进 PyTorch 环境，避免不同 CUDA 依赖互相替换。
   识别 RTX 5060，设备能力 `(12, 0)`。未绕过 Slurm 运行 GPU 计算任务。
 - 新环境的文件公共读取、目录公共遍历检查通过；其他用户没有环境修改权限。
 - GPU `sbatch --test-only --gres=gpu:1` 返回
-  `Invalid generic resource (gres) specification`；当前 GPU 调度尚未通过。
+  `Invalid generic resource (gres) specification`；该阶段 GPU 调度尚未通过，后续已完成配置与实际作业验证。
 - 锁定清单保存在本目录 `locks/`；详细安装/验证日志位于服务器
   `/home/hipeson/LocalFlow/runtime/environment-install/`，Slurm 测试日志位于
   `/opt/neuroweave/jobs/hipeson/gpu-probe/`。
@@ -59,7 +63,7 @@ TensorFlow 不混装进 PyTorch 环境，避免不同 CUDA 依赖互相替换。
 [管理员步骤](../slurm-admin.md)。科学环境还补齐了 Worker 使用的 Pydantic 与
 python-dotenv，并同步更新 `locks/scientific-py311-pip.txt`。
 
-## 2026-09-07 集群只读检查结果
+## 2026-09-07 初次集群检查（接入前的历史记录）
 
 - 主节点：`mgr`；Slurm 21.08.5，`all` 为唯一分区，`mgr` 为 IDLE。
 - `node01`、`node02`、`node03` 的系统均可通过 SSH 访问。
@@ -73,9 +77,9 @@ python-dotenv，并同步更新 `locks/scientific-py311-pip.txt`。
 - 计算节点的 `/home/data` 为 `storage:/home/data` NFS 挂载。
 - `/home/hipeson/LocalFlow` 在计算节点不存在，不能直接作为远程工作目录或脚本路径。
 
-**因此：主节点提交、计算节点执行在架构上可行，但当前 GPU Slurm 执行尚未就绪。**
+以上是安装阶段的历史状态；GPU 配置和节点恢复现已完成，当前结果见本文开头的验证记录。
 
-## 管理员需要补齐的调度条件
+## 调度条件与当前实现
 
 1. 核查各节点 slurmd、MUNGE、配置一致性、时间同步及重启原因，然后恢复可调度状态。
 2. 在 Slurm 主配置登记 `GresTypes=gpu` 和对应节点的 `Gres=gpu:1`；
@@ -87,9 +91,10 @@ python-dotenv，并同步更新 `locks/scientific-py311-pip.txt`。
 5. 建议配置作业记账；如果继续没有 `sacct`，平台必须保存终态和退出码，
    不能把作业从 `squeue` 消失当作成功。
 
-这些调度管理操作未由环境安装器执行。
+GPU 资源登记、节点恢复和共享目录已完成，操作由独立管理员脚本执行。
+平台持久保存终态和退出码；Slurm 记账服务及设备 cgroup 强制隔离仍未启用。
 
-## GPU 提交示例（调度条件修复后）
+## GPU 提交示例
 
 将验证脚本复制到共享目录后再提交，保持绝对路径。以下只创建自己的验证目录：
 
@@ -107,12 +112,9 @@ RTX 5060 的约 8GB 显存对较大 3D 模型可能需要较小 batch、混合�
 
 ## NeuroWeave 接入位置
 
-当前 `RunService` 和 `ExternalCommandRunner.execute` 在主节点启动本地进程。
-环境安装不会自动改变调度方式，也不会将 planning 方法自动变成 Runner。
-部分环境检查也需调整，例如 FSL eddy 当前通过主节点 `/dev/nvidia0` 判断 CUDA，
-Slurm 模式应查询执行目标的 GPU 能力，不能继续使用主节点是否有显卡作为判断条件。
-
-应新增受审核的 Slurm 执行后端：
+`RunService` 根据提交时的执行选项选择本地或 Slurm；Slurm Worker 在分配的计算节点调用可信 Runner。
+FSL eddy 的 Dry-run 可以识别集群 GPU，实际执行时仍会在节点重新检查。
+planning 方法仍需接入可信 Runner，才能由网页执行。现有 Slurm 后端包含：
 
 1. 由可信 Runner 生成参数数组和资源请求，将步骤快照及所需代码放入共享工作区。
 2. 用 `sbatch --parsable` 提交并将 Job ID 写入运行审计。

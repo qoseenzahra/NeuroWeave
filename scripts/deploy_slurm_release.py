@@ -330,6 +330,7 @@ def deploy(source, revision, enable_slurm):
                 path.parent.mkdir(parents=True, exist_ok=True, mode=0o755)
                 atomic_write(path, change['after'], change['after_mode'])
             atomic_write(ENV_FILE, after_env, 0o600)
+            command(['systemctl', '--user', 'daemon-reload'])
             command(['systemctl', '--user', 'start', SERVICE])
             command(['systemctl', '--user', 'is-active', '--quiet', SERVICE])
         except Exception:

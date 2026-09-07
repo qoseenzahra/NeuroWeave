@@ -128,7 +128,7 @@ class SmokeSuite:
         from app.workflow_models import DryRunReport, MethodOption, Workflow, WorkflowStep
 
         stamp = now()
-        dataset_path = self.root / ("missing-dataset" if missing else "dataset")
+        dataset_path = self.root / (("missing-dataset-" if missing else "dataset-") + name)
         if not missing and not dataset_path.exists():
             dataset_path.mkdir(mode=0o700)
             (dataset_path / "dataset_description.json").write_text(

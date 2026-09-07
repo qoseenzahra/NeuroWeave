@@ -8,6 +8,7 @@ NeuroWeave 是以 NeuroClaw 为上游能力库的本地神经影像智能工作�
 
 2026-09-07 已新增 `/opt/neuroweave/envs/` 公共 Python 环境，覆盖科学计算、神经影像、EEG
 和 PyTorch CUDA；环境安装与 Slurm 实测状态见 [公共环境与调度说明](deploy/python-environments/README.md)。
+Slurm 执行已启用：主节点提交，三个 RTX 5060 计算节点执行 GPU 作业，实际 CUDA 运算、取消和重启恢复均已通过验证。使用方式见 [Slurm 执行文档](deploy/slurm-execution.md)，证据见 [验证记录](deploy/slurm-verification.md)。
 
 - Web 对话工作台
 - 普通对话与任务两种交互模式
@@ -26,10 +27,11 @@ NeuroWeave 是以 NeuroClaw 为上游能力库的本地神经影像智能工作�
 - 未手动选择时，按 NeuroClaw 的名称匹配规则识别消息中明确提到的 Skill
 - DWI 样例垂直流程：模型规划、兼容方法选择、流程锁定、参数审核、Dry-run 和最终确认
 - 可信 Runner 注册表、后台执行队列、取消、进度/日志、制品校验与 SQLite 运行审计
+- 本地或 Slurm 执行选择、CPU/内存/GPU/时限申请、Job ID 展示与持久恢复监控
 
 当前目录共有 103 个 Skill（99 个 NeuroClaw 上游 Skill 和 4 个 NeuroWeave Skill），每个 Skill 都有 `planning.manifest.json`，因此都能进入任务卡并选择受约束参数。生成器会优先从 `SKILL.md` 的方法表、快速参考和命令块中提取操作选项，再补充适合该能力类别的常用与高级规划参数；当前 103 个 planning manifest 都有来源依据，60 个 Skill 提取出了方法级操作选项，共登记 330 条只读参考命令。运行时会把命中 Skill 的多值 `operation` 选项展开为独立候选方法，而不修改能力树或一次读取全部 Skill；当前 114 个能力、128 个原始方法可展开为 468 个可选择方法，其中 64 个能力包含多种方法。任务卡可以展开查看 Skill、脚本和命令的来源位置，参数下拉项也可以显示选项说明。
 
-Manifest 的 `runner_id` 只是执行契约，不等于已经有执行代码。只有同时出现在后端可信 Runner 注册表、并通过服务器运行时探测的方法才会在 Dry-run 后标记为可执行。从文档提取的命令始终是只读参考，不会被模型或后端直接运行。当前显式注册 22 个经过审核的 Runner；部署服务器上 18 个已就绪，另外 4 个因缺少对应现有环境而安全禁用。输入只读，结果统一写入隔离的 `/outputs/run_*/step/` 目录，并记录完整命令日志、进度、校验和与运行事件。
+Manifest 的 `runner_id` 只是执行契约，不等于已经有执行代码。只有同时出现在后端可信 Runner 注册表、并通过服务器运行时探测的方法才会在 Dry-run 后标记为可执行。从文档提取的命令始终是只读参考，不会被模型或后端直接运行。当前显式注册 22 个经过审核的 Runner；部署服务器上 19 个已就绪，fMRIPrep、QSIPrep 和 nii2dcm 尚未配置执行入口。输入只读，本地结果写入 `LOCALFLOW_OUTPUT_ROOT/run_*/step/`，Slurm 结果写入共享的 `/home/data/neuroweave/runs/hipeson/run_*/step/`，并记录命令日志、进度、校验和与运行事件。
 
 ## 目录
 
