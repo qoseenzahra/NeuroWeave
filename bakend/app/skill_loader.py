@@ -1,4 +1,4 @@
-"""LocalFlow adapter around NeuroClaw's reused SkillLoader."""
+"""NeuroWeave adapter around NeuroClaw's reused SkillLoader."""
 
 from __future__ import annotations
 
@@ -89,7 +89,7 @@ class Skill:
 
 
 class SkillLoader:
-    """Cached LocalFlow view over the copied NeuroClaw loader and skill tree."""
+    """Cached NeuroWeave view over the copied NeuroClaw loader and skill tree."""
 
     def __init__(self, skills_dir: Path, summaries_file: Path | None = None) -> None:
         self.skills_dir = skills_dir.resolve()

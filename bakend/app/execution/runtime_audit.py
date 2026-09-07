@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-"""Audit configured LocalFlow runners without executing scientific jobs.
+"""Audit configured NeuroWeave runners without executing scientific jobs.
 
 Run inside the backend container with::
 
@@ -331,7 +331,7 @@ def build_report(*, deep: bool = False) -> dict[str, Any]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Audit LocalFlow runner environments")
+    parser = argparse.ArgumentParser(description="Audit NeuroWeave runner environments")
     parser.add_argument(
         "--deep",
         action="store_true",

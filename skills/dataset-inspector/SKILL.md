@@ -18,6 +18,6 @@ status: ready
 - 潜在质量问题
 - 后续处理建议
 
-LocalFlow 已为该 Skill 接入受信任的只读 `dataset.inspect` Runner。流程确认且
+NeuroWeave 已为该 Skill 接入受信任的只读 `dataset.inspect` Runner。流程确认且
 Dry-run 通过后，用户可显式启动扫描；Runner 只读取所选数据集，并把
 `dataset_profile.json` 写入隔离的运行输出目录，不修改源数据。

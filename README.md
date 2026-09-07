@@ -1,6 +1,10 @@
-# LocalFlow
+# NeuroWeave
 
-LocalFlow 是以 NeuroClaw 为上游能力库搭建的本地数据处理平台骨架。本阶段实现：
+NeuroWeave 是以 NeuroClaw 为上游能力库的本地神经影像智能工作流平台，通过自然语言组织分析需求，编排处理步骤，并由经过审核的可信 Runner 调用服务器现有软件，形成可追溯的分析流程。
+
+项目原名 LocalFlow。当前产品名称统一为 **NeuroWeave**；为兼容现有部署，源码目录 `D:\reference_projects\LocalFlow`、服务器目录 `/home/hipeson/LocalFlow`、SSH 别名 `localflow-server`、`localflow-backend.service`、数据库/Socket 文件名以及 `LOCALFLOW_*` 环境变量继续沿用。API 中的 Skill 来源值 `LocalFlow` 保留为兼容标识，界面显示为 NeuroWeave。
+
+当前功能：
 
 - Web 对话工作台
 - 普通对话与任务两种交互模式
@@ -20,7 +24,7 @@ LocalFlow 是以 NeuroClaw 为上游能力库搭建的本地数据处理平台�
 - DWI 样例垂直流程：模型规划、兼容方法选择、流程锁定、参数审核、Dry-run 和最终确认
 - 可信 Runner 注册表、后台执行队列、取消、进度/日志、制品校验与 SQLite 运行审计
 
-当前目录共有 103 个 Skill（99 个 NeuroClaw 上游 Skill 和 4 个 LocalFlow Skill），每个 Skill 都有 `planning.manifest.json`，因此都能进入任务卡并选择受约束参数。生成器会优先从 `SKILL.md` 的方法表、快速参考和命令块中提取操作选项，再补充适合该能力类别的常用与高级规划参数；当前 103 个 planning manifest 都有来源依据，60 个 Skill 提取出了方法级操作选项，共登记 330 条只读参考命令。运行时会把命中 Skill 的多值 `operation` 选项展开为独立候选方法，而不修改能力树或一次读取全部 Skill；当前 114 个能力、128 个原始方法可展开为 468 个可选择方法，其中 64 个能力包含多种方法。任务卡可以展开查看 Skill、脚本和命令的来源位置，参数下拉项也可以显示选项说明。
+当前目录共有 103 个 Skill（99 个 NeuroClaw 上游 Skill 和 4 个 NeuroWeave Skill），每个 Skill 都有 `planning.manifest.json`，因此都能进入任务卡并选择受约束参数。生成器会优先从 `SKILL.md` 的方法表、快速参考和命令块中提取操作选项，再补充适合该能力类别的常用与高级规划参数；当前 103 个 planning manifest 都有来源依据，60 个 Skill 提取出了方法级操作选项，共登记 330 条只读参考命令。运行时会把命中 Skill 的多值 `operation` 选项展开为独立候选方法，而不修改能力树或一次读取全部 Skill；当前 114 个能力、128 个原始方法可展开为 468 个可选择方法，其中 64 个能力包含多种方法。任务卡可以展开查看 Skill、脚本和命令的来源位置，参数下拉项也可以显示选项说明。
 
 Manifest 的 `runner_id` 只是执行契约，不等于已经有执行代码。只有同时出现在后端可信 Runner 注册表、并通过服务器运行时探测的方法才会在 Dry-run 后标记为可执行。从文档提取的命令始终是只读参考，不会被模型或后端直接运行。当前显式注册 22 个经过审核的 Runner；部署服务器上 18 个已就绪，另外 4 个因缺少对应现有环境而安全禁用。输入只读，结果统一写入隔离的 `/outputs/run_*/step/` 目录，并记录完整命令日志、进度、校验和与运行事件。
 
@@ -308,7 +312,7 @@ FSL eddy 与 dtifit、MRtrix3 响应函数/FOD/5TT/纤维追踪/连接组、Free
 ASL CBF、PET SUVR、Nibabel 检查、表格清洗和可复现性报告。DIPY、fMRIPrep、QSIPrep 与
 nii2dcm 已具备完整输入输出、参数和 Runner 契约，但只有在其环境探测通过后才允许执行。
 
-缺少软件时采用 NeuroClaw 式“环境入口配置”，不在 LocalFlow 中创建或修改环境。把已有
+缺少软件时采用 NeuroClaw 式“环境入口配置”，不在 NeuroWeave 中创建或修改环境。把已有
 环境中的解释器或入口程序配置到根目录 `.env`，重启 Compose 即可，不需要修改 Skill：
 
 ```dotenv
@@ -437,6 +441,6 @@ DeepSeek 官方 tokenizer 的精确计数。压缩默认保留最近 8 条原始
 
 ## 上游复用与改造边界
 
-Skill 目录、SkillLoader、依赖图校验、离线摘要、103 个 Skill 及其配套文件直接复用自同级 NeuroClaw 项目。LocalFlow 在外层增加缓存、来源标记、检索 API 和对话适配。具体清单见 `UPSTREAM.md`。
+Skill 目录、SkillLoader、依赖图校验、离线摘要、103 个 Skill 及其配套文件直接复用自同级 NeuroClaw 项目。NeuroWeave 在外层增加缓存、来源标记、检索 API 和对话适配。具体清单见 `UPSTREAM.md`。
 
 环境管理类 Skill 和上游命令 handler 虽已保留，但只作为说明文件展示；后端不会执行其中的任意命令。样例流程使用独立的 `tool.manifest.json` 声明 capability、输入输出类型、参数和 `runner_id`，实际执行还必须由 `bakend/app/execution/runner_registry.py` 显式注册经过代码审查的 Runner。模型文本、SKILL.md 命令块和前端命令预览都不能越过这个白名单。NeuroClaw 使用 MIT License，许可证副本位于 `THIRD_PARTY_NOTICES/NeuroClaw-LICENSE.txt`。

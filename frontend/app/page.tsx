@@ -208,7 +208,7 @@ const WELCOME_MESSAGE: ChatMessage = {
   id: 'welcome',
   role: 'assistant',
   content:
-    '你好，我是 LocalFlow。NeuroClaw 的现有 Skill 能力库已接入，你可以从左侧搜索并选择一个或多个 Skill，再告诉我希望如何处理数据。\n\n本次会话的原始消息由本地后端保存；对话较长时，较早内容会整理成工作摘要，同时保留近期原始消息。',
+    '你好，我是 NeuroWeave。NeuroClaw 的现有 Skill 能力库已接入，你可以从左侧搜索并选择一个或多个 Skill，再告诉我希望如何处理数据。\n\n本次会话的原始消息由本地后端保存；对话较长时，较早内容会整理成工作摘要，同时保留近期原始消息。',
 };
 
 function iconForSkill(skill: Skill) {
@@ -430,7 +430,7 @@ export default function Home() {
           fetch(`${API_BASE}/api/skills`),
         ]);
         if (!healthResponse.ok || !skillsResponse.ok) {
-          throw new Error('LocalFlow API is unavailable');
+          throw new Error('NeuroWeave API is unavailable');
         }
         const healthData = (await healthResponse.json()) as Health;
         const skillsData = (await skillsResponse.json()) as {
@@ -680,7 +680,7 @@ export default function Home() {
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <span className="text-[17px] font-semibold tracking-[-0.02em]">LocalFlow</span>
+              <span className="text-[17px] font-semibold tracking-[-0.02em]">NeuroWeave</span>
               <Badge className="h-5 rounded-md bg-blue-50 px-1.5 text-[10px] text-blue-700 shadow-none">
                 LOCAL
               </Badge>
@@ -944,7 +944,7 @@ export default function Home() {
                 onClick={() => setSourceFilter(source)}
                 type="button"
               >
-                {source === 'all' ? '全部' : source}
+                {source === 'all' ? '全部' : source === 'LocalFlow' ? 'NeuroWeave' : source}
               </button>
             ))}
           </div>
@@ -988,7 +988,7 @@ export default function Home() {
                             {skill.display_name}
                           </span>
                           <span className="mt-0.5 block font-mono text-[9px] uppercase tracking-wide text-slate-400">
-                            {skill.source ?? 'LocalFlow'}
+                            {skill.source === 'NeuroClaw' ? 'NeuroClaw' : 'NeuroWeave'}
                           </span>
                         </span>
                         <span
@@ -1132,7 +1132,7 @@ export default function Home() {
                   Conversation workspace
                 </p>
                 <h2 className="mt-1 text-xl font-semibold tracking-[-0.025em] text-slate-900">
-                  {interactionMode === 'task' ? '描述你的数据处理目标' : '与 LocalFlow 直接对话'}
+                  {interactionMode === 'task' ? '描述你的数据处理目标' : '与 NeuroWeave 直接对话'}
                 </h2>
                 <p className="mt-1 text-sm leading-6 text-slate-500">
                   {interactionMode === 'task'
@@ -1162,7 +1162,7 @@ export default function Home() {
                     )}
                   >
                     {message.role === 'assistant' && (
-                      <p className="mb-1.5 text-xs font-semibold text-slate-900">LocalFlow</p>
+                      <p className="mb-1.5 text-xs font-semibold text-slate-900">NeuroWeave</p>
                     )}
                     <p className="whitespace-pre-wrap text-sm leading-7">{message.content}</p>
                     {message.role === 'assistant' && message.capabilityRouting && (

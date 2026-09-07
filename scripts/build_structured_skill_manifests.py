@@ -1,4 +1,4 @@
-"""Generate planning manifests for every LocalFlow/NeuroClaw Skill.
+"""Generate planning manifests for every NeuroWeave/NeuroClaw Skill.
 
 Planning manifests make a Skill available as a typed Workflow step with bounded
 parameters. They intentionally do not declare an executable runner. Reviewed

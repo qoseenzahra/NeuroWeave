@@ -14,12 +14,12 @@ from ..external_command import ExternalCommandRunner
 
 class ReportBuilderRunner:
     runner_id = "report.build"
-    label = "LocalFlow 可复现性报告"
+    label = "NeuroWeave 可复现性报告"
 
     def runtime_status(self) -> dict[str, object]:
         return {
             "available": True,
-            "reason": "使用 LocalFlow 内置报告 Runner",
+            "reason": "使用 NeuroWeave 内置报告 Runner",
             "executable": "python:report-builder",
             "environment_profile": "localflow-backend",
         }
@@ -63,7 +63,7 @@ class ReportBuilderRunner:
             context,
             output,
             "processing_report",
-            "LocalFlow 处理报告",
+            "NeuroWeave 处理报告",
             media_type,
             {"format": output_format, "workflow_revision": context.workflow.revision},
         )
@@ -167,7 +167,7 @@ class ReportBuilderRunner:
         snapshot = html.escape(json.dumps(report, ensure_ascii=False, indent=2))
         return (
             "<!doctype html><html lang='zh-CN'><meta charset='utf-8'>"
-            "<title>LocalFlow 处理报告</title><style>body{max-width:980px;margin:40px auto;"
+            "<title>NeuroWeave 处理报告</title><style>body{max-width:980px;margin:40px auto;"
             "font:15px/1.6 system-ui;color:#172033}section{border-top:1px solid #dbe3ef;"
             "padding:16px 0}pre{white-space:pre-wrap;background:#f5f7fb;padding:14px;border-radius:8px}"
             "</style><body><h1>" + html.escape(workflow["title"]) + "</h1><p>"

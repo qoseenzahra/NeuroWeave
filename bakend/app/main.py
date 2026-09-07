@@ -130,7 +130,7 @@ async def lifespan(_app: FastAPI):
     run_service.shutdown()
 
 app = FastAPI(
-    title="LocalFlow API",
+    title="NeuroWeave API",
     version="0.1.0",
     description="Local dialogue and skill-discovery API.",
     lifespan=lifespan,
@@ -155,7 +155,7 @@ app.add_middleware(
 
 @app.get("/")
 async def root() -> dict[str, str]:
-    return {"name": "LocalFlow API", "docs": "/docs"}
+    return {"name": "NeuroWeave API", "docs": "/docs"}
 
 
 @app.get("/api/health")

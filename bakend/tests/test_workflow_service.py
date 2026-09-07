@@ -1254,7 +1254,7 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
 
         expected = ChatResponse(
             content="普通对话回复",
-            provider_used="LocalFlow",
+            provider_used="NeuroWeave",
             model_used="conversation-demo",
             mode="demo",
             selected_skills=[],

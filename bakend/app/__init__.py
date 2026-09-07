@@ -1,2 +1,2 @@
-"""LocalFlow local API package."""
+"""NeuroWeave local API package."""
 

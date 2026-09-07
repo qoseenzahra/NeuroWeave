@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'LocalFlow · 本地数据处理工作台',
-  description: '通过对话选择本地 Skill，组织数据处理需求。',
+  title: 'NeuroWeave · 神经影像智能工作流平台',
+  description: '通过自然语言编排神经影像分析流程，调用本地工具，追踪处理进度与分析结果。',
 };
 
 export default function RootLayout({

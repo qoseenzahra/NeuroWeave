@@ -12,7 +12,7 @@ from dipy.segment.mask import median_otsu
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="LocalFlow reviewed DIPY tensor worker")
+    parser = argparse.ArgumentParser(description="NeuroWeave reviewed DIPY tensor worker")
     parser.add_argument("--dwi", type=Path, required=True)
     parser.add_argument("--bvals", type=Path, required=True)
     parser.add_argument("--bvecs", type=Path, required=True)

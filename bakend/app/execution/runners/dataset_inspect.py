@@ -21,7 +21,7 @@ class DatasetInspectRunner:
     def runtime_status(self) -> dict[str, object]:
         return {
             "available": True,
-            "reason": "使用 LocalFlow 内置 Python Runner",
+            "reason": "使用 NeuroWeave 内置 Python Runner",
             "executable": "python:dataset-inspect",
         }
 

@@ -9,7 +9,7 @@ import pandas as pd
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="LocalFlow reviewed table-cleaning worker")
+    parser = argparse.ArgumentParser(description="NeuroWeave reviewed table-cleaning worker")
     parser.add_argument("--input", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--report", type=Path, required=True)

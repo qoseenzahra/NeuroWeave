@@ -16,7 +16,7 @@ class BidsPrepareRunner:
     def runtime_status(self) -> dict[str, object]:
         return {
             "available": True,
-            "reason": "使用 LocalFlow 内置只读输入 BIDS Runner",
+            "reason": "使用 NeuroWeave 内置只读输入 BIDS Runner",
             "executable": "python:bids-prepare",
             "environment_profile": "localflow-backend",
         }
@@ -77,8 +77,8 @@ class BidsPrepareRunner:
             except (OSError, json.JSONDecodeError) as exc:
                 raise RuntimeError(f"dataset_description.json 无效：{exc}") from exc
         else:
-            description = {"Name": source.name or "LocalFlow dataset", "BIDSVersion": "1.9.0"}
-        description.setdefault("Name", source.name or "LocalFlow dataset")
+            description = {"Name": source.name or "NeuroWeave dataset", "BIDSVersion": "1.9.0"}
+        description.setdefault("Name", source.name or "NeuroWeave dataset")
         description.setdefault("BIDSVersion", "1.9.0")
         description_path.write_text(json.dumps(description, ensure_ascii=False, indent=2), encoding="utf-8")
 

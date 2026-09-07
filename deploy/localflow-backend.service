@@ -1,5 +1,5 @@
 [Unit]
-Description=LocalFlow native FastAPI backend
+Description=NeuroWeave native FastAPI backend
 After=network-online.target
 Wants=network-online.target
 

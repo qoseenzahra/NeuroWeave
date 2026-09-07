@@ -1,4 +1,4 @@
-"""Build LocalFlow's complete, reviewed Skill capability index.
+"""Build NeuroWeave's complete, reviewed Skill capability index.
 
 The tree separates machine-reviewed runner capabilities from structured
 planning capabilities generated from every Skill. Every loaded Skill must be
@@ -461,7 +461,7 @@ def build_tree(skills: list[Skill]) -> dict[str, Any]:
         "generated_from": "scripts/build_capability_tree.py",
         "root": {
             "id": "localflow-capabilities",
-            "label": "LocalFlow 本地数据处理能力",
+            "label": "NeuroWeave 本地数据处理能力",
             "description": (
                 "完整索引所有现有 Skill；先按能力定位，再只读取命中的 SKILL.md。"
                 "所有 Skill 都有结构化规划 Manifest；只有受审 runner 能力可生成执行预览。"
