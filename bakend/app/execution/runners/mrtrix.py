@@ -51,7 +51,7 @@ class MrtrixTckgenRunner(ExternalCommandRunner):
                     raise ValueError("FOD 输入尚未绑定实际文件")
                 for path in paths:
                     fod = path.resolve(strict=True)
-                    if not self._allowed_input(fod, context.output_directory.parent):
+                    if not self._allowed_binding_input(context.step.input_bindings["fod"], fod, context.output_directory.parent):
                         continue  # common_preflight already reports the invalid root.
                     checked = subprocess.run(  # noqa: S603 - fixed reviewed executable and argv
                         [str(self.mrstats_executable), str(fod), "-output", "max"],

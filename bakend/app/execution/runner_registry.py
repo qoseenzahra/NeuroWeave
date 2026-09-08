@@ -112,6 +112,8 @@ class RunnerRegistry:
                         continue
                     match = next(item for item in binding.sample_matches if item.sample_id == sample_id)
                     binding.absolute_path = match.absolute_path
+                    from ..historical_inputs import select_history_sample
+                    select_history_sample(binding, sample_id)
                     binding.binding_mode = "single"
                     binding.sample_matches = []
                 problems.extend(f"样本 {sample_id}：{problem}"
@@ -137,6 +139,9 @@ class RunnerRegistry:
                 is_dry_run=True,
             )
             try:
-                return runner.preflight(context)
+                from ..historical_inputs import historical_binding_problems
+                history_problems = [problem for binding in context.step.input_bindings.values()
+                                    for problem in historical_binding_problems(binding)]
+                return history_problems + runner.preflight(context)
             except (RuntimeError, ValueError, OSError) as exc:
                 return [f"输入或运行环境检查失败：{exc}"]

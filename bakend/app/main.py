@@ -31,6 +31,7 @@ from .execution import RunnerRegistry, RunConflict, RunService
 from .local_store import LocalStore
 from .operation_service import OperationService
 from .maintenance import storage_status, inventory_outputs
+from .historical_inputs import HistoricalSelectionRequest
 from .models import ChatRequest, ChatResponse
 from .neuroclaw_compat.validate_dag import find_cycles, find_missing_deps, load_skill_graph
 from .skill_loader import SkillLoader
@@ -810,6 +811,41 @@ def preview_workflow_input(
         )
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="Workflow or dataset not found") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@app.get("/api/workflows/{workflow_id}/steps/{step_id}/inputs/{slot_id}/history")
+def historical_input_candidates(workflow_id: str, step_id: str, slot_id: str,
+                                offset: int = Query(0, ge=0, le=1000000)):
+    try:
+        return workflow_service.historical_input_candidates(workflow_id, step_id, slot_id, offset)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Workflow not found") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@app.post("/api/workflows/{workflow_id}/steps/{step_id}/inputs/{slot_id}/history/preview")
+def preview_historical_input(workflow_id: str, step_id: str, slot_id: str, request: HistoricalSelectionRequest):
+    try:
+        return workflow_service.preview_historical_input(workflow_id, step_id, slot_id, request)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Workflow or historical run not found") from exc
+    except RevisionConflict as exc:
+        raise _revision_http_error(exc) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@app.post("/api/workflows/{workflow_id}/steps/{step_id}/inputs/{slot_id}/history", response_model=Workflow)
+def bind_historical_input(workflow_id: str, step_id: str, slot_id: str, request: HistoricalSelectionRequest):
+    try:
+        return workflow_service.bind_historical_input(workflow_id, step_id, slot_id, request)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Workflow or historical run not found") from exc
+    except RevisionConflict as exc:
+        raise _revision_http_error(exc) from exc
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 

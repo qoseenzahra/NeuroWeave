@@ -77,6 +77,27 @@ class OutputSlotSpec(BaseModel):
     generated_when: dict[str, list[Any]] = Field(default_factory=dict)
 
 
+class HistoricalArtifactReference(BaseModel):
+    # Frozen provenance travels with a run to compute nodes; no database lookup
+    # or dataset-directory inference is needed by a scientific runner.
+    sample_id: str
+    step_id: str
+    artifact_id: str
+    absolute_path: str
+    output_directory: str
+    size_bytes: int
+    mtime_ns: int
+    sha256: str = ""
+    is_directory: bool = False
+
+
+class HistoricalInputReference(BaseModel):
+    run_id: str
+    group_id: str
+    dataset_id: str
+    artifacts: list[HistoricalArtifactReference]
+
+
 class InputBinding(BaseModel):
     slot_id: str
     artifact_type: str
@@ -93,6 +114,7 @@ class InputBinding(BaseModel):
     variables: list[str] = Field(default_factory=list)
     coverage: SamplePathCoverage | None = None
     sample_matches: list[SamplePathMatch] = Field(default_factory=list)
+    history: HistoricalInputReference | None = None
     status: Literal["validated", "selected", "planned"] = "selected"
     messages: list[str] = Field(default_factory=list)
 

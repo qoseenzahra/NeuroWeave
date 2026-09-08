@@ -36,6 +36,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ExecutionSettings, executionErrors } from '@/components/workflow/execution-settings';
 import { ArtifactPathPicker } from '@/components/dataset/artifact-path-picker';
+import { HistoricalInputPicker } from '@/components/dataset/historical-input-picker';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -585,6 +586,11 @@ function WorkflowCardState({ apiBase, workflow, onChange, disabled = false, onBu
                         onBind={(slotId, rootId, relativePath) =>
                           void bindInput(step.id, slotId, rootId, relativePath)
                         }
+                        onBindHistory={(slotId, runId, groupId) => void mutate(
+                          `input:${step.id}:${slotId}`,
+                          `/api/workflows/${workflow.workflow_id}/steps/${step.id}/inputs/${slotId}/history`,
+                          'POST', { run_id: runId, group_id: groupId },
+                        )}
                         onCompleteDependencies={() =>
                           void mutate(
                             'complete-dependencies',
@@ -1017,6 +1023,7 @@ function MethodArtifacts({
   disabled,
   method,
   onBind,
+  onBindHistory,
   onCompleteDependencies,
   selectedParameters,
   step,
@@ -1027,6 +1034,7 @@ function MethodArtifacts({
   disabled: boolean;
   method: MethodOption;
   onBind: (slotId: string, rootId: string, relativePath: string) => void;
+  onBindHistory: (slotId: string, runId: string, groupId: string) => void;
   onCompleteDependencies: () => void;
   selectedParameters: Record<string, ParameterValue>;
   step: WorkflowStep;
@@ -1059,7 +1067,7 @@ function MethodArtifacts({
             <div>
               <p className="text-xs font-semibold text-slate-800">方法输入</p>
               <p className="mt-0.5 text-[10px] text-slate-400">
-                流程锁定后，可从当前数据集选择并批量匹配
+                流程锁定后，可选择当前数据集文件或历史运行输出
               </p>
             </div>
           </div>
@@ -1117,6 +1125,8 @@ function MethodArtifacts({
                         <span className="min-w-0 break-all">
                           {binding.source === 'upstream_output'
                             ? `来自上游 ${binding.upstream_step_id}.${binding.output_slot_id}`
+                            : binding.history
+                              ? binding.label
                             : binding.binding_mode === 'per_sample'
                               ? `${binding.coverage?.matched ?? 0} 个样本 · ${binding.path_template}`
                               : binding.relative_path || binding.label}
@@ -1139,7 +1149,8 @@ function MethodArtifacts({
                     inputBusy ? (
                       <LoaderCircle className="size-4 animate-spin text-blue-600" />
                     ) : (
-                      <ArtifactPathPicker
+                      <div className="flex min-w-0 flex-wrap gap-2">
+                        <ArtifactPathPicker
                         apiBase={apiBase}
                         dataset={workflow.dataset}
                         disabled={disabled}
@@ -1150,6 +1161,13 @@ function MethodArtifacts({
                         slot={slot}
                         workflowId={workflow.workflow_id}
                       />
+                        {workflow.dataset && <HistoricalInputPicker
+                          key={workflow.revision}
+                          apiBase={apiBase} workflowId={workflow.workflow_id} revision={workflow.revision}
+                          stepId={step.id} slotId={slot.id} slotLabel={slot.label} disabled={disabled}
+                          onSelected={(runId, groupId) => onBindHistory(slot.id, runId, groupId)}
+                        />}
+                      </div>
                     )
                   )}
                 </div>

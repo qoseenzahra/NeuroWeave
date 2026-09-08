@@ -6,6 +6,7 @@ from pathlib import Path
 
 from ..run_models import RunExecutionOptions
 from ..workflow_models import Workflow
+from ..historical_inputs import select_history_sample
 from .recipe_compiler import ExecutionUnit, RecipeCompilationError, RecipeCompiler
 
 
@@ -79,6 +80,7 @@ def schedule_units(workflow: Workflow, units: list[ExecutionUnit],
                         raise RecipeCompilationError(f"样本 {sample.label} 的输入 {name} 缺失或不唯一")
                     binding.absolute_path = matches[0].absolute_path
                     binding.relative_path = matches[0].relative_path
+                    select_history_sample(binding, sample.sample_id)
                     binding.binding_mode = "single"
                     binding.sample_matches = []
                 elif len(samples) > 1 and binding.absolute_path:

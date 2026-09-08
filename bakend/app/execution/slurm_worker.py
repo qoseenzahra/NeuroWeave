@@ -142,8 +142,17 @@ def run_payload(payload_path: Path) -> int:
                                 cancel_event=cancelled, log=log)
         # Check ALL data bindings on the node, including internal Python runners.
         from app.execution.external_command import ExternalCommandRunner
-        inputs = [p for binding in step.input_bindings.values()
-                  for p in ExternalCommandRunner.binding_paths(binding)]
+        from app.historical_inputs import historical_binding_problems
+        inputs = []
+        for binding in step.input_bindings.values():
+            history_problems = historical_binding_problems(binding, verify_hash=True)
+            if history_problems:
+                raise RuntimeError("历史输入复核失败：" + "；".join(history_problems))
+            for path in ExternalCommandRunner.binding_paths(binding):
+                if not path.exists():
+                    raise RuntimeError(f"计算节点无法访问输入：{path}")
+                if not binding.history:
+                    inputs.append(path)
         if workflow.dataset:
             inputs.append(Path(workflow.dataset.absolute_path))
         for path in inputs:

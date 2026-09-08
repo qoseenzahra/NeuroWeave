@@ -96,6 +96,7 @@ export type InputBinding = {
   variables: string[];
   coverage: SamplePathCoverage | null;
   sample_matches: SamplePathMatch[];
+  history?: { run_id: string; group_id: string; dataset_id: string } | null;
   status: 'validated' | 'selected' | 'planned';
   messages: string[];
 };

@@ -21,6 +21,7 @@ from .slurm_backend import SlurmBackend, TERMINAL_STATES
 from .sample_plan import sample_parallel_limits, schedule_units, workflow_for_unit
 from .sample_execution import execute_samples
 from .retry import input_fingerprint, implementation_fingerprint, reusable_step
+from ..historical_inputs import HistoricalInputs, historical_binding_problems
 
 
 class RunConflict(RuntimeError):
@@ -124,6 +125,9 @@ class RunService:
             raise RunConflict("流程尚未通过 Dry-run")
         if not workflow.dry_run_report.execution_enabled:
             raise RunConflict("当前流程包含尚未接入实际执行器的方法")
+        history_problems = HistoricalInputs(self.store).validate_workflow(workflow)
+        if history_problems:
+            raise RunConflict("历史输入已失效：" + "；".join(history_problems))
 
         active = self.store.active_run_for_workflow(workflow_id)
         if active is not None:
@@ -260,6 +264,9 @@ class RunService:
                TERMINAL_STATES | {"SUBMISSION_FAILED"} for step in original.steps):
             raise RunConflict("仍有状态不确定的 Slurm 作业，请先恢复监控并确认已结束")
         workflow = Workflow.model_validate(original.plan_snapshot)
+        history_problems = HistoricalInputs(self.store).validate_workflow(workflow)
+        if history_problems:
+            raise RunConflict("历史输入已失效：" + "；".join(history_problems))
         units = schedule_units(workflow, self.recipe_compiler.compile(workflow), original.execution)
         if original.selected_step_ids:
             units = [unit for unit in units if unit.step.id in original.selected_step_ids]
@@ -560,7 +567,9 @@ class RunService:
                     result = self.slurm_backend.execute(context, (unit.execution or run.execution).model_dump(),
                                                         step_run.scheduler or None, on_job)
                 else:
-                    problems = runner.preflight(context)
+                    problems = [problem for binding in context.step.input_bindings.values()
+                                for problem in historical_binding_problems(binding, verify_hash=True)]
+                    problems.extend(runner.preflight(context))
                     if problems:
                         raise RuntimeError("；".join(problems))
                     result = runner.run(context)

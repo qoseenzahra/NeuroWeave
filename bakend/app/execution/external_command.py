@@ -46,10 +46,13 @@ class ExternalCommandRunner:
                 if not context.input_is_deferred(slot_id):
                     problems.append(f"输入 {slot_id} 的上游输出尚未解析为实际文件")
                 continue
+            from ..historical_inputs import historical_binding_problems
+            history_problems = historical_binding_problems(binding)
+            problems.extend(f"输入 {slot_id}：{problem}" for problem in history_problems)
             for path in self.binding_paths(binding):
                 if not path.exists():
                     problems.append(f"输入 {slot_id} 不存在：{path}")
-                elif not self._allowed_input(path, context.output_directory.parent):
+                elif not (binding.history and not history_problems) and not self._allowed_input(path, context.output_directory.parent):
                     problems.append(f"输入 {slot_id} 超出允许运行的数据根：{path}")
         try:
             context.output_directory.mkdir(parents=True, exist_ok=True)
@@ -282,3 +285,12 @@ class ExternalCommandRunner:
             except ValueError:
                 continue
         return False
+
+    @classmethod
+    def _allowed_binding_input(cls, binding: InputBinding | None, path: Path, run_root: Path | None = None) -> bool:
+        if binding is not None and binding.history is not None:
+            from ..historical_inputs import historical_binding_problems
+            return not historical_binding_problems(binding) and any(
+                Path(reference.absolute_path) == path.resolve(strict=False)
+                for reference in binding.history.artifacts)
+        return cls._allowed_input(path, run_root)

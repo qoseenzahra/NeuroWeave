@@ -94,6 +94,20 @@ class RunStoreMixin:
                 AND status IN ('queued','running','cancel_requested') ORDER BY updated_at DESC LIMIT 1""", (workflow_id,)).fetchone()
             return self._hydrate_run(connection, row) if row else None
 
+    def historical_runs(self, dataset_id: str, *, offset=0, limit=10):
+        """Page by immutable original dataset, including legacy run snapshots."""
+        limit = max(1, min(limit, 20))
+        with self._connect() as connection:
+            rows = connection.execute("""
+                SELECT r.* FROM runs r LEFT JOIN run_plans p ON p.run_id=r.run_id
+                WHERE r.status IN ('succeeded','failed','cancelled')
+                  AND CASE WHEN r.storage_version=1
+                      THEN json_extract(p.payload_json,'$.dataset_id')
+                      ELSE json_extract(r.payload_json,'$.plan_snapshot.dataset_id') END = ?
+                ORDER BY r.created_at DESC,r.run_id DESC LIMIT ? OFFSET ?
+            """, (dataset_id, limit + 1, max(0, offset))).fetchall()
+            return [self._hydrate_run(connection, row) for row in rows[:limit]], len(rows) > limit
+
     def incomplete_runs(self):
         with self._connect() as connection:
             return [self._hydrate_run(connection, row) for row in connection.execute(

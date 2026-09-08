@@ -19,6 +19,7 @@ from .execution.recipe_compiler import RecipeCompilationError, RecipeCompiler
 from .execution.runner_registry import RunnerRegistry
 from .local_store import LocalStore
 from .operation_context import checkpoint
+from .historical_inputs import HistoricalInputs
 from .models import (
     CapabilityRecommendation,
     CapabilityRecommendationItem,
@@ -853,6 +854,50 @@ class WorkflowService:
                 formats=slot.formats,
             )
 
+    def _historical_input_target(self, workflow_id, step_id, slot_id, expected_revision=None):
+        workflow = self._require(workflow_id)
+        if expected_revision is not None:
+            self._check_revision(workflow, expected_revision)
+        if workflow.status == "confirmed" or workflow.locked_at is None:
+            raise ValueError("请先锁定可编辑的流程链，再选择历史输入")
+        step = self._step(workflow, step_id)
+        slot = next((item for item in self._selected_method(step).input_slots if item.id == slot_id), None)
+        if slot is None or "existing_path" not in slot.source_options:
+            raise ValueError("当前方法输入不接受已有文件")
+        return workflow.model_copy(deep=True), slot
+
+    def historical_input_candidates(self, workflow_id, step_id, slot_id, offset=0):
+        with self._lock:
+            workflow, slot = self._historical_input_target(workflow_id, step_id, slot_id)
+        return HistoricalInputs(self.store).candidates(workflow, slot, offset=offset)
+
+    def preview_historical_input(self, workflow_id, step_id, slot_id, request):
+        with self._lock:
+            workflow, slot = self._historical_input_target(workflow_id, step_id, slot_id, request.expected_revision)
+        preview, _ = HistoricalInputs(self.store).preview(workflow, slot, request.run_id, request.group_id)
+        with self._lock:
+            self._check_revision(self._require(workflow_id), request.expected_revision)
+        return preview
+
+    def bind_historical_input(self, workflow_id, step_id, slot_id, request):
+        with self._lock:
+            workflow, slot = self._historical_input_target(workflow_id, step_id, slot_id, request.expected_revision)
+        # Filesystem work is outside the global workflow lock. Apply rechecks the
+        # source and uses CAS so a preview can never overwrite newer parameters.
+        preview, binding = HistoricalInputs(self.store).preview(workflow, slot, request.run_id, request.group_id)
+        if not preview["can_apply"]:
+            raise ValueError("历史输出未能唯一覆盖所有样本，请查看匹配预览")
+        with self._lock:
+            current, _ = self._historical_input_target(workflow_id, step_id, slot_id, request.expected_revision)
+            self._step(current, step_id).input_bindings[slot_id] = binding
+            self._clear_review(current)
+            self._advance(current)
+            self._refresh(current)
+            self._save(current, "workflow_historical_input_bound",
+                       {"step_id": step_id, "slot_id": slot_id, "run_id": request.run_id,
+                        "group_id": request.group_id, "sample_count": preview["coverage"]["matched"]})
+            return current.model_copy(deep=True)
+
     def lock_chain(self, workflow_id: str, expected_revision: int) -> Workflow:
         with self._lock:
             workflow = self._require(workflow_id)
@@ -994,7 +1039,8 @@ class WorkflowService:
             and Path(workflow.dataset.absolute_path).is_dir()
             and workflow.dataset_id
         )
-        structured_inputs_valid = all(
+        history_problems = HistoricalInputs(self.store).validate_workflow(workflow)
+        structured_inputs_valid = not history_problems and all(
             not step.missing_required_inputs
             and all(
                 binding.source == "upstream_output"
@@ -1067,7 +1113,7 @@ class WorkflowService:
             and unit.method.runner_id in available_runner_ids
             for unit in execution_units
         )
-        warnings = ["Dry-run 已验证流程、参数、路径和 runner 声明，尚未运行处理软件。"]
+        warnings = ["Dry-run 已验证流程、参数、路径和 runner 声明，尚未运行处理软件。", *history_problems]
         if any(unit.method.execution_mode == "planning" for unit in execution_units):
             warnings.append("流程包含规划型步骤；这些步骤只形成参数快照，不生成可执行命令。")
         unavailable_runners = sorted(
@@ -2008,7 +2054,7 @@ class WorkflowService:
                     existing
                     and existing.artifact_type == slot.type
                     and existing.source == "existing_path"
-                    and self._binding_paths_exist(existing)
+                    and (existing.history is not None or self._binding_paths_exist(existing))
                 ):
                     # Honor an existing-file binding when a declared source
                     # selector controls whether software generates that input.
@@ -2452,6 +2498,8 @@ class WorkflowService:
     ) -> str | None:
         if binding.source == "upstream_output":
             return f"<{binding.upstream_step_id}.{binding.output_slot_id}>"
+        if binding.history and binding.binding_mode == "per_sample":
+            return f"<历史运行 {binding.history.run_id}：按样本标识匹配>"
         if binding.binding_mode == "per_sample" and binding.path_template:
             base = dataset.absolute_path if dataset else "<DATASET_FOLDER>"
             return str(Path(base) / binding.path_template)

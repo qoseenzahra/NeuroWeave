@@ -135,7 +135,7 @@ class ReviewedRunner(ExternalCommandRunner):
             if len(paths) != 1:
                 raise ValueError('输入必须绑定一个文件或目录：' + name)
             path = paths[0].resolve(strict=True)
-            if not self._allowed_input(path, context.output_directory.parent):
+            if not self._allowed_binding_input(binding, path, context.output_directory.parent):
                 raise ValueError('输入超出授权数据根：' + name)
             if definition.get('binding') == 'folder':
                 if not path.is_dir():
