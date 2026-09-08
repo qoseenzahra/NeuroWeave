@@ -131,6 +131,8 @@ def updated_env(text, revision, enabled):
         'LOCALFLOW_SLURM_WORKER_ROOT': str(WORKERS / revision),
         'LOCALFLOW_SLURM_PYTHON': str(PYTHON),
         'LOCALFLOW_SLURM_OUTPUT_ROOT': str(OUTPUTS),
+        'NEUROWEAVE_RELEASE_REVISION': revision,
+        'LOCALFLOW_BACKUP_ROOT': '/home/data/neuroweave/backups/hipeson',
     }
     seen = set()
     output = []
@@ -160,6 +162,10 @@ def idle_database():
             "('queued', 'running', 'cancel_requested') GROUP BY status"
         ).fetchall()
         require(not rows, 'Production has active runs; deployment refused.')
+        if connection.execute("SELECT 1 FROM sqlite_master WHERE name='operations'").fetchone():
+            require(not connection.execute("SELECT 1 FROM operations WHERE status IN "
+                "('queued','running','cancel_requested') LIMIT 1").fetchone(),
+                'Production has active background checks; finish/cancel them before deployment.')
     finally:
         connection.close()
 
@@ -262,13 +268,88 @@ def backup_changes(revision, changes, before_env, after_env):
     manifest = {'revision': revision, 'production': str(PRODUCTION), 'files': records,
                 'environment': {'path': str(ENV_FILE), 'before_sha256': sha(before_env),
                                 'after_sha256': sha(after_env), 'backup_mode': '0600'},
-                'database': 'Existing production SQLite was checked read-only and is never copied/reset.',
+                'database': 'An online-API snapshot is made in database/ after the idle backend stops; production is never reset.',
                 'rollback': 'Stop the user backend only after confirming no active runs. Review hashes, '
                             'restore saved original files and environment, then start the backend. '
                             'New files listed with existed=false require explicit review before removal.'}
     atomic_write(backup / 'manifest.json', (json.dumps(manifest, indent=2) + '\n').encode(), 0o600)
     print('Backup: ' + str(backup), flush=True)
     return backup
+
+
+def verify_health(revision=None):
+    import time
+    for _ in range(30):
+        try:
+            payload = json.loads(command(["curl","--fail","--silent","--max-time","5","--unix-socket",
+                str(PRODUCTION / "runtime/localflow-backend.sock"),
+                "http://localhost/api/health?include_runtime=false"]))
+            require(payload.get("status") == "ok", "Backend health is not OK.")
+            if revision:
+                require(payload.get("release",{}).get("backend_revision") == revision, "Backend revision mismatch.")
+            return
+        except (RuntimeError, ValueError):
+            time.sleep(1)
+    raise RuntimeError("Backend health/version check did not pass.")
+
+
+def rollback(backup):
+    """Restore reviewed source while retaining post-release research records.
+
+    Additive schema remains. Normalize run headers back to legacy full JSON so
+    the previous backend can read the latest records without rewinding the DB.
+    """
+    require(backup.is_absolute() and backup.parent == BACKUPS and backup.resolve() == backup,
+            "Rollback must name an existing release backup.")
+    manifest = json.loads((backup / "manifest.json").read_text())
+    require(manifest["production"] == str(PRODUCTION), "Wrong rollback destination.")
+    idle_database()
+    before_env = (backup / "native-backend.env").read_bytes()
+    require(sha(before_env) == manifest["environment"]["before_sha256"], "Saved environment checksum mismatch.")
+    actions = []
+    for item in manifest["files"]:
+        relative = Path(item["path"])
+        require(not relative.is_absolute() and ".." not in relative.parts and public_path(relative),
+                "Rollback manifest contains an invalid source path.")
+        path = PRODUCTION / relative
+        no_symlinks(path, PRODUCTION)
+        current = path.read_bytes() if path.is_file() else None
+        require(current is None or sha(current) in {item["before_sha256"],item["after_sha256"]},
+                "A source file changed since release; review it before rollback.")
+        original = (backup / "files" / relative).read_bytes() if item["existed"] else None
+        require(original is None or sha(original) == item["before_sha256"], "Saved source checksum mismatch.")
+        actions.append((path,relative,item,original))
+    marker = PRODUCTION / "runtime/release-maintenance.lock"
+    marker.write_text("rollback\n")
+    command(["systemctl","--user","stop",SERVICE])
+    idle_database()
+    sys.path.insert(0, str(PRODUCTION / "bakend"))
+    from app.maintenance import backup_database
+    from app.local_store import LocalStore
+    backup_database(DATABASE, backup / "before-rollback-database")
+    store = LocalStore(DATABASE)
+    with store._connect() as connection:
+        connection.execute("BEGIN IMMEDIATE")
+        rows = connection.execute("SELECT * FROM runs WHERE storage_version=1").fetchall()
+        for row in rows:
+            run = store._hydrate_run(connection,row)
+            connection.execute("UPDATE runs SET payload_json=?,storage_version=0 WHERE run_id=?",
+                               (run.model_dump_json(),run.run_id))
+    for path,relative,item,original in actions:
+        if original is None:
+            if path.exists():
+                preserved = backup / "introduced" / relative
+                preserved.parent.mkdir(parents=True,exist_ok=True)
+                require(not preserved.exists(), "Introduced-file preservation destination already exists.")
+                os.rename(path,preserved)
+        else:
+            atomic_write(path,original,item["before_mode"])
+    atomic_write(ENV_FILE,before_env,0o600)
+    command(["systemctl","--user","daemon-reload"])
+    command(["systemctl","--user","start",SERVICE])
+    verify_health()
+    marker.unlink()
+    print("Previous source restored; latest database records and scientific outputs preserved.")
 
 
 def validate_context(source, revision):
@@ -306,6 +387,8 @@ def deploy(source, revision, enable_slurm):
                 'Existing environment does not select the expected production database.')
         idle_database()
         files = source_files(source)
+        command([str(PRODUCTION / ".conda/backend/bin/python"),
+                 str(source / "scripts/verify_backend_environment.py")])
         changes = production_changes(files)
         after_env = updated_env(env_text, revision, enable_slurm).encode('utf-8')
         backup = backup_changes(revision, changes, before_env, after_env)
@@ -319,7 +402,12 @@ def deploy(source, revision, enable_slurm):
             state = command(['systemctl', '--user', 'show', SERVICE, '--property=ActiveState', '--value'])
             require(state == 'inactive', 'Backend did not reach inactive state; deployment stopped.')
             idle_database()
+            sys.path.insert(0, str(source / "bakend"))
+            from app.maintenance import backup_database
+            backup_database(DATABASE, backup / "database")
             require(ENV_FILE.read_bytes() == before_env, 'Environment changed during deployment planning.')
+            marker = PRODUCTION / "runtime/release-maintenance.lock"
+            atomic_write(marker, revision.encode(), 0o600)
             for name, change in changes.items():
                 path = PRODUCTION / name
                 no_symlinks(path, PRODUCTION)
@@ -333,6 +421,8 @@ def deploy(source, revision, enable_slurm):
             command(['systemctl', '--user', 'daemon-reload'])
             command(['systemctl', '--user', 'start', SERVICE])
             command(['systemctl', '--user', 'is-active', '--quiet', SERVICE])
+            verify_health(revision)
+            marker.unlink()
         except Exception:
             print('Deployment stopped. Backups retained at ' + str(backup) +
                   '. Backend may be stopped or partially updated; no automatic rollback was attempted.',
@@ -344,11 +434,20 @@ def deploy(source, revision, enable_slurm):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--source', type=Path, required=True)
-    parser.add_argument('--revision', required=True)
+    parser.add_argument('--source', type=Path)
+    parser.add_argument('--revision')
+    parser.add_argument('--rollback', type=Path, help='Restore reviewed source and retain the latest DB records.')
     parser.add_argument('--enable-slurm', action='store_true',
                         help='Explicitly enable Slurm; disabled by default.')
     args = parser.parse_args()
+    if args.rollback:
+        require(socket.gethostname().split('.')[0] == 'mgr' and os.geteuid() != 0, "Rollback as hipeson on mgr.")
+        import fcntl
+        with (BACKUPS / '.deployment.lock').open('a') as lock:
+            fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            rollback(args.rollback)
+        return
+    require(args.source is not None and args.revision is not None, "--source and --revision are required.")
     require(re.fullmatch(r'[0-9a-f]{40}', args.revision), '--revision must be a lowercase 40-character Git SHA.')
     deploy(args.source, args.revision, args.enable_slurm)
 

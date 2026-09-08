@@ -1,6 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRunMonitoring } from '@/lib/use-run-monitoring';
+import { useExecutionDraft } from '@/lib/use-execution-draft';
+import { fetchOperation, cancelOperation, type OperationView } from '@/lib/api-operation';
 import {
   Check,
   CheckCircle2,
@@ -63,7 +66,6 @@ import type {
   ParameterOption,
   ParameterSpec,
   ParameterValue,
-  RunEvent,
   Workflow,
   WorkflowRun,
   WorkflowStep,
@@ -142,10 +144,11 @@ export function WorkflowCard(props: WorkflowCardProps) {
 function WorkflowCardState({ apiBase, workflow, onChange, disabled = false, onBusyChange }: WorkflowCardProps) {
   const [busyAction, setBusyAction] = useState<string | null>(null);
   const [runBusy, setRunBusy] = useState<string | null>(null);
-  const [run, setRun] = useState<WorkflowRun | null>(null);
-  const [runEvents, setRunEvents] = useState<RunEvent[]>([]);
+  const { run, setRun, runEvents, setRunEvents } = useRunMonitoring(apiBase, workflow.workflow_id);
+  const [operation, setOperation] = useState<OperationView | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [execution, setExecution] = useState<ExecutionOptions>(DEFAULT_EXECUTION);
+  const draft = useExecutionDraft(apiBase, workflow.workflow_id, workflow.revision, DEFAULT_EXECUTION);
+  const { execution, setExecution } = draft;
   const [backendRefresh, setBackendRefresh] = useState(0);
   const backendKey = `${apiBase}:${workflow.workflow_id}:${workflow.status}:${backendRefresh}`;
   const [backendSnapshot, setBackendSnapshot] = useState<{
@@ -200,7 +203,7 @@ function WorkflowCardState({ apiBase, workflow, onChange, disabled = false, onBu
       window.clearTimeout(timeout);
       controller.abort();
     };
-  }, [apiBase, workflow.status, backendKey]);
+  }, [apiBase, workflow.status, backendKey, setExecution]);
 
   const slurmReady = Boolean(
     backends && backends.slurm.enabled !== false && backends.slurm.available && backends.slurm.partitions.length,
@@ -211,60 +214,6 @@ function WorkflowCardState({ apiBase, workflow, onChange, disabled = false, onBu
   const resourceErrors = executionErrors(execution, backends, workflow);
   const executionBlocked = execution.backend === 'slurm' && (!slurmReady || resourceErrors.length > 0);
 
-  useEffect(() => {
-    let current = true;
-    const loadLatestRun = async () => {
-      try {
-        const response = await fetch(
-          `${apiBase}/api/runs?workflow_id=${encodeURIComponent(workflow.workflow_id)}&limit=1`,
-        );
-        if (!response.ok) return;
-        const payload = (await response.json()) as { runs?: WorkflowRun[] };
-        const latest = payload.runs?.[0] ?? null;
-        if (!current) return;
-        setRun(latest);
-        if (latest) {
-          const eventResponse = await fetch(`${apiBase}/api/runs/${latest.run_id}/events`);
-          if (eventResponse.ok && current) {
-            const eventPayload = (await eventResponse.json()) as { events?: RunEvent[] };
-            setRunEvents(eventPayload.events ?? []);
-          }
-        }
-      } catch {
-        // Workflow planning remains usable when the optional run service is unavailable.
-      }
-    };
-    void loadLatestRun();
-    return () => {
-      current = false;
-    };
-  }, [apiBase, workflow.workflow_id]);
-
-  const monitoredRunId = run && ACTIVE_RUN_STATUSES.has(run.status) ? run.run_id : null;
-  useEffect(() => {
-    if (!monitoredRunId) return;
-    let current = true;
-    const refresh = async () => {
-      try {
-        const [runResponse, eventResponse] = await Promise.all([
-          fetch(`${apiBase}/api/runs/${monitoredRunId}`),
-          fetch(`${apiBase}/api/runs/${monitoredRunId}/events`),
-        ]);
-        if (runResponse.ok && current) setRun((await runResponse.json()) as WorkflowRun);
-        if (eventResponse.ok && current) {
-          const payload = (await eventResponse.json()) as { events?: RunEvent[] };
-          setRunEvents(payload.events ?? []);
-        }
-      } catch {
-        // Keep the latest persisted snapshot visible and retry on the next interval.
-      }
-    };
-    const timer = window.setInterval(() => void refresh(), 1000);
-    return () => {
-      current = false;
-      window.clearInterval(timer);
-    };
-  }, [apiBase, monitoredRunId]);
 
   const mutate = async (
     action: string,
@@ -277,11 +226,14 @@ function WorkflowCardState({ apiBase, workflow, onChange, disabled = false, onBu
     setBusyAction(action);
     setError(null);
     try {
-      const response = await fetch(`${apiBase}${path}`, {
+      const request = {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...body, expected_revision: workflow.revision }),
-      });
+      };
+      const response = action === 'dry-run'
+        ? await fetchOperation(apiBase, `${apiBase}${path}-jobs`, request, setOperation)
+        : await fetch(`${apiBase}${path}`, request);
       const payload = (await response.json()) as Workflow | ApiError;
       if (!response.ok) {
         const detail = (payload as ApiError).detail;
@@ -296,6 +248,7 @@ function WorkflowCardState({ apiBase, workflow, onChange, disabled = false, onBu
       setError(requestError instanceof Error ? requestError.message : '工作流更新失败');
     } finally {
       setBusyAction(null);
+      setOperation(null);
       onBusyChange?.(workflow.workflow_id, false);
     }
   };
@@ -325,13 +278,14 @@ function WorkflowCardState({ apiBase, workflow, onChange, disabled = false, onBu
     );
 
   const startRun = async () => {
-    if (executionBlocked) {
+    if (!draft.ready || executionBlocked) {
       setError(!slurmReady ? slurmReason : '请检查 Slurm 分区及资源申请');
       return;
     }
     setRunBusy('start');
     setError(null);
     try {
+      if (!await draft.save()) throw new Error('运行设置尚未保存，请解决下方错误后重试');
       const response = await fetch(
         `${apiBase}/api/workflows/${workflow.workflow_id}/runs`,
         {
@@ -361,6 +315,22 @@ function WorkflowCardState({ apiBase, workflow, onChange, disabled = false, onBu
     } finally {
       setRunBusy(null);
     }
+  };
+
+  const retryRun = async (stepId?: string) => {
+    if (!run || runBusy) return;
+    setRunBusy('retry');
+    setError(null);
+    try {
+      const response = await fetch(`${apiBase}/api/runs/${run.run_id}/retry`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ step_ids: stepId ? [stepId] : [] }),
+      });
+      const payload = await response.json() as WorkflowRun & { detail?: string };
+      if (!response.ok) throw new Error(payload.detail || '无法重试任务');
+      setRun(payload);
+    } catch (failure) { setError(failure instanceof Error ? failure.message : '无法重试任务'); }
+    finally { setRunBusy(null); }
   };
 
   const controlRun = async (action: 'cancel' | 'resume-monitoring') => {
@@ -687,7 +657,16 @@ function WorkflowCardState({ apiBase, workflow, onChange, disabled = false, onBu
           </Alert>
         )}
 
-        {run && <RunPanel events={runEvents} run={run} />}
+        {workflow.status === 'confirmed' && <div className="text-xs text-slate-500">
+          {draft.error ? <span className="text-red-700">{draft.error} <button className="underline" onClick={draft.reload}>重新载入运行设置</button></span>
+            : !draft.ready ? '正在恢复运行设置…' : draft.saving ? '正在保存运行设置…' : '运行设置自动保存'}
+        </div>}
+        {operation && <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+          <span className="min-w-0 wrap-anywhere">{operation.message}</span>
+          <Button size="sm" variant="outline" disabled={operation.status === 'cancel_requested'}
+            onClick={() => void cancelOperation(apiBase, operation.operation_id).catch(() => setError('取消检查请求失败'))}>取消检查</Button>
+        </div>}
+        {run && <RunPanel apiBase={apiBase} events={runEvents} run={run} onRetry={runBusy ? undefined : retryRun} />}
 
         {error && (
           <Alert variant="destructive">
@@ -727,7 +706,7 @@ function WorkflowCardState({ apiBase, workflow, onChange, disabled = false, onBu
             {!slurmReady && <output className="block text-xs text-slate-500">Slurm：{slurmReason}</output>}
             {execution.backend === 'slurm' && (
               <ExecutionSettings value={execution} backends={backends} workflow={workflow}
-                disabled={Boolean(runBusy)} onChange={setExecution} />
+                disabled={Boolean(runBusy) || !draft.ready} onChange={setExecution} />
             )}
           </div>
         )}
@@ -851,7 +830,7 @@ function WorkflowCardState({ apiBase, workflow, onChange, disabled = false, onBu
           {workflow.status === 'confirmed' && workflow.dry_run_report?.execution_enabled && !runActive && (
             <Button
               className="gap-2 bg-blue-600 hover:bg-blue-700"
-              disabled={Boolean(runBusy) || executionBlocked}
+              disabled={Boolean(runBusy) || executionBlocked || !draft.ready}
               onClick={() => void startRun()}
               size="sm"
             >
@@ -859,6 +838,10 @@ function WorkflowCardState({ apiBase, workflow, onChange, disabled = false, onBu
               {run ? '再次运行' : '开始运行'}
             </Button>
           )}
+          {run && ['failed', 'cancelled'].includes(run.status) && <Button size="sm" variant="outline"
+            disabled={Boolean(runBusy)} onClick={() => void retryRun()}>
+            <RotateCcw />重试未完成步骤
+          </Button>}
           {runActive && (
             <Button
               className="gap-2"

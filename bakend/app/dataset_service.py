@@ -21,6 +21,7 @@ from .dataset_models import (
     SamplePathMatch,
 )
 from .local_store import LocalStore
+from .operation_context import checkpoint
 
 
 class DatasetService:
@@ -157,6 +158,7 @@ class DatasetService:
             created_at=existing.created_at if existing else now,
             updated_at=now,
         )
+        checkpoint()
         self.store.save_dataset(dataset)
         return dataset
 
@@ -166,6 +168,7 @@ class DatasetService:
         updated = dataset.model_copy(
             update={"inspection": self._inspect(directory), "updated_at": self._now()}
         )
+        checkpoint()
         self.store.save_dataset(updated)
         return updated
 
@@ -354,6 +357,7 @@ class DatasetService:
             access_warnings.append(str(error))
 
         for current, dirs, files in os.walk(directory, followlinks=False, onerror=on_error):
+            checkpoint(f"已扫描 {file_count} 个文件")
             current_path = Path(current).resolve()
             dirs[:] = [
                 name
@@ -362,6 +366,7 @@ class DatasetService:
                 and self._is_within((current_path / name).resolve(), directory)
             ]
             for filename in files:
+                checkpoint()
                 path = current_path / filename
                 if not self._is_within(path.resolve(), directory):
                     continue

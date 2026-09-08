@@ -242,8 +242,17 @@ class ConversationService:
         )
         return True
 
-    def snapshot(self, conversation_id: str) -> ConversationSnapshot:
+    def snapshot(self, conversation_id: str, *, limit: int | None = None, before_sequence: int | None = None) -> ConversationSnapshot:
         conversation = self._require(conversation_id)
+        if limit is not None:
+            limit = max(1,min(limit,100))
+            rows = self.store.conversation_messages(conversation_id,limit=limit+1,
+                before_sequence=before_sequence,newest_first=True)
+            more = len(rows) > limit
+            messages = list(reversed(rows[:limit]))
+            return ConversationSnapshot(conversation=conversation,memory=self.memory_status(conversation_id),
+                messages=messages,has_more=more,before_sequence=messages[0].sequence if more and messages else None,
+                context=self.store.conversation_context(conversation_id))
         messages = self.store.conversation_messages(conversation_id)
         recent = self.store.conversation_messages(
             conversation_id,
@@ -263,17 +272,13 @@ class ConversationService:
         compacted_this_turn: bool = False,
     ) -> ConversationMemoryStatus:
         conversation = self._require(conversation_id)
-        recent = self.store.conversation_messages(
-            conversation_id,
-            after_sequence=conversation.summarized_through_sequence,
-        )
-        return ConversationMemoryStatus(
-            summary_version=conversation.summary_version,
-            summarized_messages=conversation.summarized_through_sequence,
-            recent_messages=len(recent),
-            estimated_recent_tokens=sum(item.estimated_tokens for item in recent),
-            compacted_this_turn=compacted_this_turn,
-        )
+        with self.store._connect() as connection:
+            row = connection.execute("""SELECT COUNT(*) AS count,COALESCE(SUM(estimated_tokens),0) AS tokens
+                FROM conversation_messages WHERE conversation_id=? AND sequence>?""",
+                (conversation_id,conversation.summarized_through_sequence)).fetchone()
+        return ConversationMemoryStatus(summary_version=conversation.summary_version,
+            summarized_messages=conversation.summarized_through_sequence,recent_messages=row["count"],
+            estimated_recent_tokens=row["tokens"],compacted_this_turn=compacted_this_turn)
 
     @staticmethod
     def estimate_tokens(text: str) -> int:

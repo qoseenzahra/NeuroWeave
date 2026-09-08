@@ -15,10 +15,11 @@ from .conversation_models import (
 )
 from .dataset_models import DatasetRecord
 from .run_models import WorkflowRun
+from .run_store import RunStoreMixin
 from .workflow_models import Workflow
 
 
-class LocalStore:
+class LocalStore(RunStoreMixin):
     """Durable local SQLite storage for datasets, workflows and workflow events."""
 
     def __init__(self, database_path: Path) -> None:
@@ -177,6 +178,25 @@ class LocalStore:
                 "CREATE INDEX IF NOT EXISTS idx_conversations_archived_updated_id "
                 "ON conversations(archived, updated_at DESC, conversation_id DESC)"
             )
+            run_columns = {row["name"] for row in connection.execute("PRAGMA table_info(runs)")}
+            for name in ("storage_version", "state_revision"):
+                if name not in run_columns:
+                    connection.execute(f"ALTER TABLE runs ADD COLUMN {name} INTEGER NOT NULL DEFAULT 0")
+            connection.execute("""CREATE TABLE IF NOT EXISTS run_plans (
+                run_id TEXT PRIMARY KEY REFERENCES runs(run_id) ON DELETE CASCADE, payload_json TEXT NOT NULL)""")
+            connection.execute("""CREATE TABLE IF NOT EXISTS run_steps (
+                run_id TEXT NOT NULL REFERENCES runs(run_id) ON DELETE CASCADE, step_id TEXT NOT NULL,
+                position INTEGER NOT NULL, payload_json TEXT NOT NULL, state_revision INTEGER NOT NULL,
+                PRIMARY KEY(run_id,step_id))""")
+            connection.execute("CREATE INDEX IF NOT EXISTS idx_run_steps_revision ON run_steps(run_id,state_revision)")
+            connection.execute("""CREATE TABLE IF NOT EXISTS run_artifact_order (
+                run_id TEXT NOT NULL REFERENCES runs(run_id) ON DELETE CASCADE,
+                artifact_id TEXT NOT NULL, position INTEGER NOT NULL,
+                PRIMARY KEY(run_id,artifact_id))""")
+            connection.execute("""CREATE TABLE IF NOT EXISTS execution_drafts (
+                workflow_id TEXT PRIMARY KEY REFERENCES workflows(workflow_id) ON DELETE CASCADE,
+                workflow_revision INTEGER NOT NULL, draft_revision INTEGER NOT NULL,
+                payload_json TEXT NOT NULL, updated_at TEXT NOT NULL)""")
             connection.execute("PRAGMA optimize")
 
     def create_conversation(self, conversation: ConversationRecord) -> None:
@@ -198,6 +218,32 @@ class LocalStore:
                     conversation.updated_at,
                 ),
             )
+
+    def execution_draft(self, workflow_id: str) -> dict[str, Any]:
+        with self._connect() as connection:
+            row = connection.execute("SELECT * FROM execution_drafts WHERE workflow_id=?", (workflow_id,)).fetchone()
+            if row:
+                return dict(execution=json.loads(row["payload_json"]), draft_revision=row["draft_revision"],
+                            workflow_revision=row["workflow_revision"])
+        latest = self.list_runs(workflow_id=workflow_id, limit=1, summary=True)
+        return dict(execution=latest[0].get("execution") if latest else None, draft_revision=0,
+                    workflow_revision=latest[0]["workflow_revision"] if latest else None)
+
+    def save_execution_draft(self, workflow_id, workflow_revision, draft_revision, execution):
+        with self._lock, self._connect() as connection:
+            workflow = connection.execute("SELECT revision FROM workflows WHERE workflow_id=?", (workflow_id,)).fetchone()
+            if workflow is None:
+                raise KeyError(workflow_id)
+            if workflow["revision"] != workflow_revision:
+                raise ValueError("流程已更新，请重新载入后保存运行设置")
+            current = connection.execute("SELECT draft_revision FROM execution_drafts WHERE workflow_id=?", (workflow_id,)).fetchone()
+            if (current["draft_revision"] if current else 0) != draft_revision:
+                raise ValueError("运行设置已在其他页面更新，请重新载入后修改")
+            connection.execute("""INSERT INTO execution_drafts VALUES(?,?,?,?,?)
+                ON CONFLICT(workflow_id) DO UPDATE SET workflow_revision=excluded.workflow_revision,
+                draft_revision=excluded.draft_revision,payload_json=excluded.payload_json,updated_at=excluded.updated_at""",
+                (workflow_id,workflow_revision,draft_revision+1,execution.model_dump_json(),datetime.now(timezone.utc).isoformat()))
+        return dict(execution=execution.model_dump(mode="json"),draft_revision=draft_revision+1,workflow_revision=workflow_revision)
 
     def get_conversation(self, conversation_id: str | None) -> ConversationRecord | None:
         if not conversation_id:
@@ -392,15 +438,20 @@ class LocalStore:
         *,
         after_sequence: int = 0,
         limit: int | None = None,
+        before_sequence: int | None = None,
+        newest_first: bool = False,
     ) -> list[ConversationMessageRecord]:
         query = """
             SELECT message_id, conversation_id, sequence, role, content,
                    estimated_tokens, metadata_json, created_at
             FROM conversation_messages
             WHERE conversation_id = ? AND sequence > ?
-            ORDER BY sequence ASC
         """
         parameters: list[Any] = [conversation_id, after_sequence]
+        if before_sequence is not None:
+            query += " AND sequence < ?"
+            parameters.append(before_sequence)
+        query += " ORDER BY sequence " + ("DESC" if newest_first else "ASC")
         if limit is not None:
             query += " LIMIT ?"
             parameters.append(max(1, min(limit, 500)))
@@ -419,6 +470,20 @@ class LocalStore:
             )
             for row in rows
         ]
+
+    def conversation_context(self, conversation_id):
+        result = {}
+        with self._connect() as connection:
+            for key in ("workflow_id", "dataset_id", "interaction_mode", "selected_skills"):
+                # Ordinary assistant replies store workflow_id=null; they do not
+                # unlock or clear an earlier workflow. Dataset null is explicit.
+                condition = "= 'text'" if key == "workflow_id" else "IS NOT NULL"
+                row = connection.execute(f"""SELECT metadata_json FROM conversation_messages
+                    WHERE conversation_id=? AND json_type(metadata_json, ?) {condition}
+                    ORDER BY sequence DESC LIMIT 1""", (conversation_id, "$."+key)).fetchone()
+                if row:
+                    result[key] = json.loads(row["metadata_json"])[key]
+        return result
 
     def update_conversation_summary(
         self,
@@ -582,58 +647,6 @@ class LocalStore:
             for row in rows
         ]
 
-    def save_run(
-        self,
-        run: WorkflowRun,
-        *,
-        event_type: str | None = None,
-        event_message: str = "",
-        level: str = "info",
-        step_id: str | None = None,
-        event_payload: dict[str, Any] | None = None,
-    ) -> None:
-        with self._lock, self._connect() as connection:
-            connection.execute(
-                """
-                INSERT INTO runs (
-                    run_id, workflow_id, workflow_revision, status,
-                    payload_json, created_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)
-                ON CONFLICT(run_id) DO UPDATE SET
-                    status = excluded.status,
-                    payload_json = excluded.payload_json,
-                    updated_at = excluded.updated_at
-                """,
-                (
-                    run.run_id,
-                    run.workflow_id,
-                    run.workflow_revision,
-                    run.status,
-                    run.model_dump_json(),
-                    run.created_at,
-                    run.updated_at,
-                ),
-            )
-            if event_type:
-                connection.execute(
-                    """
-                    INSERT INTO run_events (
-                        run_id, event_type, level, message, progress,
-                        step_id, payload_json, created_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                    """,
-                    (
-                        run.run_id,
-                        event_type,
-                        level,
-                        event_message,
-                        run.progress,
-                        step_id,
-                        json.dumps(event_payload or {}, ensure_ascii=False),
-                        run.updated_at,
-                    ),
-                )
-
     def append_run_event(
         self,
         run_id: str,
@@ -666,85 +679,6 @@ class LocalStore:
                 ),
             )
 
-    def get_run(self, run_id: str) -> WorkflowRun | None:
-        with self._connect() as connection:
-            row = connection.execute(
-                "SELECT payload_json FROM runs WHERE run_id = ?",
-                (run_id,),
-            ).fetchone()
-        return WorkflowRun.model_validate_json(row["payload_json"]) if row else None
-
-    def list_runs(
-        self,
-        *,
-        workflow_id: str | None = None,
-        limit: int = 50,
-    ) -> list[WorkflowRun]:
-        safe_limit = max(1, min(limit, 200))
-        with self._connect() as connection:
-            if workflow_id:
-                rows = connection.execute(
-                    """
-                    SELECT payload_json FROM runs
-                    WHERE workflow_id = ?
-                    ORDER BY updated_at DESC LIMIT ?
-                    """,
-                    (workflow_id, safe_limit),
-                ).fetchall()
-            else:
-                rows = connection.execute(
-                    "SELECT payload_json FROM runs ORDER BY updated_at DESC LIMIT ?",
-                    (safe_limit,),
-                ).fetchall()
-        return [WorkflowRun.model_validate_json(row["payload_json"]) for row in rows]
-
-    def active_run_for_workflow(self, workflow_id: str) -> WorkflowRun | None:
-        with self._connect() as connection:
-            row = connection.execute(
-                """
-                SELECT payload_json FROM runs
-                WHERE workflow_id = ?
-                  AND status IN ('queued', 'running', 'cancel_requested')
-                ORDER BY updated_at DESC LIMIT 1
-                """,
-                (workflow_id,),
-            ).fetchone()
-        return WorkflowRun.model_validate_json(row["payload_json"]) if row else None
-
-    def incomplete_runs(self) -> list[WorkflowRun]:
-        with self._connect() as connection:
-            rows = connection.execute(
-                "SELECT payload_json FROM runs WHERE status IN ('queued','running','cancel_requested')"
-            ).fetchall()
-        return [WorkflowRun.model_validate_json(row["payload_json"]) for row in rows]
-
-    def run_events(self, run_id: str, *, after_event_id: int = 0) -> list[dict[str, Any]]:
-        with self._connect() as connection:
-            rows = connection.execute(
-                """
-                SELECT event_id, event_type, level, message, progress,
-                       step_id, payload_json, created_at
-                FROM run_events
-                WHERE run_id = ? AND event_id > ?
-                ORDER BY event_id ASC
-                LIMIT 1000
-                """,
-                (run_id, max(0, after_event_id)),
-            ).fetchall()
-        return [
-            {
-                "event_id": row["event_id"],
-                "event_type": row["event_type"],
-                "level": row["level"],
-                "message": row["message"],
-                "progress": row["progress"],
-                "step_id": row["step_id"],
-                "payload": json.loads(row["payload_json"]),
-                "created_at": row["created_at"],
-            }
-            for row in rows
-        ]
-
     def fail_incomplete_runs(
         self,
         updated_at: str,
@@ -753,15 +687,7 @@ class LocalStore:
         *,
         preserve_slurm: bool = False,
     ) -> int:
-        with self._connect() as connection:
-            rows = connection.execute(
-                """
-                SELECT payload_json FROM runs
-                WHERE status IN ('queued', 'running', 'cancel_requested')
-                ORDER BY updated_at ASC
-                """
-            ).fetchall()
-        runs = [WorkflowRun.model_validate_json(row["payload_json"]) for row in rows]
+        runs = self.incomplete_runs()
         if preserve_slurm:
             runs = [run for run in runs if run.execution.backend != "slurm"]
         for run in runs:

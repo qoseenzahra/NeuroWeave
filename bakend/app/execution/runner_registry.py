@@ -4,6 +4,7 @@ import tempfile
 from pathlib import Path
 from threading import Event
 
+from ..operation_context import checkpoint, current_operation
 from ..workflow_models import MethodOption, Workflow, WorkflowStep
 from .base import RunnerContext, TrustedRunner
 from .runners.ants import AntsRegistrationRunner
@@ -104,6 +105,7 @@ class RunnerRegistry:
                 return ["多样本输入覆盖不一致，或仍有缺失文件"]
             problems = []
             for sample_id in identifiers:
+                checkpoint(f"检查样本：{sample_id}")
                 sample_step = step.model_copy(deep=True)
                 for binding in sample_step.input_bindings.values():
                     if binding.source == "upstream_output" or binding.binding_mode != "per_sample":
@@ -129,7 +131,7 @@ class RunnerRegistry:
                 step=step.model_copy(deep=True),
                 method=method.model_copy(deep=True),
                 output_directory=Path(temporary),
-                cancel_event=Event(),
+                cancel_event=current_operation.get().cancel_event if current_operation.get() else Event(),
                 log=lambda _message, _progress, _level: None,
                 remote_gpu_available=remote_gpu_available,
                 is_dry_run=True,

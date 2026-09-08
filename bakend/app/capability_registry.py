@@ -261,11 +261,15 @@ class CapabilityRegistry:
 
     def stats(self) -> dict[str, int]:
         self._load()
+        # Computing selectable variants walks the full catalog. Reuse counts
+        # until the manifest signature changes so health reads stay lightweight.
+        if getattr(self, "_stats_signature", None) == self._signature and hasattr(self, "_stats_cache"):
+            return dict(self._stats_cache)
         selectable_counts = [
             len(self.selectable_methods_for(capability))
             for capability in self._by_capability
         ]
-        return {
+        result = {
             "capabilities": len(self._by_capability),
             "methods": sum(len(items) for items in self._by_capability.values()),
             "planning_methods": sum(
@@ -292,6 +296,9 @@ class CapabilityRegistry:
             "selectable_methods": sum(selectable_counts),
             "multi_method_capabilities": sum(count > 1 for count in selectable_counts),
         }
+        self._stats_signature = self._signature
+        self._stats_cache = result
+        return dict(result)
 
     @staticmethod
     def _mentions_skill(text: str, skill_id: str) -> bool:

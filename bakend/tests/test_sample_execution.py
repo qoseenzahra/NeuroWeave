@@ -140,6 +140,24 @@ class SampleExecutionTests(unittest.TestCase):
         self.fixture.backend.execute.assert_not_called()
         self.assertFalse(self.fixture.store.list_runs())
 
+    def test_shared_node_queue_fills_a_free_slot_while_another_sample_is_slow(self):
+        self.options.nodes = [self.options.nodes[0]]
+        self.options.nodes[0].parallel_samples = 2
+        slow_started, third_started = threading.Event(), threading.Event()
+        self.addCleanup(third_started.set)
+        def execute(context, options, state, on_job):
+            if context.step.id == "sample_0001__inspect":
+                slow_started.set()
+                self.assertTrue(third_started.wait(timeout=3), "A free slot must take sample 3 before sample 1 finishes")
+            elif context.step.id == "sample_0003__inspect":
+                self.assertTrue(slow_started.wait(timeout=2))
+                third_started.set()
+            return RunnerResult([], "done")
+        self.fixture.backend.execute.side_effect = execute
+        result = self.fixture._finished(self.create().run_id)
+        self.assertEqual(result.status, "succeeded", result.error_message)
+        self.assertTrue(third_started.is_set())
+
     def test_parallel_limit_above_assigned_sample_count_only_reserves_actual_capacity(self):
         self.options.nodes[0].parallel_samples = 128  # Only two samples are assigned here.
         result = self.fixture._finished(self.create().run_id)

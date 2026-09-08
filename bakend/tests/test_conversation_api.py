@@ -134,7 +134,50 @@ class ConversationApiTests(unittest.IsolatedAsyncioTestCase):
                         finally:
                             released.set()
                             await slow_request
+                    entered, released = Event(), Event()
+                    from app.operation_context import checkpoint
+                    def scan(_dataset_id):
+                        entered.set()
+                        self.assertTrue(released.wait(3))
+                        checkpoint()
+                        return {"done":True}
+                    with patch.object(main.dataset_service, "inspect", side_effect=scan):
+                        response = await asyncio.wait_for(client.post("/api/datasets/synthetic/inspect-jobs"),timeout=1)
+                        self.assertEqual(response.status_code,202)
+                        operation_id = response.json()["operation_id"]
+                        try:
+                            self.assertTrue(await asyncio.to_thread(entered.wait,2))
+                            fast = await asyncio.wait_for(client.get("/api/health?include_runtime=false"),timeout=1)
+                            self.assertEqual(fast.status_code,200)
+                            cancelled = await client.post(f"/api/operations/{operation_id}/cancel")
+                            self.assertEqual(cancelled.json()["status"],"cancel_requested")
+                        finally:
+                            released.set()
+                        for _ in range(100):
+                            record = (await client.get(f"/api/operations/{operation_id}")).json()
+                            if record["status"] == "cancelled":
+                                break
+                            await asyncio.sleep(.01)
+                        self.assertEqual(record["status"],"cancelled")
+                    marker = root / "release-maintenance.lock"
+                    marker.write_text("synthetic")
+                    try:
+                        self.assertEqual((await client.post("/api/conversations")).status_code,503)
+                        self.assertEqual((await client.get("/api/conversations")).status_code,200)
+                    finally:
+                        marker.unlink()
+                    cors = await client.options("/api/workflows/synthetic/execution-draft",headers={
+                        "Origin":"http://localhost:3000","Access-Control-Request-Method":"PUT"})
+                    self.assertEqual(cors.status_code,200)
+                    conversation = main.conversation_service.create("Paged")
+                    for index in range(85):
+                        main.local_store.append_conversation_message(conversation.conversation_id,role="user",
+                            content=str(index),estimated_tokens=1,metadata={},created_at="2026-09-08")
+                    first = (await client.get(f"/api/conversations/{conversation.conversation_id}")).json()
+                    self.assertEqual(len(first["messages"]),40)
+                    self.assertTrue(first["has_more"])
             finally:
+                main.operation_service.shutdown(wait=True)
                 main.run_service.shutdown()
                 # This test imports app.main with a temporary database path.
                 # Do not leave that process-wide module bound to a database that

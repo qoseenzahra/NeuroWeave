@@ -5,6 +5,8 @@ services:
     build:
       context: .
       dockerfile: frontend/Dockerfile
+      args:
+        NEUROWEAVE_REVISION: ${NEUROWEAVE_REVISION:-development}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
@@ -14,7 +16,7 @@ services:
       start_period: 15s
 
   gateway:
-    image: public.ecr.aws/docker/library/nginx:1.28-alpine
+    image: public.ecr.aws/docker/library/nginx:1.28-alpine@sha256:a8b39bd9cf0f83869a2162827a0caf6137ddf759d50a171451b335cecc87d236
     depends_on:
       frontend:
         condition: service_healthy

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import time
 from concurrent.futures import Future, ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
@@ -19,6 +20,7 @@ from .runners.freesurfer import FreeSurferReconAllRunner
 from .slurm_backend import SlurmBackend, TERMINAL_STATES
 from .sample_plan import sample_parallel_limits, schedule_units, workflow_for_unit
 from .sample_execution import execute_samples
+from .retry import input_fingerprint, implementation_fingerprint, reusable_step
 
 
 class RunConflict(RuntimeError):
@@ -50,6 +52,7 @@ class RunService:
         self._cancel_events: dict[str, Event] = {}
         self._futures: dict[str, Future[None]] = {}
         self._detach_event = Event()
+        self._progress_saved: dict[tuple[str, str | None], float] = {}
         self.slurm_backend = SlurmBackend()
         self.slurm_output_root = Path(os.getenv(
             "LOCALFLOW_SLURM_OUTPUT_ROOT", "/home/data/neuroweave/runs/hipeson"
@@ -77,7 +80,13 @@ class RunService:
             return self._create(workflow_id, expected_revision, execution)
 
     def _save_run(self, run: WorkflowRun, **kwargs: Any) -> None:
+        progress_only = kwargs.pop("progress_only", False)
         with self._lock:
+            key = (run.run_id, kwargs.get("step_id"))
+            now = time.monotonic()
+            if progress_only and now - self._progress_saved.get(key, 0) < 1:
+                return
+            self._progress_saved[key] = now
             cancellation = self._cancel_events.get(run.run_id)
             if cancellation is not None and cancellation.is_set():
                 run.cancellation_requested = True
@@ -220,6 +229,8 @@ class RunService:
             if Path(run.output_directory).resolve() != self._safe_run_directory(run_id, "slurm"):
                 raise RunConflict("共享输出根目录与原任务不一致，请恢复原 Slurm 输出配置")
             units = schedule_units(workflow, self.recipe_compiler.compile(workflow), run.execution)
+            if run.selected_step_ids:
+                units = [unit for unit in units if unit.step.id in run.selected_step_ids]
             if ([u.step.id for u in units] != [s.step_id for s in run.steps]
                     or any(u.method.runner_id != s.runner_id or u.method.id != s.method_id
                            for u, s in zip(units, run.steps))):
@@ -238,6 +249,91 @@ class RunService:
         if run is None:
             raise KeyError(run_id)
         return run
+
+    def retry(self, run_id: str, step_ids=None, sample_ids=None) -> WorkflowRun:
+        original = self.get(run_id)
+        if original.status not in {"failed", "cancelled"}:
+            raise RunConflict("只能重试已经结束的失败或取消任务")
+        if self.store.active_run_for_workflow(original.workflow_id):
+            raise RunConflict("该流程已有活动任务，请等待结束")
+        if any(step.scheduler and step.status != "succeeded" and step.scheduler.get("state") not in
+               TERMINAL_STATES | {"SUBMISSION_FAILED"} for step in original.steps):
+            raise RunConflict("仍有状态不确定的 Slurm 作业，请先恢复监控并确认已结束")
+        workflow = Workflow.model_validate(original.plan_snapshot)
+        units = schedule_units(workflow, self.recipe_compiler.compile(workflow), original.execution)
+        if original.selected_step_ids:
+            units = [unit for unit in units if unit.step.id in original.selected_step_ids]
+        old = {step.step_id: step for step in original.steps}
+        if set(old) != {unit.step.id for unit in units}:
+            raise RunConflict("执行配方已变化，不能重试旧快照")
+        selected = set(step_ids or [])
+        if selected - set(old) or set(sample_ids or []) - {step.sample_id for step in original.steps}:
+            raise RunConflict("重试范围包含不属于该任务的步骤或样本")
+        selected.update(step.step_id for step in original.steps if step.sample_id in (sample_ids or []))
+        if not selected:
+            selected = {step.step_id for step in original.steps if step.status != "succeeded"}
+        # Include downstream consumers, then all required ancestors. Other samples stay untouched.
+        while True:
+            before = set(selected)
+            selected.update(unit.step.id for unit in units if set(unit.step.depends_on) & selected)
+            if before == selected:
+                break
+        needed = set(selected)
+        while True:
+            before = set(needed)
+            needed.update(dep for unit in units if unit.step.id in needed for dep in unit.step.depends_on)
+            if before == needed:
+                break
+        units = [unit for unit in units if unit.step.id in needed]
+        event = Event()
+        now = self._now()
+        new_id = f"run_{uuid4().hex[:12]}"
+        run = original.model_copy(deep=True, update=dict(run_id=new_id, retry_of=original.run_id,
+            selected_step_ids=[unit.step.id for unit in units], reused_step_ids=[], status="queued",
+            current_step_id=None, progress=0, error_code="", error_message="", cancellation_requested=False,
+            created_at=now, updated_at=now, started_at=None, finished_at=None, state_revision=0,
+            output_directory=str(self._safe_run_directory(new_id, original.execution.backend)), steps=[], artifacts=[]))
+        status = self.slurm_backend.status() if original.execution.backend == "slurm" else None
+        for unit in units:
+            runner = self.runner_registry.get(unit.method.runner_id)
+            if runner is None:
+                raise RunConflict("旧任务的执行器已不可用")
+            if status is not None:
+                if not status.get("available") or original.execution.partition not in status.get("partitions", []):
+                    raise RunConflict("原 Slurm 分区当前不可用")
+                self._validate_node_resources(unit.execution or original.execution,status,
+                    parallel_samples=sample_parallel_limits(original.execution,workflow.dataset.inspection.sample_count).get(unit.execution.node,1))
+            previous = old[unit.step.id]
+            can_reuse = previous.status == "succeeded" and all(
+                dep in run.reused_step_ids for dep in unit.step.depends_on)
+            if can_reuse:
+                runtime_step = self._resolve_runtime_bindings(unit.step, run)
+                context = RunnerContext(new_id,workflow_for_unit(workflow,unit),runtime_step,unit.method,
+                    Path(run.output_directory)/unit.workspace_key,event,lambda *_args: None)
+                can_reuse = reusable_step(previous,context,runner,Path(original.output_directory).resolve())
+            if can_reuse:
+                restored = previous.model_copy(deep=True)
+                run.reused_step_ids.append(restored.step_id)
+                run.artifacts.extend(restored.artifacts)
+            else:
+                restored = RunStep(step_id=unit.step.id,title=unit.step.title,runner_id=unit.method.runner_id,
+                    method_id=unit.method.id,sample_id=unit.sample_id,sample_label=unit.sample_label,
+                    node_name=unit.execution.node if unit.execution else None)
+            run.steps.append(restored)
+        run.progress = 100 * len(run.reused_step_ids) / max(1,len(run.steps))
+        # Hashing large inputs must not hold the service lock and block cancellations.
+        # Commit only if no task or recovery raced this preparation.
+        with self._lock:
+            current = self.get(run_id)
+            if (current.updated_at != original.updated_at or current.status != original.status
+                    or self.store.active_run_for_workflow(original.workflow_id)):
+                raise RunConflict("任务状态已变化，请刷新后重试")
+            Path(run.output_directory).mkdir(parents=True,mode=0o700)
+            self._save_run(run,event_type="retry_created",event_message="从原任务创建重试；已验证成功结果按需复用",
+                           event_payload={"retry_of":original.run_id,"reused_steps":run.reused_step_ids})
+            self._cancel_events[new_id] = event
+            self._futures[new_id] = self._executor.submit(self._execute,new_id,workflow,units,event)
+            return self.get(new_id)
 
     def recover_freesurfer(self, run_id: str, expected_revision: int, *, dry_run: bool = True) -> dict[str, Any]:
         """Recover only the known autorecon2 output-validation false negative.
@@ -387,7 +483,7 @@ class RunService:
             )
             step_total = max(len(resolved), 1)
             for step_index, unit in enumerate(resolved):
-                if step_index < start_index:
+                if step_index < start_index or run.steps[step_index].status == "succeeded":
                     continue
                 workflow_step, method = unit.step, unit.method
                 step_run = run.steps[step_index]
@@ -425,7 +521,7 @@ class RunService:
                     if cancel_event.is_set():
                         run.status = "cancel_requested"
                         run.cancellation_requested = True
-                    self._save_run(run)
+                    self._save_run(run, step_id=step_run.step_id, progress_only=True)
                     self.store.append_run_event(
                         run_id,
                         event_type="runner_log",
@@ -446,6 +542,11 @@ class RunService:
                     log=log,
                     detach_event=self._detach_event if run.execution.backend == "slurm" else None,
                 )
+                if not step_run.scheduler:
+                    step_run.input_fingerprint = input_fingerprint(context)
+                    step_run.implementation_fingerprint = implementation_fingerprint(runner, method)
+                    self._save_run(run, step_id=step_run.step_id)
+
                 if run.execution.backend == "slurm":
                     def on_job(state: dict[str, Any]) -> None:
                         step_run.scheduler = state
@@ -536,6 +637,7 @@ class RunService:
             with self._lock:
                 self._cancel_events.pop(run_id, None)
                 self._futures.pop(run_id, None)
+                self._progress_saved = {key: value for key, value in self._progress_saved.items() if key[0] != run_id}
 
     def _finish_cancelled(self, run: WorkflowRun, message: str) -> None:
         active_step = next((step for step in run.steps if step.status == "running"), None)

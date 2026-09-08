@@ -47,6 +47,8 @@ class RunStep(BaseModel):
     sample_id: str | None = None
     sample_label: str = ""
     node_name: str | None = None
+    input_fingerprint: dict[str, str] = Field(default_factory=dict)
+    implementation_fingerprint: str = ""
 
 
 class RunResources(BaseModel):
@@ -83,6 +85,10 @@ class RunExecutionOptions(RunResources):
 
 
 class WorkflowRun(BaseModel):
+    state_revision: int = 0
+    retry_of: str | None = None
+    reused_step_ids: list[str] = Field(default_factory=list)
+    selected_step_ids: list[str] = Field(default_factory=list)
     run_id: str
     workflow_id: str
     workflow_revision: int
@@ -106,6 +112,15 @@ class WorkflowRun(BaseModel):
 class RunCreateRequest(BaseModel):
     expected_revision: int = Field(ge=1)
     execution: RunExecutionOptions = Field(default_factory=RunExecutionOptions)
+
+
+class ExecutionDraftRequest(RunCreateRequest):
+    expected_draft_revision: int = Field(ge=0)
+
+
+class RunRetryRequest(BaseModel):
+    step_ids: list[str] = Field(default_factory=list, max_length=10000)
+    sample_ids: list[str] = Field(default_factory=list, max_length=10000)
 
 
 class RunEvent(BaseModel):

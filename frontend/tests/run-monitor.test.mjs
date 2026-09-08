@@ -63,7 +63,7 @@ await test('the real monitor bounds 3000 steps and 1000 outputs, with details co
   // Render the production component without a browser or any backend/job requests.
   const root = resolve(import.meta.dirname, '..');
   const server = await createServer({ root, configFile: false,
-    resolve: { alias: { '@': root } }, server: { middlewareMode: true },
+    resolve: { alias: { '@': root } }, server: { middlewareMode: true, hmr: false },
     appType: 'custom' });
   try {
     const { RunPanel } = await server.ssrLoadModule('/components/workflow/run-panel.tsx');

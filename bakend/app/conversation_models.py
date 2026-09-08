@@ -62,3 +62,6 @@ class ConversationSnapshot(BaseModel):
     memory: ConversationMemoryStatus
     messages: list[ConversationMessageRecord] = Field(default_factory=list)
     recent_messages: list[ConversationMessageRecord] = Field(default_factory=list)
+    has_more: bool = False
+    before_sequence: int | None = None
+    context: dict[str, Any] = Field(default_factory=dict)

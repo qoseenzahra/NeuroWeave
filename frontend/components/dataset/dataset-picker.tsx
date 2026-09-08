@@ -39,6 +39,7 @@ import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { responseError } from '@/lib/api-error';
+import { fetchOperation, cancelOperation, type OperationView } from '@/lib/api-operation';
 import type { DataRoot, Dataset, DirectoryListing } from '@/lib/dataset';
 
 type DatasetPickerProps = {
@@ -64,6 +65,7 @@ export function DatasetPicker({ apiBase, selectedDataset, onSelected, disabled =
   const [listing, setListing] = useState<DirectoryListing | null>(null);
   const [pathDraft, setPathDraft] = useState('');
   const [filter, setFilter] = useState('');
+  const [operation, setOperation] = useState<OperationView | null>(null);
   const [busy, setBusy] = useState<'load' | 'register' | 'inspect' | 'select' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const selectionEpoch = useRef(0);
@@ -177,7 +179,7 @@ export function DatasetPicker({ apiBase, selectedDataset, onSelected, disabled =
     setBusy('register');
     setError(null);
     try {
-      const response = await fetch(`${apiBase}/api/datasets/register`, {
+      const response = await fetchOperation(apiBase, `${apiBase}/api/datasets/register-jobs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -186,7 +188,7 @@ export function DatasetPicker({ apiBase, selectedDataset, onSelected, disabled =
           display_name:
             listing.relative_path.split(/[\\/]/).filter(Boolean).at(-1) ?? listing.root.label,
         }),
-      });
+      }, setOperation);
       if (!response.ok) throw new Error(await responseError(response));
       const dataset = (await response.json()) as Dataset;
       setDatasets((current) => [
@@ -198,6 +200,7 @@ export function DatasetPicker({ apiBase, selectedDataset, onSelected, disabled =
       setError(requestError instanceof Error ? requestError.message : '数据集登记失败');
     } finally {
       setBusy(null);
+      setOperation(null);
     }
   };
 
@@ -207,9 +210,9 @@ export function DatasetPicker({ apiBase, selectedDataset, onSelected, disabled =
     setBusy('inspect');
     setError(null);
     try {
-      const response = await fetch(`${apiBase}/api/datasets/${dataset.dataset_id}/inspect`, {
+      const response = await fetchOperation(apiBase, `${apiBase}/api/datasets/${dataset.dataset_id}/inspect-jobs`, {
         method: 'POST',
-      });
+      }, setOperation);
       if (!response.ok) throw new Error(await responseError(response));
       const refreshed = (await response.json()) as Dataset;
       setDatasets((current) =>
@@ -220,6 +223,7 @@ export function DatasetPicker({ apiBase, selectedDataset, onSelected, disabled =
       setError(requestError instanceof Error ? requestError.message : '重新扫描失败');
     } finally {
       setBusy(null);
+      setOperation(null);
     }
   };
 
@@ -227,6 +231,7 @@ export function DatasetPicker({ apiBase, selectedDataset, onSelected, disabled =
     <Dialog
       onOpenChange={(nextOpen) => {
         if (nextOpen && disabledRef.current) return;
+        if (!nextOpen && operation) void cancelOperation(apiBase, operation.operation_id).catch(() => setError('取消检查请求失败'));
         setOpen(nextOpen);
         if (nextOpen) void loadWorkspace();
       }}
@@ -245,6 +250,11 @@ export function DatasetPicker({ apiBase, selectedDataset, onSelected, disabled =
             仅可浏览后端允许的数据根目录。选择后会先扫描元数据，不会修改文件。
           </DialogDescription>
         </DialogHeader>
+        {operation && <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 border-b px-4 py-2 text-sm">
+          <span className="min-w-0 wrap-anywhere">{operation.message}</span>
+          <Button size="sm" variant="outline" disabled={operation.status === 'cancel_requested'}
+            onClick={() => void cancelOperation(apiBase, operation.operation_id).catch(() => setError('取消检查请求失败'))}>取消检查</Button>
+        </div>}
 
         <div className="grid auto-rows-max min-h-0 min-w-0 overflow-y-auto md:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
           <section className="min-h-0 min-w-0 border-b border-slate-200 p-4 md:border-b-0 md:border-r">

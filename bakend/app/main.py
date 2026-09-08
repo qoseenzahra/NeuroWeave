@@ -6,7 +6,8 @@ from pathlib import Path
 from typing import Any
 
 import httpx
-from fastapi import FastAPI, HTTPException, Query, Response
+from fastapi import FastAPI, HTTPException, Query, Response, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from .chat_service import ChatService
@@ -28,10 +29,12 @@ from .dataset_models import (
 from .dataset_service import DatasetService
 from .execution import RunnerRegistry, RunConflict, RunService
 from .local_store import LocalStore
+from .operation_service import OperationService
+from .maintenance import storage_status, inventory_outputs
 from .models import ChatRequest, ChatResponse
 from .neuroclaw_compat.validate_dag import find_cycles, find_missing_deps, load_skill_graph
 from .skill_loader import SkillLoader
-from .run_models import RunCreateRequest, WorkflowRun
+from .run_models import ExecutionDraftRequest, RunCreateRequest, RunRetryRequest, WorkflowRun
 from .workflow_models import (
     InputBindingRequest,
     InputPreviewRequest,
@@ -61,6 +64,7 @@ chat_service = ChatService()
 capability_registry = CapabilityRegistry(SKILLS_DIR)
 capability_tree = CapabilityTree(SKILLS_DIR / "capability.tree.json")
 local_store = LocalStore(DATABASE_PATH)
+operation_service = OperationService(local_store)
 dataset_service = DatasetService(PROJECT_ROOT, local_store)
 conversation_service = ConversationService(local_store, chat_service)
 runner_registry = RunnerRegistry()
@@ -132,6 +136,7 @@ def _skill_with_execution_status(skill: Any, methods: list[Any] | None = None,
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     yield
+    operation_service.shutdown()
     run_service.shutdown()
 
 app = FastAPI(
@@ -153,13 +158,23 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
 
+@app.middleware("http")
+async def release_maintenance(request: Request, call_next):
+    # Deployment keeps reads/health available while rejecting new mutations.
+    marker = DATABASE_PATH.parent / "release-maintenance.lock"
+    if request.method in {"POST","PUT","PATCH","DELETE"} and marker.exists():
+        return JSONResponse({"detail":"系统正在发布维护，请稍后重试"}, status_code=503,
+                            headers={"Retry-After":"30"})
+    return await call_next(request)
+
+
 @app.get("/")
-async def root() -> dict[str, str]:
+def root() -> dict[str, str]:
     return {"name": "NeuroWeave API", "docs": "/docs"}
 
 
@@ -169,6 +184,11 @@ def health(include_runtime: bool = True) -> dict[str, Any]:
     skill_stats["execution_enabled"] = run_service.enabled
     result = {
         "status": "ok",
+        "release": {
+            "backend_revision": os.getenv("NEUROWEAVE_RELEASE_REVISION", "development"),
+            "worker_revision": Path(os.getenv("LOCALFLOW_SLURM_WORKER_ROOT", "unversioned")).name,
+            "maintenance": (DATABASE_PATH.parent / "release-maintenance.lock").exists(),
+        },
         "mode": chat_service.mode,
         "model": chat_service.model or "conversation-demo",
         "prompt_version": chat_service.prompt_version,
@@ -195,13 +215,36 @@ def health(include_runtime: bool = True) -> dict[str, Any]:
     return result
 
 
+def _storage_paths():
+    backups = Path(os.getenv("LOCALFLOW_BACKUP_ROOT", str(DATABASE_PATH.parent / "backups")))
+    roots = [OUTPUT_ROOT, Path(os.getenv("LOCALFLOW_SLURM_OUTPUT_ROOT", str(OUTPUT_ROOT)))]
+    return backups, roots
+
+
+@app.get("/api/maintenance/storage")
+def maintenance_storage() -> dict[str, Any]:
+    backups, roots = _storage_paths()
+    return {**storage_status(DATABASE_PATH, backups, roots),
+            "backend_revision":os.getenv("NEUROWEAVE_RELEASE_REVISION","development")}
+
+
+@app.post("/api/maintenance/inventory-jobs", status_code=202)
+def maintenance_inventory() -> dict[str, Any]:
+    _, roots = _storage_paths()
+    try:
+        return operation_service.submit("storage_inventory", "outputs",
+                                        lambda: inventory_outputs(DATABASE_PATH, roots))
+    except ValueError as exc:
+        raise HTTPException(status_code=429, detail=str(exc)) from exc
+
+
 @app.get("/api/datasets/roots")
-async def dataset_roots() -> dict[str, Any]:
+def dataset_roots() -> dict[str, Any]:
     return {"roots": [root.model_dump() for root in dataset_service.roots()]}
 
 
 @app.get("/api/capabilities/tree")
-async def capabilities_tree() -> dict[str, Any]:
+def capabilities_tree() -> dict[str, Any]:
     return {
         "tree": capability_tree.compact(),
         "stats": capability_tree.stats(),
@@ -210,7 +253,7 @@ async def capabilities_tree() -> dict[str, Any]:
 
 
 @app.get("/api/artifacts/types")
-async def artifact_types() -> dict[str, Any]:
+def artifact_types() -> dict[str, Any]:
     return {
         "artifact_types": [
             item.model_dump(mode="json") for item in capability_registry.artifact_types()
@@ -219,20 +262,60 @@ async def artifact_types() -> dict[str, Any]:
 
 
 @app.get("/api/datasets/directories", response_model=DirectoryListing)
-async def dataset_directories(root_id: str, relative_path: str = "") -> DirectoryListing:
+def dataset_directories(root_id: str, relative_path: str = "") -> DirectoryListing:
     try:
         return dataset_service.list_directories(root_id, relative_path)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
+@app.get("/api/operations/{operation_id}")
+def get_operation(operation_id: str) -> dict[str, Any]:
+    try:
+        return operation_service.get(operation_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Operation not found") from exc
+
+
+@app.post("/api/operations/{operation_id}/cancel")
+def cancel_operation(operation_id: str) -> dict[str, Any]:
+    try:
+        return operation_service.cancel(operation_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Operation not found") from exc
+
+
+def _submit_operation(kind, key, action):
+    try:
+        return operation_service.submit(kind, key, action)
+    except ValueError as exc:
+        raise HTTPException(status_code=429, detail=str(exc)) from exc
+
+
+@app.post("/api/datasets/register-jobs", status_code=202)
+def register_dataset_job(request: DatasetRegisterRequest) -> dict[str, Any]:
+    return _submit_operation("dataset_register", f"{request.root_id}:{request.relative_path}",
+        lambda: dataset_service.register(request.root_id,request.relative_path,request.display_name))
+
+
+@app.post("/api/datasets/{dataset_id}/inspect-jobs", status_code=202)
+def inspect_dataset_job(dataset_id: str) -> dict[str, Any]:
+    return _submit_operation("dataset_inspect", dataset_id, lambda: dataset_service.inspect(dataset_id))
+
+
+@app.post("/api/workflows/{workflow_id}/dry-run-jobs", status_code=202)
+def dry_run_job(workflow_id: str, request: WorkflowMutationRequest) -> dict[str, Any]:
+    return _submit_operation("workflow_dry_run", f"{workflow_id}:{request.expected_revision}",
+        lambda: workflow_service.dry_run(workflow_id,request.expected_revision))
+
+
 @app.get("/api/datasets")
-async def list_datasets() -> dict[str, list[DatasetRecord]]:
+def list_datasets() -> dict[str, list[DatasetRecord]]:
     return {"datasets": dataset_service.list()}
 
 
 @app.post("/api/datasets/register", response_model=DatasetRecord)
-async def register_dataset(request: DatasetRegisterRequest) -> DatasetRecord:
+def register_dataset(request: DatasetRegisterRequest) -> DatasetRecord:
     try:
         return dataset_service.register(
             request.root_id,
@@ -244,7 +327,7 @@ async def register_dataset(request: DatasetRegisterRequest) -> DatasetRecord:
 
 
 @app.get("/api/datasets/{dataset_id}", response_model=DatasetRecord)
-async def get_dataset(dataset_id: str) -> DatasetRecord:
+def get_dataset(dataset_id: str) -> DatasetRecord:
     try:
         return dataset_service.get(dataset_id)
     except KeyError as exc:
@@ -252,7 +335,7 @@ async def get_dataset(dataset_id: str) -> DatasetRecord:
 
 
 @app.post("/api/datasets/{dataset_id}/inspect", response_model=DatasetRecord)
-async def inspect_dataset(dataset_id: str) -> DatasetRecord:
+def inspect_dataset(dataset_id: str) -> DatasetRecord:
     try:
         return dataset_service.inspect(dataset_id)
     except KeyError as exc:
@@ -300,7 +383,7 @@ def list_skills(q: str = "", source: str = "") -> dict[str, Any]:
 
 
 @app.get("/api/skills/graph")
-async def skill_graph() -> dict[str, Any]:
+def skill_graph() -> dict[str, Any]:
     graph, _metadata = load_skill_graph(SKILLS_DIR)
     return {
         "nodes": len(graph),
@@ -312,7 +395,7 @@ async def skill_graph() -> dict[str, Any]:
 
 
 @app.get("/api/skills/{skill_name}")
-async def get_skill(skill_name: str) -> dict[str, Any]:
+def get_skill(skill_name: str) -> dict[str, Any]:
     skill = skill_loader.find(skill_name)
     if skill is None:
         raise HTTPException(status_code=404, detail="Skill not found")
@@ -329,7 +412,7 @@ async def get_skill(skill_name: str) -> dict[str, Any]:
 
 
 @app.post("/api/conversations", response_model=ConversationRecord)
-async def create_conversation() -> ConversationRecord:
+def create_conversation() -> ConversationRecord:
     return conversation_service.create()
 
 
@@ -352,7 +435,7 @@ def list_conversations(
 
 
 @app.delete("/api/conversations/{conversation_id}", status_code=204)
-async def delete_conversation(conversation_id: str) -> Response:
+def delete_conversation(conversation_id: str) -> Response:
     try:
         conversation_service.delete(conversation_id)
     except KeyError as exc:
@@ -363,7 +446,7 @@ async def delete_conversation(conversation_id: str) -> Response:
 
 
 @app.patch("/api/conversations/{conversation_id}", response_model=ConversationRecord)
-async def update_conversation(
+def update_conversation(
     conversation_id: str,
     request: ConversationUpdateRequest,
 ) -> ConversationRecord:
@@ -380,9 +463,9 @@ async def update_conversation(
 
 
 @app.get("/api/conversations/{conversation_id}", response_model=ConversationSnapshot)
-async def get_conversation(conversation_id: str) -> ConversationSnapshot:
+def get_conversation(conversation_id: str, limit: int = Query(40,ge=1,le=100), before_sequence: int | None = Query(None,ge=1)) -> ConversationSnapshot:
     try:
-        return conversation_service.snapshot(conversation_id)
+        return conversation_service.snapshot(conversation_id,limit=limit,before_sequence=before_sequence)
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="Conversation not found") from exc
 
@@ -391,7 +474,7 @@ async def get_conversation(conversation_id: str) -> ConversationSnapshot:
 async def compact_conversation(conversation_id: str) -> ConversationSnapshot:
     try:
         await conversation_service.compact_if_needed(conversation_id, force=True)
-        return conversation_service.snapshot(conversation_id)
+        return conversation_service.snapshot(conversation_id,limit=40)
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="Conversation not found") from exc
 
@@ -555,7 +638,7 @@ async def draft_workflow(request: WorkflowDraftRequest) -> Workflow:
 
 
 @app.get("/api/workflows/{workflow_id}", response_model=Workflow)
-async def get_workflow(workflow_id: str) -> Workflow:
+def get_workflow(workflow_id: str) -> Workflow:
     try:
         return workflow_service.get(workflow_id)
     except KeyError as exc:
@@ -563,12 +646,12 @@ async def get_workflow(workflow_id: str) -> Workflow:
 
 
 @app.get("/api/workflows")
-async def list_workflows(limit: int = 50) -> dict[str, list[Workflow]]:
+def list_workflows(limit: int = 50) -> dict[str, list[Workflow]]:
     return {"workflows": workflow_service.list(limit)}
 
 
 @app.get("/api/workflows/{workflow_id}/events")
-async def workflow_events(workflow_id: str) -> dict[str, Any]:
+def workflow_events(workflow_id: str) -> dict[str, Any]:
     try:
         return {"events": workflow_service.events(workflow_id)}
     except KeyError as exc:
@@ -576,7 +659,7 @@ async def workflow_events(workflow_id: str) -> dict[str, Any]:
 
 
 @app.patch("/api/workflows/{workflow_id}/steps/{step_id}/method", response_model=Workflow)
-async def select_workflow_method(
+def select_workflow_method(
     workflow_id: str,
     step_id: str,
     request: MethodSelectionRequest,
@@ -597,7 +680,7 @@ async def select_workflow_method(
 
 
 @app.post("/api/workflows/{workflow_id}/lock", response_model=Workflow)
-async def lock_workflow(workflow_id: str, request: WorkflowMutationRequest) -> Workflow:
+def lock_workflow(workflow_id: str, request: WorkflowMutationRequest) -> Workflow:
     try:
         return workflow_service.lock_chain(workflow_id, request.expected_revision)
     except KeyError as exc:
@@ -609,7 +692,7 @@ async def lock_workflow(workflow_id: str, request: WorkflowMutationRequest) -> W
 
 
 @app.patch("/api/workflows/{workflow_id}/dataset", response_model=Workflow)
-async def change_workflow_dataset(workflow_id: str, request: WorkflowDatasetRequest) -> Workflow:
+def change_workflow_dataset(workflow_id: str, request: WorkflowDatasetRequest) -> Workflow:
     try:
         return workflow_service.change_dataset(
             workflow_id, request.dataset_id, request.expected_revision,
@@ -623,7 +706,7 @@ async def change_workflow_dataset(workflow_id: str, request: WorkflowDatasetRequ
 
 
 @app.post("/api/workflows/{workflow_id}/unlock", response_model=Workflow)
-async def unlock_workflow(workflow_id: str, request: WorkflowMutationRequest) -> Workflow:
+def unlock_workflow(workflow_id: str, request: WorkflowMutationRequest) -> Workflow:
     try:
         return workflow_service.unlock_chain(workflow_id, request.expected_revision)
     except KeyError as exc:
@@ -684,7 +767,7 @@ async def complete_workflow_dependencies(
     "/api/workflows/{workflow_id}/steps/{step_id}/inputs/{slot_id}",
     response_model=Workflow,
 )
-async def bind_workflow_input(
+def bind_workflow_input(
     workflow_id: str,
     step_id: str,
     slot_id: str,
@@ -711,7 +794,7 @@ async def bind_workflow_input(
     "/api/workflows/{workflow_id}/steps/{step_id}/inputs/{slot_id}/preview",
     response_model=DatasetPathPreview,
 )
-async def preview_workflow_input(
+def preview_workflow_input(
     workflow_id: str,
     step_id: str,
     slot_id: str,
@@ -732,7 +815,7 @@ async def preview_workflow_input(
 
 
 @app.patch("/api/workflows/{workflow_id}/steps/{step_id}/parameters", response_model=Workflow)
-async def update_workflow_parameters(
+def update_workflow_parameters(
     workflow_id: str,
     step_id: str,
     request: ParameterUpdateRequest,
@@ -753,7 +836,7 @@ async def update_workflow_parameters(
 
 
 @app.post("/api/workflows/{workflow_id}/review-parameters", response_model=Workflow)
-async def review_workflow_parameters(
+def review_workflow_parameters(
     workflow_id: str,
     request: WorkflowMutationRequest,
 ) -> Workflow:
@@ -768,7 +851,7 @@ async def review_workflow_parameters(
 
 
 @app.post("/api/workflows/{workflow_id}/dry-run", response_model=Workflow)
-async def dry_run_workflow(workflow_id: str, request: WorkflowMutationRequest) -> Workflow:
+def dry_run_workflow(workflow_id: str, request: WorkflowMutationRequest) -> Workflow:
     try:
         return workflow_service.dry_run(workflow_id, request.expected_revision)
     except KeyError as exc:
@@ -780,13 +863,31 @@ async def dry_run_workflow(workflow_id: str, request: WorkflowMutationRequest) -
 
 
 @app.post("/api/workflows/{workflow_id}/confirm", response_model=Workflow)
-async def confirm_workflow(workflow_id: str, request: WorkflowMutationRequest) -> Workflow:
+def confirm_workflow(workflow_id: str, request: WorkflowMutationRequest) -> Workflow:
     try:
         return workflow_service.confirm(workflow_id, request.expected_revision)
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="Workflow not found") from exc
     except RevisionConflict as exc:
         raise _revision_http_error(exc) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
+@app.get("/api/workflows/{workflow_id}/execution-draft")
+def get_execution_draft(workflow_id: str) -> dict[str, Any]:
+    if local_store.get_workflow(workflow_id) is None:
+        raise HTTPException(status_code=404, detail="Workflow not found")
+    return local_store.execution_draft(workflow_id)
+
+
+@app.put("/api/workflows/{workflow_id}/execution-draft")
+def put_execution_draft(workflow_id: str, request: ExecutionDraftRequest) -> dict[str, Any]:
+    try:
+        return local_store.save_execution_draft(workflow_id, request.expected_revision,
+            request.expected_draft_revision, request.execution)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Workflow not found") from exc
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 
@@ -805,11 +906,12 @@ def start_workflow_run(
 
 
 @app.get("/api/runs")
-async def list_runs(
+def list_runs(
     workflow_id: str | None = None,
     limit: int = 50,
-) -> dict[str, list[WorkflowRun]]:
-    return {"runs": run_service.list(workflow_id=workflow_id, limit=limit)}
+    summary: bool = False,
+) -> dict[str, Any]:
+    return {"runs": local_store.list_runs(workflow_id=workflow_id, limit=limit, summary=summary)}
 
 
 @app.get("/api/execution/backends")
@@ -818,7 +920,7 @@ def execution_backends() -> dict[str, Any]:
 
 
 @app.get("/api/runs/{run_id}", response_model=WorkflowRun)
-async def get_run(run_id: str) -> WorkflowRun:
+def get_run(run_id: str) -> WorkflowRun:
     try:
         return run_service.get(run_id)
     except KeyError as exc:
@@ -826,17 +928,25 @@ async def get_run(run_id: str) -> WorkflowRun:
 
 
 @app.get("/api/runs/{run_id}/events")
-async def run_events(run_id: str, after_event_id: int = 0) -> dict[str, Any]:
+def run_events(run_id: str, after_event_id: int = 0, before_event_id: int | None = Query(None, ge=1),
+               tail: bool = False, limit: int = Query(1000, ge=1, le=1000)) -> dict[str, Any]:
     try:
-        return {
-            "events": run_service.events(run_id, after_event_id=after_event_id)
-        }
+        return local_store.run_event_page(run_id, after_event_id=after_event_id,
+            before_event_id=before_event_id, tail=tail, limit=limit)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Run not found") from exc
+
+
+@app.get("/api/runs/{run_id}/monitor")
+def monitor_run(run_id: str, after_revision: int = -1) -> dict[str, Any]:
+    try:
+        return local_store.monitor_run(run_id, after_revision)
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="Run not found") from exc
 
 
 @app.post("/api/runs/{run_id}/cancel", response_model=WorkflowRun)
-async def cancel_run(run_id: str) -> WorkflowRun:
+def cancel_run(run_id: str) -> WorkflowRun:
     try:
         return run_service.cancel(run_id)
     except KeyError as exc:
@@ -845,8 +955,18 @@ async def cancel_run(run_id: str) -> WorkflowRun:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
+@app.post("/api/runs/{run_id}/retry", response_model=WorkflowRun)
+def retry_run(run_id: str, request: RunRetryRequest) -> WorkflowRun:
+    try:
+        return run_service.retry(run_id, request.step_ids, request.sample_ids)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Run not found") from exc
+    except (RunConflict, ValueError, OSError) as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
 @app.post("/api/runs/{run_id}/recover-freesurfer")
-async def recover_freesurfer_run(
+def recover_freesurfer_run(
     run_id: str, request: RunCreateRequest, dry_run: bool = True,
 ) -> dict[str, Any]:
     try:
@@ -859,7 +979,7 @@ async def recover_freesurfer_run(
 
 
 @app.post("/api/runs/{run_id}/resume-monitoring", response_model=WorkflowRun)
-async def resume_slurm_monitoring(run_id: str) -> WorkflowRun:
+def resume_slurm_monitoring(run_id: str) -> WorkflowRun:
     try:
         return run_service.resume_slurm_monitoring(run_id)
     except KeyError as exc:

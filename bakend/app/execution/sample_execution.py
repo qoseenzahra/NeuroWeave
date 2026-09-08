@@ -1,28 +1,31 @@
-"""Durable sample lanes with bounded concurrency on each selected node."""
+"""Per-node sample queues with durable job identity and bounded concurrency."""
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
 from threading import Event
+from queue import Queue, Empty
 
 from .base import ExecutionCancelled, ExecutionDetached, RunnerContext
 from .sample_plan import workflow_for_unit
+from .retry import input_fingerprint, implementation_fingerprint
 from .slurm_backend import TERMINAL_STATES
 
 
 def execute_samples(service, run, workflow, units, cancel_event):
     stop_submissions = Event()
     detached = Event()
-    lanes = {}
     limits = {allocation.node: allocation.parallel_samples for allocation in run.execution.nodes}
-    sample_lanes = {}
+    samples = {}
     for index, unit in enumerate(units):
-        node = unit.execution.node
-        assigned = sample_lanes.setdefault(node, {})
-        # Keep the whole sample in one stable lane, including during recovery.
-        # Splitting by step would allow downstream work to overtake its inputs.
-        if unit.sample_id not in assigned:
-            assigned[unit.sample_id] = len(assigned) % limits.get(node, 1)
-        lanes.setdefault((node, assigned[unit.sample_id]), []).append((index, unit))
+        samples.setdefault((unit.execution.node, unit.sample_id), []).append((index, unit))
+    queues = {}
+    # Resume already submitted samples first. A worker claims an entire sample;
+    # its steps remain sequential and Job IDs are saved before another submission.
+    ordered = sorted(samples.items(), key=lambda item: not any(
+        run.steps[index].scheduler and run.steps[index].status not in {"succeeded", "failed", "cancelled"}
+        for index, _unit in item[1]))
+    for (node, _sample), items in ordered:
+        queues.setdefault(node, Queue()).put(items)
 
     def update_progress():
         run.progress = sum(step.progress for step in run.steps) / max(1, len(run.steps))
@@ -62,7 +65,7 @@ def execute_samples(service, run, workflow, units, cancel_event):
                             step.progress = max(0.0, min(float(progress), 100.0))
                         step.message = message
                         update_progress()
-                        service._save_run(run)
+                        service._save_run(run, step_id=step.step_id, progress_only=True)
                         service.store.append_run_event(
                             run.run_id, event_type="runner_log", step_id=step.step_id,
                             message=message, level=level, progress=run.progress,
@@ -84,6 +87,10 @@ def execute_samples(service, run, workflow, units, cancel_event):
                     output_directory=service._safe_step_directory(run.run_id, unit.workspace_key, "slurm"),
                     cancel_event=cancel_event, log=log, detach_event=service._detach_event,
                 )
+                if not step.scheduler:
+                    step.input_fingerprint = input_fingerprint(context)
+                    step.implementation_fingerprint = implementation_fingerprint(service.runner_registry.get(unit.method.runner_id), unit.method)
+                    service._save_run(run, step_id=step.step_id)
                 result = service.slurm_backend.execute(
                     context, unit.execution.model_dump(), step.scheduler or None, on_job,
                 )
@@ -133,8 +140,21 @@ def execute_samples(service, run, workflow, units, cancel_event):
             run.status = "cancel_requested" if cancel_event.is_set() else "running"
             run.started_at = run.started_at or service._now()
             service._save_run(run, event_type="run_started", event_message="按样本分配到所选节点执行")
-        with ThreadPoolExecutor(max_workers=len(lanes), thread_name_prefix="neuroweave-sample") as pool:
-            futures = [pool.submit(lane, items) for items in lanes.values()]
+        def worker(queue):
+            while not stop_submissions.is_set() and not service._detach_event.is_set():
+                try:
+                    items = queue.get_nowait()
+                except Empty:
+                    return
+                try:
+                    lane(items)
+                finally:
+                    queue.task_done()
+
+        workers = [(node, queue) for node, queue in queues.items()
+                   for _ in range(min(limits.get(node, 1), queue.qsize()))]
+        with ThreadPoolExecutor(max_workers=max(1, len(workers)), thread_name_prefix="neuroweave-sample") as pool:
+            futures = [pool.submit(worker, queue) for _node, queue in workers]
             for future in futures:
                 future.result()
         with service._lock:
@@ -165,3 +185,6 @@ def execute_samples(service, run, workflow, units, cancel_event):
         with service._lock:
             service._cancel_events.pop(run.run_id, None)
             service._futures.pop(run.run_id, None)
+            for key in list(service._progress_saved):
+                if key[0] == run.run_id:
+                    service._progress_saved.pop(key, None)

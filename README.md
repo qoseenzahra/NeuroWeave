@@ -6,6 +6,8 @@ NeuroWeave 是以 NeuroClaw 为上游能力库的本地神经影像智能工作�
 
 当前功能：
 
+2026-09-08 增加失败步骤重试、SlurmDBD 作业记账、日志和运行状态增量读取、后台扫描/Dry-run、每节点共享样本队列、历史正文分页、运行设置自动保存、发布检查和数据库备份。使用说明、回退步骤以及原审查中暂未实施的五项问题，见 [可靠性改进与后续方案](deploy/reliability-upgrade.md)。
+
 2026-09-07 已新增 `/opt/neuroweave/envs/` 公共 Python 环境，覆盖科学计算、神经影像、EEG
 和 PyTorch CUDA；环境安装与 Slurm 实测状态见 [公共环境与调度说明](deploy/python-environments/README.md)。
 Slurm 执行已启用：主节点提交，三个 RTX 5060 计算节点执行 GPU 作业，实际 CUDA 运算、取消和重启恢复均已通过验证。使用方式见 [Slurm 执行文档](deploy/slurm-execution.md)，证据见 [验证记录](deploy/slurm-verification.md)。

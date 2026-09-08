@@ -304,6 +304,9 @@ export type RunStep = {
 };
 
 export type WorkflowRun = {
+  state_revision?: number;
+  retry_of?: string | null;
+  reused_step_ids?: string[];
   run_id: string;
   workflow_id: string;
   workflow_revision: number;

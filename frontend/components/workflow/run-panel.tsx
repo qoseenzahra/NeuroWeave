@@ -1,7 +1,8 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, CircleAlert, FileText, LoaderCircle, Terminal, TriangleAlert } from 'lucide-react';
+import { CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, CircleAlert, FileText, LoaderCircle, TriangleAlert } from 'lucide-react';
+import { RunLogs } from './run-logs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -44,7 +45,7 @@ function Pagination({ page, pages, total, label, onChange }: {
   </nav>;
 }
 
-function StepDetails({ step }: { step: RunStep }) {
+function StepDetails({ step, onRetry }: { step: RunStep; onRetry?: (id: string) => Promise<void> }) {
   return <div className="min-w-0 border-t border-slate-100 px-3 py-2 text-xs">
     <div className="flex flex-wrap items-center justify-between gap-2">
       <span className="font-medium text-slate-800">{step.title}</span>
@@ -58,6 +59,8 @@ function StepDetails({ step }: { step: RunStep }) {
       {step.scheduler.reason && <span>原因：{step.scheduler.reason}</span>}
     </div>}
     {step.error_message && <p className="mt-1 text-red-700">{step.error_message}</p>}
+    {onRetry && ['failed', 'cancelled'].includes(step.status) && <Button className="mt-2" size="sm" variant="outline"
+      onClick={() => void onRetry(step.step_id)}>重试此步骤及后续</Button>}
   </div>;
 }
 
@@ -90,11 +93,13 @@ function OutputFiles({ artifacts }: { artifacts: RunArtifact[] }) {
   </details>;
 }
 
-export function RunPanel({ events, run }: { events: RunEvent[]; run: WorkflowRun }) {
-  return <RunPanelContent key={run.run_id} events={events} run={run} />;
+type RunPanelProps = { apiBase?: string; events: RunEvent[]; run: WorkflowRun; onRetry?: (id?: string) => Promise<void> };
+
+export function RunPanel({ apiBase, events, run, onRetry }: RunPanelProps) {
+  return <RunPanelContent key={run.run_id} apiBase={apiBase} events={events} run={run} onRetry={onRetry} />;
 }
 
-function RunPanelContent({ events, run }: { events: RunEvent[]; run: WorkflowRun }) {
+function RunPanelContent({ apiBase, events, run, onRetry }: RunPanelProps) {
   const active = ['queued', 'running', 'cancel_requested'].includes(run.status);
   const groups = useMemo(() => groupRunSteps(run.steps), [run.steps]);
   // Pick the initial view once. Polling must not reset the user's filter or page.
@@ -111,7 +116,6 @@ function RunPanelContent({ events, run }: { events: RunEvent[]; run: WorkflowRun
   // instead of jumping back when more samples enter this filter later.
   if (page !== requestedPage) setPage(page);
   const samples = groups.some(group => group.sampleId);
-  const recentEvents = events.filter(event => event.message).slice(-8);
 
   return <section aria-label="运行监控" className="min-w-0 wrap-anywhere rounded-xl border border-blue-100 bg-blue-50/40 p-3 sm:p-4">
     <div className="flex flex-wrap items-center justify-between gap-2">
@@ -132,6 +136,7 @@ function RunPanelContent({ events, run }: { events: RunEvent[]; run: WorkflowRun
     {run.execution?.sample_mode === 'per_sample' && <p className="mt-2 text-xs text-slate-600">
       并行样本上限：{run.execution.nodes?.map(node => `${node.node}：${node.parallel_samples ?? 1}`).join(' · ')}
     </p>}
+    {run.retry_of && <p className="mt-2 text-xs text-slate-600">重试来源：{run.retry_of} · 已验证并复用 {run.reused_step_ids?.length ?? 0} 个步骤</p>}
     <Progress className="mt-3" value={run.progress}>
       <ProgressLabel className="text-xs text-slate-600">流程进度</ProgressLabel>
       <ProgressValue className="text-xs" />
@@ -175,7 +180,7 @@ function RunPanelContent({ events, run }: { events: RunEvent[]; run: WorkflowRun
               {group.label}{group.sampleId && group.sampleId !== group.label && ` · 样本 ID：${group.sampleId}`}
               {group.nodes.length > 0 && ` · 节点：${group.nodes.join('、')}`}
             </p>
-            {group.steps.map(step => <StepDetails step={step} key={step.step_id} />)}
+            {group.steps.map(step => <StepDetails step={step} key={step.step_id} onRetry={['failed', 'cancelled'].includes(run.status) ? onRetry : undefined} />)}
           </div>
         </details>;
       })}
@@ -185,17 +190,7 @@ function RunPanelContent({ events, run }: { events: RunEvent[]; run: WorkflowRun
     </section>
     <Pagination page={page} pages={pages} total={filtered.length} label="运行任务分页" onChange={setPage} />
 
-    {recentEvents.length > 0 && <details className="group/log mt-3 rounded-lg border border-slate-800 bg-slate-950 text-slate-200">
-      <summary className="flex cursor-pointer list-none items-center gap-2 rounded-lg px-3 py-2.5 text-sm focus-visible:outline-2 focus-visible:outline-blue-400 [&::-webkit-details-marker]:hidden">
-        <Terminal className="size-4 shrink-0" /><span className="flex-1">运行日志</span>
-        <ChevronDown className="size-4 shrink-0 group-open/log:rotate-180" />
-      </summary>
-      <div className="max-h-48 space-y-1 overflow-y-auto overscroll-contain border-t border-slate-800 p-3 font-mono text-xs">
-        {recentEvents.map(event => <p className={event.level === 'error' ? 'text-red-300' : ''} key={event.event_id}>
-          [{event.event_id}] {event.message}
-        </p>)}
-      </div>
-    </details>}
+    <RunLogs apiBase={apiBase} runId={run.run_id} events={events} />
     {run.artifacts.length > 0 && <OutputFiles artifacts={run.artifacts} />}
     {run.error_message && <Alert variant="destructive" className="mt-3">
       <TriangleAlert /><AlertDescription className="max-h-32 overflow-y-auto overscroll-contain">{run.error_message}</AlertDescription>

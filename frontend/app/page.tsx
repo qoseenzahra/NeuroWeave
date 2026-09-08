@@ -1,4 +1,5 @@
 'use client';
+import { StoragePanel } from '@/components/storage-panel';
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -60,6 +61,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { DatasetPicker } from '@/components/dataset/dataset-picker';
 import { CapabilityRecommendationCard } from '@/components/workflow/capability-recommendation-card';
+import { DeferredWorkflowCard } from '@/components/workflow/deferred-workflow-card';
+import { loadWorkflow } from '@/lib/load-workflow';
 import { WorkflowCard } from '@/components/workflow/workflow-card';
 import type {
   CapabilityRecommendation,
@@ -124,6 +127,7 @@ type ChatMessage = {
   capabilityRouting?: CapabilityRoutingTrace;
   capabilityRecommendation?: CapabilityRecommendation;
   workflow?: Workflow;
+  workflowId?: string;
 };
 
 type StoredConversationMessage = {
@@ -144,6 +148,9 @@ type ConversationSnapshot = {
     updated_at: string;
   };
   messages: StoredConversationMessage[];
+  has_more?: boolean;
+  before_sequence?: number | null;
+  context?: Record<string, unknown>;
 };
 
 type InteractionMode = 'chat' | 'task';
@@ -247,7 +254,8 @@ export default function Home() {
   const [catalogStats, setCatalogStats] = useState<CatalogStats | null>(null);
   const [health, setHealth] = useState<Health | null>(null);
   const [chosenDataset, setSelectedDataset] = useState<Dataset | null>(null);
-  const currentWorkflow = [...messages].reverse().find((message) => message.workflow)?.workflow;
+  const [retainedWorkflow, setRetainedWorkflow] = useState<Workflow | null>(null);
+  const currentWorkflow = retainedWorkflow ?? [...messages].reverse().find((message) => message.workflow)?.workflow;
   // A workflow's persisted snapshot owns its inputs, including after reopening history.
   const selectedDataset = currentWorkflow ? currentWorkflow.dataset ?? null : chosenDataset;
   const [isDatasetUpdating, setIsDatasetUpdating] = useState(false);
@@ -271,6 +279,10 @@ export default function Home() {
   } = useConversationHistory(API_BASE, conversationSearch, historyScope === 'archived', sidebarView === 'conversations');
   const [isSending, setIsSending] = useState(false);
   const [isSkillsOpen, setIsSkillsOpen] = useState(false);
+  const [beforeSequence, setBeforeSequence] = useState<number | null>(null);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+  const [messagePageError, setMessagePageError] = useState('');
+  const prependScroll = useRef<{ viewport: HTMLElement; top: number; height: number } | null>(null);
   const messageEndRef = useRef<HTMLDivElement>(null);
   const historyEndRef = useRef<HTMLDivElement>(null);
   const datasetLocked = Boolean(currentWorkflow?.locked_at || currentWorkflow?.status === 'confirmed');
@@ -336,28 +348,10 @@ export default function Home() {
     [],
   );
 
-  const hydrateMessages = useCallback(async (records: StoredConversationMessage[]) => {
-    const workflowIds = Array.from(
-      new Set(
-        records
-          .map((record) => record.metadata.workflow_id)
-          .filter((value): value is string => typeof value === 'string' && value.length > 0),
-      ),
-    );
-    const workflows = await Promise.all(
-      workflowIds.map(async (workflowId) => {
-        try {
-          const response = await fetch(`${API_BASE}/api/workflows/${workflowId}`);
-          return response.ok ? ([workflowId, (await response.json()) as Workflow] as const) : null;
-        } catch {
-          return null;
-        }
-      }),
-    );
-    const workflowById = new Map(
-      workflows.filter((entry): entry is readonly [string, Workflow] => entry !== null),
-    );
-
+  const hydrateMessages = useCallback(async (records: StoredConversationMessage[], hydrateLatest = true) => {
+    const latest = hydrateLatest ? [...records].reverse().find(record => typeof record.metadata.workflow_id === 'string') : undefined;
+    const latestId = latest?.metadata.workflow_id as string | undefined;
+    const workflow = latestId ? await loadWorkflow(API_BASE, latestId) : undefined;
     return records.map((record): ChatMessage => {
       const metadata = record.metadata ?? {};
       const mode = metadata.interaction_mode;
@@ -385,18 +379,19 @@ export default function Home() {
           typeof metadata.capability_recommendation === 'object'
             ? (metadata.capability_recommendation as CapabilityRecommendation)
             : undefined,
-        workflow: typeof workflowId === 'string' ? workflowById.get(workflowId) : undefined,
+        workflowId: typeof workflowId === 'string' ? workflowId : undefined,
+        workflow: record.message_id === latest?.message_id ? workflow : undefined,
       };
     });
   }, []);
 
   const openConversation = useCallback(
     async (item: ConversationListItem) => {
-      if (isSending || isConversationOpening || isDatasetUpdating || busyWorkflows.length > 0) return;
+      if (isSending || isConversationOpening || isDatasetUpdating || busyWorkflows.length > 0 || loadingMessages) return;
       setIsConversationOpening(true);
       setHistoryError(null);
       try {
-        const response = await fetch(`${API_BASE}/api/conversations/${item.conversation_id}`);
+        const response = await fetch(`${API_BASE}/api/conversations/${item.conversation_id}?limit=40`);
         if (!response.ok) throw new Error('无法读取这条对话');
         const snapshot = (await response.json()) as ConversationSnapshot;
         const restoredMessages = await hydrateMessages(snapshot.messages);
@@ -404,6 +399,8 @@ export default function Home() {
         setConversationId(snapshot.conversation.conversation_id);
         setConversationTitle(snapshot.conversation.title);
 
+        setBeforeSequence(snapshot.has_more ? snapshot.before_sequence ?? null : null);
+        setMessagePageError('');
         const reversedMessages = [...snapshot.messages].reverse();
         const modeMetadata = reversedMessages.find(
           (message) => 'interaction_mode' in message.metadata,
@@ -414,17 +411,20 @@ export default function Home() {
         const datasetMetadata = reversedMessages.find(
           (message) => 'dataset_id' in message.metadata,
         )?.metadata;
-        const savedMode = modeMetadata?.interaction_mode;
+        const savedMode = snapshot.context?.interaction_mode ?? modeMetadata?.interaction_mode;
         if (savedMode === 'chat' || savedMode === 'task') setInteractionMode(savedMode);
-        if (Array.isArray(skillMetadata?.selected_skills)) {
-          setSelectedSkills(stringArray(skillMetadata.selected_skills));
-        }
-        const restoredWorkflow = [...restoredMessages].reverse().find((message) => message.workflow)?.workflow;
+        setSelectedSkills(stringArray(snapshot.context?.selected_skills ?? skillMetadata?.selected_skills));
+        const contextWorkflowId = snapshot.context?.workflow_id;
+        const restoredDatasetId = snapshot.context && 'dataset_id' in snapshot.context
+          ? snapshot.context.dataset_id : datasetMetadata?.dataset_id;
+        let restoredWorkflow = [...restoredMessages].reverse().find((message) => message.workflow)?.workflow;
+        if (!restoredWorkflow && typeof contextWorkflowId === 'string') restoredWorkflow = await loadWorkflow(API_BASE, contextWorkflowId);
+        setRetainedWorkflow(restoredWorkflow ?? null);
         if (restoredWorkflow) {
           setSelectedDataset(restoredWorkflow.dataset ?? null);
-        } else if (typeof datasetMetadata?.dataset_id === 'string' && datasetMetadata.dataset_id) {
+        } else if (typeof restoredDatasetId === 'string' && restoredDatasetId) {
           const datasetResponse = await fetch(
-            `${API_BASE}/api/datasets/${datasetMetadata.dataset_id}`,
+            `${API_BASE}/api/datasets/${encodeURIComponent(restoredDatasetId)}`,
           );
           setSelectedDataset(
             datasetResponse.ok ? ((await datasetResponse.json()) as Dataset) : null,
@@ -439,7 +439,7 @@ export default function Home() {
         setIsConversationOpening(false);
       }
     },
-    [hydrateMessages, isConversationOpening, isSending, isDatasetUpdating, busyWorkflows, setHistoryError],
+    [hydrateMessages, isConversationOpening, isSending, isDatasetUpdating, busyWorkflows, loadingMessages, setHistoryError],
   );
 
   useEffect(() => {
@@ -481,6 +481,33 @@ export default function Home() {
     return () => observer.disconnect();
   }, [sidebarView, isHistoryLoading, historyError, hasMoreConversations, loadMoreConversations, conversations.length]);
 
+  const loadOlderMessages = async () => {
+    if (!conversationId || !beforeSequence || loadingMessages || isSending || isConversationOpening) return;
+    setLoadingMessages(true);
+    setMessagePageError('');
+    try {
+      const response = await fetch(`${API_BASE}/api/conversations/${conversationId}?limit=40&before_sequence=${beforeSequence}`);
+      if (!response.ok) throw new Error('无法加载更早消息，请重试');
+      const snapshot = await response.json() as ConversationSnapshot;
+      const older = await hydrateMessages(snapshot.messages, false);
+      const viewport = messageEndRef.current?.closest<HTMLElement>('[data-slot="scroll-area-viewport"]');
+      if (viewport) prependScroll.current = { viewport, top: viewport.scrollTop, height: viewport.scrollHeight };
+      setMessages(current => {
+        const ids = new Set(current.map(message => message.id));
+        return [...older.filter(message => !ids.has(message.id)), ...current];
+      });
+      setBeforeSequence(snapshot.has_more ? snapshot.before_sequence ?? null : null);
+    } catch (failure) { setMessagePageError(failure instanceof Error ? failure.message : '无法加载历史消息'); }
+    finally { setLoadingMessages(false); }
+  };
+  useLayoutEffect(() => {
+    const anchor = prependScroll.current;
+    if (anchor) {
+      anchor.viewport.scrollTop = anchor.top + anchor.viewport.scrollHeight - anchor.height;
+      prependScroll.current = null;
+    }
+  }, [messages]);
+
   const latestMessageId = messages.at(-1)?.id;
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -496,8 +523,11 @@ export default function Home() {
   };
 
   const resetConversation = () => {
-    if (isSending || isConversationOpening || isDatasetUpdating || busyWorkflows.length > 0) return;
+    if (isSending || isConversationOpening || isDatasetUpdating || busyWorkflows.length > 0 || loadingMessages) return;
     setMessages([WELCOME_MESSAGE]);
+    setRetainedWorkflow(null);
+    setBeforeSequence(null);
+    setMessagePageError('');
     setInput('');
     setConversationId(null);
     setConversationTitle('新数据处理对话');
@@ -580,7 +610,7 @@ export default function Home() {
 
   const sendMessage = async () => {
     const text = input.trim();
-    if (!text || isSending || isConversationOpening || isDatasetUpdating || busyWorkflows.length > 0) return;
+    if (!text || isSending || isConversationOpening || isDatasetUpdating || busyWorkflows.length > 0 || loadingMessages) return;
 
     const userMessage: ChatMessage = {
       id: newMessageId('user'),
@@ -640,6 +670,7 @@ export default function Home() {
           workflow: payload.workflow,
         },
       ]);
+      if (payload.workflow) setRetainedWorkflow(payload.workflow);
       setHealth({
         status: 'ok',
         mode: payload.mode ?? 'demo',
@@ -670,6 +701,7 @@ export default function Home() {
   };
 
   const updateWorkflowMessage = (workflow: Workflow) => {
+    setRetainedWorkflow(current => current?.workflow_id === workflow.workflow_id ? workflow : current);
     setMessages((current) =>
       current.map((message) =>
         message.workflow?.workflow_id === workflow.workflow_id
@@ -1138,6 +1170,7 @@ export default function Home() {
               </p>
             </div>
           </div>
+          <StoragePanel apiBase={API_BASE} />
         </div>
       </aside>
 
@@ -1205,6 +1238,15 @@ export default function Home() {
             </div>
 
             <div className="space-y-8">
+              {beforeSequence && <Button variant="outline" disabled={loadingMessages || isSending || isConversationOpening}
+                onClick={() => void loadOlderMessages()}>{loadingMessages ? '正在加载…' : '加载更早消息'}</Button>}
+              {messagePageError && <p className="text-sm text-red-700">{messagePageError}</p>}
+              {retainedWorkflow && !messages.some(message => (message.workflow?.workflow_id ?? message.workflowId) === retainedWorkflow.workflow_id) &&
+                <div className="min-w-0">
+                  <p className="mb-2 text-xs text-slate-500">当前流程（对应消息位于更早的历史中）</p>
+                  <WorkflowCard apiBase={API_BASE} workflow={retainedWorkflow} onChange={updateWorkflowMessage}
+                    onBusyChange={workflowBusyChanged} disabled={isDatasetUpdating || isConversationOpening || isSending} />
+                </div>}
               {messages.map((message) => (
                 <article
                   className={cn('flex gap-3.5', message.role === 'user' && 'justify-end')}
@@ -1250,7 +1292,7 @@ export default function Home() {
                       message.interactionMode === 'task' &&
                       message.workflowRecommended === false &&
                       !message.capabilityRecommendation &&
-                      !message.workflow && (
+                      !message.workflow && !message.workflowId && (
                         <div className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-medium text-slate-500">
                           <MessageCircle className="size-3" />
                           {message.clarificationRequired
@@ -1263,6 +1305,9 @@ export default function Home() {
                         recommendation={message.capabilityRecommendation}
                       />
                     )}
+                    {!message.workflow && message.workflowId && <DeferredWorkflowCard apiBase={API_BASE}
+                      workflowId={message.workflowId} onChange={updateWorkflowMessage} onBusyChange={workflowBusyChanged}
+                      disabled={isDatasetUpdating || isConversationOpening || isSending} />}
                     {message.workflow && (
                       <WorkflowCard
                         apiBase={API_BASE}

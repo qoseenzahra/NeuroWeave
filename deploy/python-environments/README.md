@@ -92,7 +92,7 @@ python-dotenv，并同步更新 `locks/scientific-py311-pip.txt`。
    不能把作业从 `squeue` 消失当作成功。
 
 GPU 资源登记、节点恢复和共享目录已完成，操作由独立管理员脚本执行。
-平台持久保存终态和退出码；Slurm 记账服务及设备 cgroup 强制隔离仍未启用。
+平台持久保存终态和退出码；2026-09-08 已启用 SlurmDBD/MariaDB 记账，作业 266、267、268 在三个节点通过 CUDA 实测并保留完成记录。设备 cgroup 强制隔离仍未启用。见 [可靠性改进](../reliability-upgrade.md)。
 
 ## GPU 提交示例
 
