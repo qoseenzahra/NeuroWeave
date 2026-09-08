@@ -30,3 +30,7 @@
 自动化回归：`bakend/tests/test_historical_inputs.py` 覆盖 API、修订号冲突、样本顺序、缺失和重复输出、旧存储记录、重试来源、文件替换和输入目录边界。界面合成测试入口可通过 `cd frontend` 后执行 `node tests/serve-historical-input-harness.mjs` 打开，结束后按 Ctrl+C 关闭。
 
 服务器集成验证使用 `scripts/smoke_historical_inputs.py --root /home/data/neuroweave/smoke/<新的测试目录>`。需要显式提供已部署的共享 Worker 和 Python 配置；脚本只创建合成影像和隔离数据库，不读取生产数据库或 `.env`。它调用现有 Nilearn 方法执行两轮、每轮两个样本，在第二轮倒置样本顺序，并验证实际 Slurm Worker 读取正确的旧输出且未复制到原数据目录。证据保留在测试目录的 `evidence.json`。
+
+2026-09-08 验证结果：后端 198 项测试及 496 项子测试通过，前端 8 项回归、类型检查、lint 和 Linux 构建通过。浏览器实测 775px / 390px 宽度下的 63 样本预览、翻页、应用和缺失样本禁用状态正常。
+
+真实 Slurm 作业 276–279 全部 `COMPLETED / 0:0`。第一轮 subject-A 在 node01、subject-B 在 node02 生成结果；第二轮交换顺序及节点，分别从旧运行自己的输出路径读取。原输出 SHA-256 不变，原始目录仍只有两份合成输入。运行记录位于隔离目录 `/home/data/neuroweave/smoke/history-d2abff1-20260908T0650/evidence.json`；此验证证明历史输入的身份绑定与跨节点复用，不替代具体研究数据的科学质量检查。

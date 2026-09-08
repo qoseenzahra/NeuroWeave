@@ -67,9 +67,13 @@ for index, name in enumerate(('subject-A', 'subject-B')):
     definition = next(item for item in capabilities.methods_for('skill.nilearn-tool')
                       if item.runner_id == 'reviewed.nilearn-tool.denoise')
     method = MethodOption(id=definition.method_id, **definition.model_dump(exclude={'method_id'}))
+    runner_registry = RunnerRegistry()
+    runtime = runner_registry.get(method.runner_id).runtime_status()
+    assert runtime['available'], runtime['reason']
     workflows = WorkflowService(PROJECT / 'skills/dwi-skill/workflow.manifest.json',
-        ChatService(), capabilities, store, datasets)
-    runs = RunService(store, capabilities, RunnerRegistry(), root / 'local-unused')
+        ChatService(), capabilities, store, datasets,
+        executable_runner_ids={method.runner_id}, runner_registry=runner_registry)
+    runs = RunService(store, capabilities, runner_registry, root / 'local-unused')
     options = RunExecutionOptions(backend='slurm', sample_mode='per_sample',
         nodes=[NodeAllocation(node=node, cpus=1, memory_gb=2, time_minutes=2)
                for node in ('node01', 'node02')])
