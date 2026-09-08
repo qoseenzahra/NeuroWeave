@@ -11,6 +11,10 @@ from app.capability_registry import CapabilityRegistry
 
 
 def main():
+    from build_planning_resolution import build
+    resolution=root/'bakend/resources/planning_resolution.json'
+    if json.loads(resolution.read_text(encoding='utf-8')) != build():
+        raise RuntimeError("Planning execution mappings need review/regeneration")
     registry = CapabilityRegistry(root / "skills")
     methods = registry.all_methods()
     if not methods:

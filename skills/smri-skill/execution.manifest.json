@@ -478,6 +478,62 @@
     },
     {
       "capability": "skill.smri-skill",
+      "method_id": "reviewed-fsl-anat-fsl-tool",
+      "label": "FSL 完整结构预处理（fsl_anat）",
+      "description": "调用现有实现：/opt/software/fsl/bin/fsl_anat, /opt/software/fsl/bin/fsl_sub, /opt/software/fsl/bin/fslreorient2std, /opt/software/fsl/bin/robustfov, /opt/software/fsl/bin/bet, /opt/software/fsl/bin/fast, /opt/software/fsl/bin/flirt, /opt/software/fsl/bin/fnirt, /opt/software/fsl/bin/run_first_all。输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.fsl-tool.fsl-anat",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "T1w NIfTI",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_structural_anat_T1_biascorr_brain_nii_gz",
+          "type": "generated_file",
+          "label": "structural.anat/T1_biascorr_brain.nii.gz",
+          "path_template": "results/structural.anat/T1_biascorr_brain.nii.gz"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/planning_native_worker.py",
+          "kind": "script",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.smri-skill",
       "method_id": "linked-freesurfer-recon-all",
       "label": "FreeSurfer recon-all（可执行）",
       "description": "使用服务器现有 FreeSurfer 7.4.1 执行完整 recon-all，或在同一 SUBJECTS_DIR 中连续执行 autorecon1/2/3，并登记受试者目录制品。",

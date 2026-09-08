@@ -1416,7 +1416,7 @@
                 "skill_ids": [
                   "bnt"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.braingnn",
@@ -1447,7 +1447,7 @@
                 "skill_ids": [
                   "brainnetcnn"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.cnn3d",
@@ -1480,7 +1480,7 @@
                 "skill_ids": [
                   "combraintf"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "skill.fm-app",

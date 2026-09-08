@@ -154,6 +154,10 @@ class ExecutionRecipeStepSpec(BaseModel):
     capability: str
     method_id: str
     fixed_parameters: dict[str, Any] = Field(default_factory=dict)
+    # Explicit parameter routing avoids collisions such as the three distinct
+    # MRtrix "algorithm" options in response/FOD/tractography stages.
+    parameter_bindings: dict[str, str] = Field(default_factory=dict)
+    inherit_parameters: bool = True
     input_bindings: dict[str, RecipeInputBindingSpec] = Field(default_factory=dict)
     workspace: str = "default"
 
@@ -165,6 +169,7 @@ class ExecutionRecipeSpec(BaseModel):
     interface_capability: str
     interface_method_id: str
     exposed_parameters: list[str] = Field(default_factory=list)
+    parameters: list[ParameterSpec] = Field(default_factory=list)
     input_slots: list[InputSlotSpec] = Field(default_factory=list)
     output_slots: list[OutputSlotSpec] = Field(default_factory=list)
     steps: list[ExecutionRecipeStepSpec]
@@ -196,6 +201,7 @@ class MethodOption(BaseModel):
     delegate_skill_ids: list[str] = Field(default_factory=list)
     execution_recipe: ExecutionRecipeSpec | None = None
     included_capabilities: list[str] = Field(default_factory=list)
+    execution_resolution: dict[str, Any] = Field(default_factory=dict)
 
 
 class WorkflowStep(BaseModel):

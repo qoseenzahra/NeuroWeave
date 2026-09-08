@@ -1197,7 +1197,11 @@ class WorkflowService:
             if item not in reused_inputs and item not in excluded
         ], self._declared_order)
         capability_ids = (
-            self._expand_and_order_capabilities(requested_capability_ids, initial_types, excluded | reused_inputs)
+            self._expand_and_order_capabilities(
+                requested_capability_ids, initial_types, excluded | reused_inputs,
+                {step.capability: (self._selected_method(step), step.selected_parameters)
+                 for step in existing.steps if step.selected_method_id} if existing else None,
+            )
             if dependency_policy == "complete"
             else requested_capability_ids
         )
@@ -1240,6 +1244,10 @@ class WorkflowService:
                     method_candidate_ids.append(previous_step.selected_method_id)
                 method_candidate_ids.extend(method.method_id for method in all_definitions
                                             if self._scope_conflicts(method, excluded | reused_inputs))
+                # A recommendation shortlist must not hide the direct existing-
+                # input method behind newly added composite alternatives.
+                method_candidate_ids.extend(method.method_id for method in all_definitions
+                                            if method.default_recommended)
             definitions = [method for method in all_definitions if method.method_id in method_candidate_ids] or all_definitions
             options = [
                 self._option(method, available_types, features, dataset is not None)
@@ -1653,9 +1661,14 @@ class WorkflowService:
         requested: list[str],
         initial_types: set[str],
         excluded: set[str] | None = None,
+        selected: dict[str, tuple[MethodOption, dict[str, Any]]] | None = None,
     ) -> list[str]:
         """Add only required producer capabilities and return a validated linear DAG."""
         allowed = set(self.registry.capabilities()) - (excluded or set())
+        selected = selected or {}
+        internal = {stage.capability for method, _values in selected.values()
+                    if method.execution_recipe for stage in method.execution_recipe.steps}
+        allowed -= internal - set(requested)
         result: list[str] = []
         available = set(initial_types)
         visiting: set[str] = set()
@@ -1674,17 +1687,23 @@ class WorkflowService:
             if capability_id in visiting:
                 raise RuntimeError(f"能力依赖包含循环：{capability_id}")
             visiting.add(capability_id)
+            selection = selected.get(capability_id)
+            methods = [selection[0]] if selection else self.registry.methods_for(capability_id)
+            required = ({slot.type for slot in selection[0].input_slots
+                         if self._slot_required(slot, selection[1])} if selection else None)
             for prerequisite in explicit_prerequisites.get(capability_id, []):
                 # A requested recomputation must still run; otherwise reuse a
                 # prerequisite artifact already present in the inspected inputs.
                 products = {item for method in self.registry.methods_for(prerequisite)
                             for item in method.output_types if item != 'execution_log'}
+                if required is not None and not products.intersection(required):
+                    continue
                 if prerequisite not in requested and products.intersection(available):
                     continue
                 ensure(prerequisite)
-            methods = self.registry.methods_for(capability_id)
-            if methods and not any(accepts(method) for method in methods):
-                required_types = {
+            ready = lambda: required.issubset(available) if required is not None else any(accepts(method) for method in methods)
+            if methods and not ready():
+                required_types = (required - available) if required is not None else {
                     input_type
                     for method in methods
                     for input_type in method.input_types
@@ -1704,7 +1723,7 @@ class WorkflowService:
                     producers.append((0 if can_start else 1, producer_id))
                 for _rank, producer_id in sorted(producers):
                     ensure(producer_id)
-                    if any(accepts(method) for method in methods):
+                    if ready():
                         break
             visiting.remove(capability_id)
             result.append(capability_id)
@@ -1739,8 +1758,9 @@ class WorkflowService:
             methods = []
             for method in self.registry.selectable_methods_for(capability_id):
                 runtime_status: dict[str, Any] = {
-                    "available": True if method.execution_mode == "planning" else None,
-                    "reason": "规划方法不执行命令" if method.execution_mode == "planning" else "Runner 状态未注入",
+                    "available": False if method.execution_mode == "planning" else None,
+                    "reason": (method.execution_resolution.get("reason") or "规划方法没有执行入口")
+                    if method.execution_mode == "planning" else "Runner 状态未注入",
                 }
                 if method.execution_mode == "runner" and self.runner_registry is not None:
                     recipe_methods = (
@@ -1917,6 +1937,7 @@ class WorkflowService:
             delegate_skill_ids=definition.delegate_skill_ids,
             execution_recipe=definition.execution_recipe,
             included_capabilities=definition.included_capabilities,
+            execution_resolution=definition.execution_resolution,
         )
 
     @staticmethod
@@ -1958,8 +1979,19 @@ class WorkflowService:
             definitions = {
                 definition.method_id: definition
                 for definition in self.registry.selectable_methods_for(step.capability)
-                if definition.method_id in previous_options or self._scope_conflicts(definition, excluded)
+                if definition.method_id in previous_options
+                or definition.execution_resolution.get("source_method_id") in previous_options
+                or self._scope_conflicts(definition, excluded)
             }
+            if workflow.locked_at is not None or workflow.status == "confirmed":
+                # A catalog release must not silently change the approved inputs,
+                # algorithm parameters or nested steps of an existing workflow.
+                definitions = {
+                    option.id: CapabilityMethod.model_validate({
+                        **option.model_dump(), "method_id": option.id,
+                        "capability": step.capability,
+                    }) for option in previous_options.values()
+                }
             step.method_options = []
             for definition in definitions.values():
                 checked = self._option(definition, available, features, workflow.dataset is not None,

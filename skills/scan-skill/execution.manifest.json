@@ -4,6 +4,131 @@
   "provides": [
     {
       "capability": "skill.scan-skill",
+      "method_id": "reviewed-table-join-scan-skill",
+      "label": "按显式键连接已批准的表格",
+      "description": "调用现有实现：pandas.read_csv, pandas.DataFrame.merge。输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.scan-skill.table-join",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "keys",
+          "argument": "keys",
+          "label": "连接键（逗号分隔）",
+          "type": "string",
+          "default": "subject_id",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "how",
+          "argument": "how",
+          "label": "how",
+          "type": "string",
+          "default": "left",
+          "required": true,
+          "options": [
+            {
+              "value": "left",
+              "label": "left"
+            },
+            {
+              "value": "inner",
+              "label": "inner"
+            },
+            {
+              "value": "outer",
+              "label": "outer"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "validate",
+          "argument": "validate",
+          "label": "validate",
+          "type": "string",
+          "default": "one_to_one",
+          "required": true,
+          "options": [
+            {
+              "value": "one_to_one",
+              "label": "one_to_one"
+            },
+            {
+              "value": "many_to_one",
+              "label": "many_to_one"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "CSV/TSV 表格",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "right",
+          "label": "右侧 CSV/TSV 表格",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_table_report_json",
+          "type": "generated_file",
+          "label": "table_report.json",
+          "path_template": "results/table_report.json"
+        },
+        {
+          "id": "file_joined_csv",
+          "type": "generated_file",
+          "label": "joined.csv",
+          "path_template": "results/joined.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/table_inspection_worker.py",
+          "kind": "script",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.scan-skill",
       "method_id": "linked-bids_organizer",
       "label": "BIDS Organizer",
       "description": "把已有 NIfTI/BIDS 数据复制到隔离输出目录，补齐 dataset_description.json、清理敏感 sidecar 字段并执行基础结构校验。DICOM 应先使用 dcm2niix 转换。",

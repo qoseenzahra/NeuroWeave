@@ -71,13 +71,29 @@ class RecipeCompiler:
                 stage_ids[stage.id] = child_id
                 child_method = self._method_option(definition)
                 parameters = self._default_parameters(child_method)
-                parameters.update(
-                    {
-                        key: value
-                        for key, value in parent.selected_parameters.items()
-                        if key in {spec.id for spec in child_method.parameters}
-                    }
-                )
+                if stage.inherit_parameters:
+                    parameters.update(
+                        {
+                            key: value
+                            for key, value in parent.selected_parameters.items()
+                            if key in {spec.id for spec in child_method.parameters}
+                        }
+                    )
+                child_parameter_ids = {spec.id for spec in child_method.parameters}
+                for target_id, public_id in stage.parameter_bindings.items():
+                    if target_id not in child_parameter_ids or public_id not in {
+                        spec.id for spec in method.parameters
+                    }:
+                        raise RecipeCompilationError(
+                            f"执行配方 {recipe.recipe_id}/{stage.id} 的参数映射无效："
+                            f"{public_id} -> {target_id}"
+                        )
+                    public_values = self._default_parameters(method)
+                    public_values.update(parent.selected_parameters)
+                    if public_id in public_values:
+                        parameters[target_id] = public_values[public_id]
+                if set(stage.fixed_parameters) - child_parameter_ids:
+                    raise RecipeCompilationError(f"执行配方 {recipe.recipe_id} 含有未声明参数")
                 parameters.update(stage.fixed_parameters)
 
                 bindings: dict[str, InputBinding] = {}
@@ -93,6 +109,11 @@ class RecipeCompiler:
                         source_id = binding_spec.slot_id or target_slot_id
                         source = parent.input_bindings.get(source_id)
                         if source is not None:
+                            if source.artifact_type != target_slot.type:
+                                raise RecipeCompilationError(
+                                    f"执行配方 {recipe.recipe_id}/{stage.id} 的输入类型不匹配："
+                                    f"{source.artifact_type} -> {target_slot.type}"
+                                )
                             bindings[target_slot_id] = source.model_copy(
                                 deep=True,
                                 update={
@@ -253,6 +274,7 @@ class RecipeCompiler:
             source_references=definition.source_references,
             command_references=definition.command_references,
             delegate_skill_ids=definition.delegate_skill_ids,
+            execution_resolution=definition.execution_resolution,
         )
 
     @staticmethod

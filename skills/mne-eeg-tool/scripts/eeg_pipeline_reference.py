@@ -28,10 +28,9 @@ import argparse
 import mne
 import numpy as np
 import pandas as pd
-from mne.preprocessing import ICA, find_bad_channels, AutoReject
+from mne.preprocessing import ICA
 from mne.decoding import CSP
 from mne_connectivity import spectral_connectivity_epochs
-import pyentrp.entropy as entropy
 
 
 def load_eeg(raw_path: str):
@@ -50,6 +49,8 @@ def load_eeg(raw_path: str):
 
 def detect_and_interpolate_bad_channels(raw: mne.io.Raw):
     """Explicit bad-channel detection + interpolation."""
+    # Optional/incompatible routines must not prevent independent functions loading.
+    from mne.preprocessing import find_bad_channels
     bads = find_bad_channels(raw, method='correlation', threshold=0.8)
     raw.info['bads'] = bads
     raw.interpolate_bads(reset_bads=True)
@@ -67,6 +68,7 @@ def preprocess_filtering(raw: mne.io.Raw, target_sfreq: int = 256):
 
 def remove_artifacts(raw: mne.io.Raw):
     """ICA + AutoReject + EOG/ECG regression (if channels exist)."""
+    from mne.preprocessing import AutoReject
     ica = ICA(n_components=20, random_state=42, method='fastica')
     ica.fit(raw)
     eog_inds, _ = ica.find_bads_eog(raw)
@@ -143,7 +145,8 @@ def extract_erp_features(epochs: mne.Epochs, output_dir: str = "eeg_output"):
         peaks[ch] = {
             'peak_amp': data[peak_idx],
             'peak_latency': evokeds.times[peak_idx],
-            'auc': np.trapz(np.abs(data))
+            # NumPy 2 renamed trapz to trapezoid; preserve the original integration.
+            'auc': np.trapezoid(np.abs(data))
         }
     df_erp = pd.DataFrame(peaks).T
     df_erp.to_csv(f"{output_dir}/erp_features.csv")
@@ -174,6 +177,7 @@ def run_microstate_analysis(raw: mne.io.Raw, output_dir: str = "eeg_output"):
 
 def extract_features(epochs: mne.Epochs, output_dir: str = "eeg_output"):
     """Core + advanced features: band power, CSP, Hjorth, sample entropy."""
+    import pyentrp.entropy as entropy
     psds, freqs = mne.time_frequency.psd_array_multitaper(
         epochs.get_data(), sfreq=epochs.info['sfreq'])
     band_power = np.mean(psds[:, :, (freqs >= 8) & (freqs <= 13)], axis=2)

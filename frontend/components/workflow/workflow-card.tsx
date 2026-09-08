@@ -59,6 +59,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { RunPanel } from '@/components/workflow/run-panel';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
+import { methodExecutionLabel } from '@/lib/workflow';
 import type {
   ExecutionBackends,
   ExecutionOptions,
@@ -494,11 +495,7 @@ function WorkflowCardState({ apiBase, workflow, onChange, disabled = false, onBu
                                 : 'bg-emerald-50 text-emerald-700',
                             )}
                           >
-                            {method.execution_mode === 'planning'
-                              ? '仅规划'
-                              : method.execution_recipe
-                                ? `Runner 流程 · ${method.execution_recipe.steps.length} 步`
-                                : 'Runner'}
+                            {methodExecutionLabel(method)}
                           </Badge>
                           <Badge variant="outline" className="rounded-md bg-white font-mono text-[10px]">
                             {method.skill_id}
@@ -911,7 +908,7 @@ function MethodChoice({ method, stepId }: { method: MethodOption; stepId: string
           )}
           {method.execution_mode === 'planning' && (
             <Badge className="h-5 rounded-md bg-amber-50 px-1.5 text-[10px] text-amber-700 shadow-none">
-              规划型
+              {methodExecutionLabel(method)}
             </Badge>
           )}
           {method.execution_recipe && (
@@ -947,7 +944,12 @@ function MethodChoice({ method, stepId }: { method: MethodOption; stepId: string
 }
 
 function MethodGuidance({ method, includeInputs = true }: { method: MethodOption; includeInputs?: boolean }) {
-  const warnings = [...(includeInputs ? method.input_warnings ?? [] : []), ...(method.scope_warnings ?? [])];
+  const resolution = method.execution_resolution;
+  const warnings = [
+    ...(resolution && resolution.state !== 'mapped' ? [resolution.reason,
+      ...(resolution.requirements?.length ? ['所需条件：' + resolution.requirements.join('；')] : [])] : []),
+    ...(includeInputs ? method.input_warnings ?? [] : []), ...(method.scope_warnings ?? []),
+  ];
   if (!warnings.length) return null;
   return <span className="mt-2 block space-y-1 wrap-anywhere text-[11px] font-normal leading-5 text-amber-700">
     {warnings.map((warning) => <span className="block" key={warning}>{warning}</span>)}

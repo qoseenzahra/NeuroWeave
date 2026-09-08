@@ -4,6 +4,161 @@
   "provides": [
     {
       "capability": "skill.bids-organizer",
+      "method_id": "reviewed-explicit-metadata-bids-organizer",
+      "label": "BIDS 元数据生成",
+      "description": "调用现有实现：json.dump, shutil.copyfile。输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.bids-organizer.explicit-metadata",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "name",
+          "argument": "name",
+          "label": "数据集名称",
+          "type": "string",
+          "default": "NeuroWeave dataset",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "源数据集目录",
+          "required": true,
+          "binding": "folder",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_dataset_description_json",
+          "type": "generated_file",
+          "label": "dataset_description.json",
+          "path_template": "results/dataset_description.json"
+        },
+        {
+          "id": "file_staging_report_json",
+          "type": "generated_file",
+          "label": "staging_report.json",
+          "path_template": "results/staging_report.json"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/bids_mapping_worker.py",
+          "kind": "script",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.bids-organizer",
+      "method_id": "reviewed-explicit-stage-bids-organizer",
+      "label": "按用户文件映射整理 BIDS（文件名检查）",
+      "description": "调用现有实现：json.dump, shutil.copyfile, bids_validator.BIDSValidator.is_bids。输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.bids-organizer.explicit-stage",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "name",
+          "argument": "name",
+          "label": "数据集名称",
+          "type": "string",
+          "default": "NeuroWeave dataset",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "源数据集目录",
+          "required": true,
+          "binding": "folder",
+          "type": "analysis_input"
+        },
+        {
+          "id": "mapping",
+          "label": "显式文件映射 JSON（源相对路径 → BIDS 相对路径）",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_dataset_description_json",
+          "type": "generated_file",
+          "label": "dataset_description.json",
+          "path_template": "results/dataset_description.json"
+        },
+        {
+          "id": "file_staging_report_json",
+          "type": "generated_file",
+          "label": "staging_report.json",
+          "path_template": "results/staging_report.json"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/bids_mapping_worker.py",
+          "kind": "script",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.bids-organizer",
       "method_id": "linked-bids_organizer",
       "label": "BIDS Organizer",
       "description": "把已有 NIfTI/BIDS 数据复制到隔离输出目录，补齐 dataset_description.json、清理敏感 sidecar 字段并执行基础结构校验。DICOM 应先使用 dcm2niix 转换。",

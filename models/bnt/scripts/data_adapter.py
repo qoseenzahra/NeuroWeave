@@ -31,7 +31,8 @@ def _load_subject(atlas: str, sid: str, include_t1: bool,
     pt_path = FMRI_ROOT / atlas / f"sub-{sid}.pt"
     if not pt_path.exists():
         raise FileNotFoundError(pt_path)
-    sub_pt = torch.load(pt_path, weights_only=False)
+    # Platform inputs are tensor dictionaries, never executable pickle objects.
+    sub_pt = torch.load(pt_path, weights_only=True)
 
     fc_z = sub_pt.get("fc_matrix")
     if fc_z is None:

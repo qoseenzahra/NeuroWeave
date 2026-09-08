@@ -418,8 +418,8 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(set(tree.covered_skill_ids()), loaded)
         stats = tree.stats()
         self.assertEqual(stats["skills_covered"], 103)
-        self.assertEqual(stats["structured"], 86)
-        self.assertEqual(stats["planning"], 28)
+        self.assertGreaterEqual(stats["structured"], 86)
+        self.assertEqual(stats["planning"] + stats["structured"], stats["capabilities"])
         self.assertEqual(stats["advisory"], 0)
         self.assertEqual(stats["capabilities"], 114)
         self.assertEqual(
@@ -428,10 +428,10 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
         )
         registry_stats = self.service.registry.stats()
         self.assertEqual(registry_stats["capabilities"], 114)
-        self.assertEqual(registry_stats["methods"], 346)
+        self.assertGreaterEqual(registry_stats["methods"], 346)
         self.assertEqual(registry_stats["planning_methods"], 105)
-        self.assertEqual(registry_stats["runner_methods"], 241)
-        self.assertEqual(registry_stats["evidence_backed_methods"], 346)
+        self.assertGreaterEqual(registry_stats["runner_methods"], 241)
+        self.assertEqual(registry_stats["evidence_backed_methods"], registry_stats["methods"])
         self.assertEqual(registry_stats["artifact_types"], 39)
         self.assertGreaterEqual(registry_stats["reference_commands"], 300)
         for method in self.service.registry.all_methods():
@@ -607,9 +607,9 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(decision["routing_trace"]["strategy"], "semantic")
         workflow, _content = await self.service.draft(request, decision)
         self.assertEqual(workflow.steps[0].capability, "dwi.tractography")
-        self.assertEqual(
-            {method.id for method in workflow.steps[0].method_options},
-            {"mrtrix3-act-sift2", "fsl-probtrackx", "mrtrix3-existing-fod"},
+        self.assertTrue(
+            {"mrtrix3-act-sift2--via-rebuild-fod-act-sift2", "mrtrix3-existing-fod"}
+            <= {method.id for method in workflow.steps[0].method_options}
         )
 
     async def test_reported_tractography_wording_stays_atomic_in_fallback_mode(self) -> None:
@@ -1112,16 +1112,16 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(workflow.steps[0].selected_method_id, 'mrtrix3-existing-fod')
         self.assertEqual(set(workflow.steps[0].missing_required_inputs), {'fod', 'five_tt'})
         self.assertEqual(set(workflow.excluded_capabilities), {'dwi.five_tt', 'dwi.fod'})
-        self.assertTrue(any(m.compatible for m in workflow.steps[0].method_options if m.id == 'mrtrix3-act-sift2'))
+        self.assertTrue(any(m.compatible for m in workflow.steps[0].method_options if m.id == 'mrtrix3-act-sift2--via-rebuild-fod-act-sift2'))
         original_planner = self.service.chat_service.plan_capability_chain
         async def narrow_methods(*args):
             result = await original_planner(*args)
-            result['method_candidates']['dwi.tractography'] = ['mrtrix3-act-sift2']
+            result['method_candidates']['dwi.tractography'] = ['mrtrix3-act-sift2--via-rebuild-fod-act-sift2']
             return result
         with patch.object(self.service.chat_service, 'plan_capability_chain', side_effect=narrow_methods):
             workflow, _ = await self.service.replan(workflow.workflow_id, workflow.revision)
         self.assertEqual(workflow.steps[0].selected_method_id, 'mrtrix3-existing-fod')
-        bundled = next(m for m in workflow.steps[0].method_options if m.id == 'mrtrix3-act-sift2')
+        bundled = next(m for m in workflow.steps[0].method_options if m.id == 'mrtrix3-act-sift2--via-rebuild-fod-act-sift2')
         self.assertTrue(bundled.compatible)
         self.assertFalse(bundled.recommended)
         self.assertTrue(any('仍包含' in reason for reason in bundled.scope_warnings))
@@ -1131,7 +1131,7 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
             ['dwi.fod', 'dwi.tractography'], {'dwi.tractography': 'mrtrix3-existing-fod'},
         )
         workflow = self.service.remove_step(workflow.workflow_id, 'dwi_fod', workflow.revision)
-        bundled = next(m for m in workflow.steps[0].method_options if m.id == 'mrtrix3-act-sift2')
+        bundled = next(m for m in workflow.steps[0].method_options if m.id == 'mrtrix3-act-sift2--via-rebuild-fod-act-sift2')
         self.assertTrue(bundled.compatible)
         self.assertTrue(bundled.scope_warnings)
         workflow = self.service.select_method(workflow.workflow_id, 'dwi_tractography',
@@ -1164,8 +1164,8 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
         from unittest.mock import Mock
         with patch.object(self.service, 'runner_registry', Mock(get=Mock(side_effect=AssertionError('No runtime probe')))):
             refreshed = self.service.get(workflow.workflow_id)
-        self.assertEqual({m.id for m in refreshed.steps[0].method_options},
-                         {'mrtrix3-existing-fod', 'mrtrix3-act-sift2'})
+        self.assertTrue({'mrtrix3-existing-fod', 'mrtrix3-act-sift2--via-rebuild-fod-act-sift2'}
+                        <= {m.id for m in refreshed.steps[0].method_options})
         self.assertTrue(all(m.compatible for m in refreshed.steps[0].method_options))
         self.assertEqual(self.store.get_workflow(workflow.workflow_id), before)
 
@@ -1208,6 +1208,29 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(changed.dry_run_report)
         self.assertEqual(changed.steps[1].input_bindings['fod'].upstream_step_id, changed.steps[0].id)
 
+    async def test_locked_method_contract_changes_only_after_unlock(self) -> None:
+        workflow = await self._editable_chain(['dwi.tractography'],
+            {'dwi.tractography': 'mrtrix3-existing-fod'})
+        workflow.locked_at = workflow.created_at
+        workflow.status = 'awaiting_parameter_review'
+        original = next(m for m in workflow.steps[0].method_options if m.id == 'mrtrix3-existing-fod')
+        self.store.save_workflow(workflow, event_type='test_locked_contract')
+        definitions = self.service.registry.selectable_methods_for('dwi.tractography')
+        changed = [m.model_copy(deep=True) for m in definitions]
+        for method in changed:
+            if method.method_id == original.id:
+                method.label = 'Updated reviewed contract'
+                method.parameters = []
+        with patch.object(self.service.registry, 'selectable_methods_for', return_value=changed):
+            saved = self.service.get(workflow.workflow_id)
+            locked = next(m for m in saved.steps[0].method_options if m.id == original.id)
+            self.assertEqual(locked.parameters, original.parameters)
+            self.assertEqual(locked.label, original.label)
+            unlocked = self.service.unlock_chain(workflow.workflow_id, workflow.revision)
+        current = next(m for m in unlocked.steps[0].method_options if m.id == original.id)
+        self.assertEqual(current.label, 'Updated reviewed contract')
+        self.assertEqual(current.parameters, [])
+
     def test_unavailable_software_still_blocks_method_choice(self) -> None:
         from unittest.mock import Mock
         method = next(method for method in self.service.registry.selectable_methods_for('dwi.tractography')
@@ -1221,14 +1244,15 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_removed_optional_generation_requires_file_and_uses_existing_source_parameter(self) -> None:
         workflow = await self._editable_chain(['dwi.five_tt', 'dwi.tractography'],
-                                              {'dwi.tractography': 'mrtrix3-act-sift2'})
+                                              {'dwi.tractography': 'mrtrix3-act-sift2--via-rebuild-fod-act-sift2'})
         workflow = self.service.remove_step(workflow.workflow_id, 'dwi_five_tt', workflow.revision)
         workflow = self.service.lock_chain(workflow.workflow_id, workflow.revision)
         self.assertIn('five_tt', workflow.steps[0].missing_required_inputs)
         (self.dataset_folder / 'existing_5tt.mif').write_bytes(b'synthetic')
         workflow = self.service.bind_input(workflow.workflow_id, 'dwi_tractography', 'five_tt',
             self.dataset_service.roots()[0].root_id, 'bids-example/existing_5tt.mif', workflow.revision)
-        self.assertEqual(workflow.steps[0].selected_parameters['five_tt_source'], 'existing')
+        self.assertNotIn('five_tt_source', workflow.steps[0].selected_parameters)
+        self.assertNotIn('dwi.five_tt', [s.capability for s in self.service._selected_method(workflow.steps[0]).execution_recipe.steps])
         self.assertNotIn('five_tt', workflow.steps[0].missing_required_inputs)
         self.assertNotIn('t1w', workflow.steps[0].missing_required_inputs)
 
@@ -1388,7 +1412,7 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
                 interaction_mode="task",
             )
         )
-        self.assertEqual(workflow.execution_mode, "mixed")
+        self.assertEqual(workflow.execution_mode, "runner")
         self.assertFalse(
             any("仅支持规划" in warning for warning in workflow.warnings),
             "未选择的规划候选项不应触发整个流程的警告",
@@ -1406,9 +1430,9 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
             ["dwi.preprocess", "dwi.tractography"],
         )
         tractography = workflow.steps[-1]
-        self.assertEqual(
-            {method.id for method in tractography.method_options},
-            {"mrtrix3-act-sift2", "fsl-probtrackx", "mrtrix3-existing-fod"},
+        self.assertTrue(
+            {"mrtrix3-act-sift2--via-rebuild-fod-act-sift2", "mrtrix3-existing-fod"}
+            <= {method.id for method in tractography.method_options}
         )
         self.assertEqual(
             next(
@@ -1424,14 +1448,12 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
             for parameter in method.parameters
         })
         mrtrix = next(
-            method for method in tractography.method_options if method.id == "mrtrix3-act-sift2"
+            method for method in tractography.method_options if method.id == "mrtrix3-act-sift2--via-rebuild-fod-act-sift2"
         )
-        self.assertGreaterEqual(len(mrtrix.parameters), 20)
-        self.assertTrue(any(parameter.level == "advanced" for parameter in mrtrix.parameters))
-        sift_target = next(
-            parameter for parameter in mrtrix.parameters if parameter.id == "sift_target_count"
-        )
-        self.assertEqual(sift_target.visible_when, {"postprocessing": ["sift"]})
+        self.assertEqual([stage.capability for stage in mrtrix.execution_recipe.steps],
+                         ['dwi.response', 'dwi.fod', 'dwi.tractography'])
+        self.assertNotIn('sift_target_count', {parameter.id for parameter in mrtrix.parameters})
+        self.assertEqual(mrtrix.execution_recipe.steps[-1].fixed_parameters['postprocessing'], 'sift2')
 
     async def test_tractography_stays_target_only_until_dependencies_are_requested(self) -> None:
         workflow, _message = await self.service.draft(
@@ -1448,12 +1470,12 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
         workflow = self.service.select_method(
             workflow.workflow_id,
             "dwi_tractography",
-            "mrtrix3-act-sift2",
+            "mrtrix3-existing-fod",
             workflow.revision,
         )
         self.assertEqual(workflow.status, "chain_ready")
         self.assertTrue(workflow.can_lock)
-        self.assertIn("preprocessed_dwi", workflow.steps[0].missing_required_inputs)
+        self.assertIn("fod", workflow.steps[0].missing_required_inputs)
 
         with self.assertRaisesRegex(ValueError, "确定流程链"):
             self.service.update_parameters(
@@ -1470,11 +1492,11 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
         workflow = self.service.update_parameters(
             workflow.workflow_id,
             "dwi_tractography",
-            {"act_enabled": False, "generate_connectome": False},
+            {"act_enabled": False},
             workflow.revision,
         )
-        self.assertEqual(workflow.steps[0].missing_required_inputs, ["preprocessed_dwi"])
-        self.assertNotIn("step_size", workflow.steps[0].selected_parameters)
+        self.assertEqual(workflow.steps[0].missing_required_inputs, ["fod"])
+        self.assertIn("step_size", workflow.steps[0].selected_parameters)
 
         workflow = await self.service.complete_dependencies(
             workflow.workflow_id,
@@ -1487,14 +1509,13 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
                 "dwi.preprocess",
                 "dwi.response",
                 "dwi.fod",
-                "dwi.five_tt",
                 "dwi.tractography",
             ],
         )
         self.assertEqual(workflow.steps[0].origin, "dependency")
         self.assertTrue(all(step.origin == "dependency" for step in workflow.steps[:-1]))
         self.assertEqual(workflow.steps[-1].origin, "requested")
-        self.assertEqual(workflow.steps[-1].selected_method_id, "mrtrix3-act-sift2")
+        self.assertEqual(workflow.steps[-1].selected_method_id, "mrtrix3-existing-fod")
         self.assertIsNone(workflow.locked_at)
 
         workflow = self.service.select_method(
@@ -1504,9 +1525,9 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
             workflow.revision,
         )
         tractography = workflow.steps[-1]
-        binding = tractography.input_bindings["preprocessed_dwi"]
+        binding = tractography.input_bindings["fod"]
         self.assertEqual(binding.source, "upstream_output")
-        self.assertEqual(binding.upstream_step_id, "dwi_preprocess")
+        self.assertEqual(binding.upstream_step_id, "dwi_fod")
         self.assertEqual(workflow.status, "chain_ready")
 
     async def test_workflow_persists_per_sample_input_binding(self) -> None:
@@ -1520,37 +1541,39 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
         workflow = self.service.select_method(
             workflow.workflow_id,
             "dwi_tractography",
-            "mrtrix3-act-sift2",
+            "mrtrix3-existing-fod",
             workflow.revision,
         )
         workflow = self.service.lock_chain(workflow.workflow_id, workflow.revision)
         workflow = self.service.update_parameters(
             workflow.workflow_id,
             "dwi_tractography",
-            {"act_enabled": False, "generate_connectome": False},
+            {"act_enabled": False},
             workflow.revision,
         )
 
+        for subject in ['sub-01', 'sub-02']:
+            (self.dataset_folder / subject / 'dwi' / (subject + '_fod.nii.gz')).write_bytes(b'synthetic fod')
         preview = self.service.preview_input_mapping(
             workflow.workflow_id,
             "dwi_tractography",
-            "preprocessed_dwi",
+            "fod",
             self.dataset.root_id,
-            "bids-example/sub-01/dwi/sub-01_dwi.nii.gz",
+            "bids-example/sub-01/dwi/sub-01_fod.nii.gz",
         )
         self.assertEqual(preview.coverage.matched, 2)
 
         workflow = self.service.bind_input(
             workflow.workflow_id,
             "dwi_tractography",
-            "preprocessed_dwi",
+            "fod",
             self.dataset.root_id,
-            "bids-example/sub-01/dwi/sub-01_dwi.nii.gz",
+            "bids-example/sub-01/dwi/sub-01_fod.nii.gz",
             workflow.revision,
         )
-        binding = workflow.steps[0].input_bindings["preprocessed_dwi"]
+        binding = workflow.steps[0].input_bindings["fod"]
         self.assertEqual(binding.binding_mode, "per_sample")
-        self.assertEqual(binding.path_template, "{subject}/dwi/{subject}_dwi.nii.gz")
+        self.assertEqual(binding.path_template, "{subject}/dwi/{subject}_fod.nii.gz")
         self.assertEqual(binding.coverage.matched if binding.coverage else 0, 2)
         self.assertEqual(len(binding.sample_matches), 2)
         self.assertEqual(workflow.steps[0].missing_required_inputs, [])

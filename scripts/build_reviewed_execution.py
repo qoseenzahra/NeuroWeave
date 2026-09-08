@@ -35,10 +35,26 @@ def implementation_source(spec):
         origin = dict(kind='library_api', entrypoints=['.'.join(api) for api in apis])
     elif script.endswith('/image_summary_worker.py'):
         apis = {'inspect': [('nibabel','load'), ('nibabel','aff2axcodes')],
+                'save': [('nibabel','load'), ('nibabel','save')],
                 'surface': [('nibabel.freesurfer','read_geometry'), ('nibabel.freesurfer','read_annot')]}[operation]
         origin = dict(kind='library_api', entrypoints=['.'.join(api) for api in apis])
-    elif script.endswith('/native_worker.py'):
+    elif script.endswith('/evoked_worker.py'):
+        apis = [('mne','read_epochs'), ('mne','Epochs.average'), ('mne','Evoked.save')]
+        origin = dict(kind='library_api', entrypoints=['.'.join(api) for api in apis])
+    elif script.endswith('/bids_mapping_worker.py'):
+        apis = [('json','dump'), ('shutil','copyfile')]
+        if operation == 'stage':
+            apis.append(('bids_validator','BIDSValidator.is_bids'))
+        origin = dict(kind='library_api', entrypoints=['.'.join(api) for api in apis])
+    elif script.endswith('/table_inspection_worker.py'):
+        apis = [('pandas','read_csv'), ('pandas','DataFrame.merge' if operation=='join' else 'DataFrame.duplicated')]
+        origin = dict(kind='library_api', entrypoints=['.'.join(api) for api in apis])
+    elif script.endswith(('/native_worker.py', '/planning_native_worker.py')):
         origin = dict(kind='software_command', entrypoints=spec['executables'])
+    elif spec.get('original_entrypoint'):
+        original = spec['original_entrypoint']
+        origin = dict(kind='existing_project_script', entrypoints=[original], source=SOURCES[original])
+        apis = spec.get('original_required_apis', [])
     else:
         if script not in SOURCES:
             raise ValueError('No existing implementation source: '+script)
@@ -323,11 +339,12 @@ def emit():
         if spec['skill_id'] in {'statistical-ml','cpm','brain-age-modeling','subject-subtyping','imaging-genetics-models','temporal-models','cnn3d','survival-models','causal-treatment-models','brainnetcnn','bnt','combraintf','neuroimaging-decoding'}:
             spec['aliases'].append('run_models')
         for item in spec['inputs']:
-            item['type']={'bold':'bold_image','atlas':'label_image','roi':'label_image','mask':'brain_mask',
+            item['type']=spec.get('input_artifact_types',{}).get(item['id']) or {'bold':'bold_image','atlas':'label_image','roi':'label_image','mask':'brain_mask',
                           'dwi':'preprocessed_dwi','bval':'b_values','bvec':'b_vectors'}.get(item['id'],'analysis_input')
         spec['artifact_types']={name:{'cleaned_bold.nii.gz':'bold_image','preprocessed_bold.nii.gz':'bold_image',
             'brain_mask.nii.gz':'brain_mask','z_map.nii.gz':'z_stat_map','effect_map.nii.gz':'contrast_image',
             'connectome.npy':'connectome_matrix','roi_timeseries.csv':'roi_timeseries'}.get(name,'generated_file') for name in spec['expected']}
+        spec['artifact_types'].update(spec.get('output_artifact_types', {}))
         for skill in [spec['skill_id'],*spec['aliases']]:
             parameters=[{k:v for k,v in p.items() if k not in {'flag','flag_when','split'}} for p in spec['parameters']]
             inputs=[{k:v for k,v in p.items() if k not in {'flag','path_list','many_args'}} for p in spec['inputs']]
@@ -373,4 +390,8 @@ def emit():
 
 
 if __name__=='__main__':
-    scientific(); learning(); more_learning(); native(); eeg(); auxiliary(); dataset_scripts(); emit()
+    import sys
+    from planning_runtime_additions import register
+    scientific(); learning(); more_learning(); native(); eeg(); auxiliary(); dataset_scripts()
+    register(sys.modules[__name__])
+    emit()

@@ -33,9 +33,9 @@ Slurm 执行已启用：主节点提交，三个 RTX 5060 计算节点执行 GPU
 - 可信 Runner 注册表、后台执行队列、取消、进度/日志、制品校验与 SQLite 运行审计
 - 本地或 Slurm 执行选择、CPU/内存/GPU/时限申请、Job ID 展示与持久恢复监控
 
-当前目录共有 103 个 Skill（99 个 NeuroClaw 上游 Skill 和 4 个 NeuroWeave Skill），每个 Skill 都有 `planning.manifest.json`，因此都能进入任务卡并选择受约束参数。生成器会优先从 `SKILL.md` 的方法表、快速参考和命令块中提取操作选项，再补充适合该能力类别的常用与高级规划参数；当前 103 个 planning manifest 都有来源依据，60 个 Skill 提取出了方法级操作选项，共登记 330 条只读参考命令。运行时会把命中 Skill 的多值 `operation` 选项展开为独立候选方法，而不修改能力树或一次读取全部 Skill；当前 114 个能力、346 个原始方法可展开为 669 个可选择方法（包括同一实现的模型选项和跨 Skill 入口）。任务卡可以展开查看 Skill、脚本和命令的来源位置，参数下拉项也可以显示选项说明。
+当前目录共有 103 个 Skill（99 个 NeuroClaw 上游 Skill 和 4 个 NeuroWeave Skill），每个 Skill 都有 `planning.manifest.json`，因此都能进入任务卡并选择受约束参数。生成器会优先从 `SKILL.md` 的方法表、快速参考和命令块中提取操作选项，再补充适合该能力类别的常用与高级规划参数；当前 103 个 planning manifest 都有来源依据，60 个 Skill 提取出了方法级操作选项，共登记 330 条只读参考命令。运行时会把命中 Skill 的多值 `operation` 选项展开为独立候选方法，而不修改能力树或一次读取全部 Skill；当前 114 个能力、375 个原始方法可展开为 770 个可选择方法（包括同一实现的模型选项和跨 Skill 入口）。任务卡可以展开查看 Skill、脚本和命令的来源位置，参数下拉项也可以显示选项说明。
 
-平台只调用或管理原有项目实现、现有库 API 和已有软件命令；不根据方法名称、文档公式或基础库可用性补写算法。缺少原始可用入口的内容保留规划。Manifest 的 `runner_id` 只是执行契约，不等于已经有执行代码。只有同时出现在后端可信 Runner 注册表、并通过服务器运行时探测的方法才会在 Dry-run 后标记为可执行。从文档提取的命令始终是只读参考，不会被模型或后端直接运行。当前显式注册 164 个经过审核的 Runner；服务器公共环境中 161 个已就绪。103 个 Skill 中，72 个至少有一项可运行方法，共 305 个就绪的候选方法入口；其余条目包含规划流程和缺少运行条件的方法。fMRIPrep、QSIPrep 和 nii2dcm 尚未配置执行入口，HCP Pipelines 仍无可执行适配。详细范围、输入要求及测试证据见 [Skill 执行配置](deploy/skill-runtime/README.md) 和 [逐方法清单](deploy/skill-runtime/readiness.json)。输入只读，本地结果写入 `LOCALFLOW_OUTPUT_ROOT/run_*/step/`，Slurm 结果写入共享的 `/home/data/neuroweave/runs/hipeson/run_*/step/`，并记录命令日志、进度、校验和与运行事件。
+平台只调用或管理原有项目实现、现有库 API 和已有软件命令；不根据方法名称、文档公式或基础库可用性补写算法。缺少原始可用入口的内容保留规划。Manifest 的 `runner_id` 只是执行契约，不等于已经有执行代码。只有同时出现在后端可信 Runner 注册表、并通过服务器运行时探测的方法才会在 Dry-run 后标记为可执行。从文档提取的命令始终是只读参考，不会被模型或后端直接运行。当前显式注册 187 个经过审核的 Runner；三个计算节点的公共环境中 180 个已就绪。103 个 Skill 中，75 个至少有一项可运行方法，共 566 个就绪的候选方法入口；另有 37 个入口缺少运行条件、167 个入口仍有明确的规划缺项。原 358 个规划入口中，191 个已映射到现有调用或具体组合。fMRIPrep、QSIPrep、nii2dcm 等已有契约仍缺软件，HCP Pipelines 仍缺完整环境。详细范围、输入要求及测试证据见 [Skill 执行配置](deploy/skill-runtime/README.md) 和 [逐方法清单](deploy/skill-runtime/readiness.json)。输入只读，本地结果写入 `LOCALFLOW_OUTPUT_ROOT/run_*/step/`，Slurm 结果写入共享的 `/home/data/neuroweave/runs/hipeson/run_*/step/`，并记录命令日志、进度、校验和与运行事件。
 
 ## 目录
 
@@ -264,15 +264,15 @@ python scripts/build_capability_tree.py
 列表中返回推荐项和相关备选项。模型返回的未知方法 ID 会被丢弃，推荐项也必须包含在备选列表中。
 规划型步骤会显示 `PLAN` 参数快照，
 不会伪装成命令。当前图像配准复用现有 `fsl-tool` Skill 中的 FLIRT 能力；DWI
-纤维追踪除 MRtrix3 全流程与 FSL probtrackx 规划方法外，还提供“复用已有 FOD/5TT”的 MRtrix3 可执行方法；它只运行 tckgen，并按需运行 SIFT2。
+纤维追踪支持已有 FOD/5TT 的 ACT + SIFT2，以及明确选择重建 FOD 或追加连接矩阵的组合；FSL 提供已有 BEDPOSTX 结果追踪或 BEDPOSTX → ProbtrackX 组合。各方案按真实输入和输出执行，详见 [规划入口执行说明](deploy/skill-runtime/planning-resolution.md)。
 
 经过人工审核的规划选项可以在同一 Skill 目录增加 `recipes.manifest.json`。配方只允许引用
-`tool.manifest.json` 中已经注册的 Runner 方法，并显式声明固定参数、工作流输入、步骤输出和
+可信目录中已经注册的 Runner 方法，并显式声明固定参数、每阶段参数映射、工作流输入、步骤输出和
 公开输出映射。用户仍然在方法阶段选择一个方案；锁定后只配置配方公开的输入和参数，Dry-run
 会把方案展开成实际 Runner 步骤。运行时每一步产生的真实制品路径会替换上游占位符，再交给
 下一 Runner。FreeSurfer 的“Fast subcortical + basic surfaces”是首个样例，会在同一
 `SUBJECTS_DIR` 中依次运行 `autorecon1 → autorecon2 → autorecon3`，只有第一步导入 T1w。
-T2、FLAIR、线程数等属于 Runner 参数，不再作为独立任务方法；没有受审核配方的选项仍保持
+T2、FLAIR、线程数等属于 Runner 参数，不再作为独立任务方法。跨 Skill 的审核映射统一由 `scripts/build_planning_resolution.py` 生成，原定义指纹变更时回到待审核；没有受审核调用或配方的选项仍保持
 规划型，模型不能把参考命令自动提升为执行权限。
 
 Prompt 使用 `planner-v4-recipe-aware` 分为任务语义标准化、分层能力路由和受约束方法排序三段。当前消息定义本轮任务范围，历史摘要和已选 Skill 仅是弱提示；缺少输入或软件被视为执行约束，不再自动扩大成完整上游流程；当用户要求实际处理时，模型优先排序语义匹配的 Runner 或受审核 Runner 配方，并优先复用数据集中已经检测到的 FOD/5TT 等中间制品。配方内部步骤由后端固定，模型不能改写或重排。`GET /api/health` 会返回当前 `prompt_version`。
@@ -312,7 +312,7 @@ manifest 中通过 `input_slots` / `output_slots` 声明：
 - `required: false` 表示始终可选；`required_when` 表示只有选中 ACT、连接组等功能时才必选。
 - 输入来源可以是已登记数据集、用户从授权目录选择的已有文件/文件夹，或同一流程中上游步骤的输出。
 
-MRtrix3 的完整规划方法始终要求预处理 DWI；“已有 FOD”可执行方法只要求 FOD，并在 ACT
+MRtrix3 的“重建 FOD”组合要求预处理 DWI；“已有 FOD”方法只要求 FOD，并在 ACT
 开启时要求 5TT、在 ROI 播种时要求种子影像。SIFT2 权重只在对应后处理启用时生成。文件型
 输入不会因为扫描器发现了某种文件就自动绑定整个数据集目录，用户仍需在流程锁定后选择一次
 明确的文件；多样本数据集则由路径模板预览扩展到各样本。

@@ -65,7 +65,9 @@ def summarize_zalff(
 
     labels = load_labels(label_path)
     masker = NiftiLabelsMasker(labels_img=str(atlas_path), standardize=False)
-    roi_values = masker.fit_transform(zalff)[0]
+    # Newer Nilearn returns a 1-D vector for a single 3-D input; older versions
+    # returned one row. Preserve the same regional values in either I/O shape.
+    roi_values = np.asarray(masker.fit_transform(zalff)).reshape(-1)
 
     summary = pd.DataFrame(
         {

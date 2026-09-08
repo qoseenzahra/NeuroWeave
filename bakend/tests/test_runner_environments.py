@@ -11,7 +11,7 @@ from unittest.mock import patch
 from app.execution.runners.freesurfer import FreeSurferReconAllRunner
 from app.execution.base import RunnerContext
 from app.execution.runners.fsl import FslEddyRunner
-from app.execution.runners.mrtrix_pipeline import MrtrixFiveTtGenRunner
+from app.execution.runners.mrtrix_pipeline import MrtrixDwi2FodRunner, MrtrixFiveTtGenRunner
 
 
 class RunnerEnvironmentTests(unittest.TestCase):
@@ -45,6 +45,7 @@ class RunnerEnvironmentTests(unittest.TestCase):
             {
                 "LOCALFLOW_FREESURFER_HOME": str(home),
                 "LOCALFLOW_FSL_ROOT": "/opt/test/fsl",
+                "LOCALFLOW_SKILL_PYTHON": "/opt/test/scientific/bin/python",
                 "PATH": "/usr/local/bin:/usr/bin:/bin",
             },
             clear=False,
@@ -69,6 +70,7 @@ class RunnerEnvironmentTests(unittest.TestCase):
             {
                 "LOCALFLOW_MRTRIX_ROOT": "/opt/test/mrtrix",
                 "LOCALFLOW_FSL_ROOT": "/opt/test/fsl",
+                "LOCALFLOW_SKILL_PYTHON": "/opt/test/scientific/bin/python",
                 "PATH": "/usr/local/bin:/usr/bin:/bin",
             },
             clear=False,
@@ -76,9 +78,25 @@ class RunnerEnvironmentTests(unittest.TestCase):
             environment = MrtrixFiveTtGenRunner.execution_environment()
 
         path_parts = environment["PATH"].split(os.pathsep)
-        self.assertEqual(path_parts[0], str(Path("/opt/test/fsl/bin")))
-        self.assertEqual(path_parts[1], str(Path("/opt/test/mrtrix/bin")))
+        self.assertEqual(path_parts[0], str(Path("/opt/test/mrtrix/bin")))
+        self.assertEqual(path_parts[1], str(Path("/opt/test/scientific/bin")))
+        self.assertIn(str(Path("/opt/test/fsl/bin")), path_parts)
         self.assertEqual(environment["FSLDIR"], str(Path("/opt/test/fsl")))
+
+    def test_mrtrix_fod_lmax_matches_tissue_count(self) -> None:
+        runner = MrtrixDwi2FodRunner()
+        with tempfile.TemporaryDirectory() as temporary:
+            for algorithm, expected in (("csd", "6"), ("msmt_csd", "6,0,0")):
+                with self.subTest(algorithm=algorithm):
+                    context = SimpleNamespace(output_directory=Path(temporary),
+                        step=SimpleNamespace(selected_parameters={"algorithm": algorithm, "lmax": 6}),
+                        method=SimpleNamespace(parameters=[]), log=lambda *_: None)
+                    with patch.object(runner, "required_binding", side_effect=lambda _, slot: Path(temporary) / slot), \
+                            patch.object(runner, "artifact", return_value=None), \
+                            patch.object(runner, "execute") as execute:
+                        runner.run(context)
+                    argv = execute.call_args.args[1]
+                    self.assertEqual(argv[argv.index("-lmax") + 1], expected)
 
 
 if __name__ == "__main__":

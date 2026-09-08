@@ -816,6 +816,62 @@
           "line_start": 1
         }
       ]
+    },
+    {
+      "capability": "skill.meg-skill",
+      "method_id": "reviewed-evoked-existing-meg-skill",
+      "label": "MNE 已有 Epochs 平均诱发响应",
+      "description": "调用现有实现：mne.read_epochs, mne.Epochs.average, mne.Evoked.save。输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.meg-skill.evoked-existing",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "已分段 Epochs FIF",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_average_ave_fif",
+          "type": "generated_file",
+          "label": "average-ave.fif",
+          "path_template": "results/average-ave.fif"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/evoked_worker.py",
+          "kind": "script",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
+          "line_start": 1
+        }
+      ]
     }
   ]
 }

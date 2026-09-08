@@ -4,6 +4,62 @@
   "provides": [
     {
       "capability": "skill.dataset-inspector",
+      "method_id": "reviewed-table-inspect-dataset-inspector",
+      "label": "表字段、缺失和主键候选检查",
+      "description": "调用现有实现：pandas.read_csv, pandas.DataFrame.duplicated。输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.dataset-inspector.table-inspect",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "CSV/TSV 表格",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_table_report_json",
+          "type": "generated_file",
+          "label": "table_report.json",
+          "path_template": "results/table_report.json"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/table_inspection_worker.py",
+          "kind": "script",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.dataset-inspector",
       "method_id": "linked-dataset_inspector",
       "label": "数据集巡检",
       "description": "扫描授权目录的结构和轻量元数据，形成处理前检查摘要。",

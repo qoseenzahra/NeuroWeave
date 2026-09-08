@@ -6888,7 +6888,7 @@
       "implementation_files": [
         {
           "path": "bakend/app/execution/image_summary_worker.py",
-          "sha256": "b5e01e6eed588d925c330be01b3df6e54cc5328db8ddb42d3438cccc1c94cfe1"
+          "sha256": "ce298add94eda8567cb0addd046ffaaedfd84d408eedde324350144d3647568f"
         }
       ],
       "artifact_types": {
@@ -6972,7 +6972,7 @@
       "implementation_files": [
         {
           "path": "bakend/app/execution/image_summary_worker.py",
-          "sha256": "b5e01e6eed588d925c330be01b3df6e54cc5328db8ddb42d3438cccc1c94cfe1"
+          "sha256": "ce298add94eda8567cb0addd046ffaaedfd84d408eedde324350144d3647568f"
         }
       ],
       "artifact_types": {
@@ -14311,6 +14311,3116 @@
       ],
       "artifact_types": {
         "output.html": "generated_file"
+      }
+    },
+    {
+      "runner_id": "reviewed.dataset-inspector.table-inspect",
+      "skill_id": "dataset-inspector",
+      "method_id": "reviewed-table-inspect",
+      "label": "表字段、缺失和主键候选检查",
+      "script": "bakend/app/execution/table_inspection_worker.py",
+      "inputs": [
+        {
+          "id": "input",
+          "flag": "--input",
+          "label": "CSV/TSV 表格",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input",
+          "path_list": false,
+          "many_args": false
+        }
+      ],
+      "parameters": [],
+      "modules": [
+        "pandas"
+      ],
+      "expected": [
+        "table_report.json"
+      ],
+      "profile": "scientific",
+      "fixed_args": [
+        "--operation",
+        "inspect"
+      ],
+      "outputs": [
+        [
+          "--output-dir",
+          "."
+        ]
+      ],
+      "aliases": [],
+      "replaces_operations": [],
+      "required_files": [],
+      "executables": [],
+      "required_apis": [
+        [
+          "pandas",
+          "read_csv"
+        ],
+        [
+          "pandas",
+          "DataFrame.duplicated"
+        ]
+      ],
+      "implementation_source": {
+        "kind": "library_api",
+        "entrypoints": [
+          "pandas.read_csv",
+          "pandas.DataFrame.duplicated"
+        ],
+        "dependencies": {},
+        "adapter_scope": "Existing calls, argument/input validation, scheduling and output collection only; no replacement algorithm."
+      },
+      "implementation_files": [
+        {
+          "path": "bakend/app/execution/table_inspection_worker.py",
+          "sha256": "e89679c9fb7441583c9eafd6777ae65b9644d06e863b61707b6ec51647c59814"
+        }
+      ],
+      "artifact_types": {
+        "table_report.json": "generated_file"
+      }
+    },
+    {
+      "runner_id": "reviewed.scan-skill.table-join",
+      "skill_id": "scan-skill",
+      "method_id": "reviewed-table-join",
+      "label": "按显式键连接已批准的表格",
+      "script": "bakend/app/execution/table_inspection_worker.py",
+      "inputs": [
+        {
+          "id": "input",
+          "flag": "--input",
+          "label": "CSV/TSV 表格",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input",
+          "path_list": false,
+          "many_args": false
+        },
+        {
+          "id": "right",
+          "flag": "--right",
+          "label": "右侧 CSV/TSV 表格",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input",
+          "path_list": false,
+          "many_args": false
+        }
+      ],
+      "parameters": [
+        {
+          "id": "keys",
+          "flag": "--keys",
+          "argument": "keys",
+          "label": "连接键（逗号分隔）",
+          "type": "string",
+          "default": "subject_id",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "how",
+          "flag": "--how",
+          "argument": "how",
+          "label": "how",
+          "type": "string",
+          "default": "left",
+          "required": true,
+          "options": [
+            {
+              "value": "left",
+              "label": "left"
+            },
+            {
+              "value": "inner",
+              "label": "inner"
+            },
+            {
+              "value": "outer",
+              "label": "outer"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "validate",
+          "flag": "--validate",
+          "argument": "validate",
+          "label": "validate",
+          "type": "string",
+          "default": "one_to_one",
+          "required": true,
+          "options": [
+            {
+              "value": "one_to_one",
+              "label": "one_to_one"
+            },
+            {
+              "value": "many_to_one",
+              "label": "many_to_one"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "modules": [
+        "pandas"
+      ],
+      "expected": [
+        "table_report.json",
+        "joined.csv"
+      ],
+      "profile": "scientific",
+      "fixed_args": [
+        "--operation",
+        "join"
+      ],
+      "outputs": [
+        [
+          "--output-dir",
+          "."
+        ]
+      ],
+      "aliases": [],
+      "replaces_operations": [],
+      "required_files": [],
+      "executables": [],
+      "required_apis": [
+        [
+          "pandas",
+          "read_csv"
+        ],
+        [
+          "pandas",
+          "DataFrame.merge"
+        ]
+      ],
+      "implementation_source": {
+        "kind": "library_api",
+        "entrypoints": [
+          "pandas.read_csv",
+          "pandas.DataFrame.merge"
+        ],
+        "dependencies": {},
+        "adapter_scope": "Existing calls, argument/input validation, scheduling and output collection only; no replacement algorithm."
+      },
+      "implementation_files": [
+        {
+          "path": "bakend/app/execution/table_inspection_worker.py",
+          "sha256": "e89679c9fb7441583c9eafd6777ae65b9644d06e863b61707b6ec51647c59814"
+        }
+      ],
+      "artifact_types": {
+        "table_report.json": "generated_file",
+        "joined.csv": "generated_file"
+      }
+    },
+    {
+      "runner_id": "reviewed.dwi-skill.sift-existing",
+      "skill_id": "dwi-skill",
+      "method_id": "reviewed-sift-existing",
+      "label": "MRtrix SIFT（筛选已有纤维）",
+      "script": "bakend/app/execution/planning_native_worker.py",
+      "inputs": [
+        {
+          "id": "input",
+          "flag": "--input",
+          "label": "已有 tractogram",
+          "required": true,
+          "binding": "file",
+          "type": "tractogram",
+          "path_list": false,
+          "many_args": false
+        },
+        {
+          "id": "fod",
+          "flag": "--fod",
+          "label": "同空间白质 FOD",
+          "required": true,
+          "binding": "file",
+          "type": "fod_image",
+          "path_list": false,
+          "many_args": false
+        },
+        {
+          "id": "five_tt",
+          "flag": "--five-tt",
+          "label": "同空间 5TT",
+          "required": false,
+          "binding": "file",
+          "type": "five_tt_image",
+          "path_list": false,
+          "many_args": false
+        }
+      ],
+      "parameters": [
+        {
+          "id": "term_number",
+          "flag": "--term-number",
+          "argument": "term-number",
+          "label": "保留纤维数量",
+          "type": "integer",
+          "default": 1000,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 100000000
+        }
+      ],
+      "modules": [],
+      "expected": [
+        "tracks.tck"
+      ],
+      "profile": "scientific",
+      "fixed_args": [
+        "--operation",
+        "sift"
+      ],
+      "outputs": [
+        [
+          "--output-dir",
+          "."
+        ]
+      ],
+      "aliases": [],
+      "replaces_operations": [],
+      "required_files": [],
+      "executables": [
+        "/opt/software/mrtrix3-master/bin/tcksift"
+      ],
+      "input_artifact_types": {
+        "input": "tractogram",
+        "fod": "fod_image",
+        "five_tt": "five_tt_image"
+      },
+      "output_artifact_types": {
+        "tracks.tck": "tractogram"
+      },
+      "required_apis": [],
+      "implementation_source": {
+        "kind": "software_command",
+        "entrypoints": [
+          "/opt/software/mrtrix3-master/bin/tcksift"
+        ],
+        "dependencies": {},
+        "adapter_scope": "Existing calls, argument/input validation, scheduling and output collection only; no replacement algorithm."
+      },
+      "implementation_files": [
+        {
+          "path": "bakend/app/execution/planning_native_worker.py",
+          "sha256": "b8758b07bf02f10c8fbcc5ddbc2ade3486bb0cc12fc6bd31bc6f957669f6dd8d"
+        }
+      ],
+      "artifact_types": {
+        "tracks.tck": "tractogram"
+      }
+    },
+    {
+      "runner_id": "reviewed.fsl-tool.fsl-anat",
+      "skill_id": "fsl-tool",
+      "method_id": "reviewed-fsl-anat",
+      "label": "FSL 完整结构预处理（fsl_anat）",
+      "script": "bakend/app/execution/planning_native_worker.py",
+      "inputs": [
+        {
+          "id": "input",
+          "flag": "--input",
+          "label": "T1w NIfTI",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input",
+          "path_list": false,
+          "many_args": false
+        }
+      ],
+      "parameters": [],
+      "modules": [],
+      "expected": [
+        "structural.anat/T1_biascorr_brain.nii.gz"
+      ],
+      "profile": "scientific",
+      "fixed_args": [
+        "--operation",
+        "fsl-anat"
+      ],
+      "outputs": [
+        [
+          "--output-dir",
+          "."
+        ]
+      ],
+      "aliases": [
+        "smri-skill"
+      ],
+      "replaces_operations": [],
+      "required_files": [],
+      "executables": [
+        "/opt/software/fsl/bin/fsl_anat",
+        "/opt/software/fsl/bin/fsl_sub",
+        "/opt/software/fsl/bin/fslreorient2std",
+        "/opt/software/fsl/bin/robustfov",
+        "/opt/software/fsl/bin/bet",
+        "/opt/software/fsl/bin/fast",
+        "/opt/software/fsl/bin/flirt",
+        "/opt/software/fsl/bin/fnirt",
+        "/opt/software/fsl/bin/run_first_all"
+      ],
+      "required_apis": [],
+      "implementation_source": {
+        "kind": "software_command",
+        "entrypoints": [
+          "/opt/software/fsl/bin/fsl_anat",
+          "/opt/software/fsl/bin/fsl_sub",
+          "/opt/software/fsl/bin/fslreorient2std",
+          "/opt/software/fsl/bin/robustfov",
+          "/opt/software/fsl/bin/bet",
+          "/opt/software/fsl/bin/fast",
+          "/opt/software/fsl/bin/flirt",
+          "/opt/software/fsl/bin/fnirt",
+          "/opt/software/fsl/bin/run_first_all"
+        ],
+        "dependencies": {},
+        "adapter_scope": "Existing calls, argument/input validation, scheduling and output collection only; no replacement algorithm."
+      },
+      "implementation_files": [
+        {
+          "path": "bakend/app/execution/planning_native_worker.py",
+          "sha256": "b8758b07bf02f10c8fbcc5ddbc2ade3486bb0cc12fc6bd31bc6f957669f6dd8d"
+        }
+      ],
+      "artifact_types": {
+        "structural.anat/T1_biascorr_brain.nii.gz": "generated_file"
+      }
+    },
+    {
+      "runner_id": "reviewed.dwi-skill.bedpostx",
+      "skill_id": "dwi-skill",
+      "method_id": "reviewed-bedpostx",
+      "label": "FSL BEDPOSTX 纤维方向采样",
+      "script": "bakend/app/execution/planning_native_worker.py",
+      "inputs": [
+        {
+          "id": "input",
+          "flag": "--input",
+          "label": "预处理 DWI NIfTI",
+          "required": true,
+          "binding": "file",
+          "type": "preprocessed_dwi",
+          "path_list": false,
+          "many_args": false
+        },
+        {
+          "id": "mask",
+          "flag": "--mask",
+          "label": "脑掩膜",
+          "required": true,
+          "binding": "file",
+          "type": "brain_mask",
+          "path_list": false,
+          "many_args": false
+        },
+        {
+          "id": "bval",
+          "flag": "--bval",
+          "label": "bval",
+          "required": true,
+          "binding": "file",
+          "type": "b_values",
+          "path_list": false,
+          "many_args": false
+        },
+        {
+          "id": "bvec",
+          "flag": "--bvec",
+          "label": "bvec",
+          "required": true,
+          "binding": "file",
+          "type": "b_vectors",
+          "path_list": false,
+          "many_args": false
+        }
+      ],
+      "parameters": [
+        {
+          "id": "fibres",
+          "flag": "--fibres",
+          "argument": "fibres",
+          "label": "fibres",
+          "type": "integer",
+          "default": 2,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 3
+        },
+        {
+          "id": "burnin",
+          "flag": "--burnin",
+          "argument": "burnin",
+          "label": "burnin",
+          "type": "integer",
+          "default": 1000,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 100000
+        },
+        {
+          "id": "jumps",
+          "flag": "--jumps",
+          "argument": "jumps",
+          "label": "jumps",
+          "type": "integer",
+          "default": 1250,
+          "required": true,
+          "options": [],
+          "minimum": 25,
+          "maximum": 100000
+        },
+        {
+          "id": "sample_every",
+          "flag": "--sample-every",
+          "argument": "sample-every",
+          "label": "sample-every",
+          "type": "integer",
+          "default": 25,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 1000
+        }
+      ],
+      "modules": [
+        "nibabel"
+      ],
+      "expected": [
+        "data.bedpostX/merged_th1samples.nii.gz",
+        "data.bedpostX/merged_ph1samples.nii.gz",
+        "data.bedpostX/merged_f1samples.nii.gz"
+      ],
+      "profile": "scientific",
+      "fixed_args": [
+        "--operation",
+        "bedpostx"
+      ],
+      "outputs": [
+        [
+          "--output-dir",
+          "."
+        ]
+      ],
+      "aliases": [
+        "fsl-tool"
+      ],
+      "replaces_operations": [],
+      "required_files": [],
+      "executables": [
+        "/opt/software/fsl/bin/bedpostx",
+        "/opt/software/fsl/bin/fsl_sub",
+        "/opt/software/fsl/bin/bedpostx_preproc.sh",
+        "/opt/software/fsl/bin/bedpostx_single_slice.sh",
+        "/opt/software/fsl/bin/bedpostx_postproc.sh",
+        "/opt/software/fsl/bin/xfibres"
+      ],
+      "input_artifact_types": {
+        "input": "preprocessed_dwi"
+      },
+      "required_apis": [],
+      "implementation_source": {
+        "kind": "software_command",
+        "entrypoints": [
+          "/opt/software/fsl/bin/bedpostx",
+          "/opt/software/fsl/bin/fsl_sub",
+          "/opt/software/fsl/bin/bedpostx_preproc.sh",
+          "/opt/software/fsl/bin/bedpostx_single_slice.sh",
+          "/opt/software/fsl/bin/bedpostx_postproc.sh",
+          "/opt/software/fsl/bin/xfibres"
+        ],
+        "dependencies": {},
+        "adapter_scope": "Existing calls, argument/input validation, scheduling and output collection only; no replacement algorithm."
+      },
+      "implementation_files": [
+        {
+          "path": "bakend/app/execution/planning_native_worker.py",
+          "sha256": "b8758b07bf02f10c8fbcc5ddbc2ade3486bb0cc12fc6bd31bc6f957669f6dd8d"
+        }
+      ],
+      "artifact_types": {
+        "data.bedpostX/merged_th1samples.nii.gz": "generated_file",
+        "data.bedpostX/merged_ph1samples.nii.gz": "generated_file",
+        "data.bedpostX/merged_f1samples.nii.gz": "generated_file"
+      }
+    },
+    {
+      "runner_id": "reviewed.dwi-skill.probtrackx-existing",
+      "skill_id": "dwi-skill",
+      "method_id": "reviewed-probtrackx-existing",
+      "label": "FSL ProbtrackX（已有方向采样，输出纤维密度图）",
+      "script": "bakend/app/execution/planning_native_worker.py",
+      "inputs": [
+        {
+          "id": "samples",
+          "flag": "--samples",
+          "label": "BEDPOSTX 结果目录",
+          "required": true,
+          "binding": "folder",
+          "type": "generated_folder",
+          "path_list": false,
+          "many_args": false
+        },
+        {
+          "id": "mask",
+          "flag": "--mask",
+          "label": "脑掩膜",
+          "required": true,
+          "binding": "file",
+          "type": "brain_mask",
+          "path_list": false,
+          "many_args": false
+        },
+        {
+          "id": "seed",
+          "flag": "--seed",
+          "label": "种子掩膜",
+          "required": true,
+          "binding": "file",
+          "type": "seed_mask",
+          "path_list": false,
+          "many_args": false
+        }
+      ],
+      "parameters": [
+        {
+          "id": "nsamples",
+          "flag": "--nsamples",
+          "argument": "nsamples",
+          "label": "nsamples",
+          "type": "integer",
+          "default": 5000,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 100000
+        },
+        {
+          "id": "nsteps",
+          "flag": "--nsteps",
+          "argument": "nsteps",
+          "label": "nsteps",
+          "type": "integer",
+          "default": 2000,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 100000
+        },
+        {
+          "id": "step_length",
+          "flag": "--step-length",
+          "argument": "step-length",
+          "label": "step-length",
+          "type": "number",
+          "default": 0.5,
+          "required": true,
+          "options": [],
+          "minimum": 0.01,
+          "maximum": 10
+        },
+        {
+          "id": "curvature",
+          "flag": "--curvature",
+          "argument": "curvature",
+          "label": "curvature",
+          "type": "number",
+          "default": 0.2,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 1
+        }
+      ],
+      "modules": [],
+      "expected": [
+        "fdt_paths.nii.gz",
+        "waytotal"
+      ],
+      "profile": "scientific",
+      "fixed_args": [
+        "--operation",
+        "probtrackx"
+      ],
+      "outputs": [
+        [
+          "--output-dir",
+          "."
+        ]
+      ],
+      "aliases": [
+        "fsl-tool"
+      ],
+      "replaces_operations": [],
+      "required_files": [],
+      "executables": [
+        "/opt/software/fsl/bin/probtrackx2"
+      ],
+      "input_artifact_types": {
+        "samples": "generated_folder",
+        "seed": "seed_mask"
+      },
+      "required_apis": [],
+      "implementation_source": {
+        "kind": "software_command",
+        "entrypoints": [
+          "/opt/software/fsl/bin/probtrackx2"
+        ],
+        "dependencies": {},
+        "adapter_scope": "Existing calls, argument/input validation, scheduling and output collection only; no replacement algorithm."
+      },
+      "implementation_files": [
+        {
+          "path": "bakend/app/execution/planning_native_worker.py",
+          "sha256": "b8758b07bf02f10c8fbcc5ddbc2ade3486bb0cc12fc6bd31bc6f957669f6dd8d"
+        }
+      ],
+      "artifact_types": {
+        "fdt_paths.nii.gz": "generated_file",
+        "waytotal": "generated_file"
+      }
+    },
+    {
+      "runner_id": "reviewed.nibabel-skill.save-existing",
+      "skill_id": "nibabel-skill",
+      "method_id": "reviewed-save-existing",
+      "label": "NiBabel NIfTI 保存／格式转换",
+      "script": "bakend/app/execution/image_summary_worker.py",
+      "inputs": [
+        {
+          "id": "image",
+          "flag": "--image",
+          "label": "已有影像",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input",
+          "path_list": false,
+          "many_args": false
+        }
+      ],
+      "parameters": [],
+      "modules": [
+        "nibabel",
+        "numpy"
+      ],
+      "expected": [
+        "image.nii.gz"
+      ],
+      "profile": "scientific",
+      "fixed_args": [
+        "--operation",
+        "save"
+      ],
+      "outputs": [
+        [
+          "--output-dir",
+          "."
+        ]
+      ],
+      "aliases": [],
+      "replaces_operations": [],
+      "required_files": [],
+      "executables": [],
+      "required_apis": [
+        [
+          "nibabel",
+          "load"
+        ],
+        [
+          "nibabel",
+          "save"
+        ]
+      ],
+      "implementation_source": {
+        "kind": "library_api",
+        "entrypoints": [
+          "nibabel.load",
+          "nibabel.save"
+        ],
+        "dependencies": {},
+        "adapter_scope": "Existing calls, argument/input validation, scheduling and output collection only; no replacement algorithm."
+      },
+      "implementation_files": [
+        {
+          "path": "bakend/app/execution/image_summary_worker.py",
+          "sha256": "ce298add94eda8567cb0addd046ffaaedfd84d408eedde324350144d3647568f"
+        }
+      ],
+      "artifact_types": {
+        "image.nii.gz": "generated_file"
+      }
+    },
+    {
+      "runner_id": "reviewed.meg-skill.evoked-existing",
+      "skill_id": "meg-skill",
+      "method_id": "reviewed-evoked-existing",
+      "label": "MNE 已有 Epochs 平均诱发响应",
+      "script": "bakend/app/execution/evoked_worker.py",
+      "inputs": [
+        {
+          "id": "input",
+          "flag": "--input",
+          "label": "已分段 Epochs FIF",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input",
+          "path_list": false,
+          "many_args": false
+        }
+      ],
+      "parameters": [],
+      "modules": [
+        "mne"
+      ],
+      "expected": [
+        "average-ave.fif"
+      ],
+      "profile": "scientific",
+      "fixed_args": [],
+      "outputs": [
+        [
+          "--output-dir",
+          "."
+        ]
+      ],
+      "aliases": [],
+      "replaces_operations": [],
+      "required_files": [],
+      "executables": [],
+      "required_apis": [
+        [
+          "mne",
+          "read_epochs"
+        ],
+        [
+          "mne",
+          "Epochs.average"
+        ],
+        [
+          "mne",
+          "Evoked.save"
+        ]
+      ],
+      "implementation_source": {
+        "kind": "library_api",
+        "entrypoints": [
+          "mne.read_epochs",
+          "mne.Epochs.average",
+          "mne.Evoked.save"
+        ],
+        "dependencies": {},
+        "adapter_scope": "Existing calls, argument/input validation, scheduling and output collection only; no replacement algorithm."
+      },
+      "implementation_files": [
+        {
+          "path": "bakend/app/execution/evoked_worker.py",
+          "sha256": "de784f7593aaa12a2fb2459449b9d4df462e2bd95aa4b68a8d397973570503d3"
+        }
+      ],
+      "artifact_types": {
+        "average-ave.fif": "generated_file"
+      }
+    },
+    {
+      "runner_id": "reviewed.bids-organizer.explicit-metadata",
+      "skill_id": "bids-organizer",
+      "method_id": "reviewed-explicit-metadata",
+      "label": "BIDS 元数据生成",
+      "script": "bakend/app/execution/bids_mapping_worker.py",
+      "inputs": [
+        {
+          "id": "input",
+          "flag": "--input",
+          "label": "源数据集目录",
+          "required": true,
+          "binding": "folder",
+          "type": "analysis_input",
+          "path_list": false,
+          "many_args": false
+        }
+      ],
+      "parameters": [
+        {
+          "id": "name",
+          "flag": "--name",
+          "argument": "name",
+          "label": "数据集名称",
+          "type": "string",
+          "default": "NeuroWeave dataset",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "modules": [],
+      "expected": [
+        "dataset_description.json",
+        "staging_report.json"
+      ],
+      "profile": "scientific",
+      "fixed_args": [
+        "--operation",
+        "metadata"
+      ],
+      "outputs": [
+        [
+          "--output-dir",
+          "."
+        ]
+      ],
+      "aliases": [],
+      "replaces_operations": [],
+      "required_files": [],
+      "executables": [],
+      "required_apis": [
+        [
+          "json",
+          "dump"
+        ],
+        [
+          "shutil",
+          "copyfile"
+        ]
+      ],
+      "implementation_source": {
+        "kind": "library_api",
+        "entrypoints": [
+          "json.dump",
+          "shutil.copyfile"
+        ],
+        "dependencies": {},
+        "adapter_scope": "Existing calls, argument/input validation, scheduling and output collection only; no replacement algorithm."
+      },
+      "implementation_files": [
+        {
+          "path": "bakend/app/execution/bids_mapping_worker.py",
+          "sha256": "e9f3e35b50b95dc7c1e8f4bc11b1bf88c0e70dc63378732164f1c331fffd5890"
+        }
+      ],
+      "artifact_types": {
+        "dataset_description.json": "generated_file",
+        "staging_report.json": "generated_file"
+      }
+    },
+    {
+      "runner_id": "reviewed.bids-organizer.explicit-stage",
+      "skill_id": "bids-organizer",
+      "method_id": "reviewed-explicit-stage",
+      "label": "按用户文件映射整理 BIDS（文件名检查）",
+      "script": "bakend/app/execution/bids_mapping_worker.py",
+      "inputs": [
+        {
+          "id": "input",
+          "flag": "--input",
+          "label": "源数据集目录",
+          "required": true,
+          "binding": "folder",
+          "type": "analysis_input",
+          "path_list": false,
+          "many_args": false
+        },
+        {
+          "id": "mapping",
+          "flag": "--mapping",
+          "label": "显式文件映射 JSON（源相对路径 → BIDS 相对路径）",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input",
+          "path_list": false,
+          "many_args": false
+        }
+      ],
+      "parameters": [
+        {
+          "id": "name",
+          "flag": "--name",
+          "argument": "name",
+          "label": "数据集名称",
+          "type": "string",
+          "default": "NeuroWeave dataset",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        }
+      ],
+      "modules": [
+        "bids_validator"
+      ],
+      "expected": [
+        "dataset_description.json",
+        "staging_report.json"
+      ],
+      "profile": "scientific",
+      "fixed_args": [
+        "--operation",
+        "stage"
+      ],
+      "outputs": [
+        [
+          "--output-dir",
+          "."
+        ]
+      ],
+      "aliases": [],
+      "replaces_operations": [],
+      "required_files": [],
+      "executables": [],
+      "required_apis": [
+        [
+          "json",
+          "dump"
+        ],
+        [
+          "shutil",
+          "copyfile"
+        ],
+        [
+          "bids_validator",
+          "BIDSValidator.is_bids"
+        ]
+      ],
+      "implementation_source": {
+        "kind": "library_api",
+        "entrypoints": [
+          "json.dump",
+          "shutil.copyfile",
+          "bids_validator.BIDSValidator.is_bids"
+        ],
+        "dependencies": {},
+        "adapter_scope": "Existing calls, argument/input validation, scheduling and output collection only; no replacement algorithm."
+      },
+      "implementation_files": [
+        {
+          "path": "bakend/app/execution/bids_mapping_worker.py",
+          "sha256": "e9f3e35b50b95dc7c1e8f4bc11b1bf88c0e70dc63378732164f1c331fffd5890"
+        }
+      ],
+      "artifact_types": {
+        "dataset_description.json": "generated_file",
+        "staging_report.json": "generated_file"
+      }
+    },
+    {
+      "runner_id": "reviewed.brain-visualization.original-region-summary",
+      "skill_id": "brain-visualization",
+      "method_id": "reviewed-original-region-summary",
+      "label": "原脚本 BOLD 频带波动区域摘要（STD 指标）",
+      "script": "skills/brain-visualization/scripts/zalff_summary_reference.py",
+      "inputs": [
+        {
+          "id": "bold",
+          "flag": "--bold",
+          "label": "原脚本所需 4D BOLD",
+          "required": true,
+          "binding": "file",
+          "type": "bold_image",
+          "path_list": false,
+          "many_args": false
+        },
+        {
+          "id": "atlas",
+          "flag": "--atlas",
+          "label": "同空间分区图谱",
+          "required": true,
+          "binding": "file",
+          "type": "label_image",
+          "path_list": false,
+          "many_args": false
+        },
+        {
+          "id": "labels",
+          "flag": "--labels",
+          "label": "图谱标签",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input",
+          "path_list": false,
+          "many_args": false
+        },
+        {
+          "id": "mask",
+          "flag": "--mask",
+          "label": "分析掩膜",
+          "required": true,
+          "binding": "file",
+          "type": "brain_mask",
+          "path_list": false,
+          "many_args": false
+        }
+      ],
+      "parameters": [
+        {
+          "id": "tr",
+          "flag": "--tr",
+          "argument": "tr",
+          "label": "tr",
+          "type": "number",
+          "default": 1.0,
+          "required": true,
+          "options": [],
+          "minimum": 0.01,
+          "maximum": 100
+        },
+        {
+          "id": "top_n",
+          "flag": "--top-n",
+          "argument": "top-n",
+          "label": "top-n",
+          "type": "integer",
+          "default": 10,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 10000
+        }
+      ],
+      "modules": [
+        "numpy",
+        "nibabel",
+        "pandas",
+        "nilearn"
+      ],
+      "expected": [
+        "TOP_active_regions.csv",
+        "top_coordinates.csv",
+        "all_brain_regions_activity.csv"
+      ],
+      "profile": "scientific",
+      "fixed_args": [],
+      "outputs": [
+        [
+          "--output-dir",
+          "."
+        ]
+      ],
+      "aliases": [],
+      "replaces_operations": [],
+      "required_files": [],
+      "executables": [],
+      "required_apis": [],
+      "implementation_source": {
+        "kind": "existing_project_script",
+        "entrypoints": [
+          "skills/brain-visualization/scripts/zalff_summary_reference.py"
+        ],
+        "source": {
+          "origin": "NeuroWeave before runtime expansion",
+          "revision": "70b681c",
+          "source_path": "skills/brain-visualization/scripts/zalff_summary_reference.py",
+          "source_sha256": "1d5d2384d31456aaed602a531d4f44981e24d529c3e1ce4700d6ecfd8f31c236"
+        },
+        "dependencies": {},
+        "adapter_scope": "Existing calls, argument/input validation, scheduling and output collection only; no replacement algorithm."
+      },
+      "implementation_files": [
+        {
+          "path": "skills/brain-visualization/scripts/zalff_summary_reference.py",
+          "sha256": "0f7bd3abd170f0f5109ce266713ed6325ef1e07553fd1e2a41424e308c29610c"
+        }
+      ],
+      "artifact_types": {
+        "TOP_active_regions.csv": "generated_file",
+        "top_coordinates.csv": "generated_file",
+        "all_brain_regions_activity.csv": "generated_file"
+      }
+    },
+    {
+      "runner_id": "reviewed.mne-eeg-tool.original-bands",
+      "skill_id": "mne-eeg-tool",
+      "method_id": "reviewed-original-bands",
+      "label": "原脚本 Welch 频带功率与分频文件",
+      "script": "bakend/app/execution/original_eeg_worker.py",
+      "inputs": [
+        {
+          "id": "input",
+          "flag": "--input",
+          "label": "原始 EEG 文件",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input",
+          "path_list": false,
+          "many_args": false
+        }
+      ],
+      "parameters": [],
+      "modules": [
+        "mne",
+        "numpy",
+        "pandas",
+        "scipy",
+        "mne_connectivity"
+      ],
+      "expected": [
+        "band_power.csv"
+      ],
+      "profile": "scientific",
+      "fixed_args": [
+        "--operation",
+        "bands"
+      ],
+      "outputs": [
+        [
+          "--output-dir",
+          "."
+        ]
+      ],
+      "aliases": [],
+      "replaces_operations": [],
+      "required_files": [
+        "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py"
+      ],
+      "executables": [],
+      "original_entrypoint": "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py",
+      "original_required_apis": [],
+      "required_apis": [],
+      "implementation_source": {
+        "kind": "existing_project_script",
+        "entrypoints": [
+          "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py"
+        ],
+        "source": {
+          "origin": "NeuroWeave before runtime expansion",
+          "revision": "70b681c",
+          "source_path": "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py",
+          "source_sha256": "70a7c44b0a55a2c9f28f2c2ff61838f3f1aa50cc8fde5c0e184a312745be2cf9"
+        },
+        "dependencies": {
+          "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py": {
+            "origin": "NeuroWeave before runtime expansion",
+            "revision": "70b681c",
+            "source_path": "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py",
+            "source_sha256": "70a7c44b0a55a2c9f28f2c2ff61838f3f1aa50cc8fde5c0e184a312745be2cf9"
+          }
+        },
+        "adapter_scope": "Existing calls, argument/input validation, scheduling and output collection only; no replacement algorithm."
+      },
+      "implementation_files": [
+        {
+          "path": "bakend/app/execution/original_eeg_worker.py",
+          "sha256": "ab123cabfd0bfa2d518b5fd82d5ab0f6cd5a8409141ec9602c332baa1cded246"
+        },
+        {
+          "path": "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py",
+          "sha256": "39387d06a8a221044eaab292b0e0eec69ee0a274d6d15d722ebb51194aef8af7"
+        }
+      ],
+      "artifact_types": {
+        "band_power.csv": "generated_file"
+      }
+    },
+    {
+      "runner_id": "reviewed.mne-eeg-tool.original-erp",
+      "skill_id": "mne-eeg-tool",
+      "method_id": "reviewed-original-erp",
+      "label": "原脚本 ERP 峰值、潜伏期与 AUC",
+      "script": "bakend/app/execution/original_eeg_worker.py",
+      "inputs": [
+        {
+          "id": "input",
+          "flag": "--input",
+          "label": "Epochs FIF",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input",
+          "path_list": false,
+          "many_args": false
+        }
+      ],
+      "parameters": [],
+      "modules": [
+        "mne",
+        "numpy",
+        "pandas",
+        "scipy",
+        "mne_connectivity"
+      ],
+      "expected": [
+        "erp_features.csv"
+      ],
+      "profile": "scientific",
+      "fixed_args": [
+        "--operation",
+        "erp"
+      ],
+      "outputs": [
+        [
+          "--output-dir",
+          "."
+        ]
+      ],
+      "aliases": [],
+      "replaces_operations": [],
+      "required_files": [
+        "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py"
+      ],
+      "executables": [],
+      "original_entrypoint": "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py",
+      "original_required_apis": [
+        [
+          "numpy",
+          "trapezoid"
+        ]
+      ],
+      "required_apis": [
+        [
+          "numpy",
+          "trapezoid"
+        ]
+      ],
+      "implementation_source": {
+        "kind": "existing_project_script",
+        "entrypoints": [
+          "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py"
+        ],
+        "source": {
+          "origin": "NeuroWeave before runtime expansion",
+          "revision": "70b681c",
+          "source_path": "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py",
+          "source_sha256": "70a7c44b0a55a2c9f28f2c2ff61838f3f1aa50cc8fde5c0e184a312745be2cf9"
+        },
+        "dependencies": {
+          "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py": {
+            "origin": "NeuroWeave before runtime expansion",
+            "revision": "70b681c",
+            "source_path": "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py",
+            "source_sha256": "70a7c44b0a55a2c9f28f2c2ff61838f3f1aa50cc8fde5c0e184a312745be2cf9"
+          }
+        },
+        "adapter_scope": "Existing calls, argument/input validation, scheduling and output collection only; no replacement algorithm."
+      },
+      "implementation_files": [
+        {
+          "path": "bakend/app/execution/original_eeg_worker.py",
+          "sha256": "ab123cabfd0bfa2d518b5fd82d5ab0f6cd5a8409141ec9602c332baa1cded246"
+        },
+        {
+          "path": "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py",
+          "sha256": "39387d06a8a221044eaab292b0e0eec69ee0a274d6d15d722ebb51194aef8af7"
+        }
+      ],
+      "artifact_types": {
+        "erp_features.csv": "generated_file"
+      }
+    },
+    {
+      "runner_id": "reviewed.mne-eeg-tool.original-alpha-ratio",
+      "skill_id": "mne-eeg-tool",
+      "method_id": "reviewed-original-alpha-ratio",
+      "label": "原脚本 F3/F4 滤波后均值比值（非对数功率差）",
+      "script": "bakend/app/execution/original_eeg_worker.py",
+      "inputs": [
+        {
+          "id": "input",
+          "flag": "--input",
+          "label": "原始 EEG 文件",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input",
+          "path_list": false,
+          "many_args": false
+        }
+      ],
+      "parameters": [],
+      "modules": [
+        "mne",
+        "numpy",
+        "pandas",
+        "scipy",
+        "mne_connectivity"
+      ],
+      "expected": [
+        "alpha_asymmetry.npy"
+      ],
+      "profile": "scientific",
+      "fixed_args": [
+        "--operation",
+        "alpha-ratio"
+      ],
+      "outputs": [
+        [
+          "--output-dir",
+          "."
+        ]
+      ],
+      "aliases": [],
+      "replaces_operations": [],
+      "required_files": [
+        "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py"
+      ],
+      "executables": [],
+      "original_entrypoint": "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py",
+      "original_required_apis": [],
+      "required_apis": [],
+      "implementation_source": {
+        "kind": "existing_project_script",
+        "entrypoints": [
+          "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py"
+        ],
+        "source": {
+          "origin": "NeuroWeave before runtime expansion",
+          "revision": "70b681c",
+          "source_path": "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py",
+          "source_sha256": "70a7c44b0a55a2c9f28f2c2ff61838f3f1aa50cc8fde5c0e184a312745be2cf9"
+        },
+        "dependencies": {
+          "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py": {
+            "origin": "NeuroWeave before runtime expansion",
+            "revision": "70b681c",
+            "source_path": "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py",
+            "source_sha256": "70a7c44b0a55a2c9f28f2c2ff61838f3f1aa50cc8fde5c0e184a312745be2cf9"
+          }
+        },
+        "adapter_scope": "Existing calls, argument/input validation, scheduling and output collection only; no replacement algorithm."
+      },
+      "implementation_files": [
+        {
+          "path": "bakend/app/execution/original_eeg_worker.py",
+          "sha256": "ab123cabfd0bfa2d518b5fd82d5ab0f6cd5a8409141ec9602c332baa1cded246"
+        },
+        {
+          "path": "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py",
+          "sha256": "39387d06a8a221044eaab292b0e0eec69ee0a274d6d15d722ebb51194aef8af7"
+        }
+      ],
+      "artifact_types": {
+        "alpha_asymmetry.npy": "generated_file"
+      }
+    },
+    {
+      "runner_id": "reviewed.mne-eeg-tool.original-features",
+      "skill_id": "mne-eeg-tool",
+      "method_id": "reviewed-original-features",
+      "label": "原脚本 CSP、频带、Hjorth 与熵特征",
+      "script": "bakend/app/execution/original_eeg_worker.py",
+      "inputs": [
+        {
+          "id": "input",
+          "flag": "--input",
+          "label": "Epochs FIF",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input",
+          "path_list": false,
+          "many_args": false
+        }
+      ],
+      "parameters": [],
+      "modules": [
+        "mne",
+        "numpy",
+        "pandas",
+        "scipy",
+        "mne_connectivity",
+        "pyentrp"
+      ],
+      "expected": [
+        "features.npz"
+      ],
+      "profile": "scientific",
+      "fixed_args": [
+        "--operation",
+        "features"
+      ],
+      "outputs": [
+        [
+          "--output-dir",
+          "."
+        ]
+      ],
+      "aliases": [],
+      "replaces_operations": [],
+      "required_files": [
+        "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py"
+      ],
+      "executables": [],
+      "original_entrypoint": "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py",
+      "original_required_apis": [
+        [
+          "pyentrp.entropy",
+          "sample_entropy"
+        ]
+      ],
+      "required_apis": [
+        [
+          "pyentrp.entropy",
+          "sample_entropy"
+        ]
+      ],
+      "implementation_source": {
+        "kind": "existing_project_script",
+        "entrypoints": [
+          "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py"
+        ],
+        "source": {
+          "origin": "NeuroWeave before runtime expansion",
+          "revision": "70b681c",
+          "source_path": "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py",
+          "source_sha256": "70a7c44b0a55a2c9f28f2c2ff61838f3f1aa50cc8fde5c0e184a312745be2cf9"
+        },
+        "dependencies": {
+          "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py": {
+            "origin": "NeuroWeave before runtime expansion",
+            "revision": "70b681c",
+            "source_path": "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py",
+            "source_sha256": "70a7c44b0a55a2c9f28f2c2ff61838f3f1aa50cc8fde5c0e184a312745be2cf9"
+          }
+        },
+        "adapter_scope": "Existing calls, argument/input validation, scheduling and output collection only; no replacement algorithm."
+      },
+      "implementation_files": [
+        {
+          "path": "bakend/app/execution/original_eeg_worker.py",
+          "sha256": "ab123cabfd0bfa2d518b5fd82d5ab0f6cd5a8409141ec9602c332baa1cded246"
+        },
+        {
+          "path": "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py",
+          "sha256": "39387d06a8a221044eaab292b0e0eec69ee0a274d6d15d722ebb51194aef8af7"
+        }
+      ],
+      "artifact_types": {
+        "features.npz": "generated_file"
+      }
+    },
+    {
+      "runner_id": "reviewed.mne-eeg-tool.original-microstates",
+      "skill_id": "mne-eeg-tool",
+      "method_id": "reviewed-original-microstates",
+      "label": "原脚本 mne_microstates 分析",
+      "script": "bakend/app/execution/original_eeg_worker.py",
+      "inputs": [
+        {
+          "id": "input",
+          "flag": "--input",
+          "label": "原始 EEG 文件",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input",
+          "path_list": false,
+          "many_args": false
+        }
+      ],
+      "parameters": [],
+      "modules": [
+        "mne",
+        "numpy",
+        "pandas",
+        "scipy",
+        "mne_connectivity",
+        "mne_microstates"
+      ],
+      "expected": [
+        "microstates.fif"
+      ],
+      "profile": "scientific",
+      "fixed_args": [
+        "--operation",
+        "microstates"
+      ],
+      "outputs": [
+        [
+          "--output-dir",
+          "."
+        ]
+      ],
+      "aliases": [],
+      "replaces_operations": [],
+      "required_files": [
+        "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py"
+      ],
+      "executables": [],
+      "original_entrypoint": "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py",
+      "original_required_apis": [
+        [
+          "mne_microstates",
+          "Microstates"
+        ]
+      ],
+      "required_apis": [
+        [
+          "mne_microstates",
+          "Microstates"
+        ]
+      ],
+      "implementation_source": {
+        "kind": "existing_project_script",
+        "entrypoints": [
+          "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py"
+        ],
+        "source": {
+          "origin": "NeuroWeave before runtime expansion",
+          "revision": "70b681c",
+          "source_path": "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py",
+          "source_sha256": "70a7c44b0a55a2c9f28f2c2ff61838f3f1aa50cc8fde5c0e184a312745be2cf9"
+        },
+        "dependencies": {
+          "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py": {
+            "origin": "NeuroWeave before runtime expansion",
+            "revision": "70b681c",
+            "source_path": "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py",
+            "source_sha256": "70a7c44b0a55a2c9f28f2c2ff61838f3f1aa50cc8fde5c0e184a312745be2cf9"
+          }
+        },
+        "adapter_scope": "Existing calls, argument/input validation, scheduling and output collection only; no replacement algorithm."
+      },
+      "implementation_files": [
+        {
+          "path": "bakend/app/execution/original_eeg_worker.py",
+          "sha256": "ab123cabfd0bfa2d518b5fd82d5ab0f6cd5a8409141ec9602c332baa1cded246"
+        },
+        {
+          "path": "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py",
+          "sha256": "39387d06a8a221044eaab292b0e0eec69ee0a274d6d15d722ebb51194aef8af7"
+        }
+      ],
+      "artifact_types": {
+        "microstates.fif": "generated_file"
+      }
+    },
+    {
+      "runner_id": "reviewed.bnt.original-trainer",
+      "skill_id": "bnt",
+      "method_id": "reviewed-original-trainer",
+      "label": "BNT 原项目训练脚本",
+      "script": "bakend/app/execution/original_training_worker.py",
+      "inputs": [
+        {
+          "id": "fmri_root",
+          "flag": "--fmri-root",
+          "label": "原始 FC 数据根目录（内含 atlas/sub-*.pt）",
+          "required": true,
+          "binding": "folder",
+          "type": "analysis_input",
+          "path_list": false,
+          "many_args": false
+        },
+        {
+          "id": "labels_csv",
+          "flag": "--labels-csv",
+          "label": "完整样本标签 CSV",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input",
+          "path_list": false,
+          "many_args": false
+        }
+      ],
+      "parameters": [
+        {
+          "id": "atlas",
+          "flag": "--atlas",
+          "argument": "atlas",
+          "label": "原始图谱目录名",
+          "type": "string",
+          "default": null,
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "subject_col",
+          "flag": "--subject-col",
+          "argument": "subject-col",
+          "label": "subject-col",
+          "type": "string",
+          "default": "subject_id",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "label_col",
+          "flag": "--label-col",
+          "argument": "label-col",
+          "label": "label-col",
+          "type": "string",
+          "default": "label",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "task",
+          "flag": "--task",
+          "argument": "task",
+          "label": "task",
+          "type": "string",
+          "default": "classification",
+          "required": true,
+          "options": [
+            {
+              "value": "classification",
+              "label": "classification"
+            },
+            {
+              "value": "regression",
+              "label": "regression"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "fold",
+          "flag": "--fold",
+          "argument": "fold",
+          "label": "fold",
+          "type": "integer",
+          "default": 0,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 99
+        },
+        {
+          "id": "kfold",
+          "flag": "--kfold",
+          "argument": "kfold",
+          "label": "kfold",
+          "type": "integer",
+          "default": 5,
+          "required": true,
+          "options": [],
+          "minimum": 2,
+          "maximum": 100
+        },
+        {
+          "id": "seed",
+          "flag": "--seed",
+          "argument": "seed",
+          "label": "seed",
+          "type": "integer",
+          "default": 123,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        {
+          "id": "n_epochs",
+          "flag": "--n-epochs",
+          "argument": "n-epochs",
+          "label": "n-epochs",
+          "type": "integer",
+          "default": 50,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 10000
+        },
+        {
+          "id": "batch_size",
+          "flag": "--batch-size",
+          "argument": "batch-size",
+          "label": "batch-size",
+          "type": "integer",
+          "default": 8,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 2048
+        },
+        {
+          "id": "lr",
+          "flag": "--lr",
+          "argument": "lr",
+          "label": "lr",
+          "type": "number",
+          "default": 0.001,
+          "required": true,
+          "options": [],
+          "minimum": 1e-08,
+          "maximum": 1
+        },
+        {
+          "id": "nclass",
+          "flag": "--nclass",
+          "argument": "nclass",
+          "label": "nclass",
+          "type": "integer",
+          "default": 2,
+          "required": true,
+          "options": [],
+          "minimum": 2,
+          "maximum": 1000
+        },
+        {
+          "id": "nhead",
+          "flag": "--nhead",
+          "argument": "nhead",
+          "label": "nhead",
+          "type": "integer",
+          "default": 4,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 64
+        },
+        {
+          "id": "dec_weight",
+          "flag": "--dec-weight",
+          "argument": "dec-weight",
+          "label": "dec-weight",
+          "type": "number",
+          "default": 0.1,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 100
+        },
+        {
+          "id": "pos_embed_dim",
+          "flag": "--pos-embed-dim",
+          "argument": "pos-embed-dim",
+          "label": "pos-embed-dim",
+          "type": "integer",
+          "default": 8,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 128
+        }
+      ],
+      "modules": [
+        "torch",
+        "numpy",
+        "pandas",
+        "sklearn"
+      ],
+      "expected": [
+        "training.log",
+        "execution.json"
+      ],
+      "profile": "torch",
+      "fixed_args": [
+        "--model",
+        "bnt"
+      ],
+      "outputs": [
+        [
+          "--output-dir",
+          "."
+        ]
+      ],
+      "aliases": [
+        "run_models"
+      ],
+      "replaces_operations": [],
+      "required_files": [
+        "skills/bnt/scripts/train_reference.py",
+        "models/bnt/scripts/data_adapter.py",
+        "models/bnt/net/bnt.py"
+      ],
+      "executables": [],
+      "original_entrypoint": "skills/bnt/scripts/train_reference.py",
+      "required_apis": [],
+      "implementation_source": {
+        "kind": "existing_project_script",
+        "entrypoints": [
+          "skills/bnt/scripts/train_reference.py"
+        ],
+        "source": {
+          "origin": "NeuroWeave before runtime expansion",
+          "revision": "70b681c",
+          "source_path": "skills/bnt/scripts/train_reference.py",
+          "source_sha256": "30748947a8cfeeabf2406175d50a7c835db0d83cd0569357441aa8a30ca907e0"
+        },
+        "dependencies": {
+          "skills/bnt/scripts/train_reference.py": {
+            "origin": "NeuroWeave before runtime expansion",
+            "revision": "70b681c",
+            "source_path": "skills/bnt/scripts/train_reference.py",
+            "source_sha256": "30748947a8cfeeabf2406175d50a7c835db0d83cd0569357441aa8a30ca907e0"
+          },
+          "models/bnt/scripts/data_adapter.py": {
+            "origin": "User-provided NeuroClaw source snapshot",
+            "source_path": "models/bnt/scripts/data_adapter.py",
+            "source_sha256": "61487cecd6df90ee83df865ce8e34cbd314fe54a164cd5d03c7624c4139c4a31",
+            "local_adjustments": "Input loading disables Pickle, device auto selects the allocated runtime, optional torch import, or isolated vendored imports; algorithm and training definitions unchanged."
+          },
+          "models/bnt/net/bnt.py": {
+            "origin": "User-provided NeuroClaw source snapshot",
+            "source_path": "models/bnt/net/bnt.py",
+            "source_sha256": "1c3e362faeaf936f68a0253335780f1d4dab4d5232f107017e061cc129409af8"
+          }
+        },
+        "adapter_scope": "Existing calls, argument/input validation, scheduling and output collection only; no replacement algorithm."
+      },
+      "implementation_files": [
+        {
+          "path": "bakend/app/execution/original_training_worker.py",
+          "sha256": "bc6e732eef7378836c2c49bba8745d7de2e8d0f5668a299b349924582d5a8ee9"
+        },
+        {
+          "path": "skills/bnt/scripts/train_reference.py",
+          "sha256": "30748947a8cfeeabf2406175d50a7c835db0d83cd0569357441aa8a30ca907e0"
+        },
+        {
+          "path": "models/bnt/scripts/data_adapter.py",
+          "sha256": "23bf49c59cdb0b6698022a3216b875f88ea9932817be23ff0a3d10c3beb4b134"
+        },
+        {
+          "path": "models/bnt/net/bnt.py",
+          "sha256": "1c3e362faeaf936f68a0253335780f1d4dab4d5232f107017e061cc129409af8"
+        }
+      ],
+      "artifact_types": {
+        "training.log": "generated_file",
+        "execution.json": "generated_file"
+      }
+    },
+    {
+      "runner_id": "reviewed.brainnetcnn.original-trainer",
+      "skill_id": "brainnetcnn",
+      "method_id": "reviewed-original-trainer",
+      "label": "BRAINNETCNN 原项目训练脚本",
+      "script": "bakend/app/execution/original_training_worker.py",
+      "inputs": [
+        {
+          "id": "fmri_root",
+          "flag": "--fmri-root",
+          "label": "原始 FC 数据根目录（内含 atlas/sub-*.pt）",
+          "required": true,
+          "binding": "folder",
+          "type": "analysis_input",
+          "path_list": false,
+          "many_args": false
+        },
+        {
+          "id": "labels_csv",
+          "flag": "--labels-csv",
+          "label": "完整样本标签 CSV",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input",
+          "path_list": false,
+          "many_args": false
+        }
+      ],
+      "parameters": [
+        {
+          "id": "atlas",
+          "flag": "--atlas",
+          "argument": "atlas",
+          "label": "原始图谱目录名",
+          "type": "string",
+          "default": null,
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "subject_col",
+          "flag": "--subject-col",
+          "argument": "subject-col",
+          "label": "subject-col",
+          "type": "string",
+          "default": "subject_id",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "label_col",
+          "flag": "--label-col",
+          "argument": "label-col",
+          "label": "label-col",
+          "type": "string",
+          "default": "label",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "task",
+          "flag": "--task",
+          "argument": "task",
+          "label": "task",
+          "type": "string",
+          "default": "classification",
+          "required": true,
+          "options": [
+            {
+              "value": "classification",
+              "label": "classification"
+            },
+            {
+              "value": "regression",
+              "label": "regression"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "fold",
+          "flag": "--fold",
+          "argument": "fold",
+          "label": "fold",
+          "type": "integer",
+          "default": 0,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 99
+        },
+        {
+          "id": "kfold",
+          "flag": "--kfold",
+          "argument": "kfold",
+          "label": "kfold",
+          "type": "integer",
+          "default": 5,
+          "required": true,
+          "options": [],
+          "minimum": 2,
+          "maximum": 100
+        },
+        {
+          "id": "seed",
+          "flag": "--seed",
+          "argument": "seed",
+          "label": "seed",
+          "type": "integer",
+          "default": 123,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        {
+          "id": "n_epochs",
+          "flag": "--n-epochs",
+          "argument": "n-epochs",
+          "label": "n-epochs",
+          "type": "integer",
+          "default": 50,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 10000
+        },
+        {
+          "id": "batch_size",
+          "flag": "--batch-size",
+          "argument": "batch-size",
+          "label": "batch-size",
+          "type": "integer",
+          "default": 8,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 2048
+        },
+        {
+          "id": "lr",
+          "flag": "--lr",
+          "argument": "lr",
+          "label": "lr",
+          "type": "number",
+          "default": 0.001,
+          "required": true,
+          "options": [],
+          "minimum": 1e-08,
+          "maximum": 1
+        },
+        {
+          "id": "nclass",
+          "flag": "--nclass",
+          "argument": "nclass",
+          "label": "nclass",
+          "type": "integer",
+          "default": 2,
+          "required": true,
+          "options": [],
+          "minimum": 2,
+          "maximum": 1000
+        },
+        {
+          "id": "device",
+          "flag": "--device",
+          "argument": "device",
+          "label": "device",
+          "type": "string",
+          "default": "auto",
+          "required": true,
+          "options": [
+            {
+              "value": "auto",
+              "label": "auto"
+            },
+            {
+              "value": "cpu",
+              "label": "cpu"
+            },
+            {
+              "value": "cuda",
+              "label": "cuda"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "dropout",
+          "flag": "--dropout",
+          "argument": "dropout",
+          "label": "dropout",
+          "type": "number",
+          "default": 0.5,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 0.99
+        },
+        {
+          "id": "weight_decay",
+          "flag": "--weight-decay",
+          "argument": "weight-decay",
+          "label": "weight-decay",
+          "type": "number",
+          "default": 0.0001,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 1
+        }
+      ],
+      "modules": [
+        "torch",
+        "numpy",
+        "pandas",
+        "sklearn"
+      ],
+      "expected": [
+        "training.log",
+        "execution.json"
+      ],
+      "profile": "torch",
+      "fixed_args": [
+        "--model",
+        "brainnetcnn"
+      ],
+      "outputs": [
+        [
+          "--output-dir",
+          "."
+        ]
+      ],
+      "aliases": [
+        "run_models"
+      ],
+      "replaces_operations": [],
+      "required_files": [
+        "models/brainnetcnn/scripts/train.py",
+        "models/bnt/scripts/data_adapter.py",
+        "models/brainnetcnn/net/brainnetcnn.py"
+      ],
+      "executables": [],
+      "original_entrypoint": "models/brainnetcnn/scripts/train.py",
+      "required_apis": [],
+      "implementation_source": {
+        "kind": "existing_project_script",
+        "entrypoints": [
+          "models/brainnetcnn/scripts/train.py"
+        ],
+        "source": {
+          "origin": "User-provided NeuroClaw source snapshot",
+          "source_path": "models/brainnetcnn/scripts/train.py",
+          "source_sha256": "fa8d29251898f7e37a960e3fa3f95a77a627378baac19ba404e30f28e92dbb9b"
+        },
+        "dependencies": {
+          "models/brainnetcnn/scripts/train.py": {
+            "origin": "User-provided NeuroClaw source snapshot",
+            "source_path": "models/brainnetcnn/scripts/train.py",
+            "source_sha256": "fa8d29251898f7e37a960e3fa3f95a77a627378baac19ba404e30f28e92dbb9b"
+          },
+          "models/bnt/scripts/data_adapter.py": {
+            "origin": "User-provided NeuroClaw source snapshot",
+            "source_path": "models/bnt/scripts/data_adapter.py",
+            "source_sha256": "61487cecd6df90ee83df865ce8e34cbd314fe54a164cd5d03c7624c4139c4a31",
+            "local_adjustments": "Input loading disables Pickle, device auto selects the allocated runtime, optional torch import, or isolated vendored imports; algorithm and training definitions unchanged."
+          },
+          "models/brainnetcnn/net/brainnetcnn.py": {
+            "origin": "User-provided NeuroClaw source snapshot",
+            "source_path": "models/brainnetcnn/net/brainnetcnn.py",
+            "source_sha256": "ced466c43da69908bb2e979afe5940d0d6246dbe84bce3a48698b6c5b1f1918d"
+          }
+        },
+        "adapter_scope": "Existing calls, argument/input validation, scheduling and output collection only; no replacement algorithm."
+      },
+      "implementation_files": [
+        {
+          "path": "bakend/app/execution/original_training_worker.py",
+          "sha256": "bc6e732eef7378836c2c49bba8745d7de2e8d0f5668a299b349924582d5a8ee9"
+        },
+        {
+          "path": "models/brainnetcnn/scripts/train.py",
+          "sha256": "fa8d29251898f7e37a960e3fa3f95a77a627378baac19ba404e30f28e92dbb9b"
+        },
+        {
+          "path": "models/bnt/scripts/data_adapter.py",
+          "sha256": "23bf49c59cdb0b6698022a3216b875f88ea9932817be23ff0a3d10c3beb4b134"
+        },
+        {
+          "path": "models/brainnetcnn/net/brainnetcnn.py",
+          "sha256": "ced466c43da69908bb2e979afe5940d0d6246dbe84bce3a48698b6c5b1f1918d"
+        }
+      ],
+      "artifact_types": {
+        "training.log": "generated_file",
+        "execution.json": "generated_file"
+      }
+    },
+    {
+      "runner_id": "reviewed.combraintf.original-trainer",
+      "skill_id": "combraintf",
+      "method_id": "reviewed-original-trainer",
+      "label": "COMBRAINTF 原项目训练脚本",
+      "script": "bakend/app/execution/original_training_worker.py",
+      "inputs": [
+        {
+          "id": "fmri_root",
+          "flag": "--fmri-root",
+          "label": "原始 FC 数据根目录（内含 atlas/sub-*.pt）",
+          "required": true,
+          "binding": "folder",
+          "type": "analysis_input",
+          "path_list": false,
+          "many_args": false
+        },
+        {
+          "id": "labels_csv",
+          "flag": "--labels-csv",
+          "label": "完整样本标签 CSV",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input",
+          "path_list": false,
+          "many_args": false
+        }
+      ],
+      "parameters": [
+        {
+          "id": "atlas",
+          "flag": "--atlas",
+          "argument": "atlas",
+          "label": "原始图谱目录名",
+          "type": "string",
+          "default": null,
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "subject_col",
+          "flag": "--subject-col",
+          "argument": "subject-col",
+          "label": "subject-col",
+          "type": "string",
+          "default": "subject_id",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "label_col",
+          "flag": "--label-col",
+          "argument": "label-col",
+          "label": "label-col",
+          "type": "string",
+          "default": "label",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "task",
+          "flag": "--task",
+          "argument": "task",
+          "label": "task",
+          "type": "string",
+          "default": "classification",
+          "required": true,
+          "options": [
+            {
+              "value": "classification",
+              "label": "classification"
+            },
+            {
+              "value": "regression",
+              "label": "regression"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "fold",
+          "flag": "--fold",
+          "argument": "fold",
+          "label": "fold",
+          "type": "integer",
+          "default": 0,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 99
+        },
+        {
+          "id": "kfold",
+          "flag": "--kfold",
+          "argument": "kfold",
+          "label": "kfold",
+          "type": "integer",
+          "default": 5,
+          "required": true,
+          "options": [],
+          "minimum": 2,
+          "maximum": 100
+        },
+        {
+          "id": "seed",
+          "flag": "--seed",
+          "argument": "seed",
+          "label": "seed",
+          "type": "integer",
+          "default": 123,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        {
+          "id": "n_epochs",
+          "flag": "--n-epochs",
+          "argument": "n-epochs",
+          "label": "n-epochs",
+          "type": "integer",
+          "default": 50,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 10000
+        },
+        {
+          "id": "batch_size",
+          "flag": "--batch-size",
+          "argument": "batch-size",
+          "label": "batch-size",
+          "type": "integer",
+          "default": 8,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 2048
+        },
+        {
+          "id": "lr",
+          "flag": "--lr",
+          "argument": "lr",
+          "label": "lr",
+          "type": "number",
+          "default": 0.001,
+          "required": true,
+          "options": [],
+          "minimum": 1e-08,
+          "maximum": 1
+        },
+        {
+          "id": "nclass",
+          "flag": "--nclass",
+          "argument": "nclass",
+          "label": "nclass",
+          "type": "integer",
+          "default": 2,
+          "required": true,
+          "options": [],
+          "minimum": 2,
+          "maximum": 1000
+        },
+        {
+          "id": "nhead",
+          "flag": "--nhead",
+          "argument": "nhead",
+          "label": "nhead",
+          "type": "integer",
+          "default": 4,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 64
+        },
+        {
+          "id": "dec_weight",
+          "flag": "--dec-weight",
+          "argument": "dec-weight",
+          "label": "dec-weight",
+          "type": "number",
+          "default": 0.1,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 100
+        },
+        {
+          "id": "hidden_size",
+          "flag": "--hidden-size",
+          "argument": "hidden-size",
+          "label": "hidden-size",
+          "type": "integer",
+          "default": 512,
+          "required": true,
+          "options": [],
+          "minimum": 4,
+          "maximum": 4096
+        },
+        {
+          "id": "n_clusters",
+          "flag": "--n-clusters",
+          "argument": "n-clusters",
+          "label": "n-clusters",
+          "type": "integer",
+          "default": 8,
+          "required": true,
+          "options": [],
+          "minimum": 2,
+          "maximum": 512
+        },
+        {
+          "id": "n_communities",
+          "flag": "--n-communities",
+          "argument": "n-communities",
+          "label": "n-communities",
+          "type": "integer",
+          "default": null,
+          "required": false,
+          "options": [],
+          "minimum": 1,
+          "maximum": 100
+        },
+        {
+          "id": "wd",
+          "flag": "--wd",
+          "argument": "wd",
+          "label": "wd",
+          "type": "number",
+          "default": 0.0005,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 1
+        }
+      ],
+      "modules": [
+        "torch",
+        "numpy",
+        "pandas",
+        "sklearn"
+      ],
+      "expected": [
+        "training.log",
+        "execution.json"
+      ],
+      "profile": "torch",
+      "fixed_args": [
+        "--model",
+        "combraintf"
+      ],
+      "outputs": [
+        [
+          "--output-dir",
+          "."
+        ]
+      ],
+      "aliases": [
+        "run_models"
+      ],
+      "replaces_operations": [],
+      "required_files": [
+        "skills/combraintf/scripts/train_reference.py",
+        "models/bnt/scripts/data_adapter.py",
+        "models/combraintf/net/combraintf.py",
+        "models/combraintf/scripts/data_adapter.py",
+        "models/bnt/net/bnt.py"
+      ],
+      "executables": [],
+      "original_entrypoint": "skills/combraintf/scripts/train_reference.py",
+      "required_apis": [],
+      "implementation_source": {
+        "kind": "existing_project_script",
+        "entrypoints": [
+          "skills/combraintf/scripts/train_reference.py"
+        ],
+        "source": {
+          "origin": "NeuroWeave before runtime expansion",
+          "revision": "70b681c",
+          "source_path": "skills/combraintf/scripts/train_reference.py",
+          "source_sha256": "6d7d632db5913ba4fdf7aeb742d7d765e820ab9dd304e39d082afe7209fe1db6"
+        },
+        "dependencies": {
+          "skills/combraintf/scripts/train_reference.py": {
+            "origin": "NeuroWeave before runtime expansion",
+            "revision": "70b681c",
+            "source_path": "skills/combraintf/scripts/train_reference.py",
+            "source_sha256": "6d7d632db5913ba4fdf7aeb742d7d765e820ab9dd304e39d082afe7209fe1db6"
+          },
+          "models/bnt/scripts/data_adapter.py": {
+            "origin": "User-provided NeuroClaw source snapshot",
+            "source_path": "models/bnt/scripts/data_adapter.py",
+            "source_sha256": "61487cecd6df90ee83df865ce8e34cbd314fe54a164cd5d03c7624c4139c4a31",
+            "local_adjustments": "Input loading disables Pickle, device auto selects the allocated runtime, optional torch import, or isolated vendored imports; algorithm and training definitions unchanged."
+          },
+          "models/combraintf/net/combraintf.py": {
+            "origin": "User-provided NeuroClaw source snapshot",
+            "source_path": "models/combraintf/net/combraintf.py",
+            "source_sha256": "ebb07022285766d4592331559153d4ba171ac636c9da237f63e58d8bbe1c9044"
+          },
+          "models/combraintf/scripts/data_adapter.py": {
+            "origin": "User-provided NeuroClaw source snapshot",
+            "source_path": "models/combraintf/scripts/data_adapter.py",
+            "source_sha256": "38765b492f1cde796559287f08202dd74cd574b996574d648417703100683c87"
+          },
+          "models/bnt/net/bnt.py": {
+            "origin": "User-provided NeuroClaw source snapshot",
+            "source_path": "models/bnt/net/bnt.py",
+            "source_sha256": "1c3e362faeaf936f68a0253335780f1d4dab4d5232f107017e061cc129409af8"
+          }
+        },
+        "adapter_scope": "Existing calls, argument/input validation, scheduling and output collection only; no replacement algorithm."
+      },
+      "implementation_files": [
+        {
+          "path": "bakend/app/execution/original_training_worker.py",
+          "sha256": "bc6e732eef7378836c2c49bba8745d7de2e8d0f5668a299b349924582d5a8ee9"
+        },
+        {
+          "path": "skills/combraintf/scripts/train_reference.py",
+          "sha256": "6d7d632db5913ba4fdf7aeb742d7d765e820ab9dd304e39d082afe7209fe1db6"
+        },
+        {
+          "path": "models/bnt/scripts/data_adapter.py",
+          "sha256": "23bf49c59cdb0b6698022a3216b875f88ea9932817be23ff0a3d10c3beb4b134"
+        },
+        {
+          "path": "models/combraintf/net/combraintf.py",
+          "sha256": "ebb07022285766d4592331559153d4ba171ac636c9da237f63e58d8bbe1c9044"
+        },
+        {
+          "path": "models/combraintf/scripts/data_adapter.py",
+          "sha256": "c2b3c5d8afc2e04fe1fa0001b409a2ee2b567d6caebd7d3416a13008078e0d39"
+        },
+        {
+          "path": "models/bnt/net/bnt.py",
+          "sha256": "1c3e362faeaf936f68a0253335780f1d4dab4d5232f107017e061cc129409af8"
+        }
+      ],
+      "artifact_types": {
+        "training.log": "generated_file",
+        "execution.json": "generated_file"
+      }
+    },
+    {
+      "runner_id": "reviewed.harmonization-tool.none",
+      "skill_id": "harmonization-tool",
+      "method_id": "reviewed-none",
+      "label": "原项目多站点校正：none",
+      "script": "skills/harmonization-tool/scripts/harmonize.py",
+      "inputs": [
+        {
+          "id": "features",
+          "flag": "--features",
+          "label": "NPY 特征矩阵",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input",
+          "path_list": false,
+          "many_args": false
+        },
+        {
+          "id": "meta",
+          "flag": "--meta",
+          "label": "样本协变量 CSV",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input",
+          "path_list": false,
+          "many_args": false
+        }
+      ],
+      "parameters": [
+        {
+          "id": "batch",
+          "flag": "--batch",
+          "argument": "batch",
+          "label": "batch",
+          "type": "string",
+          "default": "site",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "protected",
+          "flag": "--protected",
+          "argument": "protected",
+          "label": "protected",
+          "type": "string",
+          "default": "age,sex",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null,
+          "split": true
+        },
+        {
+          "id": "split",
+          "flag": "--split",
+          "argument": "split",
+          "label": "split",
+          "type": "string",
+          "default": "site-stratified",
+          "required": true,
+          "options": [
+            {
+              "value": "none",
+              "label": "none"
+            },
+            {
+              "value": "site-stratified",
+              "label": "site-stratified"
+            },
+            {
+              "value": "leave-site-out",
+              "label": "leave-site-out"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "seed",
+          "flag": "--seed",
+          "argument": "seed",
+          "label": "seed",
+          "type": "integer",
+          "default": 123,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 2147483647
+        }
+      ],
+      "modules": [
+        "numpy",
+        "pandas",
+        "scipy",
+        "sklearn",
+        "joblib"
+      ],
+      "expected": [
+        "harmonized_features.npy",
+        "manifest.json"
+      ],
+      "profile": "scientific",
+      "fixed_args": [
+        "--method",
+        "none"
+      ],
+      "outputs": [
+        [
+          "--out",
+          "."
+        ]
+      ],
+      "aliases": [],
+      "replaces_operations": [],
+      "required_files": [],
+      "executables": [],
+      "required_apis": [],
+      "implementation_source": {
+        "kind": "existing_project_script",
+        "entrypoints": [
+          "skills/harmonization-tool/scripts/harmonize.py"
+        ],
+        "source": {
+          "origin": "NeuroWeave before runtime expansion",
+          "revision": "70b681c",
+          "source_path": "skills/harmonization-tool/scripts/harmonize.py",
+          "source_sha256": "3980be9712f8a1d9fb65282a933d0997111580c2c1a7a0b5c214ce6b6b96e848"
+        },
+        "dependencies": {},
+        "adapter_scope": "Existing calls, argument/input validation, scheduling and output collection only; no replacement algorithm."
+      },
+      "implementation_files": [
+        {
+          "path": "skills/harmonization-tool/scripts/harmonize.py",
+          "sha256": "3980be9712f8a1d9fb65282a933d0997111580c2c1a7a0b5c214ce6b6b96e848"
+        }
+      ],
+      "artifact_types": {
+        "harmonized_features.npy": "generated_file",
+        "manifest.json": "generated_file"
+      }
+    },
+    {
+      "runner_id": "reviewed.harmonization-tool.combat",
+      "skill_id": "harmonization-tool",
+      "method_id": "reviewed-combat",
+      "label": "原项目多站点校正：combat",
+      "script": "skills/harmonization-tool/scripts/harmonize.py",
+      "inputs": [
+        {
+          "id": "features",
+          "flag": "--features",
+          "label": "NPY 特征矩阵",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input",
+          "path_list": false,
+          "many_args": false
+        },
+        {
+          "id": "meta",
+          "flag": "--meta",
+          "label": "样本协变量 CSV",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input",
+          "path_list": false,
+          "many_args": false
+        }
+      ],
+      "parameters": [
+        {
+          "id": "batch",
+          "flag": "--batch",
+          "argument": "batch",
+          "label": "batch",
+          "type": "string",
+          "default": "site",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "protected",
+          "flag": "--protected",
+          "argument": "protected",
+          "label": "protected",
+          "type": "string",
+          "default": "age,sex",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null,
+          "split": true
+        },
+        {
+          "id": "split",
+          "flag": "--split",
+          "argument": "split",
+          "label": "split",
+          "type": "string",
+          "default": "site-stratified",
+          "required": true,
+          "options": [
+            {
+              "value": "none",
+              "label": "none"
+            },
+            {
+              "value": "site-stratified",
+              "label": "site-stratified"
+            },
+            {
+              "value": "leave-site-out",
+              "label": "leave-site-out"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "seed",
+          "flag": "--seed",
+          "argument": "seed",
+          "label": "seed",
+          "type": "integer",
+          "default": 123,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 2147483647
+        }
+      ],
+      "modules": [
+        "numpy",
+        "pandas",
+        "scipy",
+        "sklearn",
+        "joblib",
+        "neuroCombat"
+      ],
+      "expected": [
+        "harmonized_features.npy",
+        "manifest.json"
+      ],
+      "profile": "scientific",
+      "fixed_args": [
+        "--method",
+        "combat"
+      ],
+      "outputs": [
+        [
+          "--out",
+          "."
+        ]
+      ],
+      "aliases": [],
+      "replaces_operations": [],
+      "required_files": [],
+      "executables": [],
+      "required_apis": [],
+      "implementation_source": {
+        "kind": "existing_project_script",
+        "entrypoints": [
+          "skills/harmonization-tool/scripts/harmonize.py"
+        ],
+        "source": {
+          "origin": "NeuroWeave before runtime expansion",
+          "revision": "70b681c",
+          "source_path": "skills/harmonization-tool/scripts/harmonize.py",
+          "source_sha256": "3980be9712f8a1d9fb65282a933d0997111580c2c1a7a0b5c214ce6b6b96e848"
+        },
+        "dependencies": {},
+        "adapter_scope": "Existing calls, argument/input validation, scheduling and output collection only; no replacement algorithm."
+      },
+      "implementation_files": [
+        {
+          "path": "skills/harmonization-tool/scripts/harmonize.py",
+          "sha256": "3980be9712f8a1d9fb65282a933d0997111580c2c1a7a0b5c214ce6b6b96e848"
+        }
+      ],
+      "artifact_types": {
+        "harmonized_features.npy": "generated_file",
+        "manifest.json": "generated_file"
+      }
+    },
+    {
+      "runner_id": "reviewed.harmonization-tool.combat-gam",
+      "skill_id": "harmonization-tool",
+      "method_id": "reviewed-combat-gam",
+      "label": "原项目多站点校正：combat-gam",
+      "script": "skills/harmonization-tool/scripts/harmonize.py",
+      "inputs": [
+        {
+          "id": "features",
+          "flag": "--features",
+          "label": "NPY 特征矩阵",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input",
+          "path_list": false,
+          "many_args": false
+        },
+        {
+          "id": "meta",
+          "flag": "--meta",
+          "label": "样本协变量 CSV",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input",
+          "path_list": false,
+          "many_args": false
+        }
+      ],
+      "parameters": [
+        {
+          "id": "batch",
+          "flag": "--batch",
+          "argument": "batch",
+          "label": "batch",
+          "type": "string",
+          "default": "site",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "protected",
+          "flag": "--protected",
+          "argument": "protected",
+          "label": "protected",
+          "type": "string",
+          "default": "age,sex",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null,
+          "split": true
+        },
+        {
+          "id": "split",
+          "flag": "--split",
+          "argument": "split",
+          "label": "split",
+          "type": "string",
+          "default": "site-stratified",
+          "required": true,
+          "options": [
+            {
+              "value": "none",
+              "label": "none"
+            },
+            {
+              "value": "site-stratified",
+              "label": "site-stratified"
+            },
+            {
+              "value": "leave-site-out",
+              "label": "leave-site-out"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "seed",
+          "flag": "--seed",
+          "argument": "seed",
+          "label": "seed",
+          "type": "integer",
+          "default": 123,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 2147483647
+        }
+      ],
+      "modules": [
+        "numpy",
+        "pandas",
+        "scipy",
+        "sklearn",
+        "joblib",
+        "neuroHarmonize"
+      ],
+      "expected": [
+        "harmonized_features.npy",
+        "manifest.json"
+      ],
+      "profile": "scientific",
+      "fixed_args": [
+        "--method",
+        "combat-gam"
+      ],
+      "outputs": [
+        [
+          "--out",
+          "."
+        ]
+      ],
+      "aliases": [],
+      "replaces_operations": [],
+      "required_files": [],
+      "executables": [],
+      "required_apis": [],
+      "implementation_source": {
+        "kind": "existing_project_script",
+        "entrypoints": [
+          "skills/harmonization-tool/scripts/harmonize.py"
+        ],
+        "source": {
+          "origin": "NeuroWeave before runtime expansion",
+          "revision": "70b681c",
+          "source_path": "skills/harmonization-tool/scripts/harmonize.py",
+          "source_sha256": "3980be9712f8a1d9fb65282a933d0997111580c2c1a7a0b5c214ce6b6b96e848"
+        },
+        "dependencies": {},
+        "adapter_scope": "Existing calls, argument/input validation, scheduling and output collection only; no replacement algorithm."
+      },
+      "implementation_files": [
+        {
+          "path": "skills/harmonization-tool/scripts/harmonize.py",
+          "sha256": "3980be9712f8a1d9fb65282a933d0997111580c2c1a7a0b5c214ce6b6b96e848"
+        }
+      ],
+      "artifact_types": {
+        "harmonized_features.npy": "generated_file",
+        "manifest.json": "generated_file"
+      }
+    },
+    {
+      "runner_id": "reviewed.harmonization-tool.covbat",
+      "skill_id": "harmonization-tool",
+      "method_id": "reviewed-covbat",
+      "label": "原项目多站点校正：covbat",
+      "script": "skills/harmonization-tool/scripts/harmonize.py",
+      "inputs": [
+        {
+          "id": "features",
+          "flag": "--features",
+          "label": "NPY 特征矩阵",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input",
+          "path_list": false,
+          "many_args": false
+        },
+        {
+          "id": "meta",
+          "flag": "--meta",
+          "label": "样本协变量 CSV",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input",
+          "path_list": false,
+          "many_args": false
+        }
+      ],
+      "parameters": [
+        {
+          "id": "batch",
+          "flag": "--batch",
+          "argument": "batch",
+          "label": "batch",
+          "type": "string",
+          "default": "site",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "protected",
+          "flag": "--protected",
+          "argument": "protected",
+          "label": "protected",
+          "type": "string",
+          "default": "age,sex",
+          "required": true,
+          "options": [],
+          "minimum": null,
+          "maximum": null,
+          "split": true
+        },
+        {
+          "id": "split",
+          "flag": "--split",
+          "argument": "split",
+          "label": "split",
+          "type": "string",
+          "default": "site-stratified",
+          "required": true,
+          "options": [
+            {
+              "value": "none",
+              "label": "none"
+            },
+            {
+              "value": "site-stratified",
+              "label": "site-stratified"
+            },
+            {
+              "value": "leave-site-out",
+              "label": "leave-site-out"
+            }
+          ],
+          "minimum": null,
+          "maximum": null
+        },
+        {
+          "id": "seed",
+          "flag": "--seed",
+          "argument": "seed",
+          "label": "seed",
+          "type": "integer",
+          "default": 123,
+          "required": true,
+          "options": [],
+          "minimum": 0,
+          "maximum": 2147483647
+        }
+      ],
+      "modules": [
+        "numpy",
+        "pandas",
+        "scipy",
+        "sklearn",
+        "joblib",
+        "covbat"
+      ],
+      "expected": [
+        "harmonized_features.npy",
+        "manifest.json"
+      ],
+      "profile": "scientific",
+      "fixed_args": [
+        "--method",
+        "covbat"
+      ],
+      "outputs": [
+        [
+          "--out",
+          "."
+        ]
+      ],
+      "aliases": [],
+      "replaces_operations": [],
+      "required_files": [],
+      "executables": [],
+      "required_apis": [],
+      "implementation_source": {
+        "kind": "existing_project_script",
+        "entrypoints": [
+          "skills/harmonization-tool/scripts/harmonize.py"
+        ],
+        "source": {
+          "origin": "NeuroWeave before runtime expansion",
+          "revision": "70b681c",
+          "source_path": "skills/harmonization-tool/scripts/harmonize.py",
+          "source_sha256": "3980be9712f8a1d9fb65282a933d0997111580c2c1a7a0b5c214ce6b6b96e848"
+        },
+        "dependencies": {},
+        "adapter_scope": "Existing calls, argument/input validation, scheduling and output collection only; no replacement algorithm."
+      },
+      "implementation_files": [
+        {
+          "path": "skills/harmonization-tool/scripts/harmonize.py",
+          "sha256": "3980be9712f8a1d9fb65282a933d0997111580c2c1a7a0b5c214ce6b6b96e848"
+        }
+      ],
+      "artifact_types": {
+        "harmonized_features.npy": "generated_file",
+        "manifest.json": "generated_file"
       }
     }
   ]

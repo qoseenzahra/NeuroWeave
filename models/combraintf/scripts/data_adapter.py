@@ -94,12 +94,13 @@ def build_community_ids(roi_names: List[str], atlas: str,
 def get_community_ids(atlas: str, n_communities: Optional[int] = None,
                       data_root: Optional[Path] = None) -> List[int]:
     """Load one subject from data/braingnn_input/<atlas>/, derive community ids."""
-    root = data_root or Path(__file__).resolve().parents[3] / "data" / "braingnn_input"
+    from models.bnt.scripts import data_adapter as dataset
+    root = data_root or dataset.FMRI_ROOT
     atlas_dir = root / atlas
     pt_files = sorted(atlas_dir.glob("sub-*.pt"))
     if not pt_files:
         raise FileNotFoundError(f"no .pt files in {atlas_dir}")
-    sub = torch.load(pt_files[0], weights_only=False)
+    sub = torch.load(pt_files[0], weights_only=True)
     roi_names = sub.get("roi_names", [])
     if not roi_names:
         n = int(sub.get("n_rois", 0))

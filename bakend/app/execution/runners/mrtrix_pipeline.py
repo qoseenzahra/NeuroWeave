@@ -19,6 +19,9 @@ class _MrtrixRunner(ExternalCommandRunner):
 
     def runtime_status(self) -> dict[str, object]:
         status = super().runtime_status()
+        python = Path(os.getenv("LOCALFLOW_SKILL_PYTHON", "/opt/neuroweave/envs/scientific-py311/bin/python"))
+        if self.command in {"dwi2response", "5ttgen"} and not (python.is_file() and os.access(python, os.X_OK)):
+            status.update(available=False, reason=f"MRtrix Python 前端缺少公共解释器：{python}")
         libpng = Path(os.getenv("LOCALFLOW_MRTRIX_LIBPNG", "/lib/x86_64-linux-gnu/libpng16.so.16"))
         if status["available"] and not libpng.is_file():
             status.update(available=False, reason=f"缺少 MRtrix 运行库：{libpng}")
@@ -32,7 +35,9 @@ class _MrtrixRunner(ExternalCommandRunner):
             # Some MRtrix commands are Python front-ends that delegate to
             # sibling binaries by name.  Starting the front-end by absolute
             # path does not itself make those helpers discoverable.
-            "PATH": str(root / "bin") + os.pathsep + os.getenv("PATH", ""),
+            "PATH": os.pathsep.join([str(root / "bin"),
+                str(Path(os.getenv("LOCALFLOW_SKILL_PYTHON", "/opt/neuroweave/envs/scientific-py311/bin/python")).parent),
+                os.getenv("PATH", "")]),
             "LD_LIBRARY_PATH": os.getenv("LD_LIBRARY_PATH", ""),
         }
 
@@ -113,11 +118,15 @@ class MrtrixDwi2FodRunner(_MrtrixRunner):
                 )
             )
             outputs.extend(((gm, "灰质成分"), (csf, "脑脊液成分")))
+        # MRtrix expects one lmax per response/output pair. GM and CSF are
+        # isotropic compartments; the exposed lmax controls the WM FOD only.
+        wm_lmax = str(int(self.parameter(context, "lmax", 8)))
+        lmax = f"{wm_lmax},0,0" if algorithm == "msmt_csd" else wm_lmax
         argv.extend(
             (
                 "-mask", str(self.required_binding(context, "mask")),
                 "-fslgrad", str(self.required_binding(context, "bvecs")), str(self.required_binding(context, "bvals")),
-                "-lmax", str(int(self.parameter(context, "lmax", 8))),
+                "-lmax", lmax,
                 "-nthreads", str(max(1, int(self.parameter(context, "threads", 4)))),
                 "-force",
             )
@@ -151,7 +160,7 @@ class MrtrixFiveTtGenRunner(_MrtrixRunner):
             FSLDIR=str(fsl_root),
             FSL_DIR=str(fsl_root),
             FSLOUTPUTTYPE="NIFTI_GZ",
-            PATH=str(fsl_root / "bin") + os.pathsep + environment["PATH"],
+            PATH=environment["PATH"] + os.pathsep + str(fsl_root / "bin"),
         )
         return environment
 

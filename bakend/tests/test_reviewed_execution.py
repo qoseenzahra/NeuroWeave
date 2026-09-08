@@ -79,13 +79,17 @@ class ReviewedExecutionTests(unittest.TestCase):
         runners=RunnerRegistry();registry=CapabilityRegistry(ROOT/'skills')
         self.assertTrue(retired.isdisjoint(runners.ids()))
         self.assertFalse(any(m.runner_id in retired for m in registry.all_methods()))
-        for skill in ['bnt','brainnetcnn','combraintf','connectome-discovery']:
+        for skill in ['connectome-discovery']:
             methods=registry.selectable_methods_for('skill.'+skill)
             self.assertTrue(methods)
             self.assertTrue(all(m.execution_mode=='planning' for m in methods))
         skills={skill.name:skill for skill in SkillLoader(ROOT/'skills').load_all()}
-        self.assertEqual(skills['bnt'].structure_mode,'planning')
-        self.assertTrue(any(m.execution_mode=='planning' for m in registry.selectable_methods_for('skill.cnn3d')))
+        self.assertEqual(skills['bnt'].structure_mode,'runner')
+        for skill in ['bnt','brainnetcnn','combraintf']:
+            method=next(m for m in registry.selectable_methods_for('skill.'+skill) if m.execution_mode=='runner')
+            spec=specifications()[method.runner_id]
+            self.assertIn('original-trainer',method.runner_id)
+            self.assertTrue(spec['original_entrypoint'].endswith('/train.py') or spec['original_entrypoint'].endswith('/train_reference.py'))
 
     def test_runtime_checks_actual_api_and_rejects_changed_source(self):
         self.assertTrue(probe(sys.executable, ('math',), (('math','sqrt'),))[0])
@@ -104,7 +108,9 @@ class ReviewedExecutionTests(unittest.TestCase):
                 origin=spec['implementation_source']
                 self.assertTrue(origin['entrypoints'])
                 if origin['kind']=='existing_project_script':
-                    self.assertIn(spec['script'],sources)
+                    for entrypoint in origin['entrypoints']:
+                        self.assertIn(entrypoint,sources,entrypoint)
+                        self.assertIn(entrypoint,{item['path'] for item in spec['implementation_files']})
                 elif origin['kind']=='library_api':
                     self.assertTrue(spec['required_apis'])
                 else:

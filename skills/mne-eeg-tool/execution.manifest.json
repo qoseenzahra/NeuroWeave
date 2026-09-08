@@ -872,6 +872,286 @@
           "line_start": 1
         }
       ]
+    },
+    {
+      "capability": "skill.mne-eeg-tool",
+      "method_id": "reviewed-original-bands-mne-eeg-tool",
+      "label": "原脚本 Welch 频带功率与分频文件",
+      "description": "调用现有实现：skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py。输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.mne-eeg-tool.original-bands",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "原始 EEG 文件",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_band_power_csv",
+          "type": "generated_file",
+          "label": "band_power.csv",
+          "path_template": "results/band_power.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/original_eeg_worker.py",
+          "kind": "script",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.mne-eeg-tool",
+      "method_id": "reviewed-original-erp-mne-eeg-tool",
+      "label": "原脚本 ERP 峰值、潜伏期与 AUC",
+      "description": "调用现有实现：skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py。输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.mne-eeg-tool.original-erp",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "Epochs FIF",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_erp_features_csv",
+          "type": "generated_file",
+          "label": "erp_features.csv",
+          "path_template": "results/erp_features.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/original_eeg_worker.py",
+          "kind": "script",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.mne-eeg-tool",
+      "method_id": "reviewed-original-alpha-ratio-mne-eeg-tool",
+      "label": "原脚本 F3/F4 滤波后均值比值（非对数功率差）",
+      "description": "调用现有实现：skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py。输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.mne-eeg-tool.original-alpha-ratio",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "原始 EEG 文件",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_alpha_asymmetry_npy",
+          "type": "generated_file",
+          "label": "alpha_asymmetry.npy",
+          "path_template": "results/alpha_asymmetry.npy"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/original_eeg_worker.py",
+          "kind": "script",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.mne-eeg-tool",
+      "method_id": "reviewed-original-features-mne-eeg-tool",
+      "label": "原脚本 CSP、频带、Hjorth 与熵特征",
+      "description": "调用现有实现：skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py。输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.mne-eeg-tool.original-features",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "Epochs FIF",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_features_npz",
+          "type": "generated_file",
+          "label": "features.npz",
+          "path_template": "results/features.npz"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/original_eeg_worker.py",
+          "kind": "script",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
+          "line_start": 1
+        }
+      ]
+    },
+    {
+      "capability": "skill.mne-eeg-tool",
+      "method_id": "reviewed-original-microstates-mne-eeg-tool",
+      "label": "原脚本 mne_microstates 分析",
+      "description": "调用现有实现：skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py。输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.mne-eeg-tool.original-microstates",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [],
+      "input_slots": [
+        {
+          "id": "input",
+          "label": "原始 EEG 文件",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_microstates_fif",
+          "type": "generated_file",
+          "label": "microstates.fif",
+          "path_template": "results/microstates.fif"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "bakend/app/execution/original_eeg_worker.py",
+          "kind": "script",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
+          "line_start": 1
+        }
+      ]
     }
   ]
 }

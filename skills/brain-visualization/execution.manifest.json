@@ -173,6 +173,118 @@
           "line_start": 1
         }
       ]
+    },
+    {
+      "capability": "skill.brain-visualization",
+      "method_id": "reviewed-original-region-summary-brain-visualization",
+      "label": "原脚本 BOLD 频带波动区域摘要（STD 指标）",
+      "description": "调用现有实现：skills/brain-visualization/scripts/zalff_summary_reference.py。输入保持只读，输出写入独立任务目录。",
+      "runner_id": "reviewed.brain-visualization.original-region-summary",
+      "execution_mode": "runner",
+      "structure_level": "reviewed",
+      "parameters": [
+        {
+          "id": "tr",
+          "argument": "tr",
+          "label": "tr",
+          "type": "number",
+          "default": 1.0,
+          "required": true,
+          "options": [],
+          "minimum": 0.01,
+          "maximum": 100
+        },
+        {
+          "id": "top_n",
+          "argument": "top-n",
+          "label": "top-n",
+          "type": "integer",
+          "default": 10,
+          "required": true,
+          "options": [],
+          "minimum": 1,
+          "maximum": 10000
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "bold",
+          "label": "原脚本所需 4D BOLD",
+          "required": true,
+          "binding": "file",
+          "type": "bold_image"
+        },
+        {
+          "id": "atlas",
+          "label": "同空间分区图谱",
+          "required": true,
+          "binding": "file",
+          "type": "label_image"
+        },
+        {
+          "id": "labels",
+          "label": "图谱标签",
+          "required": true,
+          "binding": "file",
+          "type": "analysis_input"
+        },
+        {
+          "id": "mask",
+          "label": "分析掩膜",
+          "required": true,
+          "binding": "file",
+          "type": "brain_mask"
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "results",
+          "type": "generated_folder",
+          "label": "分析结果",
+          "primary": true,
+          "path_template": "results/"
+        },
+        {
+          "id": "file_TOP_active_regions_csv",
+          "type": "generated_file",
+          "label": "TOP_active_regions.csv",
+          "path_template": "results/TOP_active_regions.csv"
+        },
+        {
+          "id": "file_top_coordinates_csv",
+          "type": "generated_file",
+          "label": "top_coordinates.csv",
+          "path_template": "results/top_coordinates.csv"
+        },
+        {
+          "id": "file_all_brain_regions_activity_csv",
+          "type": "generated_file",
+          "label": "all_brain_regions_activity.csv",
+          "path_template": "results/all_brain_regions_activity.csv"
+        }
+      ],
+      "input_types": [
+        "analysis_input"
+      ],
+      "output_types": [
+        "generated_folder"
+      ],
+      "default_recommended": true,
+      "replaces_operations": [],
+      "source_references": [
+        {
+          "path": "skills/brain-visualization/scripts/zalff_summary_reference.py",
+          "kind": "script",
+          "label": "现有实现调用入口",
+          "line_start": 1
+        },
+        {
+          "path": "bakend/resources/existing_implementation_sources.json",
+          "kind": "script",
+          "label": "实现来源与原始源码校验记录",
+          "line_start": 1
+        }
+      ]
     }
   ]
 }

@@ -108,12 +108,15 @@ export type ExecutionRecipe = {
   interface_capability: string;
   interface_method_id: string;
   exposed_parameters: string[];
+  parameters?: ParameterSpec[];
   steps: Array<{
     id: string;
     title: string;
     capability: string;
     method_id: string;
     fixed_parameters: Record<string, ParameterValue>;
+    parameter_bindings?: Record<string, string>;
+    inherit_parameters?: boolean;
     workspace: string;
   }>;
 };
@@ -143,7 +146,26 @@ export type MethodOption = {
   delegate_skill_ids?: string[];
   execution_recipe?: ExecutionRecipe | null;
   included_capabilities?: string[];
+  execution_resolution?: {
+    state: string;
+    reason: string;
+    requirements?: string[];
+    source_method_id?: string;
+    target_method_id?: string;
+  };
 };
+
+export function methodExecutionLabel(method: MethodOption): string {
+  if (method.execution_mode === 'runner') {
+    return method.execution_recipe ? `Runner 流程 · ${method.execution_recipe.steps.length} 步` : 'Runner';
+  }
+  const labels: Record<string, string> = {
+    missing_runtime: '缺少运行环境', missing_implementation: '缺少原始实现',
+    needs_protocol: '待明确分析协议', interactive: '交互管理', external_service: '需外部服务',
+    source_error: '原定义待修正', platform_managed: '平台管理', unreviewed: '待核对执行入口',
+  };
+  return labels[method.execution_resolution?.state ?? ''] ?? '仅规划';
+}
 
 export type WorkflowStep = {
   id: string;

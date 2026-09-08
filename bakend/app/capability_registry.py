@@ -15,6 +15,7 @@ from .workflow_models import (
     OutputSlotSpec,
     ParameterSpec,
 )
+from .planning_resolution import PlanningResolver
 
 
 class ArtifactTypeDefinition(BaseModel):
@@ -49,6 +50,7 @@ class CapabilityMethod(BaseModel):
     execution_recipe: ExecutionRecipeSpec | None = None
     included_capabilities: list[str] = Field(default_factory=list)
     replaces_operations: list[str] = Field(default_factory=list)
+    execution_resolution: dict = Field(default_factory=dict)
 
 
 class CapabilityRegistry:
@@ -60,12 +62,15 @@ class CapabilityRegistry:
         self._by_capability: dict[str, list[CapabilityMethod]] = {}
         self._artifact_types: dict[str, ArtifactTypeDefinition] = {}
         self._recipes_by_operation: dict[tuple[str, str], ExecutionRecipeSpec] = {}
+        self._planning_resolver = PlanningResolver(
+            skills_dir.parent / "bakend/resources/planning_resolution.json"
+        )
 
     def methods_for(self, capability: str) -> list[CapabilityMethod]:
         self._load()
         return [item.model_copy(deep=True) for item in self._by_capability.get(capability, [])]
 
-    def selectable_methods_for(self, capability: str) -> list[CapabilityMethod]:
+    def selectable_methods_for(self, capability: str, *, resolve_planning: bool = True) -> list[CapabilityMethod]:
         """Expand a planning Skill's operation choices into workflow methods.
 
         Generated planning manifests historically stored real task/method choices in
@@ -207,18 +212,29 @@ class CapabilityRegistry:
                         },
                     )
                 )
+        if resolve_planning:
+            return self._planning_resolver.resolve(expanded, self._raw_method)
         return expanded
+
+    def _raw_method(self, capability: str, method_id: str):
+        method = self._method_from_loaded(capability, method_id)
+        if method is not None:
+            return method
+        return next((m for m in self.selectable_methods_for(capability, resolve_planning=False)
+                     if m.method_id == method_id), None)
 
     def method_for(self, capability: str, method_id: str) -> CapabilityMethod | None:
         self._load()
-        method = self._method_from_loaded(capability, method_id)
+        method = next((m for m in self.selectable_methods_for(capability) if m.method_id == method_id), None)
+        if method is None:
+            method = self._method_from_loaded(capability, method_id)
         return method.model_copy(deep=True) if method is not None else None
 
     def recipe_methods(self, recipe: ExecutionRecipeSpec) -> list[CapabilityMethod]:
         self._load()
         methods: list[CapabilityMethod] = []
         for step in recipe.steps:
-            method = self._method_from_loaded(step.capability, step.method_id)
+            method = self._raw_method(step.capability, step.method_id)
             if method is None:
                 raise RuntimeError(
                     f"执行配方 {recipe.recipe_id} 引用了不存在的方法："
@@ -343,10 +359,12 @@ class CapabilityRegistry:
         )
         recipe_manifests = sorted(self.skills_dir.glob("*/recipes.manifest.json"))
         artifact_path = self.skills_dir / "artifact-types.json"
+        resolution_path = self.skills_dir.parent / 'bakend/resources/planning_resolution.json'
         signature_paths = [
             *manifests,
             *recipe_manifests,
             *([artifact_path] if artifact_path.is_file() else []),
+            *([resolution_path] if resolution_path.is_file() else []),
         ]
         signature = tuple(
             (str(path), path.stat().st_mtime_ns, path.stat().st_size) for path in signature_paths
@@ -475,10 +493,12 @@ class CapabilityRegistry:
                         )
                 recipes_by_operation[key] = recipe
 
+        resolver = PlanningResolver(resolution_path)
         self._signature = signature
         self._by_capability = by_capability
         self._artifact_types = artifact_types
         self._recipes_by_operation = recipes_by_operation
+        self._planning_resolver = resolver
 
     def _method_from_loaded(
         self,
