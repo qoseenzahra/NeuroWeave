@@ -96,9 +96,15 @@ export type InputBinding = {
   variables: string[];
   coverage: SamplePathCoverage | null;
   sample_matches: SamplePathMatch[];
-  history?: { run_id: string; group_id: string; dataset_id: string } | null;
+  history?: { run_id: string; group_id: string; dataset_id: string; allow_partial?: boolean } | null;
   status: 'validated' | 'selected' | 'planned';
   messages: string[];
+};
+
+export type SampleScope = {
+  total: number;
+  eligible_sample_ids: string[];
+  skipped_samples: { sample_id: string; label: string; reasons: string[] }[];
 };
 
 export type ExecutionRecipe = {
@@ -235,6 +241,7 @@ export type Workflow = {
   locked_at: string | null;
   parameters_reviewed_at: string | null;
   dry_run_report: DryRunReport | null;
+  sample_scope?: SampleScope | null;
   confirmed_at: string | null;
   created_at: string;
   updated_at: string;
@@ -327,6 +334,7 @@ export type RunStep = {
 };
 
 export type WorkflowRun = {
+  sample_scope?: SampleScope | null;
   state_revision?: number;
   retry_of?: string | null;
   reused_step_ids?: string[];

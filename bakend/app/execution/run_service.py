@@ -18,10 +18,11 @@ from .recipe_compiler import ExecutionUnit, RecipeCompilationError, RecipeCompil
 from .runner_registry import RunnerRegistry
 from .runners.freesurfer import FreeSurferReconAllRunner
 from .slurm_backend import SlurmBackend, TERMINAL_STATES
-from .sample_plan import sample_parallel_limits, schedule_units, workflow_for_unit
+from .sample_plan import unit_parallel_limits, schedule_units, workflow_for_unit
 from .sample_execution import execute_samples
 from .retry import input_fingerprint, implementation_fingerprint, reusable_step
 from ..historical_inputs import HistoricalInputs, historical_binding_problems
+from ..sample_scope import partial_sample_scope
 
 
 class RunConflict(RuntimeError):
@@ -134,13 +135,14 @@ class RunService:
             raise RunConflict(f"该流程已有活动任务：{active.run_id}")
 
         try:
+            scope = partial_sample_scope(workflow)
+            if scope != workflow.sample_scope:
+                raise RecipeCompilationError("样本运行范围已变化，请重新审核输入并执行 Dry-run")
             resolved = self.recipe_compiler.compile(workflow)
             resolved = schedule_units(workflow, resolved, execution)
-        except (RecipeCompilationError, OSError) as exc:
+        except (RecipeCompilationError, OSError, ValueError) as exc:
             raise RunConflict(str(exc)) from exc
-        parallel_limits = sample_parallel_limits(
-            execution, workflow.dataset.inspection.sample_count if workflow.dataset else 0,
-        )
+        parallel_limits = unit_parallel_limits(execution, resolved)
         for unit in resolved:
             step, method = unit.step, unit.method
             if method.execution_mode != "runner":
@@ -174,6 +176,7 @@ class RunService:
             progress=0.0,
             output_directory=str(output_directory),
             plan_snapshot=workflow.model_dump(mode="json"),
+            sample_scope=scope,
             steps=[
                 RunStep(
                     step_id=step.id,
@@ -301,6 +304,7 @@ class RunService:
             created_at=now, updated_at=now, started_at=None, finished_at=None, state_revision=0,
             output_directory=str(self._safe_run_directory(new_id, original.execution.backend)), steps=[], artifacts=[]))
         status = self.slurm_backend.status() if original.execution.backend == "slurm" else None
+        parallel_limits = unit_parallel_limits(original.execution, units)
         for unit in units:
             runner = self.runner_registry.get(unit.method.runner_id)
             if runner is None:
@@ -309,7 +313,7 @@ class RunService:
                 if not status.get("available") or original.execution.partition not in status.get("partitions", []):
                     raise RunConflict("原 Slurm 分区当前不可用")
                 self._validate_node_resources(unit.execution or original.execution,status,
-                    parallel_samples=sample_parallel_limits(original.execution,workflow.dataset.inspection.sample_count).get(unit.execution.node,1))
+                    parallel_samples=parallel_limits.get(unit.execution.node, 1))
             previous = old[unit.step.id]
             can_reuse = previous.status == "succeeded" and all(
                 dep in run.reused_step_ids for dep in unit.step.depends_on)

@@ -13,11 +13,11 @@ type Candidate = {
 };
 type Preview = {
   run_id: string; group_id: string; coverage: SamplePathCoverage;
-  matches: SamplePathMatch[]; can_apply: boolean; messages: string[];
+  matches: SamplePathMatch[]; can_apply: boolean; messages: string[]; partial?: boolean;
 };
 type Props = {
   apiBase: string; workflowId: string; revision: number; stepId: string; slotId: string;
-  slotLabel: string; disabled: boolean; onSelected: (runId: string, groupId: string) => void;
+  slotLabel: string; disabled: boolean; onSelected: (runId: string, groupId: string, allowPartial: boolean) => void;
 };
 
 export function HistoricalInputPicker(props: Props) {
@@ -113,15 +113,18 @@ export function HistoricalInputPicker(props: Props) {
             <Button size="sm" variant="ghost" disabled={page + 1 >= pageCount} onClick={() => setPage(page + 1)}>下一页样本</Button>
           </div>
           {preview.messages.map(message => <p key={message} className="text-xs text-slate-500">{message}</p>)}
-          {!preview.can_apply && <p role="alert" className="text-sm text-amber-800">未能唯一覆盖全部样本，请选择其他历史输出或使用已有文件输入。</p>}
+          {preview.can_apply && preview.coverage.matched < preview.coverage.total && <p className="text-sm text-amber-800">
+            将仅使用已匹配的 {preview.coverage.matched} 个样本。缺失、无效或匹配不唯一的样本将跳过；最终运行范围取所有已绑定输入的共同匹配样本。
+          </p>}
+          {!preview.can_apply && <p role="alert" className="text-sm text-amber-800">没有可唯一匹配的有效样本，请选择其他历史输出或使用已有文件输入。</p>}
         </div>}
       </div>
       <div className="flex shrink-0 flex-wrap justify-end gap-2 border-t pt-3">
         <Button size="sm" variant="outline" onClick={() => setOpen(false)}>关闭</Button>
         <Button size="sm" disabled={busy || props.disabled || !preview?.can_apply} onClick={() => {
           if (!preview?.can_apply) return;
-          props.onSelected(preview.run_id, preview.group_id); setOpen(false);
-        }}>应用到 {preview?.coverage.matched ?? 0} 个样本</Button>
+          props.onSelected(preview.run_id, preview.group_id, preview.coverage.matched < preview.coverage.total); setOpen(false);
+        }}>{preview && preview.coverage.matched < preview.coverage.total ? '仅使用匹配的' : '应用到'} {preview?.coverage.matched ?? 0} 个样本</Button>
       </div>
     </DialogContent>
   </Dialog>;

@@ -22,6 +22,7 @@ PROJECT = Path(__file__).resolve().parents[1]
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', type=Path, required=True)
+    parser.add_argument('--partial', action='store_true', help='Withhold one synthetic source output; submit only the other sample')
     args = parser.parse_args()
     root = args.root.resolve()
     if root.parent != Path('/home/data/neuroweave/smoke') or root.exists():
@@ -127,7 +128,14 @@ for index, name in enumerate(('subject-A', 'subject-B')):
         first = execute(workflow('source'))
         paths = {s.sample_id: next(a.absolute_path for a in s.artifacts if a.artifact_type == 'bold_image')
                  for s in first.steps}
-        checksums = {path: hashlib.sha256(Path(path).read_bytes()).hexdigest() for path in paths.values()}
+        if args.partial:
+            withheld = Path(paths['subject-B']).resolve()
+            assert withheld.is_relative_to(root / 'runs')
+            withheld.rename(withheld.with_name(withheld.name + '.unavailable'))
+            options.nodes = [NodeAllocation(node='node02', cpus=1, memory_gb=2,
+                time_minutes=2, parallel_samples=2)]
+        checksums = {path: hashlib.sha256(Path(path).read_bytes()).hexdigest()
+                     for path in paths.values() if Path(path).is_file()}
         target = workflow('target')
         target.dataset.inspection.samples.reverse()
         store.save_workflow(target, event_type='synthetic_reorder')
@@ -135,12 +143,17 @@ for index, name in enumerate(('subject-A', 'subject-B')):
         choices = HistoricalInputs(store).candidates(target, slot)['candidates']
         choice = next(item for item in choices if item['run_id'] == first.run_id)
         request = HistoricalSelectionRequest(expected_revision=target.revision,
-            run_id=first.run_id, group_id=choice['group_id'])
+            run_id=first.run_id, group_id=choice['group_id'], allow_partial=args.partial)
         preview = workflows.preview_historical_input(target.workflow_id, 'denoise', 'bold', request)
-        assert preview['can_apply'] and preview['coverage']['matched'] == 2
-        assert all(paths[m['sample_id']] == m['absolute_path'] for m in preview['matches'])
+        assert preview['can_apply'] and preview['coverage']['matched'] == (1 if args.partial else 2)
+        assert all(paths[m['sample_id']] == m['absolute_path'] for m in preview['matches'] if m['status'] == 'matched')
         target = workflows.bind_historical_input(target.workflow_id, 'denoise', 'bold', request)
         second = execute(target)
+        if args.partial:
+            assert [s.sample_id for s in second.steps] == ['subject-A']
+            assert second.steps[0].step_id == 'sample_0002__denoise'
+            assert [s.sample_id for s in second.sample_scope.skipped_samples] == ['subject-B']
+            evidence['sample_scope'] = second.sample_scope.model_dump(mode='json')
         # The worker request proves each sample read its own source output in place.
         for step in second.steps:
             request_path = Path(step.scheduler['job_directory']) / 'payload.json'
@@ -156,7 +169,7 @@ for index, name in enumerate(('subject-A', 'subject-B')):
         assert len(list(raw.rglob('*.nii.gz'))) == 2
         evidence.update(success=True, sample_mapping=preview['matches'], source_checksums=checksums,
             raw_input_roots_only=True, no_input_copy=True)
-        print('PASS: two runs, four real Slurm jobs, exact historical paths and unchanged source files.', flush=True)
+        print(f"PASS: two runs, {len(first.steps) + len(second.steps)} real Slurm jobs, exact historical paths and unchanged selected source files.", flush=True)
     finally:
         # Cancel only runs created in this isolated test if an assertion/timeout occurs.
         for run_id in owned_runs:

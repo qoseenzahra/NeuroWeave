@@ -17,15 +17,16 @@ const server = await createServer({ root, configFile: false,
       } else if (url.pathname.startsWith('/api/workflows/')) {
         res.setHeader('Content-Type', 'application/json');
         const missing = url.pathname.includes('/missing/');
+        const empty = url.pathname.includes('/empty/');
         if (url.pathname.endsWith('/preview')) {
           const matches = Array.from({ length: 63 }, (_, index) => ({ sample_id: 'sample-' + index,
             label: 'Synthetic sample ' + index, relative_path: '',
             absolute_path: '/synthetic/previous-run/' + 'long_output_directory_'.repeat(5) + '/sample-' + index + '/5tt.mif',
-            status: missing && index === 62 ? 'missing' : 'matched',
-            message: missing && index === 62 ? '此样本没有成功的历史输出' : '按原始样本标识匹配' }));
+            status: empty || (missing && index === 62) ? 'missing' : 'matched',
+            message: empty || (missing && index === 62) ? '此样本没有成功的历史输出' : '按原始样本标识匹配' }));
           res.end(JSON.stringify({ run_id: 'run_fixture', group_id: group, matches,
-            coverage: { total: 63, matched: missing ? 62 : 63, missing: missing ? 1 : 0, invalid: 0 },
-            can_apply: !missing, messages: ['合成预览，不包含研究数据。'] }));
+            coverage: { total: 63, matched: empty ? 0 : missing ? 62 : 63, missing: empty ? 63 : missing ? 1 : 0, invalid: 0 },
+            partial: missing || empty, can_apply: !empty, messages: ['合成预览，不包含研究数据。'] }));
         } else {
           res.end(JSON.stringify({ candidates: [{ run_id: 'run_fixture', group_id: group,
             run_title: 'Synthetic 5TT generation', run_status: 'succeeded', created_at: '2026-09-08T00:00:00Z',
@@ -39,4 +40,3 @@ await server.listen();
 console.log('Historical input fixture: http://127.0.0.1:18765/__historical_input_test');
 async function shutdown() { await server.close(); process.exit(0); }
 process.once('SIGINT', shutdown); process.once('SIGTERM', shutdown);
-

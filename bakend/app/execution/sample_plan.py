@@ -7,6 +7,7 @@ from pathlib import Path
 from ..run_models import RunExecutionOptions
 from ..workflow_models import Workflow
 from ..historical_inputs import select_history_sample
+from ..sample_scope import partial_sample_scope, restrict_sample_bindings
 from .recipe_compiler import ExecutionUnit, RecipeCompilationError, RecipeCompiler
 
 
@@ -21,8 +22,21 @@ def sample_parallel_limits(execution: RunExecutionOptions, sample_count: int) ->
     }
 
 
+def unit_parallel_limits(execution: RunExecutionOptions, units: list[ExecutionUnit]) -> dict[str, int]:
+    """Count actual assigned samples, including a retry restricted to one node."""
+    return {allocation.node: min(allocation.parallel_samples, len({u.sample_id for u in units
+            if u.sample_id and u.execution and u.execution.node == allocation.node}))
+            for allocation in execution.nodes} if execution.sample_mode == "per_sample" else {}
+
+
 def schedule_units(workflow: Workflow, units: list[ExecutionUnit],
                    execution: RunExecutionOptions) -> list[ExecutionUnit]:
+    scope = partial_sample_scope(workflow)
+    if scope is not None:
+        if not scope.eligible_sample_ids:
+            raise RecipeCompilationError("各输入没有共同匹配的样本，无法执行")
+        if execution.sample_mode != "per_sample":
+            raise RecipeCompilationError("部分历史输入请使用按样本运行，以按原始样本标识提交")
     if execution.sample_mode == "single":
         options = execution
         if execution.nodes:
@@ -44,6 +58,14 @@ def schedule_units(workflow: Workflow, units: list[ExecutionUnit],
         raise RecipeCompilationError("数据集样本清单不完整，不能进行批量运行")
     if len({sample.sample_id for sample in samples}) != len(samples):
         raise RecipeCompilationError("数据集样本标识重复，不能进行批量运行")
+    original_ordinals = {sample.sample_id: index + 1 for index, sample in enumerate(samples)}
+    if scope is not None:
+        eligible = set(scope.eligible_sample_ids)
+        samples = [sample for sample in samples if sample.sample_id in eligible]
+        # Apply the same scope to compiled recipe stages and ordinary methods.
+        execution_view = workflow.model_copy(update={"steps": [unit.step for unit in units]})
+        restricted = restrict_sample_bindings(execution_view, scope)
+        units = [replace(unit, step=step) for unit, step in zip(units, restricted.steps, strict=True)]
     if len(execution.nodes) > len(samples):
         raise RecipeCompilationError("选择的节点数不能多于样本数")
     if sum(sample_parallel_limits(execution, len(samples)).values()) > 128:
@@ -61,7 +83,7 @@ def schedule_units(workflow: Workflow, units: list[ExecutionUnit],
             raise RecipeCompilationError("请先通过输入路径模板绑定各样本文件，避免重复处理同一输入")
     scheduled = []
     for index, sample in enumerate(samples):
-        prefix = f"sample_{index + 1:04d}__"
+        prefix = f"sample_{original_ordinals[sample.sample_id]:04d}__"
         allocation = execution.nodes[index % len(execution.nodes)]
         options = RunExecutionOptions(
             backend="slurm", partition=execution.partition, **allocation.model_dump(exclude={"parallel_samples"}),

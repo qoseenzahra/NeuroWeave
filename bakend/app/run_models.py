@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field, model_validator
+from .workflow_models import SampleScope
 
 
 RunStatus = Literal[
@@ -97,6 +98,7 @@ class WorkflowRun(BaseModel):
     current_step_id: str | None = None
     output_directory: str
     plan_snapshot: dict[str, Any] = Field(default_factory=dict)
+    sample_scope: SampleScope | None = None
     steps: list[RunStep] = Field(default_factory=list)
     artifacts: list[RunArtifact] = Field(default_factory=list)
     error_code: str = ""

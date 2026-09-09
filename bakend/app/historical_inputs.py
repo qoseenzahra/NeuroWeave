@@ -18,6 +18,7 @@ from .workflow_models import (
 class HistoricalSelectionRequest(WorkflowMutationRequest):
     run_id: str = Field(min_length=1, max_length=100)
     group_id: str = Field(pattern=r"^[0-9a-f]{24}$")
+    allow_partial: bool = False
 
 
 def artifact_problem(reference: HistoricalArtifactReference, *, verify_hash=False) -> str:
@@ -52,7 +53,10 @@ def historical_binding_problems(binding: InputBinding, *, verify_hash=False) -> 
     if binding.history is None:
         return []
     history = binding.history
-    paths = ([match.absolute_path for match in binding.sample_matches]
+    selected_matches = [m for m in binding.sample_matches if m.status == "matched"]
+    if binding.binding_mode == "per_sample" and not history.allow_partial and len(selected_matches) != len(binding.sample_matches):
+        return ["历史输出尚未覆盖全部样本，需明确选择仅使用匹配样本"]
+    paths = ([match.absolute_path for match in selected_matches]
              if binding.binding_mode == "per_sample" else [binding.absolute_path])
     refs = history.artifacts
     if (binding.source != "existing_path" or history.dataset_id != binding.dataset_id
@@ -61,7 +65,7 @@ def historical_binding_problems(binding: InputBinding, *, verify_hash=False) -> 
             or len(set(paths)) != len(paths)):
         return ["历史输出绑定的来源、路径或样本覆盖不一致"]
     if binding.binding_mode == "per_sample":
-        expected = {match.sample_id: match.absolute_path for match in binding.sample_matches}
+        expected = {match.sample_id: match.absolute_path for match in selected_matches}
         if (len(expected) != len(paths) or len({ref.sample_id for ref in refs}) != len(refs)
                 or any(expected.get(ref.sample_id) != ref.absolute_path for ref in refs)):
             return ["历史输出的样本标识与路径不一致"]
@@ -170,7 +174,7 @@ class HistoricalInputs:
             run = ancestor
         raise ValueError("输出不在原运行目录内，且没有可验证的重试复用记录")
 
-    def preview(self, workflow: Workflow, slot: InputSlotSpec, run_id: str, group_id: str):
+    def preview(self, workflow: Workflow, slot: InputSlotSpec, run_id: str, group_id: str, *, allow_partial=False):
         dataset = self._dataset(workflow)
         run = self._source(workflow, run_id)
         group = self._groups(run, slot.type).get(group_id)
@@ -230,9 +234,13 @@ class HistoricalInputs:
             matched=sum(match.status == "matched" for match in matches),
             missing=sum(match.status == "missing" for match in matches),
             invalid=sum(match.status == "invalid" for match in matches))
-        can_apply = coverage.total > 0 and coverage.matched == coverage.total
+        can_apply = coverage.matched > 0 and (allow_partial or coverage.matched == coverage.total)
+        # Ambiguous/shared/invalid paths remain visible as skipped, never as
+        # executable provenance, including duplicate artifacts from failed runs.
+        matched_ids = {match.sample_id for match in matches if match.status == "matched"}
+        refs = [ref for ref in refs if ref.sample_id in matched_ids]
         history = HistoricalInputReference(run_id=run_id, group_id=group_id,
-            dataset_id=dataset.dataset_id, artifacts=refs)
+            dataset_id=dataset.dataset_id, artifacts=refs, allow_partial=allow_partial)
         binding = InputBinding(slot_id=slot.id, artifact_type=slot.type, source="existing_path",
             label=f"历史运行 {run_id} · {group['label']} · {coverage.matched} 个样本",
             absolute_path=refs[0].absolute_path if refs else None, dataset_id=dataset.dataset_id,
@@ -241,7 +249,9 @@ class HistoricalInputs:
             status="validated", messages=["按原数据集和样本标识绑定历史输出；文件保留在原位置。"])
         return {"run_id": run_id, "group_id": group_id, "coverage": coverage.model_dump(),
                 "matches": [match.model_dump() for match in matches], "can_apply": can_apply,
+                "partial": coverage.matched < coverage.total,
                 "messages": ["仅采用已结束运行中成功步骤登记的输出。",
+                    "多个输入取共同匹配的样本，其余样本不提交执行。",
                     "路径匹配不代表影像空间已对齐；执行时会复核文件及已有校验和。"]}, binding
 
     def validate_workflow(self, workflow):
@@ -255,7 +265,8 @@ class HistoricalInputs:
                 try:
                     if slot is None or "existing_path" not in slot.source_options:
                         raise ValueError("当前方法不接受此历史输入")
-                    preview, expected = self.preview(workflow, slot, binding.history.run_id, binding.history.group_id)
+                    preview, expected = self.preview(workflow, slot, binding.history.run_id, binding.history.group_id,
+                                                     allow_partial=binding.history.allow_partial)
                     if not preview["can_apply"] or expected.history != binding.history:
                         raise ValueError("历史输出或样本覆盖已改变，请重新选择")
                     problems.extend(historical_binding_problems(binding))

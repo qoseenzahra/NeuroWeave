@@ -175,8 +175,11 @@ def execute_samples(service, run, workflow, units, cancel_event):
             run.finished_at = service._now()
             run.updated_at = run.finished_at
             run.current_step_id = None
+            message = (f"本次所选 {len({step.sample_id for step in run.steps if step.sample_id})} 个样本运行完成；"
+                       f"{len(run.sample_scope.skipped_samples)} 个样本因输入未匹配而跳过"
+                       if run.sample_scope else "所有样本运行完成")
             service._save_run(run, event_type="run_" + run.status,
-                              event_message=run.error_message or "所有样本运行完成")
+                              event_message=run.error_message or message)
     except Exception as exc:
         # Persistence/monitoring faults leave the run active and recoverable.
         service.store.append_run_event(run.run_id, event_type="slurm_monitor_detached",

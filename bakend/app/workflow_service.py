@@ -20,6 +20,7 @@ from .execution.runner_registry import RunnerRegistry
 from .local_store import LocalStore
 from .operation_context import checkpoint
 from .historical_inputs import HistoricalInputs
+from .sample_scope import partial_sample_scope, restrict_sample_bindings
 from .models import (
     CapabilityRecommendation,
     CapabilityRecommendationItem,
@@ -874,7 +875,7 @@ class WorkflowService:
     def preview_historical_input(self, workflow_id, step_id, slot_id, request):
         with self._lock:
             workflow, slot = self._historical_input_target(workflow_id, step_id, slot_id, request.expected_revision)
-        preview, _ = HistoricalInputs(self.store).preview(workflow, slot, request.run_id, request.group_id)
+        preview, _ = HistoricalInputs(self.store).preview(workflow, slot, request.run_id, request.group_id, allow_partial=True)
         with self._lock:
             self._check_revision(self._require(workflow_id), request.expected_revision)
         return preview
@@ -884,9 +885,10 @@ class WorkflowService:
             workflow, slot = self._historical_input_target(workflow_id, step_id, slot_id, request.expected_revision)
         # Filesystem work is outside the global workflow lock. Apply rechecks the
         # source and uses CAS so a preview can never overwrite newer parameters.
-        preview, binding = HistoricalInputs(self.store).preview(workflow, slot, request.run_id, request.group_id)
+        preview, binding = HistoricalInputs(self.store).preview(workflow, slot, request.run_id, request.group_id,
+                                                               allow_partial=request.allow_partial)
         if not preview["can_apply"]:
-            raise ValueError("历史输出未能唯一覆盖所有样本，请查看匹配预览")
+            raise ValueError("历史输出未能唯一覆盖所有样本；可明确选择仅使用匹配样本，至少需匹配一个样本")
         with self._lock:
             current, _ = self._historical_input_target(workflow_id, step_id, slot_id, request.expected_revision)
             self._step(current, step_id).input_bindings[slot_id] = binding
@@ -1009,6 +1011,9 @@ class WorkflowService:
             ]
             if missing:
                 raise ValueError("仍有必需输入未绑定：" + "；".join(missing))
+            workflow.sample_scope = partial_sample_scope(workflow)
+            if workflow.sample_scope is not None and not workflow.sample_scope.eligible_sample_ids:
+                raise ValueError("各输入没有共同匹配的样本，无法执行；请调整历史输入或补齐文件")
             self._validate_all_parameters(workflow)
             workflow.parameters_reviewed_at = self._now()
             workflow.dry_run_report = None
@@ -1026,8 +1031,10 @@ class WorkflowService:
         self._validate_all_parameters(workflow)
         declared_runners = self.registry.runner_ids()
         selected_methods = [self._selected_method(step) for step in workflow.steps]
+        workflow.sample_scope = partial_sample_scope(workflow)
+        checked_workflow = restrict_sample_bindings(workflow, workflow.sample_scope)
         try:
-            execution_units = RecipeCompiler(self.registry).compile(workflow)
+            execution_units = RecipeCompiler(self.registry).compile(checked_workflow)
         except RecipeCompilationError as exc:
             raise ValueError(f"执行配方无法展开：{exc}") from exc
         dataset_required = any(
@@ -1047,7 +1054,7 @@ class WorkflowService:
                 or self._binding_paths_exist(binding)
                 for binding in step.input_bindings.values()
             )
-            for step, method in zip(workflow.steps, selected_methods, strict=True)
+            for step, method in zip(checked_workflow.steps, selected_methods, strict=True)
             if method.input_slots
         )
         dataset_check_passed = (
@@ -1114,6 +1121,10 @@ class WorkflowService:
             for unit in execution_units
         )
         warnings = ["Dry-run 已验证流程、参数、路径和 runner 声明，尚未运行处理软件。", *history_problems]
+        if workflow.sample_scope is not None:
+            count = len(workflow.sample_scope.eligible_sample_ids)
+            warnings.append(f"仅运行共同匹配的 {count} / {workflow.sample_scope.total} 个样本；其余样本不提交执行。")
+            dataset_check_passed = dataset_check_passed and count > 0
         if any(unit.method.execution_mode == "planning" for unit in execution_units):
             warnings.append("流程包含规划型步骤；这些步骤只形成参数快照，不生成可执行命令。")
         unavailable_runners = sorted(
@@ -2150,6 +2161,7 @@ class WorkflowService:
             return
         self._resolve_workflow_inputs(workflow)
         self._refresh_execution_summary(workflow)
+        workflow.sample_scope = partial_sample_scope(workflow)
         unresolved = [step for step in workflow.steps if step.selected_method_id is None]
         if workflow.locked_at is None:
             workflow.status = "awaiting_method_choice" if unresolved else "chain_ready"
@@ -2164,7 +2176,8 @@ class WorkflowService:
             return
 
         parameters_valid = True
-        missing_inputs = any(step.missing_required_inputs for step in workflow.steps)
+        missing_inputs = any(step.missing_required_inputs for step in workflow.steps) or (
+            workflow.sample_scope is not None and not workflow.sample_scope.eligible_sample_ids)
         for step in workflow.steps:
             method = self._selected_method(step)
             try:

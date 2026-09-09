@@ -96,6 +96,19 @@ class HistoricalInputReference(BaseModel):
     group_id: str
     dataset_id: str
     artifacts: list[HistoricalArtifactReference]
+    allow_partial: bool = False
+
+
+class SkippedSample(BaseModel):
+    sample_id: str
+    label: str
+    reasons: list[str]
+
+
+class SampleScope(BaseModel):
+    total: int
+    eligible_sample_ids: list[str] = Field(default_factory=list)
+    skipped_samples: list[SkippedSample] = Field(default_factory=list)
 
 
 class InputBinding(BaseModel):
@@ -275,6 +288,7 @@ class Workflow(BaseModel):
     locked_at: str | None = None
     parameters_reviewed_at: str | None = None
     dry_run_report: DryRunReport | None = None
+    sample_scope: SampleScope | None = None
     confirmed_at: str | None = None
     created_at: str
     updated_at: str

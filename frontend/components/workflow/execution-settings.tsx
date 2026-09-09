@@ -18,11 +18,15 @@ function assignedSamples(count: number, nodes: NodeAllocation[], index: number) 
 }
 
 export function executionErrors(value: ExecutionOptions, backends: ExecutionBackends | null, workflow: Workflow): string[] {
-  if (value.backend !== 'slurm') return [];
   const errors: string[] = [];
+  if (workflow.sample_scope) {
+    if (!workflow.sample_scope.eligible_sample_ids.length) errors.push('各输入没有共同匹配的样本，请调整输入。');
+    if (value.backend !== 'slurm' || value.sample_mode !== 'per_sample') errors.push('部分样本运行需要选择 Slurm 并按样本运行。');
+  }
+  if (value.backend !== 'slurm') return errors;
   const nodes = value.nodes ?? [];
   const batch = value.sample_mode === 'per_sample';
-  const count = workflow.dataset?.inspection.sample_count ?? 0;
+  const count = workflow.sample_scope?.eligible_sample_ids.length ?? workflow.dataset?.inspection.sample_count ?? 0;
   if (!backends?.slurm.available || !backends.slurm.partitions.includes(value.partition)) errors.push('请选择可用的 Slurm 分区。');
   if (batch && (!nodes.length || !count)) errors.push('按样本运行需要有效的样本清单和至少一个节点。');
   if (nodes.length > (batch ? count : 1)) errors.push('节点数不能多于待运行样本数。');
@@ -93,7 +97,7 @@ export function ExecutionSettings({ value, backends, workflow, disabled, onChang
   const nodes = value.nodes ?? [];
   const available = backends?.slurm.nodes?.filter(node => node.partition === value.partition) ?? [];
   const batch = value.sample_mode === 'per_sample';
-  const count = workflow.dataset?.inspection.sample_count ?? 0;
+  const count = workflow.sample_scope?.eligible_sample_ids.length ?? workflow.dataset?.inspection.sample_count ?? 0;
   const errors = executionErrors(value, backends, workflow);
   const allocation = (node: SlurmNode): NodeAllocation => ({
     node: node.name, cpus: Math.min(value.cpus, node.cpus ?? 128),

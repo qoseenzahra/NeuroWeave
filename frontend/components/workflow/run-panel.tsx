@@ -11,6 +11,7 @@ import { Progress, ProgressLabel, ProgressValue } from '@/components/ui/progress
 import { filterRunGroups, groupRunSteps, monitorPage, STEP_STATUS_COPY } from '@/lib/run-monitor';
 import type { MonitorFilter, MonitorStatus } from '@/lib/run-monitor';
 import type { RunArtifact, RunEvent, RunStep, WorkflowRun } from '@/lib/workflow';
+import { SampleScopeNotice } from '@/components/workflow/sample-scope-notice';
 
 const RUN_STATUS_COPY: Record<WorkflowRun['status'], string> = {
   queued: '等待运行', running: '正在运行', cancel_requested: '正在取消',
@@ -137,6 +138,7 @@ function RunPanelContent({ apiBase, events, run, onRetry }: RunPanelProps) {
       并行样本上限：{run.execution.nodes?.map(node => `${node.node}：${node.parallel_samples ?? 1}`).join(' · ')}
     </p>}
     {run.retry_of && <p className="mt-2 text-xs text-slate-600">重试来源：{run.retry_of} · 已验证并复用 {run.reused_step_ids?.length ?? 0} 个步骤</p>}
+    <SampleScopeNotice scope={run.sample_scope} />
     <Progress className="mt-3" value={run.progress}>
       <ProgressLabel className="text-xs text-slate-600">流程进度</ProgressLabel>
       <ProgressValue className="text-xs" />

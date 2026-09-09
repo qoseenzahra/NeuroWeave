@@ -35,6 +35,7 @@ import {
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ExecutionSettings, executionErrors } from '@/components/workflow/execution-settings';
+import { SampleScopeNotice } from '@/components/workflow/sample-scope-notice';
 import { ArtifactPathPicker } from '@/components/dataset/artifact-path-picker';
 import { HistoricalInputPicker } from '@/components/dataset/historical-input-picker';
 import { Badge } from '@/components/ui/badge';
@@ -431,6 +432,7 @@ function WorkflowCardState({ apiBase, workflow, onChange, disabled = false, onBu
       </CardHeader>
 
       <CardContent className="space-y-3">
+        <SampleScopeNotice scope={workflow.sample_scope} />
         {workflow.warnings.map((warning) => (
           <Alert className="border-amber-200 bg-amber-50 text-amber-900" key={warning}>
             <TriangleAlert />
@@ -583,10 +585,10 @@ function WorkflowCardState({ apiBase, workflow, onChange, disabled = false, onBu
                         onBind={(slotId, rootId, relativePath) =>
                           void bindInput(step.id, slotId, rootId, relativePath)
                         }
-                        onBindHistory={(slotId, runId, groupId) => void mutate(
+                        onBindHistory={(slotId, runId, groupId, allowPartial) => void mutate(
                           `input:${step.id}:${slotId}`,
                           `/api/workflows/${workflow.workflow_id}/steps/${step.id}/inputs/${slotId}/history`,
-                          'POST', { run_id: runId, group_id: groupId },
+                          'POST', { run_id: runId, group_id: groupId, allow_partial: allowPartial },
                         )}
                         onCompleteDependencies={() =>
                           void mutate(
@@ -1036,7 +1038,7 @@ function MethodArtifacts({
   disabled: boolean;
   method: MethodOption;
   onBind: (slotId: string, rootId: string, relativePath: string) => void;
-  onBindHistory: (slotId: string, runId: string, groupId: string) => void;
+  onBindHistory: (slotId: string, runId: string, groupId: string, allowPartial: boolean) => void;
   onCompleteDependencies: () => void;
   selectedParameters: Record<string, ParameterValue>;
   step: WorkflowStep;
@@ -1167,7 +1169,7 @@ function MethodArtifacts({
                           key={workflow.revision}
                           apiBase={apiBase} workflowId={workflow.workflow_id} revision={workflow.revision}
                           stepId={step.id} slotId={slot.id} slotLabel={slot.label} disabled={disabled}
-                          onSelected={(runId, groupId) => onBindHistory(slot.id, runId, groupId)}
+                          onSelected={(runId, groupId, allowPartial) => onBindHistory(slot.id, runId, groupId, allowPartial)}
                         />}
                       </div>
                     )
