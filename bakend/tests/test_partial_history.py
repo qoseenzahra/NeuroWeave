@@ -111,6 +111,17 @@ def test_conditional_unused_input_does_not_exclude_samples(history_case):
     assert "unused" not in restrict_sample_bindings(workflow, scope).steps[0].input_bindings
 
 
+def test_single_eligible_sample_cannot_reuse_another_subjects_single_file(history_case):
+    workflow, _ = partial_target(history_case)
+    binding = workflow.steps[0].input_bindings["fod"]
+    binding.binding_mode, binding.sample_matches = "single", []
+    assert "subject-A" in binding.absolute_path
+    units = RecipeCompiler(history_case[-1].registry).compile(workflow)
+    with pytest.raises(RecipeCompilationError, match="各样本路径模板"):
+        schedule_units(workflow, units, RunExecutionOptions(backend="slurm", sample_mode="per_sample",
+            nodes=[NodeAllocation(node="node01")]))
+
+
 def test_two_historical_inputs_use_intersection_and_block_empty_review(history_case):
     store, _, workflow, source, slot, service = history_case
     # A second real output group, with the correct FOD type and independent provenance.

@@ -71,6 +71,10 @@ def schedule_units(workflow: Workflow, units: list[ExecutionUnit],
     if sum(sample_parallel_limits(execution, len(samples)).values()) > 128:
         raise RecipeCompilationError("一次运行的实际并行样本数不能超过 128")
     root = Path(workflow.dataset.absolute_path).resolve(strict=True)
+    # A subset does not turn an original subject file into a shared input.
+    # Skipped directories need not exist, but their identity boundary still applies.
+    original_roots = [(root / sample.relative_root).resolve()
+                      for sample in workflow.dataset.inspection.samples]
     roots = {}
     for sample in samples:
         path = (root / sample.relative_root).resolve(strict=True)
@@ -105,9 +109,9 @@ def schedule_units(workflow: Workflow, units: list[ExecutionUnit],
                     select_history_sample(binding, sample.sample_id)
                     binding.binding_mode = "single"
                     binding.sample_matches = []
-                elif len(samples) > 1 and binding.absolute_path:
+                elif len(original_ordinals) > 1 and binding.absolute_path:
                     path = Path(binding.absolute_path).resolve(strict=True)
-                    if path == root or any(path.is_relative_to(folder) for folder in roots.values()):
+                    if path == root or any(path.is_relative_to(folder) for folder in original_roots):
                         raise RecipeCompilationError(
                             f"输入 {name} 指向单一样本或整个数据集，请使用各样本路径模板"
                         )
