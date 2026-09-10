@@ -80,6 +80,45 @@ class RunServiceTests(unittest.TestCase):
         self.service.shutdown()
         self.temporary.cleanup()
 
+    def test_workspace_output_uses_frozen_root_and_rejects_escape(self) -> None:
+        workspace = self.dataset_root.parent / "workspace"
+        workspace.mkdir()
+        with patch.dict(os.environ, {"WORKSPACE_ALLOWED_ROOTS": str(workspace), "WORKSPACE_DEFAULT_ROOT": str(workspace)}):
+            workflow = self._workflow(execution_enabled=True)
+            workflow.workspace_id = "ws_test"
+            workflow.workspace_root_path = str(workspace)
+            workflow.output_relative_path = "outputs"
+            self.store.save_workflow(workflow, event_type="workflow_confirmed")
+            run = self.service.create(workflow.workflow_id, workflow.revision)
+            for _ in range(200):
+                run = self.service.get(run.run_id)
+                if run.status in {"succeeded", "failed"}:
+                    break
+                time.sleep(0.02)
+            self.assertEqual(run.status, "succeeded", run.error_message)
+            self.assertTrue(Path(run.artifacts[0].absolute_path).is_relative_to(workspace / "outputs"))
+            # Later edits cannot move an already submitted run.
+            workflow.output_relative_path = "later"
+            self.store.save_workflow(workflow, event_type="test_later_edit")
+            self.assertEqual(self.service._safe_run_directory(run.run_id), Path(run.output_directory))
+            workflow.output_relative_path = "../escape"
+            self.store.save_workflow(workflow, event_type="test_invalid_edit")
+            with self.assertRaises(PermissionError):
+                self.service.create(workflow.workflow_id, workflow.revision)
+
+    def test_confirmed_file_operation_reserves_paths_against_new_run(self):
+        from app.workspace_service import WorkspaceService
+        root = self.dataset_root.parent
+        with patch.dict(os.environ, {"WORKSPACE_ALLOWED_ROOTS": str(root), "WORKSPACE_DEFAULT_ROOT": str(root)}):
+            WorkspaceService(self.store, root)
+            workflow = self._workflow(execution_enabled=True)
+            self.store.save_workflow(workflow, event_type="workflow_confirmed")
+            with self.store._connect() as db:
+                db.execute("INSERT INTO workspace_operations VALUES(?,?,?,?,?)", ('op', 'ws', 'running',
+                    json.dumps({'action': 'move', 'source': str(self.dataset_root), 'target': str(root / 'elsewhere')}), 'now'))
+            with self.assertRaises(RunConflict):
+                self.service.create(workflow.workflow_id, workflow.revision)
+
     def test_confirmed_dataset_inspection_executes_and_persists_artifact(self) -> None:
         workflow = self._workflow(execution_enabled=True)
         self.store.save_workflow(workflow, event_type="workflow_confirmed")

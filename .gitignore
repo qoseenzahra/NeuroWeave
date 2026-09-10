@@ -26,6 +26,7 @@ frontend/tsconfig.tsbuildinfo
 runtime/
 outputs/
 datasets/
+workspaces/
 deploy/native-backend.env
 .conda/
 

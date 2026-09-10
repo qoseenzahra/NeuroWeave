@@ -17,6 +17,7 @@ class ConversationMessageRecord(BaseModel):
 
 
 class ConversationRecord(BaseModel):
+    workspace_id: str | None = None
     conversation_id: str
     title: str
     archived: bool = False
@@ -28,6 +29,7 @@ class ConversationRecord(BaseModel):
 
 
 class ConversationListItem(BaseModel):
+    workspace_id: str | None = None
     conversation_id: str
     title: str
     archived: bool = False
@@ -45,6 +47,7 @@ class ConversationPage(BaseModel):
 
 
 class ConversationUpdateRequest(BaseModel):
+    workspace_id: str | None = None
     title: str | None = Field(default=None, min_length=1, max_length=120)
     archived: bool | None = None
 

@@ -17,6 +17,7 @@ from typing import Any
 # Explicit names, never a LOCALFLOW_* wildcard: API keys and service settings
 # must not be copied from the API process into shared job files or child tools.
 RUNTIME_ENV_ALLOWLIST = frozenset({
+    "WORKSPACE_ALLOWED_ROOTS", "WORKSPACE_DEFAULT_ROOT",
     "LOCALFLOW_RUN_INPUT_ROOTS", "LOCALFLOW_SKILL_PYTHON", "LOCALFLOW_DIPY_PYTHON", "LOCALFLOW_TORCH_PYTHON",
     "LOCALFLOW_FSL_ROOT", "LOCALFLOW_MRTRIX_ROOT", "LOCALFLOW_MRTRIX_LIBPNG",
     "LOCALFLOW_ANTS_ROOT", "LOCALFLOW_DCM2NIIX", "LOCALFLOW_FMRIPREP_EXECUTABLE",
@@ -130,6 +131,11 @@ def run_payload(payload_path: Path) -> int:
     common = {"schema_version": 1, "submission_token": token, "job_id": job_id}
     try:
         workflow = Workflow.model_validate(payload["workflow"])
+        if workflow.workspace_root_path:
+            from app.workspace_paths import WorkspacePaths
+            policy = WorkspacePaths(Path(workflow.workspace_root_path))
+            allowed_output = policy.output_root(workflow.workspace_root_path, workflow.output_relative_path)
+            policy.resolve(allowed_output, str(output), write=True)
         step = WorkflowStep.model_validate(payload["step"])
         method = MethodOption.model_validate(payload["method"])
         if method.execution_mode != "runner":

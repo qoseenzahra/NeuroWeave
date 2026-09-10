@@ -262,6 +262,9 @@ class DryRunReport(BaseModel):
 
 
 class Workflow(BaseModel):
+    workspace_id: str | None = None
+    workspace_root_path: str | None = None
+    output_relative_path: str = "outputs"
     workflow_id: str
     template_id: str
     revision: int = 1
@@ -295,6 +298,7 @@ class Workflow(BaseModel):
 
 
 class WorkflowDraftRequest(BaseModel):
+    workspace_id: str | None = None
     message: str = Field(min_length=1, max_length=20_000)
     selected_skills: list[str] = Field(default_factory=list)
     dataset_id: str | None = None

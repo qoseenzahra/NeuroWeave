@@ -42,7 +42,7 @@ EXCLUDED_DIRS = {
     '.git', '.conda', '.venv', 'venv', 'env', 'envs', 'node_modules',
     '__pycache__', '.cache', 'cache', '.pytest_cache', '.mypy_cache', '.ruff_cache',
     '.next', '.vinext', '.wrangler', 'dist', 'build', 'runtime', 'outputs',
-    'datasets', 'secrets', 'secret', '.secrets', 'credentials', '.ssh', '.aws',
+    'datasets', 'workspaces', 'secrets', 'secret', '.secrets', 'credentials', '.ssh', '.aws',
     '.azure', '.kube', '.codex',
 }
 EXCLUDED_SUFFIXES = {'.db', '.sqlite', '.sqlite3', '.pem', '.key', '.p12', '.pfx',
@@ -134,6 +134,17 @@ def updated_env(text, revision, enabled):
         'NEUROWEAVE_RELEASE_REVISION': revision,
         'LOCALFLOW_BACKUP_ROOT': '/home/data/neuroweave/backups/hipeson',
     }
+    # Initial defaults use shared storage; preserve an administrator's existing
+    # workspace scope instead of silently broadening/narrowing it on releases.
+    workspace_defaults = {
+        'WORKSPACE_ALLOWED_ROOTS': '/home/data',
+        'WORKSPACE_DEFAULT_ROOT': '/home/data/neuroweave/workspaces/hipeson',
+        'WORKSPACE_PAGE_SIZE': '80', 'WORKSPACE_TEXT_MAX_CHARS': '12000',
+        'WORKSPACE_TRASH_DIR': '.neuroweave-trash',
+    }
+    for key, value in workspace_defaults.items():
+        if not re.search(r'^\s*' + key + r'\s*=', text, re.M):
+            values[key] = value
     seen = set()
     output = []
     for line in text.splitlines(keepends=True):
@@ -166,6 +177,9 @@ def idle_database():
             require(not connection.execute("SELECT 1 FROM operations WHERE status IN "
                 "('queued','running','cancel_requested') LIMIT 1").fetchone(),
                 'Production has active background checks; finish/cancel them before deployment.')
+        if connection.execute("SELECT 1 FROM sqlite_master WHERE name='workspace_operations'").fetchone():
+            require(not connection.execute("SELECT 1 FROM workspace_operations WHERE status='running' LIMIT 1").fetchone(),
+                    'A filesystem operation is running; deployment refused.')
     finally:
         connection.close()
 

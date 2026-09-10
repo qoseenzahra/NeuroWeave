@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import json
 import time
 from concurrent.futures import Future, ThreadPoolExecutor
 from datetime import datetime, timezone
@@ -164,11 +165,15 @@ class RunService:
 
         now = self._now()
         run_id = f"run_{uuid4().hex[:12]}"
-        output_directory = self._safe_run_directory(run_id, execution.backend)
+        output_directory = self._safe_run_directory(run_id, execution.backend, workflow)
+        self._check_workspace_operations(workflow, output_directory)
         if execution.backend == "slurm":
             self.slurm_output_root.mkdir(parents=True, exist_ok=True, mode=0o700)
-            output_directory.mkdir(mode=0o700)
+            output_directory.mkdir(parents=True, mode=0o700)
         run = WorkflowRun(
+            workspace_id=workflow.workspace_id,
+            workspace_root_path=workflow.workspace_root_path,
+            output_relative_path=workflow.output_relative_path,
             run_id=run_id,
             workflow_id=workflow.workflow_id,
             workflow_revision=workflow.revision,
@@ -233,6 +238,7 @@ class RunService:
             if self._detach_event.is_set():
                 raise RunConflict("后端正在关闭，请在启动后恢复监控")
             workflow = Workflow.model_validate(run.plan_snapshot)
+            self._check_workspace_operations(workflow, Path(run.output_directory))
             if Path(run.output_directory).resolve() != self._safe_run_directory(run_id, "slurm"):
                 raise RunConflict("共享输出根目录与原任务不一致，请恢复原 Slurm 输出配置")
             units = schedule_units(workflow, self.recipe_compiler.compile(workflow), run.execution)
@@ -302,7 +308,8 @@ class RunService:
             selected_step_ids=[unit.step.id for unit in units], reused_step_ids=[], status="queued",
             current_step_id=None, progress=0, error_code="", error_message="", cancellation_requested=False,
             created_at=now, updated_at=now, started_at=None, finished_at=None, state_revision=0,
-            output_directory=str(self._safe_run_directory(new_id, original.execution.backend)), steps=[], artifacts=[]))
+            output_directory=str(self._safe_run_directory(new_id, original.execution.backend, workflow)), steps=[], artifacts=[]))
+        self._check_workspace_operations(workflow, Path(run.output_directory))
         status = self.slurm_backend.status() if original.execution.backend == "slurm" else None
         parallel_limits = unit_parallel_limits(original.execution, units)
         for unit in units:
@@ -754,8 +761,48 @@ class RunService:
             artifact.metadata.setdefault("output_slot_id", matching.id)
             remaining.remove(matching)
 
-    def _safe_run_directory(self, run_id: str, backend: str = "local") -> Path:
+    def _check_workspace_operations(self, workflow, output):
+        """Prevent a new run from acquiring paths reserved by a confirmed file operation."""
+        from ..workspace_paths import within
+        paths = [output]
+        if workflow.dataset:
+            paths.append(Path(workflow.dataset.absolute_path))
+        for step in workflow.steps:
+            for binding in step.input_bindings.values():
+                if binding.absolute_path:
+                    paths.append(Path(binding.absolute_path))
+                paths.extend(Path(match.absolute_path) for match in binding.sample_matches if match.absolute_path)
+        with self.store._connect() as db:
+            if not db.execute("SELECT 1 FROM sqlite_master WHERE name='workspace_operations'").fetchone():
+                return
+            operations = [json.loads(row[0]) for row in db.execute("SELECT payload FROM workspace_operations WHERE status='running'")]
+        for operation in operations:
+            reserved = [operation.get("target")]
+            if operation["action"] not in {"copy", "read-sensitive"}:
+                reserved.append(operation["source"])
+            for value in filter(None, reserved):
+                reserved_path = Path(value).resolve()
+                if any(within(path.resolve(), reserved_path) or within(reserved_path, path.resolve()) for path in paths):
+                    raise RunConflict("输入或输出路径正在进行已确认的文件操作，请等待操作完成")
+
+    def _safe_run_directory(self, run_id: str, backend: str = "local", workflow=None) -> Path:
         root = self.slurm_output_root if backend == "slurm" else self.output_root
+        workspace_root = workflow.workspace_root_path if workflow else None
+        relative = workflow.output_relative_path if workflow else "outputs"
+        if workflow is None:
+            # Directory resolution is on the per-sample hot path. Read only the
+            # compact run header, never hydrate thousands of steps/artifacts.
+            with self.store._connect() as db:
+                row = db.execute("SELECT payload_json FROM runs WHERE run_id=?", (run_id,)).fetchone()
+            if row:
+                header = json.loads(row[0])
+                workspace_root = header.get("workspace_root_path")
+                relative = header.get("output_relative_path", "outputs")
+        if workspace_root:
+            from ..workspace_paths import WorkspacePaths
+            policy = WorkspacePaths(self.output_root.parent / "workspaces")
+            root = policy.output_root(workspace_root, relative)
+            return policy.resolve(Path(workspace_root), str(root / run_id), write=True)
         candidate = (root / run_id).resolve()
         candidate.relative_to(root)
         return candidate

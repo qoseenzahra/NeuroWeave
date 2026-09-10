@@ -136,7 +136,13 @@ class SlurmBackend:
         self._raise_if_detached(context)
         try:
             output = context.output_directory.resolve(strict=False)
-            output.relative_to(self.output_root.resolve(strict=True))
+            if context.workflow.workspace_root_path:
+                from ..workspace_paths import WorkspacePaths
+                policy = WorkspacePaths(self.output_root.parent / "workspaces")
+                allowed_output = policy.output_root(context.workflow.workspace_root_path, context.workflow.output_relative_path)
+                output = policy.resolve(allowed_output, str(context.output_directory), write=True)
+            else:
+                output.relative_to(self.output_root.resolve(strict=True))
             output.mkdir(parents=True, exist_ok=True, mode=0o700)
             output = output.resolve(strict=True)
         except (OSError, ValueError) as exc:

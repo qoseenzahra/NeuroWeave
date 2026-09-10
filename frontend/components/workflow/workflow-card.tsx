@@ -1,4 +1,5 @@
 'use client';
+import { WorkspaceOutput } from './workspace-output';
 
 import { useEffect, useState } from 'react';
 import { useRunMonitoring } from '@/lib/use-run-monitoring';
@@ -412,6 +413,7 @@ function WorkflowCardState({ apiBase, workflow, onChange, disabled = false, onBu
             <CardDescription className="mt-1 leading-5">
               {workflow.summary} · {configuredCount}/{workflow.steps.length} 个步骤已选定方法
             </CardDescription>
+            <WorkspaceOutput apiBase={apiBase} workflow={workflow} onChange={onChange} disabled={disabled} />
             {workflow.dataset && (
               <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] text-slate-500">
                 <Database className="size-3.5 text-blue-600" />
@@ -1157,6 +1159,7 @@ function MethodArtifacts({
                         <ArtifactPathPicker
                         apiBase={apiBase}
                         dataset={workflow.dataset}
+                        workspaceRoot={workflow.workspace_root_path}
                         disabled={disabled}
                         onSelected={(rootId, relativePath) =>
                           onBind(slot.id, rootId, relativePath)

@@ -182,6 +182,8 @@ class ConversationService:
             estimated_tokens=self.estimate_tokens(response.content),
             metadata={
                 "response_type": response.type,
+                "workspace_id": response.workspace_id,
+                "workspace_tool_events": response.workspace_tool_events,
                 "selected_skills": response.selected_skills,
                 "recommended_capabilities": response.recommended_capabilities,
                 "workflow_id": response.workflow.workflow_id if response.workflow else None,

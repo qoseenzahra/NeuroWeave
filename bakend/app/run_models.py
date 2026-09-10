@@ -86,6 +86,9 @@ class RunExecutionOptions(RunResources):
 
 
 class WorkflowRun(BaseModel):
+    workspace_id: str | None = None
+    workspace_root_path: str | None = None
+    output_relative_path: str = "outputs"
     state_revision: int = 0
     retry_of: str | None = None
     reused_step_ids: list[str] = Field(default_factory=list)

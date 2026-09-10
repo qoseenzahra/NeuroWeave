@@ -107,6 +107,7 @@ class DatasetInspection(BaseModel):
 
 
 class DatasetRecord(BaseModel):
+    workspace_id: str | None = None
     dataset_id: str
     root_id: str
     relative_path: str

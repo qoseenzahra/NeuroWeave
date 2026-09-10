@@ -51,6 +51,7 @@ type ArtifactPathPickerProps = {
   apiBase: string;
   disabled: boolean;
   dataset: Dataset | null;
+  workspaceRoot?: string | null;
   workflowId: string;
   stepId: string;
   slot: InputSlotSpec;
@@ -60,6 +61,7 @@ type ArtifactPathPickerProps = {
 export function ArtifactPathPicker({
   apiBase,
   dataset,
+  workspaceRoot,
   disabled,
   onSelected,
   stepId,
@@ -114,12 +116,19 @@ export function ArtifactPathPicker({
       if (!response.ok) throw new Error(await responseError(response));
       const payload = (await response.json()) as { roots: DataRoot[] };
       setRoots(payload.roots);
+      const normalize = (path: string) => path.replaceAll('\\', '/').replace(/\/+$/, '');
+      const workspacePath = workspaceRoot ? normalize(workspaceRoot) : '';
+      const workspaceDataRoot = workspaceRoot ? payload.roots.find(item => {
+        const base = normalize(item.path);
+        return workspacePath === base || workspacePath.startsWith(`${base}/`);
+      }) : undefined;
       const initialRoot =
-        dataset?.root_id || rootId || payload.roots.at(0)?.root_id || '';
+        dataset?.root_id || workspaceDataRoot?.root_id || rootId || payload.roots.at(0)?.root_id || '';
       setRootId(initialRoot);
       if (initialRoot) {
         const initialPath =
-          dataset?.root_id === initialRoot ? dataset.relative_path : '';
+          dataset?.root_id === initialRoot ? dataset.relative_path : workspaceDataRoot?.root_id === initialRoot
+            ? workspacePath.slice(normalize(workspaceDataRoot.path).length).replace(/^\//, '') : '';
         await loadDirectory(initialRoot, initialPath);
       }
     } catch (requestError) {
@@ -130,7 +139,7 @@ export function ArtifactPathPicker({
       );
       setBusy(false);
     }
-  }, [apiBase, dataset, loadDirectory, rootId]);
+  }, [apiBase, dataset, workspaceRoot, loadDirectory, rootId]);
 
   const choose = async (relativePath: string) => {
     if (!dataset) {

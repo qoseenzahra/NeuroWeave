@@ -215,6 +215,9 @@ export type DryRunReport = {
 };
 
 export type Workflow = {
+  workspace_id?: string | null;
+  workspace_root_path?: string | null;
+  output_relative_path?: string;
   workflow_id: string;
   template_id: string;
   revision: number;
@@ -334,6 +337,9 @@ export type RunStep = {
 };
 
 export type WorkflowRun = {
+  workspace_id?: string | null;
+  workspace_root_path?: string | null;
+  output_relative_path?: string;
   sample_scope?: SampleScope | null;
   state_revision?: number;
   retry_of?: string | null;

@@ -1,4 +1,5 @@
 'use client';
+import { ServerPath } from '@/components/workspace-panel';
 
 import { useMemo, useState } from 'react';
 import { CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, CircleAlert, FileText, LoaderCircle, TriangleAlert } from 'lucide-react';
@@ -199,7 +200,8 @@ function RunPanelContent({ apiBase, events, run, onRetry }: RunPanelProps) {
     </Alert>}
     <details className="mt-2 text-xs text-slate-500">
       <summary className="cursor-pointer py-1">输出目录</summary>
-      <p className="mt-1 break-all font-mono">{run.output_directory}</p>
+      <ServerPath path={run.output_directory} label={run.workspace_root_path
+        ? run.output_directory.slice(run.workspace_root_path.length + 1) : run.output_directory} />
     </details>
   </section>;
 }

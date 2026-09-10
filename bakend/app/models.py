@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -14,6 +14,10 @@ class Message(BaseModel):
 
 
 class ChatRequest(BaseModel):
+    workspace_id: str | None = None
+    client_turn_id: str | None = Field(default=None, min_length=16, max_length=100)
+    workspace_context: str = Field(default="", exclude=True, repr=False)
+    workspace_root_path: str | None = Field(default=None, exclude=True)
     message: str = Field(min_length=1, max_length=20_000)
     history: list[Message] = Field(default_factory=list)
     conversation_id: str | None = None
@@ -70,6 +74,8 @@ class CapabilityRoutingTrace(BaseModel):
 
 
 class ChatResponse(BaseModel):
+    workspace_id: str | None = None
+    workspace_tool_events: list[dict[str, Any]] = Field(default_factory=list)
     type: Literal["done", "recommendation", "workflow"] = "done"
     content: str
     provider_used: str

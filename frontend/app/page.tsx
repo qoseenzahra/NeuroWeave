@@ -1,5 +1,6 @@
 'use client';
 import { StoragePanel } from '@/components/storage-panel';
+import { WorkspacePanel, WorkspaceTimeline, workspaceApi, type Workspace, type WorkspaceEvent } from '@/components/workspace-panel';
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -117,6 +118,7 @@ type CatalogStats = {
 };
 
 type ChatMessage = {
+  workspaceEvents?: WorkspaceEvent[];
   id: string;
   role: 'user' | 'assistant';
   content: string;
@@ -141,6 +143,7 @@ type StoredConversationMessage = {
 
 type ConversationSnapshot = {
   conversation: {
+    workspace_id?: string | null;
     conversation_id: string;
     title: string;
     archived: boolean;
@@ -248,6 +251,20 @@ export default function Home() {
   const [skills, setSkills] = useState<Skill[]>(FALLBACK_SKILLS);
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([WELCOME_MESSAGE]);
+  const [workspaceId, setWorkspaceId] = useState<string | null>(null);
+  const [workspaceOpen, setWorkspaceOpen] = useState(false);
+  const [liveWorkspaceEvents, setLiveWorkspaceEvents] = useState<WorkspaceEvent[]>([]);
+  const [activeTurn, setActiveTurn] = useState<string | null>(null);
+  useEffect(() => {
+    if (!activeTurn) return;
+    let alive = true;
+    const timer = setInterval(() => {
+      void workspaceApi<WorkspaceEvent[]>(API_BASE, `/api/workspace-tool-events?turn_id=${activeTurn}`).then(events => {
+        if (alive) setLiveWorkspaceEvents(events);
+      }).catch(() => {});
+    }, 900);
+    return () => { alive = false; clearInterval(timer); };
+  }, [activeTurn]);
   const [input, setInput] = useState('');
   const [search, setSearch] = useState('');
   const [sourceFilter, setSourceFilter] = useState<'all' | 'NeuroClaw' | 'LocalFlow'>('all');
@@ -358,6 +375,7 @@ export default function Home() {
       const workflowId = metadata.workflow_id;
       return {
         id: `stored-${record.message_id}`,
+        workspaceEvents: Array.isArray(metadata.workspace_tool_events) ? metadata.workspace_tool_events as WorkspaceEvent[] : undefined,
         role: record.role,
         content: record.content,
         skills: record.role === 'user' ? stringArray(metadata.selected_skills) : undefined,
@@ -397,6 +415,7 @@ export default function Home() {
         const restoredMessages = await hydrateMessages(snapshot.messages);
         setMessages(restoredMessages.length > 0 ? restoredMessages : [WELCOME_MESSAGE]);
         setConversationId(snapshot.conversation.conversation_id);
+        setWorkspaceId(snapshot.conversation.workspace_id ?? null);
         setConversationTitle(snapshot.conversation.title);
 
         setBeforeSequence(snapshot.has_more ? snapshot.before_sequence ?? null : null);
@@ -623,6 +642,8 @@ export default function Home() {
     setMessages(conversationWithUser);
     setInput('');
     setIsSending(true);
+    const turnId = crypto.randomUUID();
+    setActiveTurn(turnId); setLiveWorkspaceEvents([]);
 
     try {
       const response = await fetch(`${API_BASE}/api/chat`, {
@@ -631,6 +652,8 @@ export default function Home() {
         body: JSON.stringify({
           message: text,
           conversation_id: conversationId,
+          workspace_id: workspaceId,
+          client_turn_id: turnId,
           selected_skills: selectedSkills,
           dataset_id: selectedDataset?.dataset_id ?? null,
           interaction_mode: interactionMode,
@@ -644,6 +667,8 @@ export default function Home() {
         mode?: 'demo' | 'model';
         model_used?: string;
         conversation_id?: string;
+        workspace_id?: string | null;
+        workspace_tool_events?: WorkspaceEvent[];
         selected_skills?: string[];
         auto_selected?: boolean;
         interaction_mode?: InteractionMode;
@@ -660,6 +685,7 @@ export default function Home() {
         ...conversationWithUser,
         {
           id: newMessageId('assistant'),
+          workspaceEvents: payload.workspace_tool_events,
           role: 'assistant',
           content: payload.content ?? '',
           interactionMode: payload.interaction_mode ?? interactionMode,
@@ -671,6 +697,7 @@ export default function Home() {
         },
       ]);
       if (payload.workflow) setRetainedWorkflow(payload.workflow);
+      setWorkspaceId(payload.workspace_id ?? null);
       setHealth({
         status: 'ok',
         mode: payload.mode ?? 'demo',
@@ -697,6 +724,7 @@ export default function Home() {
       ]);
     } finally {
       setIsSending(false);
+      setActiveTurn(null); setLiveWorkspaceEvents([]);
     }
   };
 
@@ -1175,7 +1203,7 @@ export default function Home() {
       </aside>
 
       <section className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-[72px] shrink-0 items-center gap-3 border-b border-slate-200/80 bg-white/85 px-4 backdrop-blur-xl sm:px-6">
+        <header className="flex min-h-[72px] shrink-0 flex-wrap items-center gap-2 border-b border-slate-200/80 bg-white/85 px-4 py-2 backdrop-blur-xl sm:px-6">
           <Button
             aria-label="打开 Skill 面板"
             className="lg:hidden"
@@ -1202,6 +1230,7 @@ export default function Home() {
             />
             {health?.mode === 'model' ? health.model : '对话演示模式'}
           </div>
+          <Button size="sm" variant="outline" onClick={() => setWorkspaceOpen(true)}>{workspaceId ? '工作区文件' : '选择工作区'}</Button>
           <DatasetPicker
             key={`${conversationId ?? 'new'}:${currentWorkflow?.workflow_id ?? 'draft'}`}
             apiBase={API_BASE}
@@ -1232,7 +1261,7 @@ export default function Home() {
                 <p className="mt-1 text-sm leading-6 text-slate-500">
                   {interactionMode === 'task'
                     ? `模型逐层展开能力树，再只加载相关 Skill；可推荐单步任务或多个 Skill 的组合。`
-                    : '普通对话模式只返回文字回答，不会创建或推荐流程卡片。'}
+                    : '普通对话用于问答和工作区只读查询，不会创建或推荐流程卡片。'}
                 </p>
               </div>
             </div>
@@ -1259,7 +1288,7 @@ export default function Home() {
                   )}
                   <div
                     className={cn(
-                      'max-w-[min(720px,85%)]',
+                      'min-w-0 max-w-[min(720px,85%)]',
                       message.role === 'user'
                         ? 'rounded-2xl rounded-tr-md bg-[#1158e6] px-4 py-3 text-white shadow-[0_8px_24px_rgba(17,88,230,0.16)]'
                         : 'pt-1 text-slate-700',
@@ -1269,6 +1298,7 @@ export default function Home() {
                       <p className="mb-1.5 text-xs font-semibold text-slate-900">NeuroWeave</p>
                     )}
                     <p className="whitespace-pre-wrap text-sm leading-7">{message.content}</p>
+                    {!!message.workspaceEvents?.length && <WorkspaceTimeline apiBase={API_BASE} events={message.workspaceEvents} />}
                     {message.role === 'assistant' && message.capabilityRouting && (
                       <div className="mt-3 inline-flex flex-wrap items-center gap-x-1.5 gap-y-1 rounded-md border border-blue-100 bg-blue-50 px-2 py-1 text-[10px] font-medium text-blue-700">
                         <ListTree className="size-3" />
@@ -1343,6 +1373,7 @@ export default function Home() {
                     : '正在组织回复…'}
                 </div>
               )}
+              {isSending && <WorkspaceTimeline apiBase={API_BASE} events={liveWorkspaceEvents} />}
               <div ref={messageEndRef} />
             </div>
           </div>
@@ -1466,7 +1497,7 @@ export default function Home() {
             <p className="mt-2 text-center text-[10px] text-slate-400">
               {interactionMode === 'task'
                 ? '流程需经过方法选择、参数确认和 Dry-run；仅已接入可信 Runner 的方法可显式启动。'
-                : '普通对话不会创建 Workflow，也不会执行文件或软件操作。'}
+                : '普通对话不会自动修改文件。文件管理面板中的修改需要逐项确认。'}
             </p>
           </div>
         </div>
@@ -1582,6 +1613,12 @@ export default function Home() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {workspaceOpen && <WorkspacePanel apiBase={API_BASE} workspaceId={workspaceId} conversationId={conversationId}
+        datasetId={selectedDataset?.dataset_id}
+        locked={datasetDisabled} onClose={() => setWorkspaceOpen(false)} onSelect={async (workspace: Workspace | null) => {
+          if (conversationId) await workspaceApi(API_BASE, `/api/conversations/${conversationId}`, { workspace_id: workspace?.id ?? null }, 'PATCH');
+          setWorkspaceId(workspace?.id ?? null);
+        }} />}
     </main>
   );
 }

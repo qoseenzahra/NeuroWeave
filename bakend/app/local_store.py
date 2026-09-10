@@ -174,6 +174,8 @@ class LocalStore(RunStoreMixin):
                 connection.execute(
                     "ALTER TABLE conversations ADD COLUMN archived INTEGER NOT NULL DEFAULT 0"
                 )
+            if "workspace_id" not in conversation_columns:
+                connection.execute("ALTER TABLE conversations ADD COLUMN workspace_id TEXT")
             connection.execute(
                 "CREATE INDEX IF NOT EXISTS idx_conversations_archived_updated_id "
                 "ON conversations(archived, updated_at DESC, conversation_id DESC)"
@@ -204,13 +206,14 @@ class LocalStore(RunStoreMixin):
             connection.execute(
                 """
                 INSERT INTO conversations (
-                    conversation_id, title, summary, summary_version,
+                    conversation_id, title, workspace_id, summary, summary_version,
                     summarized_through_sequence, created_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     conversation.conversation_id,
                     conversation.title,
+                    conversation.workspace_id,
                     conversation.summary,
                     conversation.summary_version,
                     conversation.summarized_through_sequence,
@@ -251,7 +254,7 @@ class LocalStore(RunStoreMixin):
         with self._connect() as connection:
             row = connection.execute(
                 """
-                SELECT conversation_id, title, archived, summary, summary_version,
+                SELECT conversation_id, title, archived, workspace_id, summary, summary_version,
                        summarized_through_sequence, created_at, updated_at
                 FROM conversations
                 WHERE conversation_id = ?
@@ -283,6 +286,7 @@ class LocalStore(RunStoreMixin):
                 f"""
                 SELECT
                     c.conversation_id,
+                    c.workspace_id,
                     c.title,
                     c.archived,
                     c.created_at,

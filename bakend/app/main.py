@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import json
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
@@ -47,6 +48,10 @@ from .workflow_models import (
     WorkflowMutationRequest,
 )
 from .workflow_service import RevisionConflict, WorkflowService
+from .workspace_service import WorkspaceService
+from .workspace_routes import workspace_router
+from .workspace_tools import WorkspaceTools
+from .workspace_models import WorkflowOutputRequest, DatasetWorkspaceRequest
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -68,6 +73,8 @@ local_store = LocalStore(DATABASE_PATH)
 operation_service = OperationService(local_store)
 dataset_service = DatasetService(PROJECT_ROOT, local_store)
 conversation_service = ConversationService(local_store, chat_service)
+workspace_service = WorkspaceService(local_store, PROJECT_ROOT / "workspaces")
+workspace_tools = WorkspaceTools(workspace_service, chat_service)
 runner_registry = RunnerRegistry()
 workflow_service = WorkflowService(
     SKILLS_DIR / "dwi-skill" / "workflow.manifest.json",
@@ -94,6 +101,48 @@ run_service = RunService(
     runner_registry,
     OUTPUT_ROOT,
 )
+
+
+def _protected_workspace_paths():
+    # Reads remain available; mutations cannot invalidate queued/running jobs.
+    protected = [DATABASE_PATH.parent, PROJECT_ROOT / "bakend", PROJECT_ROOT / "skills",
+                 PROJECT_ROOT / "deploy", PROJECT_ROOT / ".conda"]
+    for run in local_store.incomplete_runs():
+        protected.append(Path(run.output_directory))
+        workflow = Workflow.model_validate(run.plan_snapshot)
+        if workflow.dataset:
+            protected.append(Path(workflow.dataset.absolute_path))
+        for step in workflow.steps:
+            for binding in step.input_bindings.values():
+                if binding.absolute_path:
+                    protected.append(Path(binding.absolute_path))
+                protected.extend(Path(match.absolute_path) for match in binding.sample_matches if match.absolute_path)
+    return protected
+
+
+workspace_service.protected_paths = _protected_workspace_paths
+workspace_service.run_lock = run_service._lock
+
+
+def _workspace_request(request: ChatRequest) -> ChatRequest:
+    workspace_id = request.workspace_id
+    if request.conversation_id:
+        conversation = local_store.get_conversation(request.conversation_id)
+        if conversation:
+            if workspace_id and conversation.workspace_id and workspace_id != conversation.workspace_id:
+                raise HTTPException(409, "工作区与对话不一致，请先显式切换工作区")
+            workspace_id = workspace_id or conversation.workspace_id
+    try:
+        workspace = workspace_service.get(workspace_id) if workspace_id else None
+        dataset = dataset_service.get(request.dataset_id) if request.dataset_id else None
+        context = json.dumps({"workspace_id": workspace_id, "workspace_root": workspace.root_path if workspace else None,
+                              "dataset_root": dataset.absolute_path if dataset else None,
+                              "default_output": str(Path(workspace.root_path) / "outputs") if workspace else None}, ensure_ascii=False)
+    except (KeyError, ValueError, OSError) as exc:
+        raise HTTPException(409, str(exc)) from exc
+    # Never accept a root/context supplied by an HTTP client as authoritative.
+    return request.model_copy(update={"workspace_id": workspace_id, "workspace_context": context if workspace else "",
+                                      "workspace_root_path": workspace.root_path if workspace else None})
 
 
 def _skill_with_execution_status(skill: Any, methods: list[Any] | None = None,
@@ -146,6 +195,7 @@ app = FastAPI(
     description="Local dialogue and skill-discovery API.",
     lifespan=lifespan,
 )
+app.include_router(workspace_router(workspace_service))
 
 origins = [
     origin.strip()
@@ -166,6 +216,10 @@ app.add_middleware(
 
 @app.middleware("http")
 async def release_maintenance(request: Request, call_next):
+    if request.method in {"POST", "PATCH", "DELETE"} and request.url.path.startswith(("/api/fs/", "/api/workspaces")):
+        origin = request.headers.get("origin")
+        if origin and origin not in origins and origin != str(request.base_url).rstrip("/"):
+            return JSONResponse({"detail": "工作区写请求来自未授权的网页来源"}, status_code=403)
     # Deployment keeps reads/health available while rejecting new mutations.
     marker = DATABASE_PATH.parent / "release-maintenance.lock"
     if request.method in {"POST","PUT","PATCH","DELETE"} and marker.exists():
@@ -315,6 +369,41 @@ def list_datasets() -> dict[str, list[DatasetRecord]]:
     return {"datasets": dataset_service.list()}
 
 
+@app.patch("/api/datasets/{dataset_id}/workspace", response_model=DatasetRecord)
+def associate_dataset_workspace(dataset_id: str, request: DatasetWorkspaceRequest):
+    try:
+        if request.workspace_id:
+            workspace_service.get(request.workspace_id)
+        dataset = dataset_service.get(dataset_id).model_copy(update={"workspace_id": request.workspace_id})
+        local_store.save_dataset(dataset)
+        return dataset
+    except (KeyError, ValueError) as exc:
+        raise HTTPException(409, str(exc)) from exc
+
+
+@app.patch("/api/workflows/{workflow_id}/output", response_model=Workflow)
+def set_workspace_output(workflow_id: str, request: WorkflowOutputRequest):
+    try:
+        with run_service._lock, workflow_service._lock:
+            workflow = workflow_service.get(workflow_id)
+            if workflow.revision != request.expected_revision:
+                raise ValueError("流程版本已变化，请刷新")
+            if workflow.status == "confirmed" or local_store.active_run_for_workflow(workflow_id):
+                raise ValueError("请先解锁流程；已有任务的输出目录不受后续修改影响")
+            if not workflow.workspace_root_path:
+                raise ValueError("此历史流程尚未关联工作区；请在选择工作区后新建流程")
+            root = Path(workflow.workspace_root_path)
+            output = workspace_service.paths.output_root(str(root), request.relative_path)
+            workflow.output_relative_path = str(output.relative_to(root))
+            workflow_service._advance(workflow)
+            workflow.dry_run_report = None
+            workflow_service._refresh(workflow)
+            local_store.save_workflow(workflow, event_type="workspace_output_changed", event_payload={"path": str(output)})
+            return workflow
+    except (ValueError, KeyError, OSError) as exc:
+        raise HTTPException(409, str(exc)) from exc
+
+
 @app.post("/api/datasets/register", response_model=DatasetRecord)
 def register_dataset(request: DatasetRegisterRequest) -> DatasetRecord:
     try:
@@ -452,6 +541,10 @@ def update_conversation(
     request: ConversationUpdateRequest,
 ) -> ConversationRecord:
     try:
+        if "workspace_id" in request.model_fields_set:
+            workspace_service.bind_conversation(conversation_id, request.workspace_id)
+            if request.title is None and request.archived is None:
+                return local_store.get_conversation(conversation_id)
         return conversation_service.update(
             conversation_id,
             title=request.title,
@@ -482,12 +575,17 @@ async def compact_conversation(conversation_id: str) -> ConversationSnapshot:
 
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest) -> ChatResponse:
+    request = _workspace_request(request)
     try:
         request, conversation_id = conversation_service.begin_turn(request)
+        if request.workspace_id:
+            workspace_service.bind_conversation(conversation_id, request.workspace_id)
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="Conversation not found") from exc
 
     async def finalize(response: ChatResponse) -> ChatResponse:
+        response = response.model_copy(update={"workspace_id": request.workspace_id,
+            "workspace_tool_events": workspace_service.events(request.client_turn_id) if request.client_turn_id else []})
         memory = await conversation_service.finish_turn(conversation_id, response)
         return response.model_copy(
             update={
@@ -503,6 +601,11 @@ async def chat(request: ChatRequest) -> ChatResponse:
         selected = skill_loader.infer(request.message)
         auto_selected = bool(selected)
     try:
+        workspace_answer = await workspace_tools.reply(request)
+        if workspace_answer is not None:
+            return await finalize(ChatResponse(content=workspace_answer, provider_used=chat_service.provider_name,
+                model_used=chat_service.model or "conversation-demo", mode=chat_service.mode,
+                selected_skills=[skill.name for skill in selected], interaction_mode=request.interaction_mode))
         if request.interaction_mode == "task":
             decision = await workflow_service.assess_task(request)
             if decision.get("clarification_required"):
@@ -626,7 +729,7 @@ async def chat(request: ChatRequest) -> ChatResponse:
 async def draft_workflow(request: WorkflowDraftRequest) -> Workflow:
     try:
         workflow, _content = await workflow_service.draft(
-            ChatRequest(**request.model_dump())
+            _workspace_request(ChatRequest(**request.model_dump()))
         )
         return workflow
     except httpx.HTTPStatusError as exc:

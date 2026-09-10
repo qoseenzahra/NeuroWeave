@@ -149,6 +149,7 @@ class DatasetService:
         now = self._now()
         existing = self.store.find_dataset_by_path(root_id, normalized)
         dataset = DatasetRecord(
+            workspace_id=existing.workspace_id if existing else None,
             dataset_id=existing.dataset_id if existing else f"ds_{uuid4().hex[:12]}",
             root_id=root_id,
             relative_path=normalized,
