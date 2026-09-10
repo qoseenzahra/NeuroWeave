@@ -115,6 +115,10 @@ npm run build
 
 Linux 必须执行 `tests/test_workspaces.py`，覆盖 Windows 开发账户可能无权创建的符号链接测试。实际模型验收需要当前模型支持 OpenAI 兼容结构化 function calling；失败会显示接口错误，不会假装执行。
 
+2026-09-10 验证记录：开发阶段完整后端回归 232 passed、609 个子检查；最终相关回归 47 passed、19 个子检查，另有会话兼容回归 23 passed、6 个子检查。Windows 无权创建符号链接的测试跳过，Linux 工作区及 Runner 的 18 项测试、3 个子检查全部通过。前端 13 项回归、TypeScript、lint 和生产构建通过。浏览器验收覆盖新建/切换/历史恢复、写操作待确认、183 文件目录的 80→160 自动分页和 390 像素窄屏布局。
+
+真实服务器模型已按自然语言调用目录和文本工具，并将重命名留在待确认状态；测试使用独立 SQLite 和合成文本。Slurm 作业 333 在 node03 完成数据集巡检，退出码 0:0，结果保存于 `/home/data/neuroweave/smoke/workspace-20260910/86a11471/outputs/run_380b7e357bd7/dwi_inspect/dataset_profile.json`。此项验证工作区输出和调度集成，不代表重新验证所有科学算法。
+
 发布沿用 `scripts/package_release.py`、`scripts/deploy_slurm_release.py` 和 `scripts/deploy_frontend_release.py`。先比较生产公共文件与上一个发布包的 SHA-256，保存任何服务器独有改动，再部署已提交归档。数据库采用增量加列/新表，不清理既有对话、任务或输出。
 
 服务器命令示例，`RELEASE` 指已校验解压的具体版本目录：
