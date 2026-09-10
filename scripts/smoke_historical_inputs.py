@@ -22,8 +22,11 @@ PROJECT = Path(__file__).resolve().parents[1]
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', type=Path, required=True)
-    parser.add_argument('--partial', action='store_true', help='Withhold one synthetic source output; submit only the other sample')
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument('--partial', action='store_true', help='Withhold one synthetic source output; submit only the other sample')
+    mode.add_argument('--single', action='store_true', help='One original sample, ordinary inputs, then historical inputs on node03')
     args = parser.parse_args()
+    sample_count = 1 if args.single else 2
     root = args.root.resolve()
     if root.parent != Path('/home/data/neuroweave/smoke') or root.exists():
         parser.error('Use a new direct child of /home/data/neuroweave/smoke')
@@ -41,13 +44,13 @@ def main():
 from pathlib import Path
 import nibabel as nib
 import numpy as np
-for index, name in enumerate(('subject-A', 'subject-B')):
+for index, name in enumerate(('subject-A', 'subject-B')[:int(sys.argv[2])]):
     folder = Path(sys.argv[1]) / name
     folder.mkdir()
     rng = np.random.default_rng(200 + index)
     image = rng.normal(100, 3, size=(8, 8, 8, 40)).astype('float32')
     nib.save(nib.Nifti1Image(image, np.eye(4)), folder / 'bold.nii.gz')
-''', str(raw)], check=True)
+''', str(raw), str(sample_count)], check=True)
     sys.path.insert(0, str(PROJECT / 'bakend'))
     from app.capability_registry import CapabilityRegistry
     from app.chat_service import ChatService
@@ -63,7 +66,7 @@ for index, name in enumerate(('subject-A', 'subject-B')):
     store = LocalStore(root / 'smoke.sqlite3')
     datasets = DatasetService(PROJECT, store)
     dataset = datasets.register(datasets.roots()[0].root_id, '')
-    assert dataset.inspection.sample_count == 2
+    assert dataset.inspection.sample_count == sample_count
     capabilities = CapabilityRegistry(PROJECT / 'skills')
     definition = next(item for item in capabilities.methods_for('skill.nilearn-tool')
                       if item.runner_id == 'reviewed.nilearn-tool.denoise')
@@ -77,7 +80,7 @@ for index, name in enumerate(('subject-A', 'subject-B')):
     runs = RunService(store, capabilities, runner_registry, root / 'local-unused')
     options = RunExecutionOptions(backend='slurm', sample_mode='per_sample',
         nodes=[NodeAllocation(node=node, cpus=1, memory_gb=2, time_minutes=2)
-               for node in ('node01', 'node02')])
+               for node in (('node03',) if args.single else ('node01', 'node02'))])
     evidence = {'root': str(root), 'runner': method.runner_id, 'runs': [], 'success': False}
     owned_runs = []
 
@@ -98,7 +101,7 @@ for index, name in enumerate(('subject-A', 'subject-B')):
         assert preview.can_apply
         result.steps[0].input_bindings['bold'] = InputBinding(slot_id='bold', artifact_type='bold_image',
             source='existing_path', label='Synthetic BOLD', dataset_id=dataset.dataset_id,
-            absolute_path=str(raw / 'subject-A/bold.nii.gz'), binding_mode='per_sample',
+            absolute_path=str(raw / 'subject-A/bold.nii.gz'), binding_mode=preview.binding_mode,
             path_template=preview.path_template, sample_matches=preview.matches,
             coverage=preview.coverage, status='validated')
         store.save_workflow(result, event_type='synthetic_fixture')
@@ -145,10 +148,15 @@ for index, name in enumerate(('subject-A', 'subject-B')):
         request = HistoricalSelectionRequest(expected_revision=target.revision,
             run_id=first.run_id, group_id=choice['group_id'], allow_partial=args.partial)
         preview = workflows.preview_historical_input(target.workflow_id, 'denoise', 'bold', request)
-        assert preview['can_apply'] and preview['coverage']['matched'] == (1 if args.partial else 2)
+        assert preview['can_apply'] and preview['coverage']['matched'] == (1 if args.partial else sample_count)
         assert all(paths[m['sample_id']] == m['absolute_path'] for m in preview['matches'] if m['status'] == 'matched')
         target = workflows.bind_historical_input(target.workflow_id, 'denoise', 'bold', request)
         second = execute(target)
+        if args.single:
+            assert all(len(run.steps) == 1 and run.steps[0].sample_id == 'subject-A' for run in (first, second))
+            assert all(run.steps[0].node_name == 'node03' for run in (first, second))
+            assert second.plan_snapshot['steps'][0]['input_bindings']['bold']['binding_mode'] == 'single'
+            evidence['single_sample_on_compute_node'] = True
         if args.partial:
             assert [s.sample_id for s in second.steps] == ['subject-A']
             assert second.steps[0].step_id == 'sample_0002__denoise'
@@ -166,7 +174,7 @@ for index, name in enumerate(('subject-A', 'subject-B')):
                 'absolute_path': binding['absolute_path'], 'run_id': binding['history']['run_id']})
         assert all(hashlib.sha256(Path(path).read_bytes()).hexdigest() == digest
                    for path, digest in checksums.items())
-        assert len(list(raw.rglob('*.nii.gz'))) == 2
+        assert len(list(raw.rglob('*.nii.gz'))) == sample_count
         evidence.update(success=True, sample_mapping=preview['matches'], source_checksums=checksums,
             raw_input_roots_only=True, no_input_copy=True)
         print(f"PASS: two runs, {len(first.steps) + len(second.steps)} real Slurm jobs, exact historical paths and unchanged selected source files.", flush=True)

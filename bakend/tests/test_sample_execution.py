@@ -186,6 +186,25 @@ class SampleExecutionTests(unittest.TestCase):
         self.fixture.backend.execute.assert_not_called()
 
     def test_fod_outputs_are_bound_only_to_the_same_samples_tracking_step(self):
+        self._run_fod_tracking_case()
+
+    def test_single_sample_ordinary_inputs_execute_on_selected_compute_node(self):
+        self.workflow.dataset.inspection.samples = self.workflow.dataset.inspection.samples[:1]
+        self.workflow.dataset.inspection.sample_count = 1
+        self.options.nodes = [NodeAllocation(node="node03", cpus=8, parallel_samples=4)]
+        run = self._run_fod_tracking_case()
+        self.assertEqual([s.step_id for s in run.steps], ["sample_0001__fod", "sample_0001__tracking"])
+        self.assertEqual({s.sample_id for s in run.steps}, {"sample-1"})
+        self.assertEqual({s.node_name for s in run.steps}, {"node03"})
+        self.assertTrue(all(call.args[1]["cpus"] == 8 for call in self.fixture.backend.execute.call_args_list))
+
+    def test_single_sample_at_dataset_root_uses_ordinary_inputs(self):
+        self.workflow.dataset.inspection.samples = [DatasetSample(sample_id="single", label="single", relative_root="")]
+        self.workflow.dataset.inspection.sample_count = 1
+        self.options.nodes = [self.options.nodes[0]]
+        self._run_fod_tracking_case()
+
+    def _run_fod_tracking_case(self):
         definitions = [("dwi.fod", "mrtrix-dwi2fod"), ("dwi.tractography", "mrtrix3-existing-fod")]
         steps = []
         for index, (capability, method_id) in enumerate(definitions):
@@ -205,7 +224,8 @@ class SampleExecutionTests(unittest.TestCase):
                                                    absolute_path=str(path), status="matched"))
                 step.input_bindings[name] = InputBinding(
                     slot_id=name, artifact_type=slot.type, source="existing_path", status="validated",
-                    binding_mode="per_sample", sample_matches=matches,
+                    binding_mode="single" if len(matches) == 1 else "per_sample", sample_matches=matches,
+                    absolute_path=matches[0].absolute_path,
                 )
             steps.append(step)
         steps[1].input_bindings["fod"] = InputBinding(
@@ -234,7 +254,8 @@ class SampleExecutionTests(unittest.TestCase):
         self.fixture.backend.execute.side_effect = execute
         run = self.fixture._finished(self.create().run_id)
         self.assertEqual(run.status, "succeeded", run.error_message)
-        self.assertEqual(len(set(tracked)), 4)
+        self.assertEqual(len(set(tracked)), self.workflow.dataset.inspection.sample_count)
+        return run
 
     def test_resources_unknown_nodes_and_incomplete_samples_are_rejected_before_submission(self):
         for change in ("missing_node", "cpu", "memory", "gpu", "missing_sample"):

@@ -33,4 +33,20 @@ try {
     assert(html.includes('max-h-52') && html.includes('overflow-y-auto'));
     assert(!/<details[^>]*\sopen(?:[\s=>])/.test(html));
   });
+  await test('one original sample can select per-sample mode and a compute node', async () => {
+    const { ExecutionSettings, executionErrors } = await server.ssrLoadModule('/components/workflow/execution-settings.tsx');
+    const workflow = { workflow_id: 'one', dataset: { inspection: { sample_count: 1 } }, steps: [] };
+    const options = { backend: 'slurm', partition: 'all', sample_mode: 'per_sample',
+      nodes: [{ node: 'node03', cpus: 4, memory_gb: 2, gpus: 0, time_minutes: 10, parallel_samples: 4 }] };
+    const backends = { slurm: { available: true, partitions: ['all'], gpu_available: false,
+      nodes: [{ name: 'node03', partition: 'all', schedulable: true, state: 'idle', cpus: 4, memory_mb: 8192, gpus: 0 }] } };
+    assert.deepEqual(executionErrors(options, backends, workflow), []);
+    const html = renderToStaticMarkup(createElement(ExecutionSettings, { workflow, value: options, backends, disabled: false, onChange() {} }));
+    assert.match(html, /<option\b[^>]*value="per_sample"[^>]*>按样本运行（1 个样本）<\/option>/);
+    assert(!/<option\b[^>]*disabled[^>]*value="per_sample"|<option\b[^>]*value="per_sample"[^>]*disabled/.test(html));
+    assert(html.includes('使用节点 node03') && html.includes('最多同时处理 1 个'));
+    assert(html.includes('两种运行方式都可指定计算节点'));
+    const partial = renderToStaticMarkup(createElement(ExecutionSettings, { workflow: { ...workflow, sample_scope: scope }, value: options, backends, disabled: false, onChange() {} }));
+    assert(!partial.includes('两种运行方式都可指定计算节点'));
+  });
 } finally { await server.close(); }

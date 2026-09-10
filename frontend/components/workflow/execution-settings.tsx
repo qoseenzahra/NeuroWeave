@@ -125,6 +125,9 @@ export function ExecutionSettings({ value, backends, workflow, disabled, onChang
         </NativeSelect>
       </div>
     </div>
+    {count === 1 && !workflow.sample_scope && <p className="text-xs leading-5 text-slate-500">
+      当前只有 1 个待运行样本，两种运行方式都可指定计算节点；按样本运行时会保留样本标识。
+    </p>}
     {!batch && <div className="space-y-1.5">
       <Label htmlFor={'node-' + workflow.workflow_id}>运行节点</Label>
       <NativeSelect className="w-full" id={'node-' + workflow.workflow_id} disabled={disabled}

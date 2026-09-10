@@ -81,8 +81,11 @@ def schedule_units(workflow: Workflow, units: list[ExecutionUnit],
         if not path.is_relative_to(root) or not path.is_dir():
             raise RecipeCompilationError("样本目录不存在或超出当前数据集")
         roots[sample.sample_id] = path
-    if not any(binding.binding_mode == "per_sample"
-               for unit in units for binding in unit.step.input_bindings.values()):
+    # Single-sample selection deliberately stores ordinary file/directory inputs.
+    # Only an original multi-sample dataset needs a template to prevent reuse.
+    # Use the original count so a one-sample subset keeps the same protection.
+    if len(original_ordinals) > 1 and not any(binding.binding_mode == "per_sample"
+                                            for unit in units for binding in unit.step.input_bindings.values()):
         if any(unit.method.runner_id != "dataset.inspect" for unit in units):
             raise RecipeCompilationError("请先通过输入路径模板绑定各样本文件，避免重复处理同一输入")
     scheduled = []
