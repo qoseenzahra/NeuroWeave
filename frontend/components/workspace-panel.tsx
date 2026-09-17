@@ -7,7 +7,7 @@ export type Workspace = { id: string; name: string; root_path: string; status: s
 export type WorkspaceOperation = { id: string; action: string; source: string; target: string | null;
   conversation_id: string | null; status: string; error?: string; result?: Record<string, unknown>;
   staging_path?: string;
-  request: { permanent?: boolean; overwrite?: boolean } };
+  request: { permanent?: boolean; overwrite?: boolean; root_path?: string } };
 export type WorkspaceEvent = { tool: string; status: string; count?: number; error?: string;
   operation?: WorkspaceOperation; arguments?: Record<string, unknown>; time?: string };
 type Entry = { name: string; path: string; relative_path: string; type: string; size: number;
@@ -66,12 +66,13 @@ for (const [name, label] of Object.entries(toolLabels)) {
   if (/^(list|inspect|search|read)_/.test(name)) toolLabels[name.replace('_workspace_', '_dataset_')] = `数据集（只读）· ${label}`;
 }
 
-export function WorkspaceConfirmation({ apiBase, operation, onDone }: {
-  apiBase: string; operation: WorkspaceOperation; onDone?: () => void;
+export function WorkspaceConfirmation({ apiBase, operation, onDone, onDismiss }: {
+  apiBase: string; operation: WorkspaceOperation; onDone?: (value: WorkspaceOperation) => void; onDismiss?: () => void;
 }) {
   const [current, setCurrent] = useState(operation);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [dismissed, setDismissed] = useState(false);
   useEffect(() => {
     let alive = true;
     void workspaceApi<WorkspaceOperation>(apiBase, `/api/fs/operations/${operation.id}`).then(value => {
@@ -79,17 +80,26 @@ export function WorkspaceConfirmation({ apiBase, operation, onDone }: {
     }).catch(e => { if (alive) setError(String(e)); });
     return () => { alive = false; };
   }, [apiBase, operation.id]);
+  useEffect(() => {
+    if (current.action !== 'mkdir' || current.status !== 'succeeded') return;
+    // Keep the audit record; only retire the transient success UI.
+    const timer = setTimeout(() => { setDismissed(true); onDismiss?.(); }, 2500);
+    return () => clearTimeout(timer);
+  }, [current.action, current.status, onDismiss]);
   const confirm = async () => {
     setBusy(true); setError('');
     try {
       const value = await workspaceApi<WorkspaceOperation>(apiBase, `/api/fs/operations/${current.id}/confirm`, {
         confirmed: true, conversation_id: current.conversation_id,
       });
-      setCurrent(value); onDone?.();
+      setCurrent(value); onDone?.(value);
     } catch (e) { setError(String(e)); } finally { setBusy(false); }
   };
+  if (dismissed) return null;
   return <div className="my-2 min-w-0 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs">
     <strong>{actionLabels[current.action] ?? current.action} · {statusLabels[current.status] ?? current.status}</strong>
+    {current.action === 'mkdir' && current.status === 'succeeded' && <button className="float-right ml-2 underline"
+      aria-label="收起新建文件夹完成提示" onClick={() => { setDismissed(true); onDismiss?.(); }}>收起</button>}
     <p className="mt-2">源路径</p><ServerPath path={current.source} />
     {current.target && <><p>目标路径</p><ServerPath path={current.target} /></>}
     {current.request.permanent && <p className="font-semibold text-red-700">永久删除：不会进入回收站。</p>}
@@ -144,6 +154,7 @@ export function WorkspacePanel({ apiBase, workspaceId, conversationId, onSelect,
   const [overwrite, setOverwrite] = useState(false);
   const [permanent, setPermanent] = useState(false);
   const [pending, setPending] = useState<WorkspaceOperation | null>(null);
+  const dismissPending = useCallback(() => setPending(null), []);
   const [trash, setTrash] = useState<{ id: string; original_path: string; deleted_at: string; status: string }[] | null>(null);
   const [restorePaths, setRestorePaths] = useState<Record<string, string>>({});
   const [width, setWidth] = useState(540);
@@ -188,13 +199,15 @@ export function WorkspacePanel({ apiBase, workspaceId, conversationId, onSelect,
   }, [load, refresh]);
 
   const perform = async () => {
-    if (!workspaceId || !editor) return;
+    if (!editor || datasetOnly || (editor !== 'mkdir' && !boundId) || !listing) return;
     setBusy(true); setError('');
     try {
-      const path = editor === 'mkdir' ? `${listing?.path}/${destination}` : selected?.path;
+      const path = editor === 'mkdir' ? `${listing.path}/${destination.trim()}` : selected?.path;
       const value = await workspaceApi<WorkspaceOperation>(apiBase, `/api/fs/${editor}`, {
-        workspace_id: workspaceId, conversation_id: conversationId, path,
-        destination: ['copy', 'move', 'rename'].includes(editor) ? destination : null, overwrite, permanent,
+        workspace_id: boundId, ...(!boundId && editor === 'mkdir' ? { root_path: listing.path } : {}),
+        conversation_id: conversationId, path,
+        destination: ['copy', 'move', 'rename'].includes(editor) ? destination : null,
+        overwrite: ['copy', 'move', 'rename'].includes(editor) && overwrite, permanent: editor === 'delete' && permanent,
       });
       setPending(value); setEditor(null);
     } catch (e) { setError(String(e)); } finally { setBusy(false); }
@@ -258,8 +271,9 @@ export function WorkspacePanel({ apiBase, workspaceId, conversationId, onSelect,
       </div>
       <div className="flex flex-wrap gap-1">
         <Button size="sm" variant="outline" disabled={!relativeParts.length} onClick={() => setDirectory(relativeParts.slice(0, -1).join('/') || '.')}>上级目录</Button>
+        {!datasetOnly && !onPick && <Button size="sm" variant="outline" disabled={!listing || busy || (registerMode ? locked : !canManage)}
+          onClick={() => { setEditor('mkdir'); setDestination(''); }}>新建文件夹</Button>}
         {!datasetOnly && (registerMode ? <Button size="sm" disabled={!listing || locked} onClick={() => { setEditor('register'); setDestination(listing?.path.split(/[\\/]/).pop() || '输出目录'); }}>当前目录作为输出目录</Button> : !onPick && <>
-          <Button size="sm" variant="outline" disabled={!canManage} onClick={() => { setEditor('mkdir'); setDestination(''); }}>新建文件夹</Button>
           <Button size="sm" variant="outline" onClick={() => { void workspaceApi<typeof trash>(apiBase, `/api/output-directories/${workspaceId}/trash`).then(setTrash).catch(e => setError(String(e))); }}>回收站</Button>
           <Button size="sm" variant="ghost" disabled={locked} onClick={() => { setEditor('workspace-edit'); setDestination(selectedWorkspace?.name ?? ''); }}>管理</Button>
         </>)}
@@ -294,7 +308,15 @@ export function WorkspacePanel({ apiBase, workspaceId, conversationId, onSelect,
       </form>}
       {editor === 'workspace-remove' && <div className="mb-3 rounded border border-amber-200 p-3 text-xs"><p>只移除输出目录记录，服务器目录、文件、历史对话与运行输出全部保留。</p>
         <Button size="sm" variant="outline" onClick={() => { void workspaceApi(apiBase, `/api/output-directories/${workspaceId}`, undefined, 'DELETE').then(async () => { await onSelect(null); await loadWorkspaces(); setRegisterMode(true); setDirectory('.'); setEditor(null); }).catch(e => setError(String(e))); }}>确认移除记录</Button></div>}
-      {pending && <WorkspaceConfirmation apiBase={apiBase} operation={pending} onDone={() => setRefresh(v => v + 1)} />}
+      {pending && <WorkspaceConfirmation key={pending.id} apiBase={apiBase} operation={pending} onDismiss={dismissPending} onDone={value => {
+        if (value.status !== 'succeeded') return;
+        // In the chooser, enter the newly created folder so it can be selected
+        // immediately. Do not redirect if the user has since browsed elsewhere.
+        if (registerMode && value.action === 'mkdir' && value.request.root_path === listing?.path) {
+          setDirectory(value.source); setFilter('');
+        }
+        setRefresh(v => v + 1);
+      }} />}
       {trash && <div className="mb-3 space-y-2 rounded border p-2 text-xs"><div className="flex justify-between"><strong>回收站（最多最近 500 项）</strong><button onClick={() => setTrash(null)}>关闭</button></div>
         {!trash.length && <p>回收站为空</p>}{trash.map(item => <div key={item.id}><ServerPath path={item.original_path} /><p>{item.deleted_at}</p>
           <input className={`${field} my-1 w-full`} aria-label="恢复目标路径" placeholder={item.original_path} value={restorePaths[item.id] ?? ''} onChange={e => setRestorePaths(value => ({ ...value, [item.id]: e.target.value }))} />

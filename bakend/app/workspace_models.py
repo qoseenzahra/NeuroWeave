@@ -42,6 +42,12 @@ class FileOperationRequest(BaseModel):
     permanent: bool = False
 
 
+class DirectoryCreationRequest(FileOperationRequest):
+    # Only mkdir can be proposed before registering an output directory.
+    workspace_id: str | None = None
+    root_path: str | None = Field(default=None, min_length=1, max_length=4096)
+
+
 class ConfirmationRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     confirmed: Literal[True]

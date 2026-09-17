@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
-from .workspace_models import Workspace, WorkspaceCreate, WorkspaceUpdate, FileOperationRequest
+from .workspace_models import Workspace, WorkspaceCreate, WorkspaceUpdate, FileOperationRequest, DirectoryCreationRequest
 from .workspace_paths import WorkspacePaths, within
 from . import workspace_io as secure_io
 from .filesystem_reader import FilesystemReader, fingerprint
@@ -153,9 +153,27 @@ class WorkspaceService(FilesystemReader):
             raise PermissionError("回收站不在允许访问的根目录内")
         return self.paths.resolve(allowed, str(target), write=True, internal=True)
 
+    def _operation_root(self, action, request):
+        if request.workspace_id:
+            if getattr(request, "root_path", None):
+                raise ValueError("已选择输出目录时不能另外指定服务器根目录")
+            return self.validate_output_directory(self.root(request.workspace_id))
+        if action != "mkdir" or not isinstance(request, DirectoryCreationRequest) or not request.root_path:
+            raise ValueError("请先选择输出目录；选择阶段仅允许新建文件夹")
+        if request.destination or request.overwrite or request.permanent:
+            raise ValueError("选择输出目录时仅允许新建一个不存在的子目录")
+        if not Path(request.root_path).is_absolute():
+            raise ValueError("父目录必须是服务器绝对路径")
+        # The parent may contain datasets elsewhere: protect the new child,
+        # without granting management rights over this entire browsing root.
+        root = self.root(root_path=request.root_path)
+        self.paths.resolve(root, request.root_path, write=True)
+        if not root.is_dir() or not os.access(root, os.R_OK | os.W_OK | os.X_OK):
+            raise PermissionError("父目录需要后端账户的读取、写入和进入权限")
+        return root
+
     def _operation_paths(self, action, request):
-        root = self.root(request.workspace_id)
-        self.validate_output_directory(root)
+        root = self._operation_root(action, request)
         source = self.paths.resolve(root, request.path, write=True, sensitive=action == "read-sensitive")
         target = self.paths.resolve(root, request.destination, write=True) if request.destination else None
         if action == "rename":
@@ -171,6 +189,8 @@ class WorkspaceService(FilesystemReader):
         if target and (within(target, source) or within(source, target)):
             raise ValueError("源路径和目标路径不能相同或互相包含")
         if action == "mkdir":
+            if not request.workspace_id and source.parent != root:
+                raise ValueError("请在当前浏览目录下新建一个直接子目录")
             if source.exists():
                 raise ValueError("目标已存在")
             if not source.parent.is_dir():
@@ -194,18 +214,18 @@ class WorkspaceService(FilesystemReader):
             raise ValueError("permanent 仅适用于删除")
         if request.conversation_id:
             conversation = self.store.get_conversation(request.conversation_id)
-            if not conversation or conversation.workspace_id != request.workspace_id:
+            if not conversation or (request.workspace_id and conversation.workspace_id != request.workspace_id):
                 raise ValueError("操作工作区与当前对话不匹配")
         source, target = self._operation_paths(action, request)
         operation = {"id": uuid4().hex, "workspace_id": request.workspace_id, "action": action,
                      "source": str(source), "target": str(target) if target else None,
                      "conversation_id": request.conversation_id, "request": request.model_dump(),
                      "source_fingerprint": fingerprint(source), "target_fingerprint": fingerprint(target) if target else None,
-                     "root_fingerprint": fingerprint(self.root(request.workspace_id))[:2],
+                     "root_fingerprint": fingerprint(self._operation_root(action, request))[:2],
                      "created_at": now(), "expires_at": time.time() + 600, "status": "pending", "confirmed": False}
         with self.store._lock, self.store._connect() as db:
             db.execute("INSERT INTO workspace_operations VALUES(?,?,?,?,?)",
-                       (operation["id"], request.workspace_id, "pending", json.dumps(operation), now()))
+                       (operation["id"], request.workspace_id or "", "pending", json.dumps(operation), now()))
         self._audit(operation, "awaiting_confirmation")
         return operation
 
@@ -296,8 +316,9 @@ class WorkspaceService(FilesystemReader):
 
     def _execute(self, operation):
         action = operation["action"]
-        request = FileOperationRequest.model_validate(operation["request"])
-        root = self.root(request.workspace_id)
+        request_type = DirectoryCreationRequest if action == "mkdir" else FileOperationRequest
+        request = request_type.model_validate(operation["request"])
+        root = self._operation_root(action, request)
         if fingerprint(root)[:2] != operation["root_fingerprint"]:
             raise ValueError("工作区目录已被替换，请重新确认")
         if action == "restore":

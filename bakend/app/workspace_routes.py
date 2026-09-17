@@ -2,7 +2,7 @@
 from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.routing import APIRoute
 
-from .workspace_models import WorkspaceCreate, WorkspaceUpdate, FileOperationRequest, ConfirmationRequest, RestoreRequest
+from .workspace_models import WorkspaceCreate, WorkspaceUpdate, FileOperationRequest, DirectoryCreationRequest, ConfirmationRequest, RestoreRequest
 
 
 class FilesystemRoute(APIRoute):
@@ -74,7 +74,11 @@ def workspace_router(service, dataset_files=None):
             return service.propose(action, request)
         return propose
 
-    for action in ("mkdir", "copy", "move", "rename", "delete", "read-sensitive"):
+    @router.post("/api/fs/mkdir")
+    def mkdir(request: DirectoryCreationRequest):
+        return service.propose("mkdir", request)
+
+    for action in ("copy", "move", "rename", "delete", "read-sensitive"):
         router.add_api_route(f"/api/fs/{action}", proposal(action), methods=["POST"], name=f"fs_{action}")
 
     @router.get("/api/fs/operations/{operation_id}")

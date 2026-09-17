@@ -11,7 +11,7 @@ from app.dataset_service import DatasetService
 from app.dataset_files import DatasetFiles
 from app.local_store import LocalStore
 from app.models import ChatRequest
-from app.workspace_models import WorkspaceCreate, FileOperationRequest
+from app.workspace_models import WorkspaceCreate, FileOperationRequest, DirectoryCreationRequest
 from app.workspace_routes import workspace_router
 from app.workspace_service import WorkspaceService
 from app.workspace_tools import WorkspaceTools
@@ -123,6 +123,75 @@ def test_output_registration_requires_os_write_and_search_permissions(scopes, mo
         fs.create(WorkspaceCreate(name='denied', root_path=str(output)))
 
 
+def test_mkdir_in_output_chooser_requires_confirmation_without_registering_parent(scopes, tmp_path):
+    from app.conversation_models import ConversationRecord
+    fs, files, dataset, ws, data, output = scopes
+    fs.paths.roots = (tmp_path,)
+    fs.store.create_conversation(ConversationRecord(conversation_id='chooser', workspace_id=ws.id,
+        title='Existing output binding', created_at='2026-09-17', updated_at='2026-09-17'))
+    app = FastAPI(); app.include_router(workspace_router(fs, files))
+    with TestClient(app) as client:
+        body = {'root_path': str(tmp_path), 'path': 'new-output', 'conversation_id': 'chooser'}
+        proposed = client.post('/api/fs/mkdir', json=body)
+        assert proposed.status_code == 200
+        operation = proposed.json()
+        assert operation['status'] == 'pending'
+        assert not (tmp_path / 'new-output').exists()
+        url = '/api/fs/operations/' + operation['id'] + '/confirm'
+        assert client.post(url, json={'confirmed': False}).status_code == 422
+        assert client.post(url, json={'confirmed': True}).status_code == 403
+        completed = client.post(url, json={'confirmed': True, 'conversation_id': 'chooser'}).json()
+        assert completed['status'] == 'succeeded'
+        assert (tmp_path / 'new-output').is_dir()
+        assert len(fs.list()) == 1  # Creating never silently registers a parent.
+        assert fs.store.get_conversation('chooser').workspace_id == ws.id
+        registered = client.post('/api/output-directories', json={
+            'root_path': str(tmp_path / 'new-output'), 'name': 'New output'})
+        assert registered.status_code == 200 and registered.json()['manageable']
+        assert client.post(url, json={'confirmed': True, 'conversation_id': 'chooser'}).status_code == 409
+        assert client.post('/api/fs/mkdir', json=body).status_code == 409
+        assert (data / 'notes.txt').read_text().startswith('dataset marker')
+
+
+def test_output_chooser_mkdir_keeps_dataset_and_path_boundaries(scopes, tmp_path):
+    fs, files, dataset, ws, data, output = scopes
+    app = FastAPI(); app.include_router(workspace_router(fs, files))
+    with TestClient(app) as client:
+        assert client.post('/api/fs/mkdir', json={'root_path': str(tmp_path), 'path': 'outside'}).status_code == 403
+        fs.paths.roots = (tmp_path,)
+        for body, status in [
+            ({'root_path': str(data), 'path': 'forbidden'}, 403),
+            ({'root_path': str(output), 'path': '../escape'}, 403),
+            ({'root_path': str(output), 'path': str(data / 'forbidden')}, 403),
+            ({'root_path': str(output), 'path': '.env-results'}, 403),
+            ({'root_path': str(output), 'path': '.', 'overwrite': True}, 409),
+            ({'root_path': str(tmp_path), 'path': 'results/nested'}, 409),
+            ({'root_path': str(output), 'path': 'new', 'workspace_id': ws.id}, 409),
+        ]:
+            response = client.post('/api/fs/mkdir', json=body)
+            assert response.status_code == status, response.text
+        for action in ('copy', 'move', 'rename', 'delete'):
+            assert client.post('/api/fs/' + action, json={
+                'root_path': str(output), 'path': 'notes.txt'}).status_code == 422
+        assert not (data / 'forbidden').exists()
+
+
+def test_output_chooser_mkdir_rechecks_permissions_and_dataset_registration(scopes, monkeypatch):
+    fs, files, dataset, ws, data, output = scopes
+    app = FastAPI(); app.include_router(workspace_router(fs, files))
+    with TestClient(app) as client:
+        denied = client.post('/api/fs/mkdir', json={'root_path': str(output), 'path': 'permission-test'}).json()
+        original = os.access
+        monkeypatch.setattr(os, 'access', lambda path, mode: False if Path(path) == output and mode & os.W_OK else original(path, mode))
+        result = client.post('/api/fs/operations/' + denied['id'] + '/confirm', json={'confirmed': True}).json()
+        assert result['status'] == 'failed' and not (output / 'permission-test').exists()
+        monkeypatch.setattr(os, 'access', original)
+        proposed = client.post('/api/fs/mkdir', json={'root_path': str(output), 'path': 'dataset-test'}).json()
+        fs.store.save_dataset(dataset.model_copy(update={'dataset_id': 'new-input', 'relative_path': 'results', 'absolute_path': str(output)}))
+        assert client.post('/api/fs/operations/' + proposed['id'] + '/confirm', json={'confirmed': True}).status_code == 403
+        assert not (output / 'dataset-test').exists()
+
+
 def test_pending_write_is_rechecked_if_folder_becomes_dataset(scopes):
     fs, files, dataset, ws, data, output = scopes
     proposal = fs.propose('delete', FileOperationRequest(workspace_id=ws.id, path='notes.txt'))
@@ -149,6 +218,9 @@ def test_dataset_symlink_escape(scopes):
         pytest.skip('Requires Linux or Windows symlink privilege')
     with pytest.raises(PermissionError):
         files.reader(dataset.dataset_id).read_text('escape/notes.txt')
+    (output / 'alias').symlink_to(output, target_is_directory=True)
+    with pytest.raises(PermissionError):
+        fs.propose('mkdir', DirectoryCreationRequest(root_path=str(output / 'alias'), path='forbidden'))
 
 
 def test_output_child_permission_denied_on_linux(scopes):
@@ -160,5 +232,7 @@ def test_output_child_permission_denied_on_linux(scopes):
         assert not fs.get(ws.id).manageable
         with pytest.raises(PermissionError):
             fs.propose('mkdir', FileOperationRequest(workspace_id=ws.id, path='not-created'))
+        with pytest.raises(PermissionError):
+            fs.propose('mkdir', DirectoryCreationRequest(root_path=str(output), path='not-created'))
     finally:
         output.chmod(0o700)
