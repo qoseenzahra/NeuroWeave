@@ -6,6 +6,7 @@ import re
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
+from threading import RLock
 
 from .dataset_models import (
     DataRoot,
@@ -36,6 +37,8 @@ class DatasetService:
     def __init__(self, project_root: Path, store: LocalStore) -> None:
         self.project_root = project_root
         self.store = store
+        self.registration_lock = RLock()
+        self.registration_guard = lambda _path: None
         self.allow_hidden_paths = os.getenv("LOCALFLOW_ALLOW_HIDDEN_PATHS", "false").lower() in {
             "1",
             "true",
@@ -160,7 +163,9 @@ class DatasetService:
             updated_at=now,
         )
         checkpoint()
-        self.store.save_dataset(dataset)
+        with self.registration_lock:
+            self.registration_guard(directory)
+            self.store.save_dataset(dataset)
         return dataset
 
     def inspect(self, dataset_id: str) -> DatasetRecord:

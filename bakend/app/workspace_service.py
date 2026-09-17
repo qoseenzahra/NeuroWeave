@@ -5,9 +5,6 @@ tools. Trash metadata and audit records live in SQLite, never in a Git checkpoin
 """
 from __future__ import annotations
 
-import base64
-import fnmatch
-import heapq
 import getpass
 import json
 import os
@@ -21,21 +18,15 @@ from uuid import uuid4
 from .workspace_models import Workspace, WorkspaceCreate, WorkspaceUpdate, FileOperationRequest
 from .workspace_paths import WorkspacePaths, within
 from . import workspace_io as secure_io
+from .filesystem_reader import FilesystemReader, fingerprint
+from .dataset_files import protect_datasets
 
 
 def now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def fingerprint(path: Path):
-    try:
-        s = path.lstat()
-        return [s.st_dev, s.st_ino, s.st_size, s.st_mtime_ns, s.st_mode]
-    except FileNotFoundError:
-        return None
-
-
-class WorkspaceService:
+class WorkspaceService(FilesystemReader):
     def __init__(self, store, default_root: Path):
         self.store = store
         self.paths = WorkspacePaths(default_root)
@@ -70,13 +61,28 @@ class WorkspaceService:
         result = Workspace.model_validate_json(row[0])
         if active and result.status != "active":
             raise ValueError("工作区已归档或移除，请先恢复工作区记录")
-        return result
+        return self._with_access(result)
 
     def list(self) -> list[Workspace]:
         with self.store._connect() as db:
             rows = db.execute("SELECT payload FROM workspaces ORDER BY id DESC").fetchall()
-        return [Workspace.model_validate_json(row[0]) for row in rows
+        return [self._with_access(Workspace.model_validate_json(row[0])) for row in rows
                 if json.loads(row[0])["status"] != "deleted"]
+
+    def validate_output_directory(self, root: Path):
+        root = self.paths.browse_root(str(root))
+        self.paths.resolve(root, ".", write=True)
+        protect_datasets(self.store, root)
+        if not root.is_dir() or not os.access(root, os.R_OK | os.W_OK | os.X_OK):
+            raise PermissionError("输出目录需要后端账户的读取、写入和进入权限；请改选目录或由管理员授权")
+        return root
+
+    def _with_access(self, record):
+        try:
+            self.validate_output_directory(Path(record.root_path))
+            return record.model_copy(update={"manageable": True, "permission_reason": "可管理；文件操作仍需确认"})
+        except (OSError, ValueError) as exc:
+            return record.model_copy(update={"manageable": False, "permission_reason": str(exc)})
 
     def _save(self, record: Workspace):
         with self.store._lock, self.store._connect() as db:
@@ -85,11 +91,9 @@ class WorkspaceService:
         return record
 
     def create(self, request: WorkspaceCreate) -> Workspace:
-        root = self.paths.browse_root(request.root_path)
-        if not root.is_dir() or not os.access(root, os.R_OK | os.X_OK):
-            raise ValueError("请选择后端账户可读取的已有服务器目录")
-        return self._save(Workspace(id=f"ws_{uuid4().hex}", name=request.name.strip(), root_path=str(root),
-                                    description=request.description, created_at=now(), updated_at=now()))
+        root = self.validate_output_directory(Path(request.root_path))
+        return self._with_access(self._save(Workspace(id=f"ws_{uuid4().hex}", name=request.name.strip(), root_path=str(root),
+                                    description=request.description, created_at=now(), updated_at=now())))
 
     def update(self, workspace_id: str, request: WorkspaceUpdate):
         record = self.get(workspace_id, active=False)
@@ -118,151 +122,27 @@ class WorkspaceService:
             return resolved
         return self.paths.browse_root(root_path)
 
-    def inspect(self, path=".", workspace_id=None, root_path=None, *, sensitive=False):
-        root = self.root(workspace_id, root_path)
-        target = self.paths.resolve(root, path, sensitive=sensitive)
-        result = {"name": target.name, "path": str(target), "relative_path": str(target.relative_to(root)),
-                  "exists": target.exists()}
-        if target.exists():
-            with secure_io.directory_fd(target.parent) as parent:
-                info = os.fstat(parent) if parent is not None and not target.name else os.stat(
-                    target if parent is None else target.name, dir_fd=parent, follow_symlinks=False)
-            if not (stat.S_ISDIR(info.st_mode) or stat.S_ISREG(info.st_mode)):
-                raise PermissionError("路径已变化或不是普通文件/目录")
-            result.update(type="directory" if stat.S_ISDIR(info.st_mode) else "file", size=info.st_size,
-                          modified_at=datetime.fromtimestamp(info.st_mtime, timezone.utc).isoformat(),
-                          permissions=stat.filemode(info.st_mode), readable=os.access(target, os.R_OK),
-                          writable=os.access(target, os.W_OK), symlink=(root / path).is_symlink())
-        return result
-
-    def list_directory(self, path=".", workspace_id=None, root_path=None, cursor=None, limit=None,
-                       sort="name", filter="", show_hidden=False):
-        root = self.root(workspace_id, root_path)
-        directory = self.paths.resolve(root, path)
-        if not directory.is_dir():
-            raise ValueError("路径不是目录")
-        limit = max(1, min(limit or self.paths.page_size, 200))
-        if sort not in {"name", "modified", "size"}:
-            raise ValueError("不支持的排序")
-        stamp = fingerprint(directory)
-        context = [str(directory), sort, filter, show_hidden, stamp]
-        after = None
-        if cursor:
-            try:
-                payload = json.loads(base64.urlsafe_b64decode(cursor))
-                if payload["context"] != context:
-                    raise ValueError("目录或筛选条件已变化，请刷新")
-                after = tuple(payload["after"])
-            except (ValueError, KeyError, TypeError) as exc:
-                raise ValueError("分页游标已失效，请刷新") from exc
-
-        def entries():
-            # Only this layer is enumerated. nsmallest bounds retained entries to
-            # one page instead of materializing/sorting an enormous directory.
-            with os.scandir(directory) as items:
-                for item in items:
-                    if (not show_hidden and item.name.startswith(".")) or filter.casefold() not in item.name.casefold():
-                        continue
-                    try:
-                        target = self.paths.resolve(root, item.path)
-                        info = target.stat()
-                        folder = stat.S_ISDIR(info.st_mode)
-                        primary = -info.st_mtime_ns if sort == "modified" else -info.st_size if sort == "size" else item.name.casefold()
-                        key = (0 if folder else 1, primary, item.name)
-                        if after is None or key > after:
-                            yield key, item.name
-                    except (OSError, ValueError):
-                        continue
-        page = heapq.nsmallest(limit + 1, entries())
-        more = len(page) > limit
-        page = page[:limit]
-        rows = []
-        for _, name in page:
-            try:
-                rows.append(self.inspect(str(directory / name), workspace_id, root_path))
-            except OSError:
-                continue
-        token = base64.urlsafe_b64encode(json.dumps({"context": context, "after": page[-1][0]}).encode()).decode() if more else None
-        return {"root_path": str(root), "path": str(directory), "relative_path": str(directory.relative_to(root)),
-                "items": rows, "has_more": more, "next_cursor": token, "limit": limit}
-
-    def read_text(self, path, workspace_id=None, root_path=None, offset=0, max_chars=None, *, sensitive=False):
-        root = self.root(workspace_id, root_path)
-        target = self.paths.resolve(root, path, sensitive=sensitive)
-        name = target.name.lower()
-        if any(name.endswith(ext) for ext in (".nii", ".nii.gz", ".mgz", ".mgh", ".mif", ".mih", ".dcm", ".ima", ".h5", ".hdf5", ".gz", ".zip", ".npy", ".npz")):
-            raise ValueError("影像或二进制文件仅可查看元数据；请交给对应 Skill/Runner 分析")
-        if not target.is_file():
-            raise ValueError("只能读取普通文本文件")
-        if offset < 0 or offset > 2_000_000:
-            raise ValueError("文本 offset 必须在 0–2000000 字符之间")
-        count = max(1, min(max_chars or self.paths.text_max, self.paths.text_max))
-        # Bounded prefix inspection before decoding. Never open FIFOs/devices.
-        fd = secure_io.open_read(target)
-        try:
-            if not stat.S_ISREG(os.fstat(fd).st_mode):
-                raise ValueError("不是普通文本文件")
-            prefix = os.read(fd, 8192)
-            if b"\x00" in prefix or (len(prefix) > 132 and prefix[128:132] == b"DICM") or any(b < 9 or 13 < b < 32 for b in prefix):
-                raise ValueError("检测到二进制内容，不能作为文本返回")
-            os.lseek(fd, 0, os.SEEK_SET)
-            with os.fdopen(fd, "r", encoding="utf-8-sig", errors="strict") as stream:
-                fd = -1
-                stream.read(offset)
-                value = stream.read(count + 1)
-                if any(ord(char) < 9 or 13 < ord(char) < 32 for char in value):
-                    raise ValueError("请求区间包含二进制控制字符，不能作为文本返回")
-        except UnicodeError as exc:
-            raise ValueError("文件不是可识别的 UTF-8 文本") from exc
-        finally:
-            if fd >= 0:
-                os.close(fd)
-        return {"path": str(target), "offset": offset, "text": value[:count], "truncated": len(value) > count,
-                "next_offset": offset + min(len(value), count), "max_chars": count}
-
-    def search(self, path=".", workspace_id=None, root_path=None, pattern="*", max_depth=2, max_results=100):
-        root = self.root(workspace_id, root_path)
-        start = self.paths.resolve(root, path)
-        if not start.is_dir():
-            raise ValueError("搜索起点必须是目录")
-        if not 0 <= max_depth <= 5 or not 1 <= max_results <= 200:
-            raise ValueError("搜索深度限制 0–5，结果数限制 1–200")
-        stack = [(start, 0)]
-        results, scanned, reason = [], 0, None
-        deadline = time.monotonic() + 5
-        while stack and reason is None:
-            directory, depth = stack.pop()
-            try:
-                with os.scandir(directory) as entries:
-                    for item in entries:
-                        scanned += 1
-                        if scanned > 20000 or time.monotonic() > deadline:
-                            reason = "扫描数量或时间上限"
-                            break
-                        if item.name.startswith(".") or item.is_symlink():
-                            continue
-                        try:
-                            target = self.paths.resolve(root, item.path)
-                            if fnmatch.fnmatch(item.name.casefold(), pattern.casefold()):
-                                results.append(self.inspect(str(target), workspace_id, root_path))
-                                if len(results) >= max_results:
-                                    reason = "结果数量上限"
-                                    break
-                            if depth < max_depth and target.is_dir():
-                                stack.append((target, depth + 1))
-                        except OSError:
-                            continue
-            except PermissionError:
-                continue
-        return {"items": results, "scanned": scanned, "max_depth": max_depth, "truncated": reason is not None,
-                "stop_reason": reason}
-
     def _protect(self, *paths: Path):
         for candidate in paths:
+            protect_datasets(self.store, candidate)
             for protected in self.protected_paths():
                 protected = Path(protected).resolve()
                 if within(candidate, protected) or within(protected, candidate):
                     raise PermissionError(f"路径正被后台任务或平台存储使用，不能修改：{candidate}")
+
+    def guard_dataset_registration(self, directory: Path):
+        # Called under the same short reservation lock as confirm(). A folder
+        # cannot become a protected dataset halfway through an approved copy.
+        with self.store._connect() as db:
+            operations = [json.loads(row[0]) for row in db.execute("SELECT payload FROM workspace_operations WHERE status='running'")]
+        for operation in operations:
+            for value in (operation.get('source'), operation.get('target')):
+                if value and (within(Path(value).resolve(), directory) or within(directory, Path(value).resolve())):
+                    raise ValueError("目录正在执行文件操作，请完成后再登记数据集")
+        for run in self.store.incomplete_runs():
+            output = Path(run.output_directory).resolve()
+            if within(output, directory) or within(directory, output):
+                raise ValueError("目录正在接收运行输出，请任务完成后再登记为输入数据集")
 
     def _trash_root(self, workspace_id):
         root = self.root(workspace_id)
@@ -275,6 +155,7 @@ class WorkspaceService:
 
     def _operation_paths(self, action, request):
         root = self.root(request.workspace_id)
+        self.validate_output_directory(root)
         source = self.paths.resolve(root, request.path, write=True, sensitive=action == "read-sensitive")
         target = self.paths.resolve(root, request.destination, write=True) if request.destination else None
         if action == "rename":

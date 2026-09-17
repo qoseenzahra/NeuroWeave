@@ -253,6 +253,7 @@ export default function Home() {
   const [messages, setMessages] = useState<ChatMessage[]>([WELCOME_MESSAGE]);
   const [workspaceId, setWorkspaceId] = useState<string | null>(null);
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
+  const [datasetFilesOpen, setDatasetFilesOpen] = useState(false);
   const [liveWorkspaceEvents, setLiveWorkspaceEvents] = useState<WorkspaceEvent[]>([]);
   const [activeTurn, setActiveTurn] = useState<string | null>(null);
   useEffect(() => {
@@ -1230,7 +1231,8 @@ export default function Home() {
             />
             {health?.mode === 'model' ? health.model : '对话演示模式'}
           </div>
-          <Button size="sm" variant="outline" onClick={() => setWorkspaceOpen(true)}>{workspaceId ? '工作区文件' : '选择工作区'}</Button>
+          <Button size="sm" variant="outline" onClick={() => setWorkspaceOpen(true)}>{workspaceId ? '输出目录管理' : '选择输出目录'}</Button>
+          {selectedDataset && <Button size="sm" variant="outline" onClick={() => setDatasetFilesOpen(true)}>查看数据集文件</Button>}
           <DatasetPicker
             key={`${conversationId ?? 'new'}:${currentWorkflow?.workflow_id ?? 'draft'}`}
             apiBase={API_BASE}
@@ -1261,7 +1263,7 @@ export default function Home() {
                 <p className="mt-1 text-sm leading-6 text-slate-500">
                   {interactionMode === 'task'
                     ? `模型逐层展开能力树，再只加载相关 Skill；可推荐单步任务或多个 Skill 的组合。`
-                    : '普通对话用于问答和工作区只读查询，不会创建或推荐流程卡片。'}
+                    : '普通对话支持问答、数据集及输出目录只读查询，不会创建或推荐流程卡片。'}
                 </p>
               </div>
             </div>
@@ -1613,11 +1615,23 @@ export default function Home() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {datasetFilesOpen && selectedDataset && <WorkspacePanel key={selectedDataset.dataset_id} apiBase={API_BASE}
+        workspaceId={null} conversationId={conversationId} datasetId={selectedDataset.dataset_id} datasetOnly
+        onSelect={async () => {}} onClose={() => setDatasetFilesOpen(false)} />}
       {workspaceOpen && <WorkspacePanel apiBase={API_BASE} workspaceId={workspaceId} conversationId={conversationId}
-        datasetId={selectedDataset?.dataset_id}
         locked={datasetDisabled} onClose={() => setWorkspaceOpen(false)} onSelect={async (workspace: Workspace | null) => {
-          if (conversationId) await workspaceApi(API_BASE, `/api/conversations/${conversationId}`, { workspace_id: workspace?.id ?? null }, 'PATCH');
-          setWorkspaceId(workspace?.id ?? null);
+          if (datasetContext.current.blocked) throw new Error('请先解锁流程再切换输出目录');
+          setIsDatasetUpdating(true);
+          try {
+            if (currentWorkflow) {
+              const updated = await workspaceApi<Workflow>(API_BASE, `/api/workflows/${currentWorkflow.workflow_id}/output`, {
+                workspace_id: workspace?.id ?? null, conversation_id: conversationId,
+                expected_revision: currentWorkflow.revision, relative_path: '.',
+              }, 'PATCH');
+              updateWorkflowMessage(updated);
+            } else if (conversationId) await workspaceApi(API_BASE, `/api/conversations/${conversationId}`, { workspace_id: workspace?.id ?? null }, 'PATCH');
+            setWorkspaceId(workspace?.id ?? null);
+          } finally { setIsDatasetUpdating(false); }
         }} />}
     </main>
   );

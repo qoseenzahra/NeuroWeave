@@ -119,6 +119,26 @@ class RunServiceTests(unittest.TestCase):
             with self.assertRaises(RunConflict):
                 self.service.create(workflow.workflow_id, workflow.revision)
 
+    def test_selected_output_root_is_used_directly_and_dataset_output_is_rejected(self):
+        root = self.dataset_root.parent / 'managed-results'
+        root.mkdir()
+        with patch.dict(os.environ, {'WORKSPACE_ALLOWED_ROOTS': str(self.dataset_root.parent), 'WORKSPACE_DEFAULT_ROOT': str(root)}):
+            workflow = self._workflow(execution_enabled=True)
+            workflow.workspace_id, workflow.workspace_root_path, workflow.output_relative_path = 'ws', str(root), '.'
+            self.store.save_workflow(workflow, event_type='confirmed')
+            run = self.service.create(workflow.workflow_id, workflow.revision)
+            for _ in range(200):
+                run = self.service.get(run.run_id)
+                if run.status in {'succeeded', 'failed'}:
+                    break
+                time.sleep(.02)
+            self.assertEqual(run.status, 'succeeded', run.error_message)
+            self.assertEqual(Path(run.output_directory).parent, root)
+            workflow.workspace_root_path = str(self.dataset_root)
+            self.store.save_workflow(workflow, event_type='invalid_output')
+            with self.assertRaises(PermissionError):
+                self.service.create(workflow.workflow_id, workflow.revision)
+
     def test_confirmed_dataset_inspection_executes_and_persists_artifact(self) -> None:
         workflow = self._workflow(execution_enabled=True)
         self.store.save_workflow(workflow, event_type="workflow_confirmed")

@@ -161,12 +161,12 @@ def test_bounded_search_and_real_function_dispatch(setup):
         calls = 0
         async def workspace_completion(self, messages, tools, required=False):
             self.calls += 1
-            assert any(t['function']['name'] == 'list_workspace_directory' for t in tools)
+            assert any(t['function']['name'] == 'list_output_directory' for t in tools)
             assert not any('confirm' in t['function']['name'] for t in tools)
             if self.calls == 1:
                 assert required
                 return {'role': 'assistant', 'content': None, 'tool_calls': [{'id': 'call1', 'type': 'function',
-                    'function': {'name': 'list_workspace_directory', 'arguments': '{"path":".","limit":3}'}}]}
+                    'function': {'name': 'list_output_directory', 'arguments': '{"path":".","limit":3}'}}]}
             assert messages[-1]['role'] == 'tool'
             data = json.loads(messages[-1]['content'])
             assert len(data['items']) == 3

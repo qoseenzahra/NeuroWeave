@@ -1,15 +1,15 @@
-# 服务器工作区管理
+# 服务器输出目录管理
 
-工作区表示对话允许查询、管理和保存输出的服务器目录。数据集仍表示处理输入；两者分别保存。网页右上角“选择工作区 / 工作区文件”进入管理面板，不使用客户端文件上传控件。
+现在按用途分为两个独立范围：数据集提供只读文件访问，选择数据集后模型即可查询，不需要选择输出目录；输出目录用于保存结果及确认后的文件管理。沿用原 workspace_id 和数据库记录以兼容历史对话。网页右上角“选择输出目录 / 输出目录管理”进入管理面板，不使用客户端文件上传控件。
 
 ## 使用
 
 1. 浏览允许的服务器根目录，或填写服务器绝对路径。目录仅按层读取，文件夹优先；可筛选、排序、显示隐藏项、刷新、使用面包屑和上级目录。默认一页 80 项，滚动到底自动继续加载。
-2. 选择“当前目录作为工作区”，填写名称。已有工作区可在下拉框切换；对话保存 `workspace_id`，历史对话恢复该关联。没有工作区的旧对话继续使用原行为。根路径不可直接修改，避免把旧对话静默关联到别的目录。
+2. 选择“当前目录作为输出目录”，填写名称。已有输出目录可在下拉框切换；对话保存 `workspace_id`，历史对话恢复该关联。没有输出目录的旧对话继续使用原行为。根路径不可直接修改，避免把旧对话静默关联到别的目录。登记时要求服务器后端账户对目录有读取、写入和进入权限；与任何已登记数据集重叠的目录不能登记为可管理输出目录。不会自动执行 chmod/chown，也不能替用户提升 Linux 权限。
 3. 选中文件查看大小、修改时间、权限和完整路径。文本预览按段读取；影像只展示元数据，内容分析继续使用现有 Skill/Runner。路径支持悬浮、横向滚动和复制。面板左边缘可拖动，聚焦后也可用左右方向键调整宽度。
 4. 新建目录、复制、移动、重命名、删除先显示待确认卡片。复制/移动目标必须包含最终文件或文件夹名称。模型没有“确认”工具；只能由网页用户确认。普通对话不提供模型写工具，但用户可以在文件面板手动管理文件。
-5. 删除默认进入回收站。恢复可以使用原位置或填写另一个工作区内目标；占用的位置不会被静默覆盖。永久删除必须显式勾选并确认。移除工作区记录只隐藏记录，目录、文件、对话和任务输出全部保留。
-6. “关联当前数据集”只保存关联，不修改数据集目录。锁定流程后不能从页面切换工作区或数据集。新流程默认输出到 `工作区/outputs/运行ID/步骤/`，可在流程卡片中调整输出子目录；历史流程保留原输出配置。已提交运行保存根目录快照，不随之后的对话切换或流程修改迁移。
+5. 删除默认进入回收站。恢复可以使用原位置或填写另一个输出目录内目标；占用的位置不会被静默覆盖。永久删除必须显式勾选并确认。移除输出目录记录只隐藏记录，目录、文件、对话和任务输出全部保留。
+6. 数据集和输出目录分别选择；网页“查看数据集文件”提供分页浏览、详情及文本预览，隐藏写操作按钮。锁定流程后不能从页面切换输出目录或数据集。新流程默认输出到 `输出目录/运行ID/步骤/`（新流程 relative_path 为 `.`），可在流程卡片中调整输出子目录；历史流程保留原输出配置。已提交运行保存根目录快照，不随之后的对话切换或流程修改迁移。
 
 ## 配置
 
@@ -35,17 +35,21 @@ WORKSPACE_TEXT_MAX_CHARS=12000
 WORKSPACE_TRASH_DIR=.neuroweave-trash
 ```
 
-Linux 多根目录可使用 `:` 或 `;` 分隔；Windows 使用 `;`。如果管理员设置 `WORKSPACE_ALLOWED_ROOTS=/`，可以浏览后端账户有权限读取的服务器路径，仍遵守特殊目录、敏感文件和工作区边界。代码没有默认开放 `/`。发布脚本只补充缺失的配置项，保留已有管理员设置。
+Linux 多根目录可使用 `:` 或 `;` 分隔；Windows 使用 `;`。如果管理员设置 `WORKSPACE_ALLOWED_ROOTS=/`，可以浏览后端账户有权限读取的服务器路径，仍遵守特殊目录、敏感文件和输出目录边界。代码没有默认开放 `/`。发布脚本只补充缺失的配置项，保留已有管理员设置。
 
-Slurm 工作区和输出目录必须在目标计算节点上以相同绝对路径挂载、可由任务账户访问。通常使用 `/home/data` 共享存储。工作区配置写入冻结的 Slurm payload 环境白名单，控制端和 Worker 都验证输出范围。选择不共享的目录不会使它自动同步到计算节点。
+Slurm 输出目录和输出目录必须在目标计算节点上以相同绝对路径挂载、可由任务账户访问。通常使用 `/home/data` 共享存储。输出目录配置写入冻结的 Slurm payload 环境白名单，控制端和 Worker 都验证输出范围。选择不共享的目录不会使它自动同步到计算节点。
 
-回收站默认位于每个工作区的 `.neuroweave-trash`。配置相对目录时仍位于工作区内；配置绝对目录时按工作区 ID 分隔，且必须处于允许根目录内。移动和回收站操作使用同文件系统原子重命名；跨文件系统移动会失败并保留源文件，可先复制，再分别确认删除。不要把不同挂载点的数据统一移到另一个文件系统上的回收站。
+回收站默认位于每个输出目录的 `.neuroweave-trash`。配置相对目录时仍位于输出目录内；配置绝对目录时按输出目录 ID 分隔，且必须处于允许根目录内。移动和回收站操作使用同文件系统原子重命名；跨文件系统移动会失败并保留源文件，可先复制，再分别确认删除。不要把不同挂载点的数据统一移到另一个文件系统上的回收站。
 
 ## API
 
+输出目录 CRUD 的新入口是 `/api/output-directories` 和 `/api/output-directories/{id}`，回收站为 `/api/output-directories/{id}/trash`。原 `/api/workspaces` API、workspace_id 字段、WORKSPACE_* 配置以及历史工具事件保留兼容；旧记录若指向数据集或失去写权限，只可浏览，不能绕过新保护。
+
+数据集文件入口为 `GET /api/datasets/{id}/files/list`、`inspect`、`search`、`read-text`；支持同样的分页、过滤、深度和文本限制，没有文件修改接口。数据集读取权限来自 `LOCALFLOW_DATA_ROOTS`，输出管理权限来自 `WORKSPACE_ALLOWED_ROOTS`，互不扩大。
+
 | 方法与路径 | 用途 |
 |---|---|
-| `GET /api/workspaces` | 工作区列表 |
+| `GET /api/workspaces` | 输出目录列表 |
 | `POST /api/workspaces` | 登记已有目录：name、root_path、description |
 | `PATCH /api/workspaces/{id}` | 修改名称、说明或 active/archived 状态 |
 | `DELETE /api/workspaces/{id}` | 移除记录，保留磁盘及历史关联 |
@@ -67,7 +71,7 @@ Slurm 工作区和输出目录必须在目标计算节点上以相同绝对路�
 | `GET /api/workspace-tool-events?turn_id=...` | 当前对话工具进度 |
 | `PATCH /api/conversations/{id}` | 新增 workspace_id 字段，null 表示解除关联 |
 | `PATCH /api/datasets/{id}/workspace` | 可选关联，不改变数据输入目录 |
-| `PATCH /api/workflows/{id}/output` | expected_revision + 工作区 relative_path |
+| `PATCH /api/workflows/{id}/output` | expected_revision + 输出目录 relative_path |
 
 列表参数：`workspace_id` 或 `root_path`、`path`（默认 `.`，可为范围内绝对路径）、`cursor`、`limit`（1–200）、`sort`（name/size/modified）、`filter`、`show_hidden`。返回 `items/has_more/next_cursor`。游标绑定目录修改状态及筛选参数，失效时需刷新。为了排序会枚举当前层，但只保留一页条目，不递归读取整棵树。
 
@@ -75,29 +79,32 @@ Slurm 工作区和输出目录必须在目标计算节点上以相同绝对路�
 
 ## 模型工具
 
-真正注册到模型 API 的函数为：
+输出目录注册到模型 API 的函数为：
 
-- `list_workspace_directory`
-- `inspect_workspace_path`
-- `search_workspace_files`
-- `read_workspace_text`
-- `create_workspace_directory`
-- `copy_workspace_path`
-- `move_workspace_path`
-- `rename_workspace_path`
-- `delete_workspace_path`
+- `list_output_directory`
+- `inspect_output_path`
+- `search_output_files`
+- `read_output_text`
+- `create_output_directory`
+- `copy_output_path`
+- `move_output_path`
+- `rename_output_path`
+- `delete_output_path`
 
-另有内部路由函数 `continue_workflow_planning`，把处理需求交回已有能力树、Skill 和规划系统。上述工具不能指定其他 workspace_id/root_path，范围从当前对话注入。没有通用 Shell 或模型确认函数。每轮最多 8 个模型回合、16 次调用；模型列表/搜索默认最多 20 项、文本最多 8000 字符，可继续分页或缩小检索范围。HTTP 文件面板的配置上限独立保留。
+选择数据集后另外注册四个只读工具：`list_dataset_directory`、`inspect_dataset_path`、`search_dataset_files`、`read_dataset_text`。没有任何数据集写工具；同时选择两种目录时，模型通过工具名称区分输入与输出，不按同名相对路径猜测范围。
 
-只读结果进入工具观察，按事件保存到对话时间线；文本内容按需发送给当前配置的模型提供商，因此工作区应选择允许该模型处理的数据目录。敏感文本例外：需要独立人工确认，只在确认响应返回网页，不发送给模型，不把文本持久化到操作记录或审计。
+另有内部路由函数 `continue_workflow_planning`，把处理需求交回已有能力树、Skill 和规划系统。上述输出工具不能指定其他 workspace_id/root_path，范围从当前对话注入。数据集工具的范围来自当前 dataset_id，并经现有数据根许可重新校验。没有通用 Shell 或模型确认函数。每轮最多 8 个模型回合、16 次调用；模型列表/搜索默认最多 20 项、文本最多 8000 字符，可继续分页或缩小检索范围。HTTP 文件面板的配置上限独立保留。
+
+只读结果进入工具观察，按事件保存到对话时间线；文本内容按需发送给当前配置的模型提供商，因此输出目录应选择允许该模型处理的数据目录。敏感文本例外：需要独立人工确认，只在确认响应返回网页，不发送给模型，不把文本持久化到操作记录或审计。
 
 ## 权限与一致性
 
-- `Path.resolve()` 检查允许根和工作区边界，拒绝 `..`、越界符号链接、循环链接与非普通文件。写操作拒绝任何路径组件的符号链接；Windows 同时拒绝 reparse point。
+- `Path.resolve()` 检查允许根和输出目录边界，拒绝 `..`、越界符号链接、循环链接与非普通文件。写操作拒绝任何路径组件的符号链接；Windows 同时拒绝 reparse point。
 - 即使根为 `/`，仍屏蔽 `/proc`、`/sys`、`/dev`、`/run`、`/boot` 等特殊目录；隐藏 `.env`、凭据/token、私钥、敏感系统文件。Linux 权限由后端账户本身决定，不使用 sudo。
 - Linux 文件内容打开及写入使用逐层 `O_NOFOLLOW` 目录描述符，重命名使用 `renameat2(RENAME_NOREPLACE)`；不能覆盖确认后新出现的目标。复制先建立同目录暂存副本，成功后再原子替换；旧目标先进入回收站。
 - 文件操作使用 Python/OS 文件接口，不拼接 Shell。影像、压缩文件、NUL/控制字节以及无法严格 UTF-8 解码的内容不能作为文本返回。搜索最多深度 5、200 个结果、20000 个扫描项、5 秒，达到限制明确返回 truncated。
 - 每次实际写入记录开始/成功/失败、后端账户、会话、工具、源/目标、时间与确认状态。确认前重新检查源/目标指纹。普通对话不给模型写工具，模型生成的“完成”文本不能替代操作成功状态。
+- 所有已登记的数据集均为只读：即使修改请求来自旧输出目录 API，或目录在操作提议后才登记为数据集，也会重新拒绝。登记数据集会检查进行中的文件操作和活动输出，避免并发改变权限范围。新 Runner 提交和重试也不得把输出写入数据集。
 - 活动任务的数据集、已绑定输入及输出目录不能移动、改名、删除或覆盖。文件操作先保留路径，新的 Runner 不能占用同一路径；长时间复制不会持有 Runner 进度锁。
 - 文件确认独立于 LLM，来自不允许网页 Origin 的写请求被拒绝。当前平台沿用单一后端账户和既有网络入口，不提供用户级身份隔离；审计中的 actor 是服务器账户，conversation_id 区分会话。不要将其当作多租户沙箱。
 
@@ -115,9 +122,9 @@ npm run build
 
 Linux 必须执行 `tests/test_workspaces.py`，覆盖 Windows 开发账户可能无权创建的符号链接测试。实际模型验收需要当前模型支持 OpenAI 兼容结构化 function calling；失败会显示接口错误，不会假装执行。
 
-2026-09-10 验证记录：开发阶段完整后端回归 232 passed、609 个子检查；最终相关回归 47 passed、19 个子检查，另有会话兼容回归 23 passed、6 个子检查。Windows 无权创建符号链接的测试跳过，Linux 工作区及 Runner 的 18 项测试、3 个子检查全部通过。前端 13 项回归、TypeScript、lint 和生产构建通过。浏览器验收覆盖新建/切换/历史恢复、写操作待确认、183 文件目录的 80→160 自动分页和 390 像素窄屏布局。
+2026-09-10 验证记录：开发阶段完整后端回归 232 passed、609 个子检查；最终相关回归 47 passed、19 个子检查，另有会话兼容回归 23 passed、6 个子检查。Windows 无权创建符号链接的测试跳过，Linux 输出目录及 Runner 的 18 项测试、3 个子检查全部通过。前端 13 项回归、TypeScript、lint 和生产构建通过。浏览器验收覆盖新建/切换/历史恢复、写操作待确认、183 文件目录的 80→160 自动分页和 390 像素窄屏布局。
 
-真实服务器模型已按自然语言调用目录和文本工具，并将重命名留在待确认状态；测试使用独立 SQLite 和合成文本。Slurm 作业 333 在 node03 完成数据集巡检，退出码 0:0，结果保存于 `/home/data/neuroweave/smoke/workspace-20260910/86a11471/outputs/run_380b7e357bd7/dwi_inspect/dataset_profile.json`。此项验证工作区输出和调度集成，不代表重新验证所有科学算法。
+真实服务器模型已按自然语言调用目录和文本工具，并将重命名留在待确认状态；测试使用独立 SQLite 和合成文本。Slurm 作业 333 在 node03 完成数据集巡检，退出码 0:0，结果保存于 `/home/data/neuroweave/smoke/workspace-20260910/86a11471/outputs/run_380b7e357bd7/dwi_inspect/dataset_profile.json`。此项验证输出目录输出和调度集成，不代表重新验证所有科学算法。
 
 发布沿用 `scripts/package_release.py`、`scripts/deploy_slurm_release.py` 和 `scripts/deploy_frontend_release.py`。先比较生产公共文件与上一个发布包的 SHA-256，保存任何服务器独有改动，再部署已提交归档。数据库采用增量加列/新表，不清理既有对话、任务或输出。
 
@@ -140,15 +147,17 @@ systemctl --user restart localflow-backend.service
 
 ## 操作限制与故障恢复
 
-- 工作区是文件范围和任务输出配置，不替代科学软件自己的参数验证。已有数据集输入选择和历史样本绑定规则保留；输入选择器优先数据集，没有数据集时从工作区所对应的授权数据根开始。工作区若不属于已配置的数据输入根，不会自动扩大科学 Runner 的输入许可。
+- 输出目录是文件范围和任务输出配置，不替代科学软件自己的参数验证。已有数据集输入选择和历史样本绑定规则保留；输入选择器优先数据集，没有数据集时从输出目录所对应的授权数据根开始。输出目录若不属于已配置的数据输入根，不会自动扩大科学 Runner 的输入许可。
 - 单次递归复制/目录修改限制 100000 项。跨文件系统 move/restore 不做隐式复制后删除。大型数据不使用 Git checkpoint。
 - 进程异常中断的文件操作保留 running 记录，不会自动重放；需检查 operation、源/目标和回收站后处理。复制的暂存路径记录为 staging_path，失败时可保留部分副本，原目标不会因复制失败被先删除。回收站 prepared 记录也保留，以支持中断后的人工核查。
 - Windows 使用原生文件权限及规范化/reparse 检查；Linux 服务器另有目录描述符防护。本功能不是针对可任意重命名挂载点、改变目录所有权或修改数据库的本机管理员的安全隔离。
 
 ## 主要修改文件
 
+2026-09-17 增补：`app/filesystem_reader.py` 复用有界读取，`app/dataset_files.py` 提供数据集只读范围和输出边界检查。
+
 后端新增 `app/workspace_models.py`、`workspace_paths.py`、`workspace_io.py`、`workspace_service.py`、`workspace_routes.py`、`workspace_tools.py`；更新 `main.py`、`models.py`、`chat_service.py`、`local_store.py`、`conversation_models.py`、`conversation_service.py`、`dataset_models.py`、`dataset_service.py`、`run_models.py`、`workflow_models.py`、`workflow_service.py`、`execution/run_service.py`、`execution/slurm_backend.py`、`execution/slurm_worker.py`。
 
 前端新增 `components/workspace-panel.tsx`、`components/workflow/workspace-output.tsx`；更新 `app/page.tsx`、`lib/workflow.ts`、`components/dataset/artifact-path-picker.tsx`、`components/workflow/workflow-card.tsx`、`components/workflow/run-panel.tsx`。
 
-验证和部署：`bakend/tests/test_workspaces.py`、`bakend/tests/test_run_service.py`、`scripts/deploy_slurm_release.py`、`.gitignore`、`README.md` 和本文。
+验证和部署：`bakend/tests/test_dataset_output_access.py`、`bakend/tests/test_workspaces.py`、`bakend/tests/test_run_service.py`、`scripts/deploy_slurm_release.py`、`.gitignore`、`README.md` 和本文。

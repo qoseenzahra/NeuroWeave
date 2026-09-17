@@ -166,6 +166,15 @@ class RunService:
         now = self._now()
         run_id = f"run_{uuid4().hex[:12]}"
         output_directory = self._safe_run_directory(run_id, execution.backend, workflow)
+        # New submissions must never write into registered input datasets,
+        # including through historical workspace records. Frozen active jobs
+        # keep their existing paths; no running task is migrated or cancelled.
+        from ..dataset_files import protect_datasets
+        protect_datasets(self.store, output_directory)
+        if workflow.workspace_root_path:
+            root = Path(workflow.workspace_root_path)
+            if not root.is_dir() or not os.access(root, os.R_OK | os.W_OK | os.X_OK):
+                raise RunConflict("输出目录需要后端账户的读取、写入和进入权限")
         self._check_workspace_operations(workflow, output_directory)
         if execution.backend == "slurm":
             self.slurm_output_root.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -309,6 +318,8 @@ class RunService:
             current_step_id=None, progress=0, error_code="", error_message="", cancellation_requested=False,
             created_at=now, updated_at=now, started_at=None, finished_at=None, state_revision=0,
             output_directory=str(self._safe_run_directory(new_id, original.execution.backend, workflow)), steps=[], artifacts=[]))
+        from ..dataset_files import protect_datasets
+        protect_datasets(self.store, Path(run.output_directory))
         self._check_workspace_operations(workflow, Path(run.output_directory))
         status = self.slurm_backend.status() if original.execution.backend == "slurm" else None
         parallel_limits = unit_parallel_limits(original.execution, units)

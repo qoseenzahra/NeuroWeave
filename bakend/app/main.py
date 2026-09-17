@@ -52,6 +52,7 @@ from .workspace_service import WorkspaceService
 from .workspace_routes import workspace_router
 from .workspace_tools import WorkspaceTools
 from .workspace_models import WorkflowOutputRequest, DatasetWorkspaceRequest
+from .dataset_files import DatasetFiles, protect_datasets
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -74,7 +75,8 @@ operation_service = OperationService(local_store)
 dataset_service = DatasetService(PROJECT_ROOT, local_store)
 conversation_service = ConversationService(local_store, chat_service)
 workspace_service = WorkspaceService(local_store, PROJECT_ROOT / "workspaces")
-workspace_tools = WorkspaceTools(workspace_service, chat_service)
+dataset_files = DatasetFiles(dataset_service)
+workspace_tools = WorkspaceTools(workspace_service, chat_service, dataset_files)
 runner_registry = RunnerRegistry()
 workflow_service = WorkflowService(
     SKILLS_DIR / "dwi-skill" / "workflow.manifest.json",
@@ -122,6 +124,8 @@ def _protected_workspace_paths():
 
 workspace_service.protected_paths = _protected_workspace_paths
 workspace_service.run_lock = run_service._lock
+dataset_service.registration_lock = run_service._lock
+dataset_service.registration_guard = workspace_service.guard_dataset_registration
 
 
 def _workspace_request(request: ChatRequest) -> ChatRequest:
@@ -134,14 +138,15 @@ def _workspace_request(request: ChatRequest) -> ChatRequest:
             workspace_id = workspace_id or conversation.workspace_id
     try:
         workspace = workspace_service.get(workspace_id) if workspace_id else None
-        dataset = dataset_service.get(request.dataset_id) if request.dataset_id else None
-        context = json.dumps({"workspace_id": workspace_id, "workspace_root": workspace.root_path if workspace else None,
-                              "dataset_root": dataset.absolute_path if dataset else None,
-                              "default_output": str(Path(workspace.root_path) / "outputs") if workspace else None}, ensure_ascii=False)
+        dataset_root = dataset_files.reader(request.dataset_id).root() if request.dataset_id else None
+        context = json.dumps({"output_directory_id": workspace_id, "output_root": workspace.root_path if workspace else None,
+                              "output_manageable": workspace.manageable if workspace else False,
+                              "dataset_id": request.dataset_id, "dataset_root": str(dataset_root) if dataset_root else None,
+                              "dataset_access": "read_only", "default_output": workspace.root_path if workspace else None}, ensure_ascii=False)
     except (KeyError, ValueError, OSError) as exc:
         raise HTTPException(409, str(exc)) from exc
     # Never accept a root/context supplied by an HTTP client as authoritative.
-    return request.model_copy(update={"workspace_id": workspace_id, "workspace_context": context if workspace else "",
+    return request.model_copy(update={"workspace_id": workspace_id, "workspace_context": context if workspace or dataset_root else "",
                                       "workspace_root_path": workspace.root_path if workspace else None})
 
 
@@ -195,7 +200,7 @@ app = FastAPI(
     description="Local dialogue and skill-discovery API.",
     lifespan=lifespan,
 )
-app.include_router(workspace_router(workspace_service))
+app.include_router(workspace_router(workspace_service, dataset_files))
 
 origins = [
     origin.strip()
@@ -216,7 +221,7 @@ app.add_middleware(
 
 @app.middleware("http")
 async def release_maintenance(request: Request, call_next):
-    if request.method in {"POST", "PATCH", "DELETE"} and request.url.path.startswith(("/api/fs/", "/api/workspaces")):
+    if request.method in {"POST", "PATCH", "DELETE"} and request.url.path.startswith(("/api/fs/", "/api/workspaces", "/api/output-directories")):
         origin = request.headers.get("origin")
         if origin and origin not in origins and origin != str(request.base_url).rstrip("/"):
             return JSONResponse({"detail": "工作区写请求来自未授权的网页来源"}, status_code=403)
@@ -385,20 +390,33 @@ def associate_dataset_workspace(dataset_id: str, request: DatasetWorkspaceReques
 def set_workspace_output(workflow_id: str, request: WorkflowOutputRequest):
     try:
         with run_service._lock, workflow_service._lock:
+            if request.conversation_id and not local_store.get_conversation(request.conversation_id):
+                raise ValueError("对话不存在")
             workflow = workflow_service.get(workflow_id)
             if workflow.revision != request.expected_revision:
                 raise ValueError("流程版本已变化，请刷新")
             if workflow.status == "confirmed" or local_store.active_run_for_workflow(workflow_id):
                 raise ValueError("请先解锁流程；已有任务的输出目录不受后续修改影响")
-            if not workflow.workspace_root_path:
-                raise ValueError("此历史流程尚未关联工作区；请在选择工作区后新建流程")
-            root = Path(workflow.workspace_root_path)
-            output = workspace_service.paths.output_root(str(root), request.relative_path)
-            workflow.output_relative_path = str(output.relative_to(root))
+            if "workspace_id" in request.model_fields_set:
+                selected = workspace_service.get(request.workspace_id) if request.workspace_id else None
+                workflow.workspace_id = selected.id if selected else None
+                workflow.workspace_root_path = selected.root_path if selected else None
+            if workflow.workspace_root_path:
+                root = workspace_service.validate_output_directory(Path(workflow.workspace_root_path))
+                output = workspace_service.paths.output_root(str(root), request.relative_path)
+                protect_datasets(local_store, output)
+                workflow.output_relative_path = str(output.relative_to(root))
+            elif "workspace_id" in request.model_fields_set:
+                output = OUTPUT_ROOT
+                workflow.output_relative_path = "outputs"
+            else:
+                raise ValueError("请先选择输出目录")
             workflow_service._advance(workflow)
             workflow.dry_run_report = None
             workflow_service._refresh(workflow)
             local_store.save_workflow(workflow, event_type="workspace_output_changed", event_payload={"path": str(output)})
+            if "workspace_id" in request.model_fields_set and request.conversation_id:
+                workspace_service.bind_conversation(request.conversation_id, request.workspace_id)
             return workflow
     except (ValueError, KeyError, OSError) as exc:
         raise HTTPException(409, str(exc)) from exc
@@ -1040,7 +1058,7 @@ def start_workflow_run(
         return run_service.create(workflow_id, request.expected_revision, request.execution)
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="Workflow not found") from exc
-    except RunConflict as exc:
+    except (RunConflict, ValueError, OSError) as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 

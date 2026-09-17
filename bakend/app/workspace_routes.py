@@ -21,7 +21,7 @@ class FilesystemRoute(APIRoute):
         return guarded
 
 
-def workspace_router(service):
+def workspace_router(service, dataset_files=None):
     router = APIRouter(route_class=FilesystemRoute)
 
     @router.get("/api/fs/roots")
@@ -30,18 +30,22 @@ def workspace_router(service):
                 "page_size": service.paths.page_size, "text_max_chars": service.paths.text_max}
 
     @router.get("/api/workspaces")
+    @router.get("/api/output-directories")
     def workspaces():
         return service.list()
 
     @router.post("/api/workspaces")
+    @router.post("/api/output-directories")
     def create(request: WorkspaceCreate):
         return service.create(request)
 
     @router.patch("/api/workspaces/{workspace_id}")
+    @router.patch("/api/output-directories/{workspace_id}")
     def update(workspace_id: str, request: WorkspaceUpdate):
         return service.update(workspace_id, request)
 
     @router.delete("/api/workspaces/{workspace_id}")
+    @router.delete("/api/output-directories/{workspace_id}")
     def remove(workspace_id: str):
         return service.remove(workspace_id)
 
@@ -82,6 +86,7 @@ def workspace_router(service):
         return service.confirm(operation_id, request.conversation_id)
 
     @router.get("/api/workspaces/{workspace_id}/trash")
+    @router.get("/api/output-directories/{workspace_id}/trash")
     def trash(workspace_id: str):
         return service.trash(workspace_id)
 
@@ -92,5 +97,28 @@ def workspace_router(service):
     @router.get("/api/workspace-tool-events")
     def events(turn_id: str = Query(min_length=16, max_length=100)):
         return service.events(turn_id)
+
+    if dataset_files is not None:
+        @router.get('/api/datasets/{dataset_id}/files/list')
+        def dataset_list(dataset_id: str, path: str = '.', cursor: str | None = None,
+                         limit: int | None = Query(None, ge=1, le=200), sort: str = 'name',
+                         filter: str = '', show_hidden: bool = False):
+            return dataset_files.reader(dataset_id).list_directory(path=path, cursor=cursor, limit=limit,
+                sort=sort, filter=filter, show_hidden=show_hidden)
+
+        @router.get('/api/datasets/{dataset_id}/files/inspect')
+        def dataset_inspect(dataset_id: str, path: str = '.'):
+            return dataset_files.reader(dataset_id).inspect(path)
+
+        @router.get('/api/datasets/{dataset_id}/files/read-text')
+        def dataset_text(dataset_id: str, path: str, offset: int = Query(0, ge=0, le=2000000),
+                         max_chars: int | None = Query(None, ge=1, le=100000)):
+            return dataset_files.reader(dataset_id).read_text(path, offset=offset, max_chars=max_chars)
+
+        @router.get('/api/datasets/{dataset_id}/files/search')
+        def dataset_search(dataset_id: str, path: str = '.', pattern: str = '*',
+                           max_depth: int = Query(2, ge=0, le=5), max_results: int = Query(100, ge=1, le=200)):
+            return dataset_files.reader(dataset_id).search(path=path, pattern=pattern,
+                                                          max_depth=max_depth, max_results=max_results)
 
     return router

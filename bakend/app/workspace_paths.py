@@ -16,11 +16,14 @@ def within(path: Path, root: Path) -> bool:
 
 
 class WorkspacePaths:
-    def __init__(self, default: Path):
-        self.default = Path(os.getenv("WORKSPACE_DEFAULT_ROOT", str(default))).expanduser().resolve()
+    def __init__(self, default: Path, *, allowed_roots: tuple[Path, ...] | None = None):
+        # Dataset readers receive a server-resolved scope, independently of the
+        # output-directory allowlist. Never widen the shared output policy.
+        self.default = (default if allowed_roots is not None else Path(os.getenv("WORKSPACE_DEFAULT_ROOT", str(default)))).expanduser().resolve()
         raw = os.getenv("WORKSPACE_ALLOWED_ROOTS", "")
         separator = ";" if ";" in raw or os.name == "nt" else os.pathsep
-        self.roots = tuple(Path(p.strip()).expanduser().resolve() for p in raw.split(separator) if p.strip()) or (self.default,)
+        self.roots = (tuple(p.resolve() for p in allowed_roots) if allowed_roots is not None else
+                      tuple(Path(p.strip()).expanduser().resolve() for p in raw.split(separator) if p.strip()) or (self.default,))
         if not any(within(self.default, root) for root in self.roots):
             raise ValueError("WORKSPACE_DEFAULT_ROOT must be within WORKSPACE_ALLOWED_ROOTS")
         self.page_size = max(1, min(int(os.getenv("WORKSPACE_PAGE_SIZE", "80")), 200))
@@ -89,6 +92,4 @@ class WorkspacePaths:
     def output_root(self, workspace_root: str, relative: str = "outputs") -> Path:
         root = self.browse_root(workspace_root)
         output = self.resolve(root, relative, write=True)
-        if output == root:
-            raise PermissionError("运行输出必须放在工作区的子目录")
         return output

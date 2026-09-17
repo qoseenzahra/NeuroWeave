@@ -6,6 +6,9 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class Workspace(BaseModel):
+    # Derived on reads. The persisted legacy workspace ID remains compatible.
+    manageable: bool = False
+    permission_reason: str = ""
     id: str
     name: str
     root_path: str
@@ -51,8 +54,10 @@ class RestoreRequest(BaseModel):
 
 
 class WorkflowOutputRequest(BaseModel):
+    workspace_id: str | None = None
+    conversation_id: str | None = None
     expected_revision: int = Field(ge=1)
-    relative_path: str = Field(min_length=1, max_length=4096)
+    relative_path: str = Field(default=".", min_length=1, max_length=4096)
 
 
 class DatasetWorkspaceRequest(BaseModel):

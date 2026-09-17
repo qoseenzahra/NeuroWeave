@@ -1355,7 +1355,7 @@ class WorkflowService:
         workflow = Workflow(
             workspace_id=existing.workspace_id if existing else request.workspace_id,
             workspace_root_path=existing.workspace_root_path if existing else request.workspace_root_path,
-            output_relative_path=existing.output_relative_path if existing else "outputs",
+            output_relative_path=existing.output_relative_path if existing else ("." if request.workspace_id else "outputs"),
             workflow_id=existing.workflow_id if existing else f"wf_{uuid4().hex[:12]}",
             template_id="dynamic:" + "+".join(capability_ids),
             revision=existing.revision + 1 if existing else 1,
