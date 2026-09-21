@@ -28,11 +28,11 @@
 
 `bakend/app/historical_inputs.py` 管理来源和身份核对；`bakend/app/sample_scope.py` 统一计算审核、Dry-run 和调度使用的样本交集。输入仍沿用 `existing_path` 并附加历史引用元数据。SQLite 不需要新表或迁移。原 Skill、科学脚本及算法参数没有变化。
 
-自动化回归：`bakend/tests/test_historical_inputs.py` 覆盖 API、修订号冲突、样本顺序、缺失和重复输出、旧存储记录、重试来源、文件替换和输入目录边界。界面合成测试入口可通过 `cd frontend` 后执行 `node tests/serve-historical-input-harness.mjs` 打开，结束后按 Ctrl+C 关闭。
+自动化回归：`bakend/tests/test_historical_inputs.py` 覆盖 API、修订号冲突、样本顺序、缺失和重复输出、旧存储记录、重试来源、文件替换和输入目录边界。前端回归通过 `cd frontend && npm test` 运行，浏览器验收记录见 `frontend/docs/main-parity.md`。
 
 服务器集成验证使用 `scripts/smoke_historical_inputs.py --root /home/data/neuroweave/smoke/<新的测试目录>`。需要显式提供已部署的共享 Worker 和 Python 配置；脚本只创建合成影像和隔离数据库，不读取生产数据库或 `.env`。它调用现有 Nilearn 方法执行两轮、每轮两个样本，在第二轮倒置样本顺序，并验证实际 Slurm Worker 读取正确的旧输出且未复制到原数据目录。证据保留在测试目录的 `evidence.json`。
 
-添加 `--partial` 可验证部分覆盖：第一轮生成两个样本的输出，再在隔离测试目录中将 B 的合成输出改名，第二轮只为 A 提交一个作业，并检查 B 被记录为跳过、A 的原始身份和输入来源保持正确。`bakend/tests/test_partial_history.py` 还覆盖显式部分应用、多输入交集、无效和重复输出、零匹配、Dry-run、实际任务范围、资源计算、持久化恢复及失败重试；前端回归见 `frontend/tests/partial-history.test.mjs`。
+添加 `--partial` 可验证部分覆盖：第一轮生成两个样本的输出，再在隔离测试目录中将 B 的合成输出改名，第二轮只为 A 提交一个作业，并检查 B 被记录为跳过、A 的原始身份和输入来源保持正确。`bakend/tests/test_partial_history.py` 还覆盖显式部分应用、多输入交集、无效和重复输出、零匹配、Dry-run、实际任务范围、资源计算、持久化恢复及失败重试；前端回归见 `frontend/tests/parity.test.mjs`。
 
 添加 `--single` 可验证原数据集仅有一个样本的情形：使用普通单文件输入在 node03 运行，再从该运行选择历史输出并再次按样本运行。两轮都应保留原样本标识；此选项与 `--partial` 互斥。
 

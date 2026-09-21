@@ -40,8 +40,5 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
       - run: npm run lint
-      - run: npx tsc --noEmit
-      - run: node --experimental-strip-types --test --test-concurrency=1 tests/*.test.mjs
+      - run: npm test
       - run: npm run build
-        env:
-          NEXT_PUBLIC_NEUROWEAVE_REVISION: ${{ github.sha }}

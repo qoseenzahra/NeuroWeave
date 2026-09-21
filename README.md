@@ -59,7 +59,7 @@ LocalFlow/
 - `bakend/app/workflow_service.py` 管理流程状态、输入绑定和审核；方法及算法参数以 `skills/*/*manifest.json` 的既有定义为准。
 - `bakend/app/execution/sample_plan.py` 分配样本并生成稳定步骤标识；`sample_execution.py` 限制每节点并行数量，恢复运行时沿用原步骤和 Slurm Job ID。
 - `bakend/app/execution/base.py` 定义 Runner 上下文和共用的可取消文件校验；各 Runner 只负责调用现有实现及整理结果。
-- `frontend/lib/use-conversation-history.ts` 管理列表缓存、翻页与过时请求；完整消息仍在打开对话时读取。
+- `frontend/src/features/conversations/useConversations.ts` 管理列表缓存、翻页与过时请求；完整消息仍在打开对话时读取。
 - `frontend/components/workflow/workflow-card.tsx` 按流程 ID 隔离界面状态；参数编辑保留滚动和运行设置，切换流程才重新初始化。
 - `frontend/components/workflow/run-panel.tsx` 按样本汇总监控，每页最多 8 项，详情和输出默认折叠；筛选与翻页保留到本次运行结束，新的运行重置视图。
 
@@ -74,13 +74,10 @@ cd D:\reference_projects\LocalFlow
 $env:PYTHONPATH = Join-Path (Get-Location) 'bakend'
 python -m pytest bakend/tests -q
 cd frontend
+npm ci
 npm run lint
-npx tsc --noEmit
-node --experimental-strip-types --test tests/run-monitor.test.mjs
+npm test
 npm run build
-# 已安装 Playwright 时运行；也可设置 LOCALFLOW_BROWSER_TOOLS 指向共享 node_modules。
-node tests/history-browser.mjs
-node tests/layout-browser.mjs
 ```
 
 ## 本地启动
@@ -99,8 +96,11 @@ uvicorn app.main:app --reload --host 127.0.0.1 --port 8010
 
 ```powershell
 cd D:\reference_projects\LocalFlow\frontend
+npm ci
 npm run dev
 ```
+
+前端开发地址为 `http://127.0.0.1:5173`，Vite 将 `/api` 代理到本地 8010 后端。生产仍使用 3000 的同源网关。前端迁移、单独发布及回退见 [部署说明](deploy/frontend-migration.md)。
 
 ## Linux 服务器部署（原生 Conda 后端）
 
@@ -476,7 +476,7 @@ LOCALFLOW_HISTORY_KEEP_RECENT_MESSAGES=8
 
 面向普通前端对话时建议保持 `LOCALFLOW_LLM_THINKING=disabled`，避免有限的输出额度被思考内容耗尽。如果需要复杂推理，可改为 `enabled`，并相应提高 `LOCALFLOW_LLM_MAX_TOKENS`。
 
-`bakend/.env` 已加入根目录 `.gitignore`，真实密钥不应写入前端代码、`NEXT_PUBLIC_*` 变量、README 或版本库。前端只连接本地 FastAPI，由后端向模型服务发送带密钥的请求。
+`bakend/.env` 已加入根目录 `.gitignore`，真实密钥不应写入前端代码、`VITE_*` 等前端构建变量、README 或版本库。前端只连接本地 FastAPI，由后端向模型服务发送带密钥的请求。
 
 `LOCALFLOW_DATA_ROOTS` 使用英文分号分隔多个绝对目录。前端不能提交任意绝对路径，只能通过 `root_id + relative_path` 浏览；后端会解析真实路径并拒绝 `..`、符号链接等越界结果。未设置时仅开放项目的 `data` 目录。
 

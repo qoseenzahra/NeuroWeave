@@ -24,4 +24,4 @@ Skill 状态和完整健康检查使用 FastAPI 工作线程，避免同步环�
 
 - 后端测试覆盖列表精简响应、长消息预览、Skill 检查期间列表并发响应、已有 5TT 的复用、明确重新生成的请求，以及重新规划后绑定保留。
 - 前端 TypeScript 检查与生产构建。
-- `frontend/tests/history-browser.mjs` 使用合成数据和真实 React hook，验证按需加载、分页缓存、归档切换、搜索取消、失败重试及隐藏面板缓存失效。需要项目现有 Vite/React、Playwright 和浏览器；可通过 `LOCALFLOW_BROWSER_TOOLS` 指定共享 node_modules，通过 `LOCALFLOW_BROWSER_EXECUTABLE` 指定浏览器。
+- 前端回归使用 `cd frontend && npm test`，覆盖历史恢复、分页去重、请求队列和运行状态；浏览器验证记录见 `frontend/docs/main-parity.md`。
