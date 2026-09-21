@@ -1,38 +1,43 @@
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+# Dependencies
+node_modules/
 
-# testing
-/coverage
+# Build output
+dist/
+dist-ssr/
 
-# next.js
-/.next/
-/.vinext/
-/out/
+# Vite cache
+.vite/
+.vite-temp/
 
-# misc
-.DS_Store
-*.pem
+# Environment variables / secrets
+.env
+.env.*
+!.env.example
 
-# debug
+# Local files
+*.local
+
+# Logs
+logs/
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# local environment
-.env*
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea/
 
-# deployment and generated files
-.vercel
-next-env.d.ts
-/dist/
-/.wrangler/
-/outputs/
-/work/
+# OS files
+.DS_Store
+Thumbs.db
+
+# Windows / Visual Studio
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

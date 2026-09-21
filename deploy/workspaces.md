@@ -116,9 +116,9 @@ Slurm 输出目录和输出目录必须在目标计算节点上以相同绝对�
 cd D:\reference_projects\LocalFlow\bakend
 python -m pytest -q
 cd ..\frontend
-npx tsc --noEmit
+npx tsc -b
 npm run lint
-node --experimental-strip-types --test --test-concurrency=1 tests/*.test.mjs
+npm test
 npm run build
 ```
 
