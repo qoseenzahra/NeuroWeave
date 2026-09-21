@@ -11,6 +11,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from ..base import RunnerResult
+from ...parameter_rules import active
 from ..external_command import ExternalCommandRunner
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -96,7 +97,10 @@ class ReviewedRunner(ExternalCommandRunner):
         if unknown:
             raise ValueError('未审核参数：' + ', '.join(sorted(unknown)))
         result = {}
+        schemas = {p.id:p for p in getattr(getattr(context, 'method', None), 'parameters', [])}
         for name, definition in declared.items():
+            if name in schemas and not active(schemas[name], context.step.selected_parameters):
+                continue
             value = context.step.selected_parameters.get(name, definition.get('default'))
             if value is None or value == '':
                 if definition.get('required', True):

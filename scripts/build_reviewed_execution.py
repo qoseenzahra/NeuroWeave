@@ -6,6 +6,7 @@ import hashlib
 import json
 import pathlib
 import re
+from parameter_documentation import enrich as enrich_parameter_documentation
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 METHODS = []
@@ -335,6 +336,7 @@ def dataset_scripts():
 def emit():
     manifests={}
     for spec in METHODS:
+        enrich_parameter_documentation(spec, ROOT)
         implementation_source(spec)
         if spec['skill_id'] in {'statistical-ml','cpm','brain-age-modeling','subject-subtyping','imaging-genetics-models','temporal-models','cnn3d','survival-models','causal-treatment-models','brainnetcnn','bnt','combraintf','neuroimaging-decoding'}:
             spec['aliases'].append('run_models')

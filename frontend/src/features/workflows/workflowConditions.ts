@@ -28,7 +28,7 @@ export function parameterValues(
 ): Record<string, ParameterValue> {
   return Object.fromEntries(
     method.parameters
-      .map((spec): [string, ParameterValue] => [spec.id, selected[spec.id] ?? spec.default])
+      .map((spec): [string, ParameterValue] => [spec.id, Object.hasOwn(selected, spec.id) ? selected[spec.id] : spec.default])
       .filter((entry) => entry[1] !== null)
   );
 }
@@ -49,4 +49,13 @@ export function visibleParameters(
 ): ParameterSpec[] {
   const values = parameterValues(method, selected);
   return method.parameters.filter((spec) => conditionMatches(spec.visible_when ?? {}, values));
+}
+
+export function parameterEnabled(spec: ParameterSpec, values: Record<string, ParameterValue>): boolean {
+  return conditionMatches(spec.visible_when ?? {}, values) && conditionMatches(spec.enabled_when ?? {}, values);
+}
+
+export function parameterRequired(spec: ParameterSpec, values: Record<string, ParameterValue>): boolean {
+  return parameterEnabled(spec, values) && (spec.required ||
+    (Object.keys(spec.required_when ?? {}).length > 0 && conditionMatches(spec.required_when ?? {}, values)));
 }

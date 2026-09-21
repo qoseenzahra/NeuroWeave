@@ -36,6 +36,7 @@ from .historical_inputs import HistoricalSelectionRequest
 from .models import ChatRequest, ChatResponse
 from .neuroclaw_compat.validate_dag import find_cycles, find_missing_deps, load_skill_graph
 from .skill_loader import SkillLoader
+from .skill_catalog import SkillCatalog
 from .run_models import ExecutionDraftRequest, RunCreateRequest, RunRetryRequest, WorkflowRun
 from .workflow_models import (
     InputBindingRequest,
@@ -78,6 +79,8 @@ workspace_service = WorkspaceService(local_store, PROJECT_ROOT / "workspaces")
 dataset_files = DatasetFiles(dataset_service)
 workspace_tools = WorkspaceTools(workspace_service, chat_service, dataset_files)
 runner_registry = RunnerRegistry()
+skill_catalog = SkillCatalog(skill_loader, capability_registry, runner_registry)
+workspace_tools.skill_catalog = skill_catalog
 workflow_service = WorkflowService(
     SKILLS_DIR / "dwi-skill" / "workflow.manifest.json",
     chat_service,
@@ -514,9 +517,39 @@ def get_skill(skill_name: str) -> dict[str, Any]:
     ]
     return {
         **_skill_with_execution_status(skill),
-        "instructions": skill.instructions,
+        "instructions": skill.overview or skill.prompt_excerpt(),
+        "reference_chars": len(skill.instructions),
+        "layered": bool(skill.overview),
         "files": files,
     }
+
+
+@app.get("/api/skills/{skill_name}/methods")
+def skill_methods(skill_name: str, q: str = Query('', max_length=500),
+                  cursor: str = '', limit: int = Query(20, ge=1, le=50), executable_only: bool = False):
+    try:
+        return skill_catalog.list_methods(skill_name, q, cursor, limit, executable_only)
+    except KeyError as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.get("/api/skill-methods/{capability}/{method_id}")
+def skill_method(capability: str, method_id: str):
+    try:
+        return skill_catalog.method(capability, method_id)
+    except KeyError as exc:
+        raise HTTPException(404, str(exc)) from exc
+
+
+@app.get("/api/skills/{skill_name}/reference")
+def skill_reference(skill_name: str, offset: int = Query(0, ge=0, le=2000000),
+                    max_chars: int = Query(6000, ge=1, le=12000)):
+    try:
+        return skill_catalog.read_reference(skill_name, offset, max_chars)
+    except KeyError as exc:
+        raise HTTPException(404, str(exc)) from exc
 
 
 @app.post("/api/conversations", response_model=ConversationRecord)

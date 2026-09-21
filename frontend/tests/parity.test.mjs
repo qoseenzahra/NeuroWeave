@@ -76,6 +76,12 @@ await test('allocation validation enforces parallel capacity, thread count and C
   assert(executionErrors({...options,nodes:[{...node,parallel_samples:1}]},backends,
     {...workflow,steps:[{selected_parameters:{threads:8,device:'cuda'},input_bindings:{}}]},t).length>=2);
 });
+await test('MRtrix thread allocation allows serial zero and rejects oversubscription', () => {
+  for (const count of [0,1,4]) assert.deepEqual(executionErrors(options,backends,
+    {...workflow,steps:[{selected_parameters:{nthreads:count},input_bindings:{}}]},t),[]);
+  assert(executionErrors(options,backends,
+    {...workflow,steps:[{selected_parameters:{nthreads:8},input_bindings:{}}]},t).length>0);
+});
 await test('single-sample selector is enabled in the real ExecutionSettings component', async () => {
   const { ExecutionSettings }=await load('features/workflows/ExecutionSettings.tsx');
   const html=renderToStaticMarkup(createElement(ExecutionSettings,{workflow,value:options,backends,disabled:false,onChange(){}}));
@@ -268,4 +274,16 @@ await test('rail label flips left and shifts vertically near the bottom-right ed
   const p=positionPopup({left:350,right:386,top:458,bottom:494},{width:180,height:40},viewport,'right','center');
   assert.equal(p.side,'left'); assert.equal(p.left,164); assert.equal(p.top,452);
 });
+  const {parameterValues,parameterEnabled,parameterRequired,visibleParameters}=await server.ssrLoadModule('/src/features/workflows/workflowConditions.ts');
+  await test('conditional parameter requirements do not confuse zero, false and omission',()=>{
+    const mode={id:'mode',type:'string',required:true,default:'auto'};
+    const abs={id:'abs',type:'number',default:null,required:false,visible_when:{mode:['absolute']},required_when:{mode:['absolute']}};
+    const method={parameters:[mode,abs]};
+    const values=parameterValues(method,{mode:'absolute',abs:0});
+    assert.equal(values.abs,0);assert.equal(parameterRequired(abs,values),true);
+    assert.equal(parameterEnabled(abs,{mode:'auto'}),false);
+    assert.equal(visibleParameters(method,{mode:'auto',abs:5}).some(p=>p.id==='abs'),false);
+    assert.equal(parameterValues({parameters:[{id:'optional',default:42}]},{optional:null}).optional,undefined);
+  });
+
 } finally { await server.close(); }

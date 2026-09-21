@@ -20,7 +20,9 @@
           "required": true,
           "options": [],
           "minimum": 0.01,
-          "maximum": 100
+          "maximum": 100,
+          "description": "Repetition time in seconds.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/denoise_timeseries_reference.py:38。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [
@@ -111,7 +113,9 @@
           "required": true,
           "options": [],
           "minimum": 0.01,
-          "maximum": 100
+          "maximum": 100,
+          "description": "Repetition time in seconds.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/denoise_timeseries_reference.py:38。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "contrast",
@@ -122,7 +126,9 @@
           "required": true,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Named contrast expression.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/task_glm_reference.py:45。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [
@@ -219,7 +225,9 @@
           "required": true,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Column or contrast expression for group inference.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/second_level_glm_reference.py:42。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [

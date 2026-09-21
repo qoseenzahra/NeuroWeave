@@ -202,7 +202,7 @@ class SlurmRunServiceTests(unittest.TestCase):
         self.backend.execute.assert_not_called()
 
     def test_create_rejects_threads_above_allocation_and_cuda_without_gpu(self) -> None:
-        for parameters, message in [({"threads": 8}, "CPU"), ({"backend": "cuda"}, "GPU")]:
+        for parameters, message in [({"threads": 8}, "CPU"), ({"nthreads": 8}, "CPU"), ({"backend": "cuda"}, "GPU")]:
             with self.subTest(parameters=parameters):
                 workflow = self.workflow.model_copy(deep=True)
                 workflow.steps[0].selected_parameters.update(parameters)

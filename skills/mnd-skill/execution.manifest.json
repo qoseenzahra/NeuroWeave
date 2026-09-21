@@ -20,7 +20,9 @@
           "required": false,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Comma-separated columns to extract",
+          "usage": "参数说明直接来自 skills/mnd-skill/scripts/extract_mnd_phenotype.py:106。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [
@@ -98,7 +100,9 @@
           "required": false,
           "options": [],
           "minimum": 0,
-          "maximum": 1000000
+          "maximum": 1000000,
+          "description": "FD threshold (default: 0.3 mm)",
+          "usage": "参数说明直接来自 skills/mnd-skill/scripts/mnd_qc_summary.py:44。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "diagnosis_file",
@@ -109,7 +113,9 @@
           "required": false,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "CSV with subject diagnosis info",
+          "usage": "参数说明直接来自 skills/mnd-skill/scripts/mnd_qc_summary.py:46。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [

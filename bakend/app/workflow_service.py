@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import math
+from .parameter_rules import active as parameter_active, required as parameter_required, conflicts as parameter_conflicts
+
 import json
 import re
 import subprocess
@@ -981,10 +984,10 @@ class WorkflowService:
             for parameter_id, value in parameters.items():
                 spec = specs[parameter_id]
                 if value is None and not spec.required:
-                    merged.pop(parameter_id, None)
+                    merged[parameter_id] = None
                 else:
                     merged[parameter_id] = value
-            self._validate_method_parameters(method, merged)
+            self._validate_method_parameters(method, merged, require_complete=False)
             step.selected_parameters = merged
             self._resolve_workflow_inputs(workflow)
             self._clear_review(workflow)
@@ -2420,7 +2423,7 @@ class WorkflowService:
 
     @staticmethod
     def _parameter_visible(spec: ParameterSpec, values: dict[str, Any]) -> bool:
-        return all(values.get(parameter_id) in allowed for parameter_id, allowed in spec.visible_when.items())
+        return parameter_active(spec, values)
 
     @staticmethod
     def _validate_parameter(spec: ParameterSpec, value: Any) -> None:
@@ -2436,6 +2439,8 @@ class WorkflowService:
             raise ValueError(f"参数 {spec.label} 不在允许的选项中")
         if spec.type in {"integer", "number"}:
             numeric = float(value)
+            if not math.isfinite(numeric):
+                raise ValueError(f"参数 {spec.label} 必须是有限数值")
             if spec.minimum is not None and numeric < spec.minimum:
                 raise ValueError(f"参数 {spec.label} 不能小于 {spec.minimum:g}{spec.unit}")
             if spec.maximum is not None and numeric > spec.maximum:
@@ -2445,6 +2450,7 @@ class WorkflowService:
         self,
         method: MethodOption,
         values: dict[str, Any],
+        *, require_complete: bool = True,
     ) -> None:
         specs = {spec.id: spec for spec in method.parameters}
         unknown = sorted(set(values) - set(specs))
@@ -2452,10 +2458,13 @@ class WorkflowService:
             raise ValueError(f"包含未声明的参数：{', '.join(unknown)}")
         for spec in specs.values():
             visible = self._parameter_visible(spec, values)
-            if visible and spec.required and spec.id not in values:
+            if require_complete and parameter_required(spec, values) and values.get(spec.id) is None:
                 raise ValueError(f"缺少必填参数：{spec.label}")
-            if visible and spec.id in values:
+            if visible and values.get(spec.id) is not None:
                 self._validate_parameter(spec, values[spec.id])
+            collisions = parameter_conflicts(spec, values)
+            if collisions:
+                raise ValueError(f"参数 {spec.label} 与 {', '.join(collisions)} 不能同时设置")
 
     def _validate_all_parameters(self, workflow: Workflow) -> None:
         for step in workflow.steps:
@@ -2487,7 +2496,7 @@ class WorkflowService:
             )
             parts = ["RUNNER_PIPELINE", method.execution_recipe.recipe_id, "::", stages]
             for spec in method.parameters:
-                if spec.id not in parameters or not WorkflowService._parameter_visible(spec, parameters):
+                if parameters.get(spec.id) is None or not WorkflowService._parameter_visible(spec, parameters):
                     continue
                 value = parameters[spec.id]
                 rendered = str(value).lower() if isinstance(value, bool) else str(value)
@@ -2503,7 +2512,7 @@ class WorkflowService:
                 if source:
                     parts.extend((f"--input-{slot.id}", subprocess.list2cmdline([source])))
             for spec in method.parameters:
-                if spec.id not in parameters or not WorkflowService._parameter_visible(spec, parameters):
+                if parameters.get(spec.id) is None or not WorkflowService._parameter_visible(spec, parameters):
                     continue
                 value = parameters[spec.id]
                 if value == "" and not spec.required:
@@ -2530,7 +2539,7 @@ class WorkflowService:
             parts.extend(("--input", input_path))
         parts.extend(("--output", "<OUTPUT_FOLDER>"))
         for spec in method.parameters:
-            if spec.id not in parameters or not WorkflowService._parameter_visible(spec, parameters):
+            if parameters.get(spec.id) is None or not WorkflowService._parameter_visible(spec, parameters):
                 continue
             value = parameters[spec.id]
             if value == "" and not spec.required:

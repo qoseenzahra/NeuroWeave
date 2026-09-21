@@ -20,7 +20,9 @@
           "required": false,
           "options": [],
           "minimum": 0,
-          "maximum": 1000000
+          "maximum": 1000000,
+          "description": "Mean framewise displacement threshold for exclusion (default: 0.3)",
+          "usage": "参数说明直接来自 skills/abcd-skill/scripts/abcd_qc_summary.py:364。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "max_fd_threshold",
@@ -31,7 +33,9 @@
           "required": false,
           "options": [],
           "minimum": 0,
-          "maximum": 1000000
+          "maximum": 1000000,
+          "description": "Maximum framewise displacement threshold for exclusion (default: 5.0)",
+          "usage": "参数说明直接来自 skills/abcd-skill/scripts/abcd_qc_summary.py:370。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "coverage_threshold",
@@ -42,7 +46,9 @@
           "required": false,
           "options": [],
           "minimum": 0,
-          "maximum": 1000000
+          "maximum": 1000000,
+          "description": "Minimum fraction of usable volumes (default: 0.8)",
+          "usage": "参数说明直接来自 skills/abcd-skill/scripts/abcd_qc_summary.py:376。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [
@@ -126,7 +132,9 @@
           "required": false,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Comma-separated list of columns to select (default: all)",
+          "usage": "参数说明直接来自 skills/abcd-skill/scripts/extract_abcd_phenotype.py:229。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "events",
@@ -137,7 +145,9 @@
           "required": false,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Comma-separated ABCD event names to include. Options: [参见原脚本动态取值]",
+          "usage": "参数说明直接来自 skills/abcd-skill/scripts/extract_abcd_phenotype.py:233。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "missing_threshold",
@@ -148,7 +158,9 @@
           "required": false,
           "options": [],
           "minimum": 0,
-          "maximum": 1000000
+          "maximum": 1000000,
+          "description": "Drop columns with more than this fraction of missing values (default: 0.5)",
+          "usage": "参数说明直接来自 skills/abcd-skill/scripts/extract_abcd_phenotype.py:241。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [
@@ -226,7 +238,9 @@
           "required": false,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "ABCD release version (default: 5.1)",
+          "usage": "参数说明直接来自 skills/abcd-skill/scripts/reorganize_abcd.py:339。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [

@@ -20,7 +20,9 @@
           "required": false,
           "options": [],
           "minimum": 0,
-          "maximum": 1000000
+          "maximum": 1000000,
+          "description": "Mean FD threshold (default: 0.3)",
+          "usage": "参数说明直接来自 skills/abide-skill/scripts/abide_qc_summary.py:257。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "max_fd_threshold",
@@ -31,7 +33,9 @@
           "required": false,
           "options": [],
           "minimum": 0,
-          "maximum": 1000000
+          "maximum": 1000000,
+          "description": "Max FD threshold (default: 5.0)",
+          "usage": "参数说明直接来自 skills/abide-skill/scripts/abide_qc_summary.py:258。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "coverage_threshold",
@@ -42,7 +46,9 @@
           "required": false,
           "options": [],
           "minimum": 0,
-          "maximum": 1000000
+          "maximum": 1000000,
+          "description": "Coverage threshold (default: 0.8)",
+          "usage": "参数说明直接来自 skills/abide-skill/scripts/abide_qc_summary.py:259。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [
@@ -126,7 +132,9 @@
           "required": false,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Comma-separated list of columns to select (default: all common columns)",
+          "usage": "参数说明直接来自 skills/abide-skill/scripts/extract_abide_phenotype.py:107。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "missing_threshold",
@@ -137,7 +145,9 @@
           "required": false,
           "options": [],
           "minimum": 0,
-          "maximum": 1000000
+          "maximum": 1000000,
+          "description": "Drop columns with more than this fraction of missing values (default: 0.5)",
+          "usage": "参数说明直接来自 skills/abide-skill/scripts/extract_abide_phenotype.py:115。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "abide_version",
@@ -148,7 +158,9 @@
           "required": false,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "ABIDE version: I or II (default: I)",
+          "usage": "参数说明直接来自 skills/abide-skill/scripts/extract_abide_phenotype.py:121。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [
@@ -233,7 +245,9 @@
           "required": false,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "ABIDE version: I or II (default: I)",
+          "usage": "参数说明直接来自 skills/abide-skill/scripts/reorganize_abide.py:340。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [

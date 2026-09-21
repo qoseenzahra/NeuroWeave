@@ -20,7 +20,9 @@
           "required": false,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Extract for specific subject only (e.g., subj01)",
+          "usage": "参数说明直接来自 skills/nsd-skill/scripts/extract_nsd_stimulus.py:82。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [
@@ -98,7 +100,9 @@
           "required": false,
           "options": [],
           "minimum": 0,
-          "maximum": 1000000
+          "maximum": 1000000,
+          "description": "FD threshold in mm (default: 0.3, typical for 7T)",
+          "usage": "参数说明直接来自 skills/nsd-skill/scripts/nsd_qc_summary.py:52。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [

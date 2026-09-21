@@ -47,6 +47,13 @@ class ParameterSpec(BaseModel):
     step: float | None = None
     placeholder: str = ""
     visible_when: dict[str, list[Any]] = Field(default_factory=dict)
+    required_when: dict[str, list[Any]] = Field(default_factory=dict)
+    enabled_when: dict[str, list[Any]] = Field(default_factory=dict)
+    conflicts_with: list[str] = Field(default_factory=list)
+    condition_help: str = ""
+    usage: str = ""
+    software_default: str = ""
+    documentation_url: str = ""
 
 
 class InputSlotSpec(BaseModel):

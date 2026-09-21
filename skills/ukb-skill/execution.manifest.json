@@ -20,7 +20,9 @@
           "required": true,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Disease key. Available: [参见原脚本动态取值]",
+          "usage": "参数说明直接来自 skills/ukb-skill/scripts/build_ukb_survival.py:183。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "censor_date",
@@ -31,7 +33,9 @@
           "required": true,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Administrative censoring date (default: 2023-10-31)",
+          "usage": "参数说明直接来自 skills/ukb-skill/scripts/build_ukb_survival.py:185。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "baseline_col",
@@ -42,7 +46,9 @@
           "required": true,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Column name for baseline assessment date",
+          "usage": "参数说明直接来自 skills/ukb-skill/scripts/build_ukb_survival.py:187。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [
@@ -112,7 +118,9 @@
           "required": false,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Disease key. Available: [参见原脚本动态取值]",
+          "usage": "参数说明直接来自 skills/ukb-skill/scripts/extract_ukb_cases.py:266。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "custom_icd",
@@ -123,7 +131,9 @@
           "required": false,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Custom ICD-10 pattern (regex)",
+          "usage": "参数说明直接来自 skills/ukb-skill/scripts/extract_ukb_cases.py:267。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "sources",
@@ -134,7 +144,9 @@
           "required": false,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Comma-separated data sources: ICD10,ICD9,Death,Self-report",
+          "usage": "参数说明直接来自 skills/ukb-skill/scripts/extract_ukb_cases.py:268。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "list_diseases",
@@ -145,7 +157,9 @@
           "required": false,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "List available diseases and exit",
+          "usage": "参数说明直接来自 skills/ukb-skill/scripts/extract_ukb_cases.py:270。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [
@@ -216,7 +230,9 @@
           "required": false,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Comma-separated variable names (default: core covariates)",
+          "usage": "参数说明直接来自 skills/ukb-skill/scripts/extract_ukb_phenotype.py:196。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "drop_missing",
@@ -227,7 +243,9 @@
           "required": false,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Drop rows with missing values",
+          "usage": "参数说明直接来自 skills/ukb-skill/scripts/extract_ukb_phenotype.py:198。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "list_variables",
@@ -238,7 +256,9 @@
           "required": false,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "List available variables and exit",
+          "usage": "参数说明直接来自 skills/ukb-skill/scripts/extract_ukb_phenotype.py:199。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [
@@ -316,7 +336,9 @@
           "required": false,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Include imaging availability check",
+          "usage": "参数说明直接来自 skills/ukb-skill/scripts/ukb_qc_summary.py:111。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "age_min",
@@ -327,7 +349,9 @@
           "required": false,
           "options": [],
           "minimum": 0,
-          "maximum": 1000000
+          "maximum": 1000000,
+          "description": "Minimum age filter",
+          "usage": "参数说明直接来自 skills/ukb-skill/scripts/ukb_qc_summary.py:112。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "age_max",
@@ -338,7 +362,9 @@
           "required": false,
           "options": [],
           "minimum": 0,
-          "maximum": 1000000
+          "maximum": 1000000,
+          "description": "Maximum age filter",
+          "usage": "参数说明直接来自 skills/ukb-skill/scripts/ukb_qc_summary.py:113。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "required_cols",
@@ -349,7 +375,9 @@
           "required": false,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Comma-separated required column names",
+          "usage": "参数说明直接来自 skills/ukb-skill/scripts/ukb_qc_summary.py:114。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [

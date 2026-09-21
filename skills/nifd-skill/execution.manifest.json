@@ -109,7 +109,9 @@
           "required": false,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "CSV with subject diagnosis info",
+          "usage": "参数说明直接来自 skills/nifd-skill/scripts/nifd_qc_summary.py:41。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [

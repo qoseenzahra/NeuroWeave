@@ -20,7 +20,9 @@
           "required": false,
           "options": [],
           "minimum": 0,
-          "maximum": 1000000
+          "maximum": 1000000,
+          "description": "Mean FD threshold (default: 0.3)",
+          "usage": "参数说明直接来自 skills/aomic-skill/scripts/aomic_qc_summary.py:210。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "max_fd_threshold",
@@ -31,7 +33,9 @@
           "required": false,
           "options": [],
           "minimum": 0,
-          "maximum": 1000000
+          "maximum": 1000000,
+          "description": "Max FD threshold (default: 5.0)",
+          "usage": "参数说明直接来自 skills/aomic-skill/scripts/aomic_qc_summary.py:211。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [
@@ -108,7 +112,9 @@
           "required": false,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Comma-separated list of columns to select (default: all)",
+          "usage": "参数说明直接来自 skills/aomic-skill/scripts/extract_aomic_phenotype.py:238。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "missing_threshold",
@@ -119,7 +125,9 @@
           "required": false,
           "options": [],
           "minimum": 0,
-          "maximum": 1000000
+          "maximum": 1000000,
+          "description": "Drop columns with more than this fraction of missing values (default: 0.5)",
+          "usage": "参数说明直接来自 skills/aomic-skill/scripts/extract_aomic_phenotype.py:246。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [
@@ -214,7 +222,9 @@
             }
           ],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "AOMIC sub-dataset (default: ID1000)",
+          "usage": "参数说明直接来自 skills/aomic-skill/scripts/reorganize_aomic.py:235。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [

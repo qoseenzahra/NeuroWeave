@@ -20,7 +20,9 @@
           "required": true,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "batch column to harmonize away",
+          "usage": "参数说明直接来自 skills/harmonization-tool/scripts/harmonize.py:58。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "protected",
@@ -31,7 +33,9 @@
           "required": true,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "protected covariates",
+          "usage": "参数说明直接来自 skills/harmonization-tool/scripts/harmonize.py:59。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "split",
@@ -55,7 +59,9 @@
             }
           ],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "optional split to fit harmonization on train only",
+          "usage": "参数说明直接来自 skills/harmonization-tool/scripts/harmonize.py:70。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "seed",
@@ -149,7 +155,9 @@
           "required": true,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "batch column to harmonize away",
+          "usage": "参数说明直接来自 skills/harmonization-tool/scripts/harmonize.py:58。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "protected",
@@ -160,7 +168,9 @@
           "required": true,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "protected covariates",
+          "usage": "参数说明直接来自 skills/harmonization-tool/scripts/harmonize.py:59。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "split",
@@ -184,7 +194,9 @@
             }
           ],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "optional split to fit harmonization on train only",
+          "usage": "参数说明直接来自 skills/harmonization-tool/scripts/harmonize.py:70。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "seed",
@@ -276,7 +288,9 @@
           "required": true,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "batch column to harmonize away",
+          "usage": "参数说明直接来自 skills/harmonization-tool/scripts/harmonize.py:58。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "protected",
@@ -287,7 +301,9 @@
           "required": true,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "protected covariates",
+          "usage": "参数说明直接来自 skills/harmonization-tool/scripts/harmonize.py:59。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "split",
@@ -311,7 +327,9 @@
             }
           ],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "optional split to fit harmonization on train only",
+          "usage": "参数说明直接来自 skills/harmonization-tool/scripts/harmonize.py:70。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "seed",
@@ -403,7 +421,9 @@
           "required": true,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "batch column to harmonize away",
+          "usage": "参数说明直接来自 skills/harmonization-tool/scripts/harmonize.py:58。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "protected",
@@ -414,7 +434,9 @@
           "required": true,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "protected covariates",
+          "usage": "参数说明直接来自 skills/harmonization-tool/scripts/harmonize.py:59。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "split",
@@ -438,7 +460,9 @@
             }
           ],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "optional split to fit harmonization on train only",
+          "usage": "参数说明直接来自 skills/harmonization-tool/scripts/harmonize.py:70。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "seed",
@@ -530,7 +554,9 @@
           "required": true,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "batch column to harmonize away",
+          "usage": "参数说明直接来自 skills/harmonization-tool/scripts/harmonize.py:58。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "protected",
@@ -541,7 +567,9 @@
           "required": true,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "protected covariates",
+          "usage": "参数说明直接来自 skills/harmonization-tool/scripts/harmonize.py:59。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "split",
@@ -565,7 +593,9 @@
             }
           ],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "optional split to fit harmonization on train only",
+          "usage": "参数说明直接来自 skills/harmonization-tool/scripts/harmonize.py:70。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "seed",

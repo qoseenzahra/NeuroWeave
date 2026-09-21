@@ -157,6 +157,11 @@ class RunService:
                     requested = step.selected_parameters.get(name)
                     if isinstance(requested, (int, float)) and (requested < 1 or requested > allocated.cpus):
                         raise RunConflict(f"步骤 {step.title} 的 {name} 超过分配的 CPU，请调整资源或参数")
+                # MRtrix uses 0 to disable multithreading, unlike the legacy
+                # thread-count fields above. Reject oversubscription before sbatch.
+                nthreads = step.selected_parameters.get("nthreads")
+                if isinstance(nthreads, (int, float)) and (nthreads < 0 or nthreads > allocated.cpus):
+                    raise RunConflict(f"步骤 {step.title} 的 nthreads 超过分配的 CPU，请调整资源或参数")
                 if (step.selected_parameters.get("backend") == "cuda" or step.selected_parameters.get("device") == "cuda") and not allocated.gpus:
                     raise RunConflict("CUDA 方法需要申请至少一张 GPU")
             elif ((step.selected_parameters.get("backend") == "cuda" or step.selected_parameters.get("device") == "cuda")

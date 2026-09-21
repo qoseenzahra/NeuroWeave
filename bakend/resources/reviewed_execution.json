@@ -50,7 +50,9 @@
           "required": true,
           "options": [],
           "minimum": 0.01,
-          "maximum": 100
+          "maximum": 100,
+          "description": "Repetition time in seconds.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/denoise_timeseries_reference.py:38。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "detrend",
@@ -62,7 +64,9 @@
           "required": true,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Enable temporal detrending.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/denoise_timeseries_reference.py:41。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "no_standardize",
@@ -74,7 +78,9 @@
           "required": true,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Disable standardization.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/denoise_timeseries_reference.py:42。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -154,7 +160,9 @@
           "required": true,
           "options": [],
           "minimum": 0.01,
-          "maximum": 100
+          "maximum": 100,
+          "description": "Repetition time in seconds.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/denoise_timeseries_reference.py:38。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "fwhm",
@@ -166,7 +174,9 @@
           "required": true,
           "options": [],
           "minimum": 0,
-          "maximum": 30
+          "maximum": 30,
+          "description": "Smoothing kernel FWHM in mm.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/preprocess_bold_reference.py:59。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "high_pass",
@@ -178,7 +188,9 @@
           "required": true,
           "options": [],
           "minimum": 1e-05,
-          "maximum": 1
+          "maximum": 1,
+          "description": "High-pass frequency in Hz.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/preprocess_bold_reference.py:60。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "low_pass",
@@ -190,7 +202,9 @@
           "required": true,
           "options": [],
           "minimum": 0.001,
-          "maximum": 1
+          "maximum": 1,
+          "description": "Low-pass frequency in Hz.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/preprocess_bold_reference.py:61。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "n_dummies",
@@ -202,7 +216,9 @@
           "required": true,
           "options": [],
           "minimum": 0,
-          "maximum": 100
+          "maximum": 100,
+          "description": "Number of initial dummy scans to drop.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/preprocess_bold_reference.py:62。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -302,7 +318,9 @@
           "required": true,
           "options": [],
           "minimum": 0.01,
-          "maximum": 100
+          "maximum": 100,
+          "description": "Repetition time in seconds.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/denoise_timeseries_reference.py:38。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -417,7 +435,9 @@
           "required": true,
           "options": [],
           "minimum": 0.01,
-          "maximum": 100
+          "maximum": 100,
+          "description": "Repetition time in seconds.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/denoise_timeseries_reference.py:38。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "contrast",
@@ -429,7 +449,9 @@
           "required": true,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Named contrast expression.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/task_glm_reference.py:45。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -534,7 +556,9 @@
           "required": true,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Column or contrast expression for group inference.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/second_level_glm_reference.py:42。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -627,7 +651,9 @@
           "required": true,
           "options": [],
           "minimum": 2,
-          "maximum": 200
+          "maximum": 200,
+          "description": "Number of ICA components.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/rest_ica_reference.py:50。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -717,7 +743,9 @@
           "required": true,
           "options": [],
           "minimum": 2,
-          "maximum": 200
+          "maximum": 200,
+          "description": "Number of dictionary components.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/rest_dictlearning_reference.py:47。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -807,7 +835,9 @@
           "required": true,
           "options": [],
           "minimum": 2,
-          "maximum": 1000
+          "maximum": 1000,
+          "description": "Number of clusters / parcels.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/kmeans_parcellation_reference.py:44。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -897,7 +927,9 @@
           "required": true,
           "options": [],
           "minimum": 2,
-          "maximum": 1000
+          "maximum": 1000,
+          "description": "Number of clusters / parcels.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/hierarchical_parcellation_reference.py:44。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -987,7 +1019,9 @@
           "required": true,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Target column in label table.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/svm_classifier_reference.py:50。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "cv",
@@ -999,7 +1033,9 @@
           "required": true,
           "options": [],
           "minimum": 2,
-          "maximum": 20
+          "maximum": 20,
+          "description": "Number of CV folds.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/svm_classifier_reference.py:51。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -1098,7 +1134,9 @@
           "required": true,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Target column in label table.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/spacenet_classifier_reference.py:49。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -1198,7 +1236,9 @@
           "required": true,
           "options": [],
           "minimum": 0,
-          "maximum": 100000
+          "maximum": 100000,
+          "description": "Number of strongest positive connections to keep.",
+          "usage": "参数说明直接来自 skills/brain-visualization/scripts/connectome_reference.py:90。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "node_size",
@@ -1210,7 +1250,9 @@
           "required": true,
           "options": [],
           "minimum": 1,
-          "maximum": 1000
+          "maximum": 1000,
+          "description": "Node marker size.",
+          "usage": "参数说明直接来自 skills/brain-visualization/scripts/connectome_reference.py:91。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "brain_opacity",
@@ -1222,7 +1264,9 @@
           "required": true,
           "options": [],
           "minimum": 0,
-          "maximum": 1
+          "maximum": 1,
+          "description": "Background template opacity.",
+          "usage": "参数说明直接来自 skills/brain-visualization/scripts/connectome_reference.py:92。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -1398,7 +1442,9 @@
           "required": true,
           "options": [],
           "minimum": 0,
-          "maximum": 500
+          "maximum": 500,
+          "description": "Threshold for identifying b0 volumes.",
+          "usage": "参数说明直接来自 skills/dipy-tool/scripts/load_and_mask_reference.py:52。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -1498,7 +1544,9 @@
           "required": true,
           "options": [],
           "minimum": 1,
-          "maximum": 100000
+          "maximum": 100000,
+          "description": "Minimum voxel count for a region to be reported.",
+          "usage": "参数说明直接来自 skills/dipy-tool/scripts/roi_stats_reference.py:50。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -4158,7 +4206,9 @@
           "required": true,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "batch column to harmonize away",
+          "usage": "参数说明直接来自 skills/harmonization-tool/scripts/harmonize.py:58。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "protected",
@@ -4171,7 +4221,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "split": true
+          "split": true,
+          "description": "protected covariates",
+          "usage": "参数说明直接来自 skills/harmonization-tool/scripts/harmonize.py:59。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "split",
@@ -4196,7 +4248,9 @@
             }
           ],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "optional split to fit harmonization on train only",
+          "usage": "参数说明直接来自 skills/harmonization-tool/scripts/harmonize.py:70。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "seed",
@@ -4296,7 +4350,9 @@
           "required": true,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Disease key. Available: [参见原脚本动态取值]",
+          "usage": "参数说明直接来自 skills/ukb-skill/scripts/build_ukb_survival.py:183。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "censor_date",
@@ -4308,7 +4364,9 @@
           "required": true,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Administrative censoring date (default: 2023-10-31)",
+          "usage": "参数说明直接来自 skills/ukb-skill/scripts/build_ukb_survival.py:185。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "baseline_col",
@@ -4320,7 +4378,9 @@
           "required": true,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Column name for baseline assessment date",
+          "usage": "参数说明直接来自 skills/ukb-skill/scripts/build_ukb_survival.py:187。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -7008,7 +7068,9 @@
           "required": true,
           "options": [],
           "minimum": 0.5,
-          "maximum": 60
+          "maximum": 60,
+          "description": "Epoch duration in seconds (default: 4.0)",
+          "usage": "参数说明直接来自 skills/seed-iv-skill/scripts/extract_seed_iv_features.py:114。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -7104,7 +7166,9 @@
             }
           ],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Classification method",
+          "usage": "参数说明直接来自 skills/seed-iv-skill/scripts/classify_seed_iv.py:119。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -7185,7 +7249,9 @@
           "required": true,
           "options": [],
           "minimum": 0.5,
-          "maximum": 60
+          "maximum": 60,
+          "description": "Epoch duration in seconds (default: 4.0)",
+          "usage": "参数说明直接来自 skills/seed-vig-skill/scripts/extract_seed_vig_features.py:113。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -7383,7 +7449,9 @@
           "options": [],
           "minimum": 0,
           "maximum": 1000000,
-          "split": false
+          "split": false,
+          "description": "Mean framewise displacement threshold for exclusion (default: 0.3)",
+          "usage": "参数说明直接来自 skills/abcd-skill/scripts/abcd_qc_summary.py:364。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "max_fd_threshold",
@@ -7396,7 +7464,9 @@
           "options": [],
           "minimum": 0,
           "maximum": 1000000,
-          "split": false
+          "split": false,
+          "description": "Maximum framewise displacement threshold for exclusion (default: 5.0)",
+          "usage": "参数说明直接来自 skills/abcd-skill/scripts/abcd_qc_summary.py:370。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "coverage_threshold",
@@ -7409,7 +7479,9 @@
           "options": [],
           "minimum": 0,
           "maximum": 1000000,
-          "split": false
+          "split": false,
+          "description": "Minimum fraction of usable volumes (default: 0.8)",
+          "usage": "参数说明直接来自 skills/abcd-skill/scripts/abcd_qc_summary.py:376。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -7502,7 +7574,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "split": false
+          "split": false,
+          "description": "Comma-separated list of columns to select (default: all)",
+          "usage": "参数说明直接来自 skills/abcd-skill/scripts/extract_abcd_phenotype.py:229。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "events",
@@ -7515,7 +7589,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "split": false
+          "split": false,
+          "description": "Comma-separated ABCD event names to include. Options: [参见原脚本动态取值]",
+          "usage": "参数说明直接来自 skills/abcd-skill/scripts/extract_abcd_phenotype.py:233。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "missing_threshold",
@@ -7528,7 +7604,9 @@
           "options": [],
           "minimum": 0,
           "maximum": 1000000,
-          "split": false
+          "split": false,
+          "description": "Drop columns with more than this fraction of missing values (default: 0.5)",
+          "usage": "参数说明直接来自 skills/abcd-skill/scripts/extract_abcd_phenotype.py:241。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -7618,7 +7696,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "split": false
+          "split": false,
+          "description": "ABCD release version (default: 5.1)",
+          "usage": "参数说明直接来自 skills/abcd-skill/scripts/reorganize_abcd.py:339。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -7718,7 +7798,9 @@
           "options": [],
           "minimum": 0,
           "maximum": 1000000,
-          "split": false
+          "split": false,
+          "description": "Mean FD threshold (default: 0.3)",
+          "usage": "参数说明直接来自 skills/abide-skill/scripts/abide_qc_summary.py:257。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "max_fd_threshold",
@@ -7731,7 +7813,9 @@
           "options": [],
           "minimum": 0,
           "maximum": 1000000,
-          "split": false
+          "split": false,
+          "description": "Max FD threshold (default: 5.0)",
+          "usage": "参数说明直接来自 skills/abide-skill/scripts/abide_qc_summary.py:258。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "coverage_threshold",
@@ -7744,7 +7828,9 @@
           "options": [],
           "minimum": 0,
           "maximum": 1000000,
-          "split": false
+          "split": false,
+          "description": "Coverage threshold (default: 0.8)",
+          "usage": "参数说明直接来自 skills/abide-skill/scripts/abide_qc_summary.py:259。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -7847,7 +7933,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "split": false
+          "split": false,
+          "description": "Comma-separated list of columns to select (default: all common columns)",
+          "usage": "参数说明直接来自 skills/abide-skill/scripts/extract_abide_phenotype.py:107。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "missing_threshold",
@@ -7860,7 +7948,9 @@
           "options": [],
           "minimum": 0,
           "maximum": 1000000,
-          "split": false
+          "split": false,
+          "description": "Drop columns with more than this fraction of missing values (default: 0.5)",
+          "usage": "参数说明直接来自 skills/abide-skill/scripts/extract_abide_phenotype.py:115。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "abide_version",
@@ -7873,7 +7963,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "split": false
+          "split": false,
+          "description": "ABIDE version: I or II (default: I)",
+          "usage": "参数说明直接来自 skills/abide-skill/scripts/extract_abide_phenotype.py:121。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -7963,7 +8055,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "split": false
+          "split": false,
+          "description": "ABIDE version: I or II (default: I)",
+          "usage": "参数说明直接来自 skills/abide-skill/scripts/reorganize_abide.py:340。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -8043,7 +8137,9 @@
           "options": [],
           "minimum": 0,
           "maximum": 1000000,
-          "split": false
+          "split": false,
+          "description": "Mean FD threshold (default: 0.3)",
+          "usage": "参数说明直接来自 skills/adhd200-skill/scripts/adhd200_qc_summary.py:65。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "max_fd_threshold",
@@ -8056,7 +8152,9 @@
           "options": [],
           "minimum": 0,
           "maximum": 1000000,
-          "split": false
+          "split": false,
+          "description": "Max FD threshold (default: 5.0)",
+          "usage": "参数说明直接来自 skills/adhd200-skill/scripts/adhd200_qc_summary.py:66。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -8159,7 +8257,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "split": false
+          "split": false,
+          "description": "Comma-separated list of columns to select (default: all)",
+          "usage": "参数说明直接来自 skills/adhd200-skill/scripts/extract_adhd200_phenotype.py:51。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "missing_threshold",
@@ -8172,7 +8272,9 @@
           "options": [],
           "minimum": 0,
           "maximum": 1000000,
-          "split": false
+          "split": false,
+          "description": "Drop columns with > this fraction missing",
+          "usage": "参数说明直接来自 skills/adhd200-skill/scripts/extract_adhd200_phenotype.py:53。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -8338,7 +8440,9 @@
           "options": [],
           "minimum": 0,
           "maximum": 1000000,
-          "split": false
+          "split": false,
+          "description": "Mean FD threshold (default: 0.3)",
+          "usage": "参数说明直接来自 skills/aibl-skill/scripts/aibl_qc_summary.py:212。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "max_fd_threshold",
@@ -8351,7 +8455,9 @@
           "options": [],
           "minimum": 0,
           "maximum": 1000000,
-          "split": false
+          "split": false,
+          "description": "Max FD threshold (default: 5.0)",
+          "usage": "参数说明直接来自 skills/aibl-skill/scripts/aibl_qc_summary.py:213。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -8444,7 +8550,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "split": false
+          "split": false,
+          "description": "Comma-separated list of columns to select (default: all)",
+          "usage": "参数说明直接来自 skills/aibl-skill/scripts/extract_aibl_phenotype.py:310。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "visits",
@@ -8457,7 +8565,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "split": false
+          "split": false,
+          "description": "Comma-separated AIBL visit names to include. Options: [参见原脚本动态取值]",
+          "usage": "参数说明直接来自 skills/aibl-skill/scripts/extract_aibl_phenotype.py:314。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "missing_threshold",
@@ -8470,7 +8580,9 @@
           "options": [],
           "minimum": 0,
           "maximum": 1000000,
-          "split": false
+          "split": false,
+          "description": "Drop columns with more than this fraction of missing values (default: 0.5)",
+          "usage": "参数说明直接来自 skills/aibl-skill/scripts/extract_aibl_phenotype.py:322。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -8636,7 +8748,9 @@
           "options": [],
           "minimum": 0,
           "maximum": 1000000,
-          "split": false
+          "split": false,
+          "description": "Mean FD threshold (default: 0.3)",
+          "usage": "参数说明直接来自 skills/aomic-skill/scripts/aomic_qc_summary.py:210。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "max_fd_threshold",
@@ -8649,7 +8763,9 @@
           "options": [],
           "minimum": 0,
           "maximum": 1000000,
-          "split": false
+          "split": false,
+          "description": "Max FD threshold (default: 5.0)",
+          "usage": "参数说明直接来自 skills/aomic-skill/scripts/aomic_qc_summary.py:211。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -8742,7 +8858,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "split": false
+          "split": false,
+          "description": "Comma-separated list of columns to select (default: all)",
+          "usage": "参数说明直接来自 skills/aomic-skill/scripts/extract_aomic_phenotype.py:238。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "missing_threshold",
@@ -8755,7 +8873,9 @@
           "options": [],
           "minimum": 0,
           "maximum": 1000000,
-          "split": false
+          "split": false,
+          "description": "Drop columns with more than this fraction of missing values (default: 0.5)",
+          "usage": "参数说明直接来自 skills/aomic-skill/scripts/extract_aomic_phenotype.py:246。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -8862,7 +8982,9 @@
           ],
           "minimum": null,
           "maximum": null,
-          "split": false
+          "split": false,
+          "description": "AOMIC sub-dataset (default: ID1000)",
+          "usage": "参数说明直接来自 skills/aomic-skill/scripts/reorganize_aomic.py:235。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -8944,7 +9066,9 @@
           "options": [],
           "minimum": 0,
           "maximum": 1000000,
-          "split": false
+          "split": false,
+          "description": "Mean FD threshold (default: 0.3)",
+          "usage": "参数说明直接来自 skills/bold5000-skill/scripts/bold5000_qc_summary.py:49。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "max_fd_threshold",
@@ -8957,7 +9081,9 @@
           "options": [],
           "minimum": 0,
           "maximum": 1000000,
-          "split": false
+          "split": false,
+          "description": "Max FD threshold (default: 5.0)",
+          "usage": "参数说明直接来自 skills/bold5000-skill/scripts/bold5000_qc_summary.py:50。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -9192,7 +9318,9 @@
           "options": [],
           "minimum": 0,
           "maximum": 1000000,
-          "split": false
+          "split": false,
+          "description": "FD threshold (default: 0.3 mm)",
+          "usage": "参数说明直接来自 skills/camcan-skill/scripts/camcan_qc_summary.py:62。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -9285,7 +9413,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "split": false
+          "split": false,
+          "description": "Comma-separated columns to extract",
+          "usage": "参数说明直接来自 skills/camcan-skill/scripts/extract_camcan_phenotype.py:108。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -9432,7 +9562,9 @@
           "options": [],
           "minimum": 0,
           "maximum": 1000000,
-          "split": false
+          "split": false,
+          "description": "Mean FD threshold (default: 0.3)",
+          "usage": "参数说明直接来自 skills/cobre-skill/scripts/cobre_qc_summary.py:48。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "max_fd_threshold",
@@ -9445,7 +9577,9 @@
           "options": [],
           "minimum": 0,
           "maximum": 1000000,
-          "split": false
+          "split": false,
+          "description": "Max FD threshold (default: 5.0)",
+          "usage": "参数说明直接来自 skills/cobre-skill/scripts/cobre_qc_summary.py:49。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -9690,7 +9824,9 @@
           "options": [],
           "minimum": 0,
           "maximum": 1000000,
-          "split": false
+          "split": false,
+          "description": "Mean FD threshold (default: 0.3)",
+          "usage": "参数说明直接来自 skills/dmt-har-med-skill/scripts/dmt_har_med_qc_summary.py:49。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "max_fd_threshold",
@@ -9703,7 +9839,9 @@
           "options": [],
           "minimum": 0,
           "maximum": 1000000,
-          "split": false
+          "split": false,
+          "description": "Max FD threshold (default: 5.0)",
+          "usage": "参数说明直接来自 skills/dmt-har-med-skill/scripts/dmt_har_med_qc_summary.py:50。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -10028,7 +10166,9 @@
           "options": [],
           "minimum": 0,
           "maximum": 1000000,
-          "split": false
+          "split": false,
+          "description": "Mean FD threshold (default: 0.3)",
+          "usage": "参数说明直接来自 skills/hbn-skill/scripts/hbn_qc_summary.py:49。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "max_fd_threshold",
@@ -10041,7 +10181,9 @@
           "options": [],
           "minimum": 0,
           "maximum": 1000000,
-          "split": false
+          "split": false,
+          "description": "Max FD threshold (default: 5.0)",
+          "usage": "参数说明直接来自 skills/hbn-skill/scripts/hbn_qc_summary.py:50。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -10200,7 +10342,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "split": false
+          "split": false,
+          "description": "Comma-separated columns to extract",
+          "usage": "参数说明直接来自 skills/hcpa-skill/scripts/extract_hcpa_phenotype.py:109。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -10539,7 +10683,9 @@
           "options": [],
           "minimum": 0,
           "maximum": 1000000,
-          "split": false
+          "split": false,
+          "description": "FD threshold (default: 0.4 mm, higher for pediatric)",
+          "usage": "参数说明直接来自 skills/hcpd-skill/scripts/hcpd_qc_summary.py:57。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -10801,7 +10947,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "split": false
+          "split": false,
+          "description": "CSV with subject diagnosis info",
+          "usage": "参数说明直接来自 skills/hcpep-skill/scripts/hcpep_qc_summary.py:58。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -10960,7 +11108,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "split": false
+          "split": false,
+          "description": "Comma-separated column names to extract (default: all)",
+          "usage": "参数说明直接来自 skills/hcpya-skill/scripts/extract_hcpya_phenotype.py:140。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -11050,7 +11200,9 @@
           "options": [],
           "minimum": 0,
           "maximum": 1000000,
-          "split": false
+          "split": false,
+          "description": "Framewise displacement threshold (default: 0.3 mm)",
+          "usage": "参数说明直接来自 skills/hcpya-skill/scripts/hcpya_qc_summary.py:69。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -11354,7 +11506,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "split": false
+          "split": false,
+          "description": "Comma-separated columns to extract",
+          "usage": "参数说明直接来自 skills/mnd-skill/scripts/extract_mnd_phenotype.py:106。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -11434,7 +11588,9 @@
           "options": [],
           "minimum": 0,
           "maximum": 1000000,
-          "split": false
+          "split": false,
+          "description": "FD threshold (default: 0.3 mm)",
+          "usage": "参数说明直接来自 skills/mnd-skill/scripts/mnd_qc_summary.py:44。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "diagnosis_file",
@@ -11447,7 +11603,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "split": false
+          "split": false,
+          "description": "CSV with subject diagnosis info",
+          "usage": "参数说明直接来自 skills/mnd-skill/scripts/mnd_qc_summary.py:46。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -11597,7 +11755,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "flag_when": true
+          "flag_when": true,
+          "description": "Skip ground truth validation (for test data)",
+          "usage": "参数说明直接来自 skills/mschallenge-skill/scripts/mschallenge_qc_summary.py:72。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -11680,7 +11840,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "flag_when": true
+          "flag_when": true,
+          "description": "Skip ground truth validation (for test data)",
+          "usage": "参数说明直接来自 skills/mschallenge-skill/scripts/validate_mschallenge.py:66。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -11864,7 +12026,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "split": false
+          "split": false,
+          "description": "CSV with subject diagnosis info",
+          "usage": "参数说明直接来自 skills/nifd-skill/scripts/nifd_qc_summary.py:41。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -12024,7 +12188,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "split": false
+          "split": false,
+          "description": "Extract for specific subject only (e.g., subj01)",
+          "usage": "参数说明直接来自 skills/nsd-skill/scripts/extract_nsd_stimulus.py:82。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -12114,7 +12280,9 @@
           "options": [],
           "minimum": 0,
           "maximum": 1000000,
-          "split": false
+          "split": false,
+          "description": "FD threshold in mm (default: 0.3, typical for 7T)",
+          "usage": "参数说明直接来自 skills/nsd-skill/scripts/nsd_qc_summary.py:52。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -12614,7 +12782,9 @@
           "options": [],
           "minimum": 0,
           "maximum": 1000000,
-          "split": false
+          "split": false,
+          "description": "FD threshold (default: 0.4mm, higher for pediatric)",
+          "usage": "参数说明直接来自 skills/pnc-skill/scripts/pnc_qc_summary.py:40。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -12867,7 +13037,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "split": false
+          "split": false,
+          "description": "CSV with subject diagnosis info",
+          "usage": "参数说明直接来自 skills/ppmi-skill/scripts/ppmi_qc_summary.py:41。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -13120,7 +13292,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "split": false
+          "split": false,
+          "description": "CSV with subject diagnosis/site info",
+          "usage": "参数说明直接来自 skills/rest-mneta-mdd-skill/scripts/rest_mdd_qc_summary.py:43。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -13507,7 +13681,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "split": false
+          "split": false,
+          "description": "CSV with subject diagnosis info",
+          "usage": "参数说明直接来自 skills/tcp-skill/scripts/tcp_qc_summary.py:41。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -13760,7 +13936,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "split": false
+          "split": false,
+          "description": "CSV with subject diagnosis info",
+          "usage": "参数说明直接来自 skills/ucla-cnp-skill/scripts/ucla_cnp_qc_summary.py:41。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -13910,7 +14088,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "split": false
+          "split": false,
+          "description": "Disease key. Available: [参见原脚本动态取值]",
+          "usage": "参数说明直接来自 skills/ukb-skill/scripts/extract_ukb_cases.py:266。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "custom_icd",
@@ -13923,7 +14103,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "split": false
+          "split": false,
+          "description": "Custom ICD-10 pattern (regex)",
+          "usage": "参数说明直接来自 skills/ukb-skill/scripts/extract_ukb_cases.py:267。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "sources",
@@ -13936,7 +14118,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "split": false
+          "split": false,
+          "description": "Comma-separated data sources: ICD10,ICD9,Death,Self-report",
+          "usage": "参数说明直接来自 skills/ukb-skill/scripts/extract_ukb_cases.py:268。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "list_diseases",
@@ -13949,7 +14133,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "flag_when": true
+          "flag_when": true,
+          "description": "List available diseases and exit",
+          "usage": "参数说明直接来自 skills/ukb-skill/scripts/extract_ukb_cases.py:270。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -14039,7 +14225,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "split": false
+          "split": false,
+          "description": "Comma-separated variable names (default: core covariates)",
+          "usage": "参数说明直接来自 skills/ukb-skill/scripts/extract_ukb_phenotype.py:196。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "drop_missing",
@@ -14052,7 +14240,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "flag_when": true
+          "flag_when": true,
+          "description": "Drop rows with missing values",
+          "usage": "参数说明直接来自 skills/ukb-skill/scripts/extract_ukb_phenotype.py:198。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "list_variables",
@@ -14065,7 +14255,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "flag_when": true
+          "flag_when": true,
+          "description": "List available variables and exit",
+          "usage": "参数说明直接来自 skills/ukb-skill/scripts/extract_ukb_phenotype.py:199。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -14145,7 +14337,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "flag_when": true
+          "flag_when": true,
+          "description": "Include imaging availability check",
+          "usage": "参数说明直接来自 skills/ukb-skill/scripts/ukb_qc_summary.py:111。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "age_min",
@@ -14158,7 +14352,9 @@
           "options": [],
           "minimum": 0,
           "maximum": 1000000,
-          "split": false
+          "split": false,
+          "description": "Minimum age filter",
+          "usage": "参数说明直接来自 skills/ukb-skill/scripts/ukb_qc_summary.py:112。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "age_max",
@@ -14171,7 +14367,9 @@
           "options": [],
           "minimum": 0,
           "maximum": 1000000,
-          "split": false
+          "split": false,
+          "description": "Maximum age filter",
+          "usage": "参数说明直接来自 skills/ukb-skill/scripts/ukb_qc_summary.py:113。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "required_cols",
@@ -14184,7 +14382,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "split": false
+          "split": false,
+          "description": "Comma-separated required column names",
+          "usage": "参数说明直接来自 skills/ukb-skill/scripts/ukb_qc_summary.py:114。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -14263,7 +14463,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "split": false
+          "split": false,
+          "description": "HTML page title",
+          "usage": "参数说明直接来自 skills/beautiful-log/scripts/beautiful_log.py:253。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -15375,7 +15577,9 @@
           "required": true,
           "options": [],
           "minimum": 0.01,
-          "maximum": 100
+          "maximum": 100,
+          "description": "Repetition time in seconds.",
+          "usage": "参数说明直接来自 skills/brain-visualization/scripts/zalff_summary_reference.py:101。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "top_n",
@@ -15387,7 +15591,9 @@
           "required": true,
           "options": [],
           "minimum": 1,
-          "maximum": 10000
+          "maximum": 10000,
+          "description": "Number of top regions to export.",
+          "usage": "参数说明直接来自 skills/brain-visualization/scripts/zalff_summary_reference.py:102。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "modules": [
@@ -16721,7 +16927,9 @@
           "required": false,
           "options": [],
           "minimum": 1,
-          "maximum": 100
+          "maximum": 100,
+          "description": "override community count (used only for hash-fallback atlases)",
+          "usage": "参数说明直接来自 skills/combraintf/scripts/train_reference.py:61。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "wd",
@@ -16883,7 +17091,9 @@
           "required": true,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "batch column to harmonize away",
+          "usage": "参数说明直接来自 skills/harmonization-tool/scripts/harmonize.py:58。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "protected",
@@ -16896,7 +17106,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "split": true
+          "split": true,
+          "description": "protected covariates",
+          "usage": "参数说明直接来自 skills/harmonization-tool/scripts/harmonize.py:59。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "split",
@@ -16921,7 +17133,9 @@
             }
           ],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "optional split to fit harmonization on train only",
+          "usage": "参数说明直接来自 skills/harmonization-tool/scripts/harmonize.py:70。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "seed",
@@ -17027,7 +17241,9 @@
           "required": true,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "batch column to harmonize away",
+          "usage": "参数说明直接来自 skills/harmonization-tool/scripts/harmonize.py:58。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "protected",
@@ -17040,7 +17256,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "split": true
+          "split": true,
+          "description": "protected covariates",
+          "usage": "参数说明直接来自 skills/harmonization-tool/scripts/harmonize.py:59。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "split",
@@ -17065,7 +17283,9 @@
             }
           ],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "optional split to fit harmonization on train only",
+          "usage": "参数说明直接来自 skills/harmonization-tool/scripts/harmonize.py:70。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "seed",
@@ -17172,7 +17392,9 @@
           "required": true,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "batch column to harmonize away",
+          "usage": "参数说明直接来自 skills/harmonization-tool/scripts/harmonize.py:58。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "protected",
@@ -17185,7 +17407,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "split": true
+          "split": true,
+          "description": "protected covariates",
+          "usage": "参数说明直接来自 skills/harmonization-tool/scripts/harmonize.py:59。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "split",
@@ -17210,7 +17434,9 @@
             }
           ],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "optional split to fit harmonization on train only",
+          "usage": "参数说明直接来自 skills/harmonization-tool/scripts/harmonize.py:70。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "seed",
@@ -17317,7 +17543,9 @@
           "required": true,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "batch column to harmonize away",
+          "usage": "参数说明直接来自 skills/harmonization-tool/scripts/harmonize.py:58。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "protected",
@@ -17330,7 +17558,9 @@
           "options": [],
           "minimum": null,
           "maximum": null,
-          "split": true
+          "split": true,
+          "description": "protected covariates",
+          "usage": "参数说明直接来自 skills/harmonization-tool/scripts/harmonize.py:59。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "split",
@@ -17355,7 +17585,9 @@
             }
           ],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "optional split to fit harmonization on train only",
+          "usage": "参数说明直接来自 skills/harmonization-tool/scripts/harmonize.py:70。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "seed",

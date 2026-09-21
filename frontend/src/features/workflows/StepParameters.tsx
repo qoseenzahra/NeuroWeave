@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import type { MethodOption, ParameterSpec, ParameterValue } from './workflowTypes';
-import { decodeOption, optionKey, visibleParameters } from './workflowConditions';
+import { decodeOption, optionKey, visibleParameters, parameterValues, parameterEnabled, parameterRequired } from './workflowConditions';
 import { useLanguageStore } from '../../stores/languageStore';
 import { getTranslations } from '../../lib/i18n';
 import type { TranslationKeys } from '../../types/i18n';
@@ -27,6 +27,7 @@ export function StepParameters({
 }: StepParametersProps) {
   const language = useLanguageStore((s) => s.language);
   const t = getTranslations(language);
+  const values = parameterValues(method, selected);
   const visible = visibleParameters(method, selected);
   const basic = visible.filter((spec) => spec.level !== 'advanced');
   const advanced = visible.filter((spec) => spec.level === 'advanced');
@@ -42,11 +43,13 @@ export function StepParameters({
     <ParameterControl
       key={spec.id}
       t={t}
-      spec={spec}
+      spec={{...spec, required: parameterRequired(spec, values)}}
+      conditionHint={spec.condition_help || (Object.keys(spec.enabled_when ?? {}).length > 0 && !parameterEnabled(spec, values)
+        ? (language === 'zh' ? '当前配置下不生效，不会传入命令。' : 'Inactive for this configuration; omitted from the command.') : '')}
       controlId={`parameter-${stepId}-${spec.id}`}
-      value={selected[spec.id] ?? spec.default}
+      value={Object.hasOwn(selected, spec.id) ? selected[spec.id] : spec.default}
       busy={busyParameterId === spec.id}
-      disabled={disabled}
+      disabled={disabled || !parameterEnabled(spec, values)}
       onChange={(value) => onChange(spec.id, value)}
     />
   );
@@ -95,6 +98,7 @@ export function StepParameters({
 }
 
 type ParameterControlProps = {
+  conditionHint?: string;
   t: TranslationKeys;
   spec: ParameterSpec;
   controlId: string;
@@ -105,6 +109,7 @@ type ParameterControlProps = {
 };
 
 function ParameterControl({
+  conditionHint,
   t,
   spec,
   controlId,
@@ -125,6 +130,7 @@ function ParameterControl({
             {optional}
           </label>
           <p className="mt-1 text-meta leading-4 text-subtle">{spec.description}</p>
+          {conditionHint && <p className="mt-1 text-meta text-accent">{conditionHint}</p>}
         </div>
         {busy ? (
           <Loader2 className="mt-0.5 h-4 w-4 animate-spin text-accent" />
@@ -165,9 +171,10 @@ function ParameterControl({
           id={controlId}
           disabled={busy || disabled}
           value={value === null ? '' : optionKey(value)}
-          onChange={(event) => onChange(decodeOption(spec, event.target.value))}
+          onChange={(event) => onChange(event.target.value === '' ? null : decodeOption(spec, event.target.value))}
           className="w-full rounded-control border border-line bg-transparent px-2 py-1.5 text-xs "
         >
+          {!spec.required && <option value="">{t.workflowParameterOptional}</option>}
           {spec.options.map((option) => (
             <option key={optionKey(option.value)} value={optionKey(option.value)}>
               {option.label}
@@ -186,6 +193,8 @@ function ParameterControl({
         />
       )}
       <p className="mt-1.5 text-meta leading-4 text-subtle">{spec.description}</p>
+      {!spec.required && spec.software_default && <p className="mt-1 text-micro text-subtle">{spec.software_default}</p>}
+          {conditionHint && <p className="mt-1 text-meta text-accent">{conditionHint}</p>}
       {selectedOption?.description && (
         <p className="mt-1 text-micro leading-4 text-accent">{selectedOption.description}</p>
       )}
@@ -215,7 +224,7 @@ function DirectParameterInput({
 
   const commit = () => {
     if (spec.type === 'string') {
-      if (draft !== value) onChange(draft);
+      if (draft !== value) onChange(!draft && !spec.required ? null : draft);
       return;
     }
     const parsed = spec.type === 'integer' ? Number.parseInt(draft, 10) : Number(draft);

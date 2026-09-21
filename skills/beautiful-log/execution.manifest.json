@@ -20,7 +20,9 @@
           "required": false,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "HTML page title",
+          "usage": "参数说明直接来自 skills/beautiful-log/scripts/beautiful_log.py:253。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [

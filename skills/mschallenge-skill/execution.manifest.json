@@ -136,7 +136,9 @@
           "required": false,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Skip ground truth validation (for test data)",
+          "usage": "参数说明直接来自 skills/mschallenge-skill/scripts/mschallenge_qc_summary.py:72。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [
@@ -206,7 +208,9 @@
           "required": false,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Skip ground truth validation (for test data)",
+          "usage": "参数说明直接来自 skills/mschallenge-skill/scripts/validate_mschallenge.py:66。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [

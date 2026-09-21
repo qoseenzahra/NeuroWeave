@@ -20,7 +20,9 @@
           "required": true,
           "options": [],
           "minimum": 0.01,
-          "maximum": 100
+          "maximum": 100,
+          "description": "Repetition time in seconds.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/denoise_timeseries_reference.py:38。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "detrend",
@@ -31,7 +33,9 @@
           "required": true,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Enable temporal detrending.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/denoise_timeseries_reference.py:41。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "no_standardize",
@@ -42,7 +46,9 @@
           "required": true,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Disable standardization.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/denoise_timeseries_reference.py:42。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [
@@ -124,7 +130,9 @@
           "required": true,
           "options": [],
           "minimum": 0.01,
-          "maximum": 100
+          "maximum": 100,
+          "description": "Repetition time in seconds.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/denoise_timeseries_reference.py:38。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "fwhm",
@@ -135,7 +143,9 @@
           "required": true,
           "options": [],
           "minimum": 0,
-          "maximum": 30
+          "maximum": 30,
+          "description": "Smoothing kernel FWHM in mm.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/preprocess_bold_reference.py:59。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "high_pass",
@@ -146,7 +156,9 @@
           "required": true,
           "options": [],
           "minimum": 1e-05,
-          "maximum": 1
+          "maximum": 1,
+          "description": "High-pass frequency in Hz.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/preprocess_bold_reference.py:60。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "low_pass",
@@ -157,7 +169,9 @@
           "required": true,
           "options": [],
           "minimum": 0.001,
-          "maximum": 1
+          "maximum": 1,
+          "description": "Low-pass frequency in Hz.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/preprocess_bold_reference.py:61。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "n_dummies",
@@ -168,7 +182,9 @@
           "required": true,
           "options": [],
           "minimum": 0,
-          "maximum": 100
+          "maximum": 100,
+          "description": "Number of initial dummy scans to drop.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/preprocess_bold_reference.py:62。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [
@@ -236,7 +252,9 @@
           "required": true,
           "options": [],
           "minimum": 0.01,
-          "maximum": 100
+          "maximum": 100,
+          "description": "Repetition time in seconds.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/denoise_timeseries_reference.py:38。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [
@@ -327,7 +345,9 @@
           "required": true,
           "options": [],
           "minimum": 0.01,
-          "maximum": 100
+          "maximum": 100,
+          "description": "Repetition time in seconds.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/denoise_timeseries_reference.py:38。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "contrast",
@@ -338,7 +358,9 @@
           "required": true,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Named contrast expression.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/task_glm_reference.py:45。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [
@@ -435,7 +457,9 @@
           "required": true,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Column or contrast expression for group inference.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/second_level_glm_reference.py:42。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [
@@ -519,7 +543,9 @@
           "required": true,
           "options": [],
           "minimum": 2,
-          "maximum": 200
+          "maximum": 200,
+          "description": "Number of ICA components.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/rest_ica_reference.py:50。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [
@@ -594,7 +620,9 @@
           "required": true,
           "options": [],
           "minimum": 2,
-          "maximum": 200
+          "maximum": 200,
+          "description": "Number of dictionary components.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/rest_dictlearning_reference.py:47。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [
@@ -669,7 +697,9 @@
           "required": true,
           "options": [],
           "minimum": 2,
-          "maximum": 1000
+          "maximum": 1000,
+          "description": "Number of clusters / parcels.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/kmeans_parcellation_reference.py:44。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [
@@ -744,7 +774,9 @@
           "required": true,
           "options": [],
           "minimum": 2,
-          "maximum": 1000
+          "maximum": 1000,
+          "description": "Number of clusters / parcels.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/hierarchical_parcellation_reference.py:44。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [
@@ -819,7 +851,9 @@
           "required": true,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Target column in label table.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/svm_classifier_reference.py:50。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "cv",
@@ -830,7 +864,9 @@
           "required": true,
           "options": [],
           "minimum": 2,
-          "maximum": 20
+          "maximum": 20,
+          "description": "Number of CV folds.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/svm_classifier_reference.py:51。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [
@@ -911,7 +947,9 @@
           "required": true,
           "options": [],
           "minimum": null,
-          "maximum": null
+          "maximum": null,
+          "description": "Target column in label table.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/spacenet_classifier_reference.py:49。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [

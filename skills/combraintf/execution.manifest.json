@@ -194,7 +194,9 @@
           "required": false,
           "options": [],
           "minimum": 1,
-          "maximum": 100
+          "maximum": 100,
+          "description": "override community count (used only for hash-fallback atlases)",
+          "usage": "参数说明直接来自 skills/combraintf/scripts/train_reference.py:61。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "wd",

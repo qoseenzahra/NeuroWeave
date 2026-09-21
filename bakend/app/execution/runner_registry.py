@@ -6,6 +6,7 @@ from threading import Event
 
 from ..operation_context import checkpoint, current_operation
 from ..workflow_models import MethodOption, Workflow, WorkflowStep
+from ..parameter_rules import effective_parameters
 from .base import RunnerContext, TrustedRunner
 from .runners.ants import AntsRegistrationRunner
 from .runners.bids_prepare import BidsPrepareRunner
@@ -16,6 +17,7 @@ from .runners.dipy import DipyTensorRunner
 from .runners.freesurfer import FreeSurferReconAllRunner
 from .runners.fsl import FslDtifitRunner, FslEddyRunner, FslFlirtRunner
 from .runners.mrtrix import MrtrixTckgenRunner
+from .runners.mrtrix_commands import command_runners
 from .runners.mrtrix_pipeline import (
     MrtrixDwi2FodRunner,
     MrtrixDwi2ResponseRunner,
@@ -58,6 +60,7 @@ class RunnerRegistry:
             TableCleanRunner(),
         ]
         runners.extend(ReviewedRunner(spec) for spec in specifications().values())
+        runners.extend(command_runners())
         self._runners = {runner.runner_id: runner for runner in runners}
 
     def ids(self) -> set[str]:
@@ -138,6 +141,7 @@ class RunnerRegistry:
                 remote_gpu_available=remote_gpu_available,
                 is_dry_run=True,
             )
+            context.step.selected_parameters = effective_parameters(context.method, step.selected_parameters)
             try:
                 from ..historical_inputs import historical_binding_problems
                 history_problems = [problem for binding in context.step.input_bindings.values()

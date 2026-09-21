@@ -58,6 +58,7 @@ class Skill:
     path: Path
     skill_md: Path
     instructions: str
+    overview: str = ""
 
     def public_dict(self) -> dict[str, Any]:
         return {
@@ -81,7 +82,7 @@ class Skill:
 
     def prompt_excerpt(self, max_chars: int = 1_800) -> str:
         """Reuse NeuroClaw's compact SKILL.md context strategy."""
-        excerpt = re.sub(r"```[\s\S]*?```", "", self.instructions)
+        excerpt = re.sub(r"```[\s\S]*?```", "", self.overview or self.instructions)
         excerpt = re.sub(r"\n{3,}", "\n\n", excerpt).strip()
         if len(excerpt) > max_chars:
             excerpt = excerpt[:max_chars].rstrip() + "\n..."
@@ -101,6 +102,7 @@ class SkillLoader:
         entries: list[tuple[str, int, int]] = []
         paths = [
             *self.skills_dir.glob("*/SKILL.md"),
+            *self.skills_dir.glob("*/OVERVIEW.md"),
             *self.skills_dir.glob("*/tool.manifest.json"),
             *self.skills_dir.glob("*/execution.manifest.json"),
             *self.skills_dir.glob("*/planning.manifest.json"),
@@ -129,6 +131,11 @@ class SkillLoader:
         skills: list[Skill] = []
 
         for descriptor in upstream_skills:
+            # The upstream loader also discovers cwd/skills. NeuroWeave must use
+            # its explicit project root, otherwise a CLI launched elsewhere can
+            # mix two projects and expose the wrong method documentation.
+            if not Path(descriptor["skill_md"]).resolve().is_relative_to(self.skills_dir):
+                continue
             skill_md = Path(descriptor["skill_md"])
             skill_path = Path(descriptor["path"])
             text = skill_md.read_text(encoding="utf-8")
@@ -182,6 +189,8 @@ class SkillLoader:
                     path=skill_path,
                     skill_md=skill_md,
                     instructions=_strip_frontmatter(text).strip(),
+                    overview=(skill_path / 'OVERVIEW.md').read_text(encoding='utf-8')
+                        if (skill_path / 'OVERVIEW.md').is_file() else '',
                 )
             )
 

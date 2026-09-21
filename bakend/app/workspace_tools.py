@@ -12,6 +12,7 @@ import re
 from uuid import uuid4
 
 from .workspace_models import FileOperationRequest
+from .skill_catalog import SKILL_TOOLS, SKILL_PROMPT
 
 
 WORKSPACE_PROMPT = """
@@ -84,11 +85,12 @@ TOOLS = OUTPUT_TOOLS + DATASET_TOOLS
 class WorkspaceTools:
     def __init__(self, service, chat, dataset_files=None):
         self.service, self.chat, self.dataset_files = service, chat, dataset_files
+        self.skill_catalog = None
 
     def available_tools(self, request):
         reads = DATASET_TOOLS if request.dataset_id and self.dataset_files else []
         outputs = OUTPUT_TOOLS if request.workspace_id else []
-        return reads + [t for t in outputs if request.interaction_mode == 'task' or t['function']['name'] not in WRITE_ACTIONS] + [CONTINUE]
+        return reads + [t for t in outputs if request.interaction_mode == 'task' or t['function']['name'] not in WRITE_ACTIONS] + (SKILL_TOOLS if self.skill_catalog else []) + [CONTINUE]
 
     @staticmethod
     def pending_summary(observations):
@@ -99,6 +101,29 @@ class WorkspaceTools:
             f"{item['action']}: {item['source']}" + (f" → {item['target']}" if item.get('target') else '') for item in pending)
 
     def execute(self, name, arguments, request):
+        skill_tool = next((t for t in SKILL_TOOLS if t['function']['name'] == name), None)
+        if skill_tool:
+            if not self.skill_catalog:
+                raise ValueError('Skill catalog unavailable')
+            definition = skill_tool['function']['parameters']
+            if not isinstance(arguments, dict) or set(arguments) - set(definition['properties']):
+                raise ValueError('Unknown Skill tool argument')
+            if set(definition['required']) - set(arguments):
+                raise ValueError('Missing Skill tool argument')
+            # Providers do not always enforce function JSON schemas. Validate
+            # scalar types here before dispatch, including bool versus integer.
+            expected = {'string': str, 'integer': int, 'boolean': bool}
+            for key, value in arguments.items():
+                if type(value) is not expected[definition['properties'][key]['type']]:
+                    raise ValueError('Invalid Skill tool argument type: ' + key)
+            if name == 'list_skill_methods':
+                return self.skill_catalog.list_methods(**arguments)
+            if name == 'read_skill_method':
+                arguments = {**arguments, 'section':arguments.get('section', 'overview')}
+                if arguments['section'] == 'all':
+                    raise ValueError('Use paginated sections')
+                return self.skill_catalog.method(**arguments)
+            return self.skill_catalog.read_reference(**arguments)
         methods = {'list': 'list_directory', 'inspect': 'inspect', 'search': 'search', 'read': 'read_text'}
         dataset_scope = '_dataset_' in name
         tool = next((t for t in TOOLS + LEGACY_TOOLS if t["function"]["name"] == name), None)
@@ -138,13 +163,13 @@ class WorkspaceTools:
         Required initial function selection prevents an ungrounded model answer to
         a filesystem question. Subsequent observations stay bounded and untrusted.
         """
-        if not request.workspace_id and not request.dataset_id:
+        if not request.workspace_id and not request.dataset_id and not self.skill_catalog:
             return None
         turn_id = request.client_turn_id or uuid4().hex
         request.client_turn_id = turn_id
         if self.chat.mode != "model":
             # Offline/demo mode performs a real list; it cannot invent contents.
-            if re.search(r"(列出|浏览|读取|搜索|查找|有哪些|有什么).{0,40}(文件|目录|数据集|工作区|路径)|(目录|数据集|工作区).{0,20}(内容|有哪些|有什么)", request.message):
+            if (request.workspace_id or request.dataset_id) and re.search(r"(列出|浏览|读取|搜索|查找|有哪些|有什么).{0,40}(文件|目录|数据集|工作区|路径)|(目录|数据集|工作区).{0,20}(内容|有哪些|有什么)", request.message):
                 dataset_scope = bool(request.dataset_id and self.dataset_files) and not ('输出' in request.message and request.workspace_id)
                 name = 'list_dataset_directory' if dataset_scope else 'list_output_directory'
                 self.service.event(turn_id, {"tool": name, "status": "running", "arguments": {"path": "."}})
@@ -153,9 +178,10 @@ class WorkspaceTools:
                 return ("已读取当前数据集：\n" if dataset_scope else "已读取当前输出目录：\n") + "\n".join(item["relative_path"] for item in result["items"]) + ("\n仍有更多条目，请在文件面板继续加载。" if result["has_more"] else "")
             return None
         tools = self.available_tools(request)
-        messages = [{"role": "system", "content": WORKSPACE_PROMPT + "\n" + request.workspace_context}]
+        messages = [{"role": "system", "content": (WORKSPACE_PROMPT + (SKILL_PROMPT if self.skill_catalog else "")) + "\n" + request.workspace_context}]
         messages += [{"role": message.role, "content": message.content} for message in request.history[-6:]]
         messages.append({"role": "user", "content": request.message})
+        messages[0]["content"] += "\n当前已选 Skill ID：" + json.dumps(request.selected_skills, ensure_ascii=False)
         observations = []
         count = 0
         for round_index in range(8):
@@ -167,9 +193,9 @@ class WorkspaceTools:
                     return pending
                 if not observations:
                     # Never accept unsupported claims from a provider ignoring tool_choice.
-                    return "模型尚未调用目录工具，未检查文件或执行任何操作。请重试，或使用服务器文件面板。"
+                    return "模型尚未调用查询工具，未检查方法或文件，也未执行任何操作。请重试，或使用服务器文件面板。"
                 if all("error" in item["result"] for item in observations):
-                    return "文件查询未成功，没有执行任何文件修改：\n" + "\n".join(item["result"]["error"] for item in observations)
+                    return "查询未成功，没有执行任何操作：\n" + "\n".join(item["result"]["error"] for item in observations)
                 return str(response.get("content") or "已完成工具查询，请查看工具记录。")
             messages.append({k: response[k] for k in ("role", "content", "tool_calls", "reasoning_content") if k in response})
             for call in calls:

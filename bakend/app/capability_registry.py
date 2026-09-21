@@ -353,6 +353,7 @@ class CapabilityRegistry:
         manifests = sorted(
             [
                 *self.skills_dir.glob("*/tool.manifest.json"),
+                *self.skills_dir.glob("*/commands/*.json"),
                 *self.skills_dir.glob("*/execution.manifest.json"),
                 *self.skills_dir.glob("*/planning.manifest.json"),
             ]

@@ -20,7 +20,9 @@
           "required": true,
           "options": [],
           "minimum": 0.5,
-          "maximum": 60
+          "maximum": 60,
+          "description": "Epoch duration in seconds (default: 4.0)",
+          "usage": "参数说明直接来自 skills/seed-vig-skill/scripts/extract_seed_vig_features.py:113。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [

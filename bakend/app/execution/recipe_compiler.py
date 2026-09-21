@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from ..parameter_rules import effective_parameters
 
 from ..capability_registry import CapabilityMethod, CapabilityRegistry
 from ..run_models import RunExecutionOptions
@@ -195,6 +196,8 @@ class RecipeCompiler:
                     resolved[1],
                 )
 
+        for unit in units:
+            unit.step.selected_parameters = effective_parameters(unit.method, unit.step.selected_parameters)
         self._validate_upstream_inputs(units)
         return units
 

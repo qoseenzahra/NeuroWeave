@@ -15,6 +15,15 @@ def main():
     resolution=root/'bakend/resources/planning_resolution.json'
     if json.loads(resolution.read_text(encoding='utf-8')) != build():
         raise RuntimeError("Planning execution mappings need review/regeneration")
+    from build_skill_layers import build as build_layers
+    from build_mrtrix_commands import build as build_command, COMMANDS
+    for path, content in build_layers().items():
+        if not path.is_file() or path.read_text(encoding='utf-8') != content:
+            raise RuntimeError('Skill overview is stale: '+str(path))
+    for command in COMMANDS:
+        path=root/'skills/dwi-skill/commands'/f'{command}.json'
+        if json.loads(path.read_text(encoding='utf-8')) != build_command(command):
+            raise RuntimeError('Command definition is stale: '+command)
     registry = CapabilityRegistry(root / "skills")
     methods = registry.all_methods()
     if not methods:

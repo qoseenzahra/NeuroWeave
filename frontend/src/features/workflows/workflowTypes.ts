@@ -35,6 +35,13 @@ export type ParameterSpec = {
   step?: number | null;
   placeholder?: string;
   visible_when?: Record<string, ParameterValue[]>;
+  required_when?: Record<string, ParameterValue[]>;
+  enabled_when?: Record<string, ParameterValue[]>;
+  conflicts_with?: string[];
+  condition_help?: string;
+  usage?: string;
+  software_default?: string;
+  documentation_url?: string;
 };
 
 export type InputSlotSpec = {

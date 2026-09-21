@@ -117,9 +117,9 @@ export function executionErrors(
     }
     if (allocation.gpus && !backends?.slurm.gpu_available) errors.push(t.workflowErrorNoGpu);
     for (const step of workflow.steps) {
-      for (const key of ['threads', 'omp_threads', 'n_jobs']) {
+      for (const key of ['threads', 'omp_threads', 'n_jobs', 'nthreads']) {
         const threads = step.selected_parameters[key];
-        if (typeof threads === 'number' && (threads < 1 || threads > allocation.cpus)) {
+        if (typeof threads === 'number' && (threads < (key === 'nthreads' ? 0 : 1) || threads > allocation.cpus)) {
           errors.push(
             t.workflowErrorThreadsExceedCpus
               .replace('{{target}}', target)

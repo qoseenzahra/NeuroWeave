@@ -20,7 +20,9 @@
           "required": true,
           "options": [],
           "minimum": 0.01,
-          "maximum": 100
+          "maximum": 100,
+          "description": "Repetition time in seconds.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/denoise_timeseries_reference.py:38。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "fwhm",
@@ -31,7 +33,9 @@
           "required": true,
           "options": [],
           "minimum": 0,
-          "maximum": 30
+          "maximum": 30,
+          "description": "Smoothing kernel FWHM in mm.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/preprocess_bold_reference.py:59。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "high_pass",
@@ -42,7 +46,9 @@
           "required": true,
           "options": [],
           "minimum": 1e-05,
-          "maximum": 1
+          "maximum": 1,
+          "description": "High-pass frequency in Hz.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/preprocess_bold_reference.py:60。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "low_pass",
@@ -53,7 +59,9 @@
           "required": true,
           "options": [],
           "minimum": 0.001,
-          "maximum": 1
+          "maximum": 1,
+          "description": "Low-pass frequency in Hz.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/preprocess_bold_reference.py:61。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         },
         {
           "id": "n_dummies",
@@ -64,7 +72,9 @@
           "required": true,
           "options": [],
           "minimum": 0,
-          "maximum": 100
+          "maximum": 100,
+          "description": "Number of initial dummy scans to drop.",
+          "usage": "参数说明直接来自 skills/nilearn-tool/scripts/preprocess_bold_reference.py:62。平台仅转发已登记选项；默认值和取值限制见本方法定义。"
         }
       ],
       "input_slots": [
