@@ -100,7 +100,7 @@ function WorkflowCardDisclosure({
 }: WorkflowCardProps) {
   const language = useLanguageStore((s) => s.language);
   const t = getTranslations(language);
-  const [expanded, setExpanded] = useState(!deferred);
+  const [expanded, setExpanded] = useState(false);
   const [hasOpened, setHasOpened] = useState(!deferred);
   // Keep historical cards lazy until first opened. Afterwards hide the body
   // without unmounting it: draft state and in-flight mutation callbacks survive.

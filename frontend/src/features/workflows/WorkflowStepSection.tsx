@@ -1,4 +1,5 @@
-import { Check, Code2, Loader2 } from 'lucide-react';
+import { useId, useState } from 'react';
+import { Check, ChevronDown, ChevronUp, Code2, Loader2 } from 'lucide-react';
 import { StepArtifacts } from './StepArtifacts';
 import { StepParameters } from './StepParameters';
 import type { MethodOption, Workflow, WorkflowStep } from './workflowTypes';
@@ -149,6 +150,8 @@ export function WorkflowStepSection({
 }: WorkflowStepSectionProps) {
   const language = useLanguageStore((s) => s.language);
   const t = getTranslations(language);
+  const [expanded, setExpanded] = useState(false);
+  const detailsId = useId();
   const method = step.method_options.find((option) => option.id === step.selected_method_id);
   const methodBusy = busyKey === `method:${step.id}`;
   const removeBusy = busyKey === `remove-step:${step.id}`;
@@ -177,8 +180,10 @@ export function WorkflowStepSection({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div>
-              <h3 className="text-xs font-semibold">{step.title}</h3>
-              <p className="mt-0.5 text-meta leading-5 text-subtle">{step.description}</p>
+              <h3 className="break-words text-xs font-semibold">{step.title}</h3>
+              <p className="mt-0.5 break-words text-meta leading-5 text-subtle">
+                {expanded ? step.description : method?.label ?? t.workflowStatusAwaitingMethodChoice}
+              </p>
             </div>
             <div className="flex flex-wrap items-center gap-1.5">
               {step.origin === 'dependency' && (
@@ -202,6 +207,18 @@ export function WorkflowStepSection({
                   </span>
                 </>
               )}
+              <button
+                type="button"
+                aria-expanded={expanded}
+                aria-controls={detailsId}
+                aria-label={`${expanded ? t.workflowCollapseStep : t.workflowExpandStep}: ${step.title}`}
+                onClick={() => setExpanded(previous => !previous)}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-control border border-line px-2 py-1 text-meta hover:bg-hover"
+              >
+                {expanded ? <ChevronUp className="size-3.5" aria-hidden="true" />
+                  : <ChevronDown className="size-3.5" aria-hidden="true" />}
+                {expanded ? t.workflowCollapseStep : t.workflowExpandStep}
+              </button>
               {!locked && workflow.status !== 'confirmed' && (
                 <button
                   type="button"
@@ -220,6 +237,8 @@ export function WorkflowStepSection({
               )}
             </div>
           </div>
+          {/* Keep inputs and parameter drafts mounted when either disclosure closes. */}
+          <div id={detailsId} hidden={!expanded}>
           {!locked && (step.method_options.length > 1 || !method) && (
             <fieldset aria-label={step.title} disabled={disabled} className="mt-3 grid gap-2">
               {step.method_options.map((option) => {
@@ -398,6 +417,7 @@ export function WorkflowStepSection({
               </code>
             </div>
           )}
+          </div>
         </div>
       </div>
     </section>

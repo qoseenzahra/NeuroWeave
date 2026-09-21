@@ -153,6 +153,8 @@ export type TranslationKeys = {
   workflowLoadError: string;
   workflowExpandDetails: string;
   workflowCollapseDetails: string;
+  workflowExpandStep: string;
+  workflowCollapseStep: string;
   workflowErrorGeneric: string;
   workflowConflict: string;
   workflowStatusAwaitingMethodChoice: string;

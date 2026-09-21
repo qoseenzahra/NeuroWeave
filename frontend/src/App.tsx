@@ -659,6 +659,7 @@ function App() {
               <Button size="sm" onClick={() => { void detailQuery.refetch(); if (activeWorkflowId) void workflowQuery.refetch(); }}>{t.retry}</Button>
             </div>}
           <MessageArea
+            key={scrollScope}
             activeWorkflowId={activeWorkflowId}
             activeWorkflow={activeWorkflow}
             t={t}
