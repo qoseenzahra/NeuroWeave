@@ -985,3 +985,9 @@ html {
 ::-webkit-scrollbar-corner {
   background: transparent;
 }
+
+/* Right drawers share the modal focus trap, Escape and backdrop behavior. */
+.dialog-root[data-placement='right'][open] {
+  justify-content: flex-end;
+  padding: 0;
+}

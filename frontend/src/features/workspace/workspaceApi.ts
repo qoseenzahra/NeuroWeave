@@ -79,17 +79,18 @@ export function inspectFs(
   path: string,
   workspaceId?: string | null,
   rootPath?: string,
-  datasetId?: string | null
+  datasetId?: string | null,
+  signal?: AbortSignal
 ): Promise<FsEntry & { exists: boolean }> {
   const query = new URLSearchParams({ path });
   if (workspaceId) query.set('workspace_id', workspaceId);
   else if (rootPath && !datasetId) query.set('root_path', rootPath);
-  return request<FsEntry & { exists: boolean }>(`${datasetId ? '/api/datasets/' + encodeURIComponent(datasetId) + '/files' : '/api/fs'}/inspect?${query.toString()}`);
+  return request<FsEntry & { exists: boolean }>(`${datasetId ? '/api/datasets/' + encodeURIComponent(datasetId) + '/files' : '/api/fs'}/inspect?${query.toString()}`, { signal });
 }
 
-export function readFsText(workspaceId: string | null, path: string, offset = 0, datasetId?: string | null): Promise<TextPreview> {
+export function readFsText(workspaceId: string | null, path: string, offset = 0, datasetId?: string | null, signal?: AbortSignal): Promise<TextPreview> {
   const query = new URLSearchParams({ ...(workspaceId ? { workspace_id: workspaceId } : {}), path, offset: String(offset) });
-  return request<TextPreview>(`${datasetId ? '/api/datasets/' + encodeURIComponent(datasetId) + '/files' : '/api/fs'}/read-text?${query.toString()}`);
+  return request<TextPreview>(`${datasetId ? '/api/datasets/' + encodeURIComponent(datasetId) + '/files' : '/api/fs'}/read-text?${query.toString()}`, { signal });
 }
 
 export type FsAction = 'mkdir' | 'copy' | 'move' | 'rename' | 'delete';

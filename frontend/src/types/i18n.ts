@@ -1,6 +1,39 @@
 export type Language = 'en' | 'zh';
 
 export type TranslationKeys = {
+  skillDetailsTitle: string;
+  skillViewDetails: string;
+  skillAdd: string;
+  skillRemove: string;
+  skillAdded: string;
+  skillSelectionHint: string;
+  skillIdentifier: string;
+  skillSource: string;
+  skillType: string;
+  skillRuntime: string;
+  skillDependencies: string;
+  skillComplementary: string;
+  skillNone: string;
+  skillInstructions: string;
+  skillFiles: string;
+  skillNoInstructions: string;
+  datasetResize: string;
+  datasetBack: string;
+  datasetNavigationHint: string;
+  datasetFileList: string;
+  datasetNoMatches: string;
+  datasetLoadedItems: string;
+  datasetBackToList: string;
+  datasetFileType: string;
+  datasetTypeFile: string;
+  datasetFileSize: string;
+  datasetFileModified: string;
+  datasetFilePermissions: string;
+  datasetBinaryHint: string;
+  datasetClosePreview: string;
+  datasetPreviewLoading: string;
+  datasetPreviewEnd: string;
+
   runRetryIncomplete: string;
   workflowRunAgain: string;
   chatNeedsClarification: string;

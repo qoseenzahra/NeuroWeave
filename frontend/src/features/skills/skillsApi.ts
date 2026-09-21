@@ -51,3 +51,13 @@ export type SkillsResponse = {
 export function fetchSkills(signal?: AbortSignal): Promise<SkillsResponse> {
   return request<SkillsResponse>('/api/skills', { signal });
 }
+
+export type SkillDetails = Skill & {
+  instructions: string;
+  files: string[];
+  complementary_skills?: string[];
+};
+
+export function fetchSkill(name: string, signal?: AbortSignal): Promise<SkillDetails> {
+  return request<SkillDetails>(`/api/skills/${encodeURIComponent(name)}`, { signal });
+}

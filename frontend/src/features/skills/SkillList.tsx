@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useSkillStore } from '../../stores/skillStore';
 import { SkillCard } from './SkillCard';
 import { SkillSearch } from './SkillSearch';
 import { useSkills } from './useSkills';
@@ -17,10 +16,13 @@ function tabForSkill(skill: Skill): Exclude<SkillTab, 'all'> {
   return 'general';
 }
 
-export function SkillList() {
+export function SkillList({ selectedSkillIds, disabled, onAdd, onRemove, onDetails, onClear }: {
+  selectedSkillIds: string[]; disabled: boolean;
+  onAdd: (id: string) => void; onRemove: (id: string) => void;
+  onDetails: (skill: Skill) => void; onClear: () => void;
+}) {
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState<SkillTab>('all');
-  const { selectedSkillIds, toggleSkill, clearSelectedSkills } = useSkillStore();
 
   const language = useLanguageStore((state) => state.language);
 
@@ -97,7 +99,7 @@ export function SkillList() {
         />
 
         {selectedSkillIds.length > 0 && (
-          <Button variant="ghost" size="sm" onClick={clearSelectedSkills}>
+          <Button variant="ghost" size="sm" disabled={disabled} onClick={onClear}>
             {t.clearSelectedSkills}
           </Button>
         )}
@@ -116,7 +118,10 @@ export function SkillList() {
               key={skill.name}
               skill={skill}
               selected={selectedSkillIds.includes(skill.name)}
-              onSelect={() => toggleSkill(skill.name)}
+              disabled={disabled}
+              onDetails={() => onDetails(skill)}
+              onAdd={() => onAdd(skill.name)}
+              onRemove={() => onRemove(skill.name)}
             />
           ))}
         </div>

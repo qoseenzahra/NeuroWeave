@@ -1,4 +1,4 @@
-import { Send } from 'lucide-react';
+import { Send, X } from 'lucide-react';
 import { Badge } from '../../ui/Badge';
 import { Button } from '../../ui/Button';
 import { IconButton } from '../../ui/IconButton';
@@ -12,8 +12,9 @@ type MessageComposerProps = {
   value: string;
   sending: boolean;
   mode: InteractionMode;
-  selectedLabel: string | null;
-  selectedCount: number;
+  selectedSkills: { id: string; label: string }[];
+  onRemoveSkill: (id: string) => void;
+  onViewSkill: (id: string) => void;
   onChange: (value: string) => void;
   onKeyDown: (event: React.KeyboardEvent<HTMLTextAreaElement>) => void;
   onSend: () => void;
@@ -26,8 +27,9 @@ export function MessageComposer({
   value,
   sending,
   mode,
-  selectedLabel,
-  selectedCount,
+  selectedSkills,
+  onRemoveSkill,
+  onViewSkill,
   onChange,
   onKeyDown,
   onSend,
@@ -51,19 +53,24 @@ export function MessageComposer({
           disabled={sending}
           className="mb-2"
         />
-        {selectedCount > 0 && selectedLabel && (
-          <div className="mb-2 flex items-center gap-2 text-meta text-muted">
+        {selectedSkills.length > 0 && (
+          <div className="mb-2 flex flex-wrap items-start gap-2 text-meta text-muted">
             <span className="shrink-0">
-              {selectedCount > 1
-                ? t.usingSkills.replace('{{count}}', String(selectedCount))
+              {selectedSkills.length > 1
+                ? t.usingSkills.replace('{{count}}', String(selectedSkills.length))
                 : t.usingSkill}
             </span>
 
-            <Badge tone="neutral" className="min-w-0 flex-1">
-              <span className="min-w-0 truncate">{selectedLabel}</span>
-            </Badge>
+            <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
+              {selectedSkills.map(skill => <Badge key={skill.id} tone="neutral" className="max-w-full" title={skill.label}>
+                <button type="button" className="min-w-0 truncate hover:text-accent" onClick={() => onViewSkill(skill.id)}
+                  aria-label={`${t.skillViewDetails}: ${skill.label}`}>{skill.label}</button>
+                <button type="button" className="shrink-0 rounded p-0.5 hover:bg-hover disabled:opacity-50" disabled={sending}
+                  aria-label={`${t.skillRemove}: ${skill.label}`} onClick={() => onRemoveSkill(skill.id)}><X className="size-3" aria-hidden="true"/></button>
+              </Badge>)}
+            </div>
 
-            <Button variant="ghost" size="sm" onClick={onClearSkills}>
+            <Button variant="ghost" size="sm" disabled={sending} onClick={onClearSkills}>
               {t.clearSelectedSkills}
             </Button>
           </div>

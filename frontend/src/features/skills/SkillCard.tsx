@@ -3,11 +3,15 @@ import type { Skill } from './skillsApi';
 import { useLanguageStore } from '../../stores/languageStore';
 import { getTranslations } from '../../lib/i18n';
 import { cx } from '../../ui/cx';
+import { Button } from '../../ui/Button';
 
 type SkillCardProps = {
   skill: Skill;
   selected: boolean;
-  onSelect: () => void;
+  onDetails: () => void;
+  onAdd: () => void;
+  onRemove: () => void;
+  disabled?: boolean;
 };
 
 function kindForSkill(skill: Skill): 'image' | 'report' | 'data' | 'default' {
@@ -18,7 +22,7 @@ function kindForSkill(skill: Skill): 'image' | 'report' | 'data' | 'default' {
   return 'default';
 }
 
-export function SkillCard({ skill, selected, onSelect }: SkillCardProps) {
+export function SkillCard({ skill, selected, onDetails, onAdd, onRemove, disabled }: SkillCardProps) {
   const language = useLanguageStore((state) => state.language);
   const t = getTranslations(language);
 
@@ -38,11 +42,11 @@ export function SkillCard({ skill, selected, onSelect }: SkillCardProps) {
   const runtimeReasons = skill.runtime_reasons?.filter(Boolean).join('\n');
 
   return (
+    <article>
     <button
       type="button"
-      onClick={onSelect}
-      aria-pressed={selected}
-      aria-label={`${selected ? t.deselect : t.select} ${skill.display_name}`}
+      onClick={onDetails}
+      aria-label={`${t.skillViewDetails}: ${skill.display_name}`}
       title={runtimeReasons || runtimeLabel}
       className={cx(
         'w-full rounded-card border p-3 text-left transition-control focus-ring-inset',
@@ -101,5 +105,13 @@ export function SkillCard({ skill, selected, onSelect }: SkillCardProps) {
         </div>
       </div>
     </button>
+    <div className="flex flex-wrap items-center justify-between gap-2 px-3 pb-3">
+      <span className="text-micro text-subtle">{selected ? t.skillAdded : t.skillViewDetails}</span>
+      <Button size="sm" disabled={disabled} onClick={selected ? onRemove : onAdd}
+        aria-label={`${selected ? t.skillRemove : t.skillAdd}: ${skill.display_name}`}>
+        {selected ? t.skillRemove : t.skillAdd}
+      </Button>
+    </div>
+    </article>
   );
 }

@@ -37,6 +37,9 @@ import {
   useRenameConversation
 } from './features/conversations/useConversations';
 import { SkillList } from './features/skills/SkillList';
+import { SkillDetails } from './features/skills/SkillDetails';
+import type { Skill } from './features/skills/skillsApi';
+import { DatasetFilesDrawer } from './features/datasets/DatasetFilesDrawer';
 import { useSkillStore } from './stores/skillStore';
 import { useSkills } from './features/skills/useSkills';
 import { useDatasetStore } from './stores/datasetStore';
@@ -55,7 +58,10 @@ function App() {
   const ui = useConversationUiStore();
   const { activeConversationId } = ui;
   const [interactionMode, setInteractionMode] = useState<InteractionMode>('chat');
-  const { selectedSkillIds, clearSelectedSkills, setSelectedSkills } = useSkillStore();
+  const { selectedSkillIds, setSelectedSkills } = useSkillStore();
+  const [viewedSkill, setViewedSkill] = useState<Skill | null>(null);
+  // Keep unsent skill choices scoped to their conversation when browsing history.
+  const skillDrafts = useRef<Record<string, string[]>>({});
   const skills = useSkills().data?.skills ?? [];
   const skillsStats = useSkills().data?.stats;
   const selectedDatasetId = useDatasetStore((s) => s.selectedDatasetId);
@@ -65,7 +71,7 @@ function App() {
   const [datasetPickerOpen, setDatasetPickerOpen] = useState(false);
   const language = useLanguageStore((s) => s.language);
   const t = getTranslations(language);
-  const selectedSkills = skills.filter((s) => selectedSkillIds.includes(s.name));
+  const selectedSkills = selectedSkillIds.map(name => skills.find(skill => skill.name === name) ?? { name, display_name: name });
   const selectedSkillNames = selectedSkills.map((s) => s.display_name || s.name).join(' + ');
   const [input, setInput] = useState('');
   const [conversationSearch, setConversationSearch] = useState('');
@@ -153,8 +159,8 @@ function App() {
   useLayoutEffect(() => {
     if (!activeConversationId || !detail || restoredConversation === activeConversationId) return;
     const context = detail.context;
-    setSelectedSkills(Array.isArray(context.selected_skills)
-      ? context.selected_skills.filter((id): id is string => typeof id === 'string') : []);
+    setSelectedSkills(skillDrafts.current[activeConversationId] ?? (Array.isArray(context.selected_skills)
+      ? context.selected_skills.filter((id): id is string => typeof id === 'string') : []));
     setDatasetId(typeof context.dataset_id === 'string' ? context.dataset_id : null);
     // Deliberately synchronize controls with the asynchronous server snapshot.
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -185,6 +191,18 @@ function App() {
     queryClient.setQueryData(['datasets', 'detail', dataset.dataset_id], dataset);
   };
   const openDatasetPicker = () => { if (!datasetDisabled) setDatasetPickerOpen(true); };
+  const changeSkills = (ids: string[]) => {
+    if (contextBusy || olderMutation.isPending) return;
+    const next = [...new Set(ids)];
+    if (activeConversationId) skillDrafts.current[activeConversationId] = next;
+    setSelectedSkills(next);
+  };
+  const addSkill = (id: string) => changeSkills([...selectedSkillIds, id]);
+  const removeSkill = (id: string) => changeSkills(selectedSkillIds.filter(value => value !== id));
+  const clearSkills = () => changeSkills([]);
+  const viewSkill = (id: string) => setViewedSkill(skills.find(skill => skill.name === id) ?? {
+    name:id, display_name:id, description:'', layer:'', skill_type:'', runtime:'', status:''
+  });
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedSearch(conversationSearch), 250);
     return () => window.clearTimeout(timer);
@@ -218,6 +236,7 @@ function App() {
     setDatasetFilesOpen(false);
     setWorkspaceOpen(false);
     setLocalNewMessages([]);
+    setSelectedSkills([]);
     setActiveTurn(null);
     ui.setActionError(null);
     setSendError(null);
@@ -611,7 +630,8 @@ function App() {
               </>
             ) : sidebarView === 'skills' ? (
               <div className="view-enter min-h-0 flex-1 overflow-y-auto px-3 py-3">
-                <SkillList />
+                <SkillList selectedSkillIds={selectedSkillIds} disabled={contextBusy || olderMutation.isPending}
+                  onAdd={addSkill} onRemove={removeSkill} onDetails={setViewedSkill} onClear={clearSkills}/>
                 {skillsStats && (
                   <div className="mt-3 border-t border-line pt-2">
                     <p className="px-1 text-meta text-subtle">
@@ -684,21 +704,24 @@ function App() {
             value={input}
             sending={contextBusy || olderMutation.isPending}
             mode={interactionMode}
-            selectedLabel={selectedSkills.length > 0 ? selectedSkillNames : null}
-            selectedCount={selectedSkills.length}
+            selectedSkills={selectedSkills.map(skill => ({id:skill.name,label:skill.display_name || skill.name}))}
+            onRemoveSkill={removeSkill}
+            onViewSkill={viewSkill}
             onChange={setInput}
             onKeyDown={handleKeyDown}
             onSend={handleSend}
             onModeChange={setInteractionMode}
-            onClearSkills={clearSelectedSkills}
+            onClearSkills={clearSkills}
           />
         </main>
       </div>
       {datasetPickerOpen && <DatasetPicker onSelect={handleDatasetSelect} onClose={() => setDatasetPickerOpen(false)} />}
       {storageOpen && <StoragePanel onClose={() => setStorageOpen(false)} />}
+      {viewedSkill && <SkillDetails key={viewedSkill.name} skill={viewedSkill}
+        selected={selectedSkillIds.includes(viewedSkill.name)} disabled={contextBusy || olderMutation.isPending}
+        onAdd={() => addSkill(viewedSkill.name)} onRemove={() => removeSkill(viewedSkill.name)} onClose={() => setViewedSkill(null)}/>}
       {datasetFilesOpen && selectedDataset && (
-        <WorkspacePanel key={selectedDataset.dataset_id} workspaceId={null} conversationId={activeConversationId}
-          datasetId={selectedDataset.dataset_id} datasetOnly onSelect={async () => undefined}
+        <DatasetFilesDrawer key={selectedDataset.dataset_id} dataset={selectedDataset}
           onClose={() => setDatasetFilesOpen(false)} />
       )}
       {workspaceOpen && (

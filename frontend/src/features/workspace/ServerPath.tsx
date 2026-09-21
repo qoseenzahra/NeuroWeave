@@ -25,7 +25,7 @@ export function ServerPath({ path, label }: { path: string; label?: string }) {
               field.value = path;
               field.style.position = 'fixed';
               field.style.opacity = '0';
-              document.body.appendChild(field);
+              (focused?.closest('dialog') ?? document.body).appendChild(field);
               try {
                 field.select();
                 // HTTP has no modern clipboard alternative; retain this narrow fallback.
