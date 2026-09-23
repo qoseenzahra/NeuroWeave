@@ -1,0 +1,152 @@
+{
+  "schema_version": 1,
+  "id": "freesurfer.autorecon-stages-f5b6e34bac",
+  "version": "1",
+  "kind": "pipeline",
+  "description": "依次执行：FreeSurfer recon-all（可执行） → FreeSurfer recon-all（可执行） → FreeSurfer recon-all（可执行）。输入和参数由方法契约定义。",
+  "label": "FreeSurfer autorecon1 → autorecon2 → autorecon3",
+  "parameters": [
+    {
+      "id": "threads",
+      "argument": "openmp",
+      "label": "OpenMP 线程数",
+      "description": "recon-all 可使用的 CPU 线程数。",
+      "type": "integer",
+      "control": "number",
+      "level": "basic",
+      "group": "计算资源",
+      "unit": "",
+      "required": true,
+      "default": 4,
+      "options": [],
+      "minimum": 1.0,
+      "maximum": 32.0,
+      "step": 1.0,
+      "placeholder": "",
+      "visible_when": {},
+      "required_when": {},
+      "enabled_when": {},
+      "conflicts_with": [],
+      "condition_help": "",
+      "usage": "",
+      "software_default": "",
+      "documentation_url": ""
+    }
+  ],
+  "input_slots": [
+    {
+      "id": "t1w",
+      "type": "t1w_image",
+      "label": "T1w 输入",
+      "description": "只在 autorecon1 导入一次；后续阶段复用同一受试者目录。",
+      "required": true,
+      "required_when": {},
+      "cardinality": "one",
+      "binding": "file",
+      "formats": [
+        ".nii",
+        ".nii.gz",
+        ".mgz"
+      ],
+      "companions": [],
+      "source_options": [
+        "dataset",
+        "existing_path",
+        "upstream_output"
+      ],
+      "validation": [
+        "path_exists"
+      ]
+    }
+  ],
+  "output_slots": [
+    {
+      "id": "subject",
+      "type": "freesurfer_subject",
+      "label": "FreeSurfer 受试者目录",
+      "description": "包含 mri、surf、label、stats 等输出。",
+      "format": "",
+      "primary": true,
+      "path_template": "{subject}/",
+      "generated_when": {}
+    }
+  ],
+  "steps": [
+    {
+      "id": "autorecon1",
+      "title": "FreeSurfer autorecon1",
+      "fixed_parameters": {
+        "processing_stage": "autorecon1"
+      },
+      "parameter_bindings": {},
+      "inherit_parameters": true,
+      "input_bindings": {
+        "t1w": {
+          "source": "workflow_input",
+          "slot_id": "t1w",
+          "step_id": null,
+          "output_slot_id": null
+        }
+      },
+      "workspace": "subject",
+      "method_ref": "freesurfer.recon_all",
+      "method_version": "1",
+      "capability": "skill.freesurfer-tool"
+    },
+    {
+      "id": "autorecon2",
+      "title": "FreeSurfer autorecon2",
+      "fixed_parameters": {
+        "processing_stage": "autorecon2"
+      },
+      "parameter_bindings": {},
+      "inherit_parameters": true,
+      "input_bindings": {
+        "subject": {
+          "source": "step_output",
+          "slot_id": null,
+          "step_id": "autorecon1",
+          "output_slot_id": "subject"
+        }
+      },
+      "workspace": "subject",
+      "method_ref": "freesurfer.recon_all",
+      "method_version": "1",
+      "capability": "skill.freesurfer-tool"
+    },
+    {
+      "id": "autorecon3",
+      "title": "FreeSurfer autorecon3",
+      "fixed_parameters": {
+        "processing_stage": "autorecon3"
+      },
+      "parameter_bindings": {},
+      "inherit_parameters": true,
+      "input_bindings": {
+        "subject": {
+          "source": "step_output",
+          "slot_id": null,
+          "step_id": "autorecon2",
+          "output_slot_id": "subject"
+        }
+      },
+      "workspace": "subject",
+      "method_ref": "freesurfer.recon_all",
+      "method_version": "1",
+      "capability": "skill.freesurfer-tool"
+    }
+  ],
+  "output_bindings": {
+    "subject": {
+      "step_id": "autorecon3",
+      "output_slot_id": "subject"
+    }
+  },
+  "included_capabilities": [
+    "skill.freesurfer-tool"
+  ],
+  "category": [
+    "内置 Pipeline",
+    "其他软件"
+  ]
+}

@@ -1,0 +1,216 @@
+{
+  "label": "分区影像统计",
+  "description": "调用现有实现：skills/dipy-tool/scripts/roi_stats_reference.py。输入保持只读，输出写入独立任务目录。",
+  "runner_id": "reviewed.dipy-tool.roi-stats",
+  "input_types": [
+    "analysis_input"
+  ],
+  "output_types": [
+    "generated_folder"
+  ],
+  "requires_features": [],
+  "parameters": [
+    {
+      "id": "min_voxels",
+      "argument": "min-voxels",
+      "label": "min-voxels",
+      "description": "Minimum voxel count for a region to be reported.",
+      "type": "integer",
+      "control": "auto",
+      "level": "basic",
+      "group": "常用参数",
+      "unit": "",
+      "required": true,
+      "default": 1,
+      "options": [],
+      "minimum": 1.0,
+      "maximum": 100000.0,
+      "step": null,
+      "placeholder": "",
+      "visible_when": {},
+      "required_when": {},
+      "enabled_when": {},
+      "conflicts_with": [],
+      "condition_help": "",
+      "usage": "参数说明直接来自 skills/dipy-tool/scripts/roi_stats_reference.py:50。平台仅转发已登记选项；默认值和取值限制见本方法定义。",
+      "software_default": "",
+      "documentation_url": ""
+    }
+  ],
+  "input_slots": [
+    {
+      "id": "metric",
+      "type": "analysis_input",
+      "label": "标量影像",
+      "description": "标量影像：模型、统计或连接组分析使用的表格、数组、图结构或特征文件。。作为此方法的 metric 输入，通过文件选择或上游输出绑定。",
+      "required": true,
+      "required_when": {},
+      "cardinality": "one",
+      "binding": "file",
+      "formats": [],
+      "companions": [],
+      "source_options": [
+        "dataset",
+        "existing_path",
+        "upstream_output"
+      ],
+      "validation": []
+    },
+    {
+      "id": "roi",
+      "type": "label_image",
+      "label": "分区图谱",
+      "description": "分区图谱：标签图谱；运行时验证实际产物。。作为此方法的 roi 输入，通过文件选择或上游输出绑定。",
+      "required": true,
+      "required_when": {},
+      "cardinality": "one",
+      "binding": "file",
+      "formats": [],
+      "companions": [],
+      "source_options": [
+        "dataset",
+        "existing_path",
+        "upstream_output"
+      ],
+      "validation": []
+    },
+    {
+      "id": "labels",
+      "type": "analysis_input",
+      "label": "标签表",
+      "description": "标签表：模型、统计或连接组分析使用的表格、数组、图结构或特征文件。。作为此方法的 labels 输入，通过文件选择或上游输出绑定。",
+      "required": false,
+      "required_when": {},
+      "cardinality": "one",
+      "binding": "file",
+      "formats": [],
+      "companions": [],
+      "source_options": [
+        "dataset",
+        "existing_path",
+        "upstream_output"
+      ],
+      "validation": []
+    }
+  ],
+  "output_slots": [
+    {
+      "id": "results",
+      "type": "generated_folder",
+      "label": "分析结果",
+      "description": "分析结果：受信任 Runner 在隔离输出目录中生成并登记的目录型结果。。由此方法生成，端口 results。 运行目录内的路径：results/。",
+      "format": "",
+      "primary": true,
+      "path_template": "results/",
+      "generated_when": {}
+    },
+    {
+      "id": "file_roi_stats_csv",
+      "type": "generated_file",
+      "label": "roi_stats.csv",
+      "description": "roi_stats.csv：受信任 Runner 在隔离输出目录中生成、校验并登记的文件。。由此方法生成，端口 file_roi_stats_csv。 运行目录内的路径：results/roi_stats.csv。",
+      "format": "",
+      "primary": false,
+      "path_template": "results/roi_stats.csv",
+      "generated_when": {}
+    }
+  ],
+  "source_references": [
+    {
+      "path": "skills/dipy-tool/scripts/roi_stats_reference.py",
+      "label": "现有实现调用入口",
+      "kind": "script",
+      "line_start": 1,
+      "line_end": null
+    },
+    {
+      "path": "bakend/resources/existing_implementation_sources.json",
+      "label": "实现来源与原始源码校验记录",
+      "kind": "script",
+      "line_start": 1,
+      "line_end": null
+    }
+  ],
+  "command_references": [],
+  "included_capabilities": [],
+  "schema_version": 1,
+  "id": "reviewed.dipy-tool.roi-stats",
+  "version": "1",
+  "kind": "method",
+  "execution": {
+    "kind": "reviewed",
+    "adapter": {
+      "runner_id": "reviewed.dipy-tool.roi-stats",
+      "script": "skills/dipy-tool/scripts/roi_stats_reference.py",
+      "inputs": [
+        {
+          "id": "metric",
+          "flag": "--metric",
+          "path_list": false,
+          "many_args": false
+        },
+        {
+          "id": "roi",
+          "flag": "--roi",
+          "path_list": false,
+          "many_args": false
+        },
+        {
+          "id": "labels",
+          "flag": "--labels",
+          "path_list": false,
+          "many_args": false
+        }
+      ],
+      "parameters": [
+        {
+          "id": "min_voxels",
+          "flag": "--min-voxels"
+        }
+      ],
+      "modules": [
+        "numpy",
+        "pandas",
+        "nibabel",
+        "nilearn"
+      ],
+      "expected": [
+        "roi_stats.csv"
+      ],
+      "profile": "scientific",
+      "fixed_args": [],
+      "outputs": [
+        [
+          "--output",
+          "roi_stats.csv"
+        ]
+      ],
+      "required_files": [],
+      "executables": [],
+      "required_apis": [],
+      "implementation_source": {
+        "kind": "existing_project_script",
+        "entrypoints": [
+          "skills/dipy-tool/scripts/roi_stats_reference.py"
+        ],
+        "source": {
+          "origin": "NeuroWeave before runtime expansion",
+          "revision": "70b681c",
+          "source_path": "skills/dipy-tool/scripts/roi_stats_reference.py",
+          "source_sha256": "6bc9efbf46cfc67ad7fd26684a82d8893a2ba4adc339ec85620270d428150343"
+        },
+        "dependencies": {},
+        "adapter_scope": "Existing calls, argument/input validation, scheduling and output collection only; no replacement algorithm."
+      },
+      "implementation_files": [
+        {
+          "path": "skills/dipy-tool/scripts/roi_stats_reference.py",
+          "sha256": "6bc9efbf46cfc67ad7fd26684a82d8893a2ba4adc339ec85620270d428150343"
+        }
+      ],
+      "artifact_types": {
+        "roi_stats.csv": "generated_file"
+      }
+    }
+  }
+}

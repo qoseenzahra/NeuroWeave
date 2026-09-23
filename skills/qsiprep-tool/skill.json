@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "id": "qsiprep-tool",
+  "description": "统筹 qsiprep-tool 的 软件方法选择，包括QSIPrep。",
+  "method_refs": [
+    {
+      "capability": "dwi.preprocess",
+      "method_id": "qsiprep",
+      "label": "QSIPrep",
+      "default_recommended": true,
+      "default_reason": "适合大多数标准 BIDS DWI 数据。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "容器化的标准 BIDS-App 路线，输出统一且包含 QC 报告。",
+      "method_ref": "qsiprep.run"
+    },
+    {
+      "capability": "skill.qsiprep-tool",
+      "method_id": "linked-qsiprep",
+      "label": "QSIPrep",
+      "default_recommended": false,
+      "default_reason": "适合大多数标准 BIDS DWI 数据。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "容器化的标准 BIDS-App 路线，输出统一且包含 QC 报告。",
+      "method_ref": "qsiprep.run"
+    },
+    {
+      "capability": "skill.qsiprep-tool",
+      "method_id": "qsiprep-tool-guided--standard-dwi-preprocessing",
+      "label": "QSIPrep",
+      "default_recommended": false,
+      "default_reason": "适合大多数标准 BIDS DWI 数据。",
+      "replaces_operations": [],
+      "execution_resolution": {
+        "state": "mapped",
+        "reason": "已指向现有软件适配；公共环境缺少该软件，界面和 Dry-run 会显示实际缺项。具体可用参数以该适配声明为准。",
+        "source_method_id": "qsiprep-tool-guided--standard-dwi-preprocessing",
+        "target_method_id": "qsiprep"
+      },
+      "role": "容器化的标准 BIDS-App 路线，输出统一且包含 QC 报告。",
+      "method_ref": "qsiprep.run"
+    },
+    {
+      "capability": "skill.qsiprep-tool",
+      "method_id": "qsiprep-tool-guided--multi-subject-run",
+      "label": "QSIPrep",
+      "default_recommended": false,
+      "default_reason": "适合大多数标准 BIDS DWI 数据。",
+      "replaces_operations": [],
+      "execution_resolution": {
+        "state": "mapped",
+        "reason": "已指向现有软件适配；公共环境缺少该软件，界面和 Dry-run 会显示实际缺项。具体可用参数以该适配声明为准。",
+        "source_method_id": "qsiprep-tool-guided--multi-subject-run",
+        "target_method_id": "qsiprep"
+      },
+      "role": "容器化的标准 BIDS-App 路线，输出统一且包含 QC 报告。",
+      "method_ref": "qsiprep.run"
+    },
+    {
+      "capability": "skill.qsiprep-tool",
+      "method_id": "qsiprep-tool-guided--hpc-cluster",
+      "label": "QSIPrep",
+      "default_recommended": false,
+      "default_reason": "适合大多数标准 BIDS DWI 数据。",
+      "replaces_operations": [],
+      "execution_resolution": {
+        "state": "mapped",
+        "reason": "已指向现有软件适配；公共环境缺少该软件，界面和 Dry-run 会显示实际缺项。具体可用参数以该适配声明为准。",
+        "source_method_id": "qsiprep-tool-guided--hpc-cluster",
+        "target_method_id": "qsiprep"
+      },
+      "role": "容器化的标准 BIDS-App 路线，输出统一且包含 QC 报告。",
+      "method_ref": "qsiprep.run"
+    },
+    {
+      "capability": "skill.qsiprep-tool",
+      "method_id": "qsiprep-tool-guided--qc",
+      "label": "QSIPrep",
+      "default_recommended": false,
+      "default_reason": "适合大多数标准 BIDS DWI 数据。",
+      "replaces_operations": [],
+      "execution_resolution": {
+        "state": "mapped",
+        "reason": "已指向现有软件适配；公共环境缺少该软件，界面和 Dry-run 会显示实际缺项。具体可用参数以该适配声明为准。",
+        "source_method_id": "qsiprep-tool-guided--qc",
+        "target_method_id": "qsiprep"
+      },
+      "role": "容器化的标准 BIDS-App 路线，输出统一且包含 QC 报告。",
+      "method_ref": "qsiprep.run"
+    }
+  ],
+  "pipeline_refs": [],
+  "planning_capabilities": [],
+  "selection_rules": [
+    "先确认目标产物和已有输入；只选择必要步骤，已有数据或历史结果优先复用。",
+    "输入缺少时先查询目录并请求用户绑定；不要自动追加生成该输入的步骤。",
+    "独立操作选择 Method；确需固定组合时选择 Pipeline，并检查每一步输入输出。",
+    "软件工具 Skill 用于选择实现，任务 Skill 用于组织需求，不因为同时匹配两类 Skill 重复添加方法。"
+  ],
+  "functions": [
+    {
+      "method_ref": "qsiprep.run",
+      "label": "QSIPrep",
+      "description": "容器化的标准 BIDS-App 路线，输出统一且包含 QC 报告。"
+    }
+  ],
+  "name": "qsiprep-tool",
+  "category": [
+    "软件工具",
+    "qsiprep"
+  ],
+  "scope": "software",
+  "applicability": [
+    "需要 qsiprep-tool 相关处理，且目标涉及：预处理后的 DWI、预处理质量控制、执行日志。",
+    "查询具体方法并检查对应输入：BIDS DWI 数据集；不是要求一次提供目录中所有方法的输入。"
+  ],
+  "limitations": [
+    "格式和样本数量满足仅是必要条件；空间、单位、样本标识与方法假设仍须按所选方法检查。",
+    "这里只统筹已登记入口；目录收录不代表覆盖软件全部命令或参数。",
+    "环境探测与运行证据分别显示；合成数据测试不代表真实数据的科学有效性。",
+    "尚无 Method 的规划能力只能提供说明，不能当作可执行步骤。"
+  ],
+  "examples": []
+}

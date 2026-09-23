@@ -1,7 +1,7 @@
 name: NeuroWeave checks
 on:
   push:
-    branches: [main]
+    branches: [main, codex/structured-skill-methods]
   pull_request:
   workflow_dispatch:
 permissions:

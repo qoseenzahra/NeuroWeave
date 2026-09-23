@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from ..parameter_rules import effective_parameters
+from ..parameter_rules import effective_parameters, matches
 
 from ..capability_registry import CapabilityMethod, CapabilityRegistry
 from ..run_models import RunExecutionOptions
@@ -57,7 +57,10 @@ class RecipeCompiler:
 
             stage_ids: dict[str, str] = {}
             stage_outputs: dict[tuple[str, str], tuple[str, str, str]] = {}
+            public_values=self._default_parameters(method)
+            public_values.update(parent.selected_parameters)
             for stage_index, stage in enumerate(recipe.steps, start=1):
+                if not matches(stage.when, public_values):continue
                 if stage.id in stage_ids:
                     raise RecipeCompilationError(
                         f"执行配方 {recipe.recipe_id} 含有重复步骤：{stage.id}"
@@ -186,6 +189,8 @@ class RecipeCompiler:
 
             for public_output_id, source in recipe.output_bindings.items():
                 resolved = stage_outputs.get((source.step_id, source.output_slot_id))
+                public_slot=next((s for s in method.output_slots if s.id==public_output_id),None)
+                if public_slot and not matches(public_slot.generated_when,public_values):continue
                 if resolved is None:
                     raise RecipeCompilationError(
                         f"执行配方 {recipe.recipe_id} 的公开输出无效："
@@ -262,6 +267,9 @@ class RecipeCompiler:
     def _method_option(definition: CapabilityMethod) -> MethodOption:
         return MethodOption(
             id=definition.method_id,
+            definition_id=definition.definition_id,
+            definition_version=definition.definition_version,
+            entry_kind=definition.entry_kind,
             skill_id=definition.skill_id,
             label=definition.label,
             description=definition.description,

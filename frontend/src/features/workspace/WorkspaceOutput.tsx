@@ -5,7 +5,7 @@ import { useLanguageStore } from '../../stores/languageStore';
 import { getTranslations } from '../../lib/i18n';
 import type { Workflow } from '../workflows/workflowTypes';
 import { saveWorkflowOutput } from './workspaceApi';
-import type { FsEntry } from './workspaceTypes';
+import type { Workspace, FsEntry } from './workspaceTypes';
 import { ServerPath } from './ServerPath';
 import { WorkspacePanel } from './WorkspacePanel';
 
@@ -23,6 +23,7 @@ export function WorkspaceOutput({
   const [editing, setEditing] = useState(false);
   const [path, setPath] = useState(workflow.output_relative_path ?? 'outputs');
   const [picker, setPicker] = useState(false);
+  const [selectingRoot, setSelectingRoot] = useState(false);
   const [error, setError] = useState('');
   const client = useQueryClient();
   const save = useMutation({
@@ -31,29 +32,51 @@ export function WorkspaceOutput({
     onSuccess: value => { onChange(value); setEditing(false); },
     onError: error => { adoptConflict(client, error); setError(String(error)); },
   });
-  const busy = save.isPending;
-  if (!workflow.workspace_id || !workflow.workspace_root_path) return null;
+  const bind = useMutation({
+    mutationKey: ['workflow-change', workflow.workflow_id, 'output-root'],
+    mutationFn: (workspace: Workspace | null) => saveWorkflowOutput(
+      workflow.workflow_id, '.', workflow.revision,
+      { workspaceId: workspace?.id ?? null, conversationId: null }
+    ),
+    onSuccess: value => { onChange(value); setEditing(false); },
+    onError: error => { adoptConflict(client, error); setError(String(error)); },
+  });
+  const busy = save.isPending || bind.isPending;
+  const hasOutput = !!workflow.workspace_id && !!workflow.workspace_root_path;
+  const locked = disabled || busy || workflow.status === 'confirmed';
   return (
     <div className="mt-2 min-w-0 rounded border border-accent-line bg-accent-quiet p-2 text-xs dark:border-accent-line ">
       <div className="flex flex-wrap items-center justify-between gap-1">
         <span>{t.workspaceOutputTitle}</span>
-        <button
+        <button type="button" className="rounded-control border border-line px-2 py-1"
+          disabled={locked} onClick={() => setSelectingRoot(true)}>
+          {t.workspaceSelect}
+        </button>
+        {hasOutput && <button
           type="button"
           className="rounded-control border border-line px-2 py-1 "
-          disabled={disabled || workflow.status === 'confirmed'}
+          disabled={locked}
           onClick={() => {
             setPath(workflow.output_relative_path ?? 'outputs');
             setEditing((v) => !v);
           }}
         >
           {t.workspaceOutputAdjust}
-        </button>
+        </button>}
       </div>
-      <ServerPath
+      {hasOutput ? <ServerPath
         path={`${workflow.workspace_root_path}/${workflow.output_relative_path ?? 'outputs'}`}
         label={`${workflow.output_relative_path ?? 'outputs'}/<run_id>`}
-      />
-      {editing && (
+      /> : <p className="mt-2 text-warning">{t.workspaceOutputRequired}</p>}
+      {workflow.status === 'confirmed' && <p className="mt-2 text-subtle">{t.workspaceLockedHint}</p>}
+      {selectingRoot && <WorkspacePanel
+        workspaceId={workflow.workspace_id ?? null}
+        conversationId={null}
+        locked={locked}
+        onSelect={async workspace => { await bind.mutateAsync(workspace); }}
+        onClose={() => setSelectingRoot(false)}
+      />}
+      {editing && hasOutput && (
         <form
           className="space-y-2"
           onSubmit={(e) => {
@@ -94,7 +117,7 @@ export function WorkspaceOutput({
       )}
       {picker && (
         <WorkspacePanel
-          workspaceId={workflow.workspace_id}
+          workspaceId={workflow.workspace_id ?? null}
           conversationId={null}
           onSelect={async () => undefined}
           onClose={() => setPicker(false)}

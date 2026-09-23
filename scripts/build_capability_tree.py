@@ -410,7 +410,7 @@ def _keywords(skill: Skill) -> list[str]:
 def _skill_node(skill: Skill) -> dict[str, Any]:
     slug = re.sub(r"[^a-z0-9]+", "-", skill.name.lower()).strip("-")
     return {
-        "id": f"skill.{slug}",
+        "id": ("software."+skill.name.removeprefix("software-") if skill.name.startswith("software-") else f"skill.{slug}"),
         "label": LABEL_OVERRIDES.get(skill.name, skill.display_name),
         "description": _description(skill),
         "keywords": _keywords(skill),
@@ -421,9 +421,13 @@ def _skill_node(skill: Skill) -> dict[str, Any]:
 
 def build_tree(skills: list[Skill]) -> dict[str, Any]:
     by_name = {skill.name: skill for skill in skills}
+    software_skills=[skill.name for skill in skills if skill.name.startswith('software-')]
+    groups=[*GROUPS, {'id':'software-catalog','label':'软件与最小命令',
+        'description':'原生软件 Skill 统筹已注册 Method；按具体处理目标选择。',
+        'groups':[{'id':'software-commands','label':'软件命令','skills':software_skills}]}]
     assigned = [
         name
-        for section in GROUPS
+        for section in groups
         for group in section["groups"]
         for name in group["skills"]
     ]
@@ -437,7 +441,7 @@ def build_tree(skills: list[Skill]) -> dict[str, Any]:
         )
 
     taxonomy_children: list[dict[str, Any]] = []
-    for section in GROUPS:
+    for section in groups:
         taxonomy_children.append(
             {
                 "id": section["id"],
@@ -463,8 +467,8 @@ def build_tree(skills: list[Skill]) -> dict[str, Any]:
             "id": "localflow-capabilities",
             "label": "NeuroWeave 本地数据处理能力",
             "description": (
-                "完整索引所有现有 Skill；先按能力定位，再只读取命中的 SKILL.md。"
-                "所有 Skill 都有结构化规划 Manifest；只有受审 runner 能力可生成执行预览。"
+                "完整索引所有现有 Skill；先按能力定位，再读取命中的原生 Skill 定义和 Method 契约。"
+                "Skill 引用独立方法与组合流程；只有受审 Runner 可生成执行预览。"
             ),
             "execution_level": "category",
             "children": [STRUCTURED_BRANCH, *taxonomy_children],
@@ -476,6 +480,15 @@ def main() -> None:
     loader = SkillLoader(SKILLS_DIR, SUMMARIES_FILE)
     skills = loader.load_all()
     payload = build_tree(skills)
+    from app.capability_registry import CapabilityRegistry
+    registry=CapabilityRegistry(SKILLS_DIR)
+    def synchronize(node):
+        if node.get('children'):
+            for child in node['children']:synchronize(child)
+        else:
+            methods=registry.methods_for(node['id'])
+            node['execution_level']='structured' if any(m.execution_mode=='runner' for m in methods) else 'planning'
+    synchronize(payload['root'])
     OUTPUT_FILE.write_text(
         json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",

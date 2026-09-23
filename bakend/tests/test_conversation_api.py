@@ -69,6 +69,43 @@ class ConversationApiTests(unittest.IsolatedAsyncioTestCase):
                             ChatRequest(message='计算FOD并追踪', interaction_mode='task'),
                             {'recommend_workflow': True, 'capability_ids': ['dwi.fod', 'dwi.tractography']},
                         )
+                        with patch.object(main.run_service, 'create') as submit:
+                            missing_output = await client.post(
+                                f'/api/workflows/{workflow.workflow_id}/runs',
+                                json={'expected_revision': workflow.revision})
+                            self.assertEqual(missing_output.status_code, 409)
+                            self.assertIn('输出目录', missing_output.json()['detail'])
+                            submit.assert_not_called()
+                        # Semantic routing must precede bounded inspection and drafting;
+                        # the unrestricted catalog loop cannot intercept processing.
+                        order = []
+                        async def assess(req):
+                            order.append('route')
+                            return {'recommend_workflow': True, 'decision_source': 'test',
+                                    'capability_ids': ['dwi.tractography']}
+                        async def inspect(req, decision, registry):
+                            order.append('inspect')
+                        async def draft(req, decision):
+                            order.append('plan')
+                            return workflow, 'reviewable plan'
+                        with patch.object(main.workflow_service, 'assess_task', side_effect=assess), \
+                             patch.object(main.workspace_tools, 'inspect_for_plan', side_effect=inspect), \
+                             patch.object(main.workflow_service, 'draft', side_effect=draft), \
+                             patch.object(main.workspace_tools, 'reply', side_effect=AssertionError('Wrong pre-routing loop')):
+                            planned = await client.post('/api/chat', json={
+                                'message':'重建白质通路', 'interaction_mode':'task'})
+                            self.assertEqual(planned.status_code, 200, planned.text)
+                            self.assertEqual(planned.json()['type'], 'workflow')
+                            self.assertEqual(order, ['route', 'inspect', 'plan'])
+                        with patch.object(main.workflow_service, 'assess_task', return_value={'recommend_workflow':False}), \
+                             patch.object(main.workspace_tools, 'reply', return_value='真实目录查询结果') as file_reply, \
+                             patch.object(main.workflow_service, 'draft') as no_plan:
+                            listing = await client.post('/api/chat', json={
+                                'message':'列出数据集文件', 'interaction_mode':'task'})
+                            self.assertEqual(listing.status_code, 200)
+                            self.assertEqual(listing.json()['content'], '真实目录查询结果')
+                            file_reply.assert_awaited_once()
+                            no_plan.assert_not_called()
                         workflow = main.workflow_service.select_method(workflow.workflow_id, 'dwi_tractography',
                             'mrtrix3-existing-fod', workflow.revision)
                         remove_url = f'/api/workflows/{workflow.workflow_id}/steps/dwi_fod/remove'

@@ -1,7 +1,7 @@
 """Build compact Skill entry documents without rewriting upstream/audited manuals.
 
 SKILL.md is a provenance-preserving reference; OVERVIEW.md is the context entry.
-Method contracts stay in existing manifests and are served on demand by SkillCatalog.
+Method contracts live in the independent methods directory and are served on demand by SkillCatalog.
 """
 import argparse
 import json
@@ -16,23 +16,30 @@ from app.capability_registry import CapabilityRegistry
 
 def build():
     loader = SkillLoader(ROOT/'skills', ROOT/'bakend/resources/neuroclaw_skill_summaries.json')
-    methods = CapabilityRegistry(ROOT/'skills').all_methods()
+    registry = CapabilityRegistry(ROOT/'skills').definitions
+    registry.load()
     outputs = {}
     for skill in loader.load_all():
-        owned = [m for m in methods if m.skill_id == skill.name]
-        count = sum(m.execution_mode == 'runner' for m in owned)
-        description = skill.summary_zh or skill.description
-        content = (f'# {skill.display_name}\n\n{description[:900]}\n\n'
-            f'## 方法目录\n\n已登记 {len(owned)} 个方法定义，其中 {count} 个具有 Runner 契约。'
-            '这不代表当前环境全部可用，也不代表覆盖软件的全部命令参数。\n\n'
-            '使用 list_skill_methods 按用途或命令名分页查找；选定后使用 read_skill_method '
-            '读取实际输入、输出、参数及生效条件。每次只读取相关方法。\n\n'
-            '## 使用边界\n\n只调用登记的现有软件、库或脚本；原文示例不是可直接执行的授权。'
-            '输入可以来自数据集、已有文件或明确的上游输出。已有结果不应重复生成。'
-            '具体环境、输入与条件参数须通过检查，运行由用户确认后的 Runner 完成。\n\n'
-            '## 详细参考\n\n[原始 Skill 说明](SKILL.md) 保留完整背景与来源。'
-            '需要背景或示例时用 read_skill_reference 分页读取，不将全文默认加入上下文。\n')
-        outputs[skill.path/'OVERVIEW.md'] = content
+        structure=registry.skills[skill.name]
+        methods={r['method_ref'] for r in structure['method_refs']}
+        pipelines={r['pipeline_ref'] for r in structure['pipeline_refs']}
+        rules='\n'.join('- '+rule for rule in structure['selection_rules'])
+        guidance='\n\n'.join('## '+title+'\n\n'+'\n'.join('- '+item for item in structure.get(key, [])) for title,key in [('适用情况','applicability'),('限制','limitations')])
+        content=(f'# {skill.display_name}\n\n{structure["description"]}\n\n'
+            f'## 统筹目录\n\n{len(methods)} 个独立方法，{len(pipelines)} 个组合流程，'
+            f'{len(structure["planning_capabilities"])} 个尚未接入的规划能力。\n\n'
+            'Skill 负责选择、解释方法与复用已有输入。执行契约唯一保存在 methods/；'
+            '组合连接保存在 pipelines/；本 Skill 的方法角色见 skill.json 的 method_refs。\n\n'
+            '先 list_skill_methods（kind=method/pipeline/capability）定位，再 read_skill_method '
+            '或 read_skill_pipeline 按需查看参数和端口，不将全部方法手册塞入上下文。\n\n'
+            f'## 选择规则\n\n{rules}\n\n{guidance}\n\n'
+            '只调用登记的现有软件、库或原始脚本；环境可用不代表已完成真实数据验证。'
+            '实际运行须检查输入、节点、参数，并通过用户确认后的 Runner。\n\n'
+            '## 背景参考\n\n[SKILL.md](SKILL.md) 保留原始背景；'
+            'read_skill_reference 分页读取。原文示例不自动取得执行权限。\n')
+        if not (skill.path/'SKILL.md').is_file():
+            content=content[:content.index('## 背景参考')].rstrip()+'\n'
+        outputs[skill.path/'OVERVIEW.md']=content
     return outputs
 
 

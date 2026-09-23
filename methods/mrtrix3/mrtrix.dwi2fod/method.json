@@ -1,0 +1,335 @@
+{
+  "label": "MRtrix3 CSD / MSMT-CSD",
+  "description": "使用 dwi2fod 从预处理 DWI 与组织响应函数估计白质 FOD。",
+  "runner_id": "mrtrix.dwi2fod",
+  "input_types": [
+    "response_functions"
+  ],
+  "output_types": [
+    "fod_image",
+    "execution_log"
+  ],
+  "requires_features": [],
+  "parameters": [
+    {
+      "id": "algorithm",
+      "argument": "algorithm",
+      "label": "FOD 算法",
+      "description": "单组织数据使用 CSD；多壳层多组织数据使用 MSMT-CSD。",
+      "type": "string",
+      "control": "select",
+      "level": "basic",
+      "group": "常用参数",
+      "unit": "",
+      "required": true,
+      "default": "csd",
+      "options": [
+        {
+          "value": "csd",
+          "label": "CSD（单组织）",
+          "description": ""
+        },
+        {
+          "value": "msmt_csd",
+          "label": "MSMT-CSD（多组织）",
+          "description": ""
+        }
+      ],
+      "minimum": null,
+      "maximum": null,
+      "step": null,
+      "placeholder": "",
+      "visible_when": {},
+      "required_when": {},
+      "enabled_when": {},
+      "conflicts_with": [],
+      "condition_help": "",
+      "usage": "",
+      "software_default": "",
+      "documentation_url": ""
+    },
+    {
+      "id": "lmax",
+      "argument": "lmax",
+      "label": "球谐最高阶数",
+      "description": "FOD 球谐展开的最大偶数阶。",
+      "type": "integer",
+      "control": "select",
+      "level": "basic",
+      "group": "常用参数",
+      "unit": "",
+      "required": true,
+      "default": 8,
+      "options": [
+        {
+          "value": 6,
+          "label": "6",
+          "description": ""
+        },
+        {
+          "value": 8,
+          "label": "8",
+          "description": ""
+        },
+        {
+          "value": 10,
+          "label": "10",
+          "description": ""
+        },
+        {
+          "value": 12,
+          "label": "12",
+          "description": ""
+        }
+      ],
+      "minimum": null,
+      "maximum": null,
+      "step": null,
+      "placeholder": "",
+      "visible_when": {},
+      "required_when": {},
+      "enabled_when": {},
+      "conflicts_with": [],
+      "condition_help": "",
+      "usage": "",
+      "software_default": "",
+      "documentation_url": ""
+    },
+    {
+      "id": "threads",
+      "argument": "nthreads",
+      "label": "线程数",
+      "description": "MRtrix3 使用的 CPU 线程数。",
+      "type": "integer",
+      "control": "number",
+      "level": "advanced",
+      "group": "计算资源",
+      "unit": "",
+      "required": true,
+      "default": 4,
+      "options": [],
+      "minimum": 1.0,
+      "maximum": 128.0,
+      "step": 1.0,
+      "placeholder": "",
+      "visible_when": {},
+      "required_when": {},
+      "enabled_when": {},
+      "conflicts_with": [],
+      "condition_help": "",
+      "usage": "",
+      "software_default": "",
+      "documentation_url": ""
+    }
+  ],
+  "input_slots": [
+    {
+      "id": "dwi",
+      "type": "preprocessed_dwi",
+      "label": "预处理 DWI",
+      "description": "与响应函数对应的 DWI。",
+      "required": true,
+      "required_when": {},
+      "cardinality": "one",
+      "binding": "file",
+      "formats": [
+        ".nii",
+        ".nii.gz",
+        ".mif"
+      ],
+      "companions": [],
+      "source_options": [
+        "dataset",
+        "existing_path",
+        "upstream_output"
+      ],
+      "validation": [
+        "path_exists"
+      ]
+    },
+    {
+      "id": "mask",
+      "type": "brain_mask",
+      "label": "DWI Mask",
+      "description": "限制 FOD 估计范围。",
+      "required": true,
+      "required_when": {},
+      "cardinality": "one",
+      "binding": "file",
+      "formats": [
+        ".nii",
+        ".nii.gz",
+        ".mif"
+      ],
+      "companions": [],
+      "source_options": [
+        "dataset",
+        "existing_path",
+        "upstream_output"
+      ],
+      "validation": [
+        "path_exists"
+      ]
+    },
+    {
+      "id": "bvecs",
+      "type": "gradient_table",
+      "label": "bvec",
+      "description": "FSL 格式梯度方向。",
+      "required": true,
+      "required_when": {},
+      "cardinality": "one",
+      "binding": "file",
+      "formats": [
+        ".bvec",
+        ".txt"
+      ],
+      "companions": [],
+      "source_options": [
+        "dataset",
+        "existing_path",
+        "upstream_output"
+      ],
+      "validation": [
+        "path_exists"
+      ]
+    },
+    {
+      "id": "bvals",
+      "type": "gradient_table",
+      "label": "bval",
+      "description": "扩散梯度强度。",
+      "required": true,
+      "required_when": {},
+      "cardinality": "one",
+      "binding": "file",
+      "formats": [
+        ".bval",
+        ".txt"
+      ],
+      "companions": [],
+      "source_options": [
+        "dataset",
+        "existing_path",
+        "upstream_output"
+      ],
+      "validation": [
+        "path_exists"
+      ]
+    },
+    {
+      "id": "wm_response",
+      "type": "response_functions",
+      "label": "白质响应函数",
+      "description": "dwi2response 生成的白质响应。",
+      "required": true,
+      "required_when": {},
+      "cardinality": "one",
+      "binding": "file",
+      "formats": [
+        ".txt"
+      ],
+      "companions": [],
+      "source_options": [
+        "dataset",
+        "existing_path",
+        "upstream_output"
+      ],
+      "validation": [
+        "path_exists"
+      ]
+    },
+    {
+      "id": "gm_response",
+      "type": "response_functions",
+      "label": "灰质响应函数",
+      "description": "仅 MSMT-CSD 必需。",
+      "required": false,
+      "required_when": {
+        "algorithm": [
+          "msmt_csd"
+        ]
+      },
+      "cardinality": "one",
+      "binding": "file",
+      "formats": [
+        ".txt"
+      ],
+      "companions": [],
+      "source_options": [
+        "dataset",
+        "existing_path",
+        "upstream_output"
+      ],
+      "validation": [
+        "path_exists"
+      ]
+    },
+    {
+      "id": "csf_response",
+      "type": "response_functions",
+      "label": "脑脊液响应函数",
+      "description": "仅 MSMT-CSD 必需。",
+      "required": false,
+      "required_when": {
+        "algorithm": [
+          "msmt_csd"
+        ]
+      },
+      "cardinality": "one",
+      "binding": "file",
+      "formats": [
+        ".txt"
+      ],
+      "companions": [],
+      "source_options": [
+        "dataset",
+        "existing_path",
+        "upstream_output"
+      ],
+      "validation": [
+        "path_exists"
+      ]
+    }
+  ],
+  "output_slots": [
+    {
+      "id": "wm_fod",
+      "type": "fod_image",
+      "label": "白质 FOD",
+      "description": "可直接传给 tckgen。",
+      "format": "",
+      "primary": true,
+      "path_template": "wm_fod.mif",
+      "generated_when": {}
+    },
+    {
+      "id": "log",
+      "type": "execution_log",
+      "label": "FOD 日志",
+      "description": "dwi2fod 完整输出。",
+      "format": "",
+      "primary": false,
+      "path_template": "dwi2fod.log",
+      "generated_when": {}
+    }
+  ],
+  "source_references": [
+    {
+      "path": "skills/dwi-skill/SKILL.md",
+      "label": "DWI Skill",
+      "kind": "skill",
+      "line_start": 1,
+      "line_end": null
+    }
+  ],
+  "command_references": [],
+  "included_capabilities": [],
+  "schema_version": 1,
+  "id": "mrtrix.dwi2fod",
+  "version": "1",
+  "kind": "method",
+  "execution": {
+    "kind": "builtin"
+  }
+}

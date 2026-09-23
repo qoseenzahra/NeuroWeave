@@ -1,0 +1,393 @@
+{
+  "schema_version": 1,
+  "id": "connectome-discovery",
+  "description": "可调用的独立操作：暂无已登记的独立执行方法。",
+  "method_refs": [],
+  "pipeline_refs": [],
+  "planning_capabilities": [
+    {
+      "capability": "skill.connectome-discovery",
+      "method_id": "connectome-discovery-guided",
+      "skill_id": "connectome-discovery",
+      "label": "Connectome Discovery 受约束方案",
+      "description": "依据 connectome-discovery/SKILL.md 生成结构化步骤；当前为规划型方法，不对应可直接执行的 runner。",
+      "runner_id": "",
+      "execution_mode": "planning",
+      "input_types": [
+        "*"
+      ],
+      "output_types": [
+        "planned_artifact"
+      ],
+      "requires_features": [],
+      "default_recommended": true,
+      "default_reason": "该规划方法包含从 SKILL.md 提取的任务选项、脚本或命令依据。",
+      "parameters": [
+        {
+          "id": "evaluation_scope",
+          "argument": "evaluation-scope",
+          "label": "评估范围",
+          "description": "选择单次划分、交叉验证或多方法基准比较。",
+          "type": "string",
+          "control": "auto",
+          "level": "basic",
+          "group": "常用参数",
+          "unit": "",
+          "required": true,
+          "default": "cross_validation",
+          "options": [
+            {
+              "value": "single_split",
+              "label": "单次划分",
+              "description": ""
+            },
+            {
+              "value": "cross_validation",
+              "label": "交叉验证",
+              "description": ""
+            },
+            {
+              "value": "benchmark",
+              "label": "基准比较",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "reproducibility",
+          "argument": "reproducibility",
+          "label": "记录复现信息",
+          "description": "保留随机种子、数据划分、依赖和参数快照。",
+          "type": "boolean",
+          "control": "auto",
+          "level": "basic",
+          "group": "常用参数",
+          "unit": "",
+          "required": true,
+          "default": true,
+          "options": [
+            {
+              "value": true,
+              "label": "记录",
+              "description": ""
+            },
+            {
+              "value": false,
+              "label": "不记录",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "validation_folds",
+          "argument": "validation-folds",
+          "label": "交叉验证折数",
+          "description": "交叉验证或基准比较使用的折数。",
+          "type": "integer",
+          "control": "number",
+          "level": "advanced",
+          "group": "验证设计",
+          "unit": "",
+          "required": true,
+          "default": 5,
+          "options": [],
+          "minimum": 2.0,
+          "maximum": 20.0,
+          "step": 1.0,
+          "placeholder": "",
+          "visible_when": {
+            "evaluation_scope": [
+              "cross_validation",
+              "benchmark"
+            ]
+          },
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "random_seed",
+          "argument": "random-seed",
+          "label": "随机种子",
+          "description": "控制数据划分、初始化和可复现实验。",
+          "type": "integer",
+          "control": "number",
+          "level": "advanced",
+          "group": "验证设计",
+          "unit": "",
+          "required": true,
+          "default": 42,
+          "options": [],
+          "minimum": 0.0,
+          "maximum": 2147483647.0,
+          "step": 1.0,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "hyperparameter_search",
+          "argument": "hyperparameter-search",
+          "label": "超参数搜索",
+          "description": "选择固定参数、网格搜索或贝叶斯搜索。",
+          "type": "string",
+          "control": "auto",
+          "level": "advanced",
+          "group": "模型优化",
+          "unit": "",
+          "required": true,
+          "default": "fixed",
+          "options": [
+            {
+              "value": "fixed",
+              "label": "固定参数",
+              "description": ""
+            },
+            {
+              "value": "grid",
+              "label": "网格搜索",
+              "description": ""
+            },
+            {
+              "value": "bayesian",
+              "label": "贝叶斯搜索",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "class_balance",
+          "argument": "class-balance",
+          "label": "类别不平衡处理",
+          "description": "分类任务中对类别不平衡的处理方式。",
+          "type": "string",
+          "control": "auto",
+          "level": "advanced",
+          "group": "模型优化",
+          "unit": "",
+          "required": true,
+          "default": "none",
+          "options": [
+            {
+              "value": "none",
+              "label": "不处理",
+              "description": ""
+            },
+            {
+              "value": "class_weight",
+              "label": "类别权重",
+              "description": ""
+            },
+            {
+              "value": "resample",
+              "label": "重采样",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "explainability",
+          "argument": "explainability",
+          "label": "生成解释结果",
+          "description": "在支持时生成特征重要性、显著性或模型解释。",
+          "type": "boolean",
+          "control": "auto",
+          "level": "advanced",
+          "group": "输出与解释",
+          "unit": "",
+          "required": true,
+          "default": true,
+          "options": [
+            {
+              "value": true,
+              "label": "生成",
+              "description": ""
+            },
+            {
+              "value": false,
+              "label": "不生成",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "primary_input",
+          "type": "analysis_input",
+          "label": "分析输入",
+          "description": "可从已登记数据集、授权路径或上游步骤选择；具体格式仍以该 Skill 的说明为准。",
+          "required": false,
+          "required_when": {},
+          "cardinality": "one",
+          "binding": "artifact",
+          "formats": [],
+          "companions": [],
+          "source_options": [
+            "dataset",
+            "existing_path",
+            "upstream_output"
+          ],
+          "validation": [
+            "path_exists"
+          ]
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "planned_output",
+          "type": "planned_artifact",
+          "label": "规划输出",
+          "description": "该 planning 步骤声明的预期产物；只有接入 runner 后才会实际生成。",
+          "format": "",
+          "primary": true,
+          "path_template": "derivatives/connectome-discovery/",
+          "generated_when": {}
+        }
+      ],
+      "structure_level": "evidence",
+      "source_references": [
+        {
+          "path": "skills/connectome-discovery/SKILL.md",
+          "label": "Skill 说明与方法依据",
+          "kind": "skill",
+          "line_start": 1,
+          "line_end": null
+        },
+        {
+          "path": "skills/connectome-discovery/SKILL.md",
+          "label": "已提取 2 条参考命令",
+          "kind": "command",
+          "line_start": null,
+          "line_end": null
+        }
+      ],
+      "command_references": [
+        {
+          "command": "pytest models/tests/test_extended_models.py -q",
+          "language": "bash",
+          "source_path": "skills/connectome-discovery/SKILL.md",
+          "line_start": 82,
+          "kind": "operation",
+          "executable": false
+        },
+        {
+          "command": "pip install numpy scipy pandas",
+          "language": "bash",
+          "source_path": "skills/connectome-discovery/SKILL.md",
+          "line_start": 33,
+          "kind": "setup",
+          "executable": false
+        }
+      ],
+      "delegate_skill_ids": [
+        "cpm",
+        "fmri-skill",
+        "brain-visualization"
+      ],
+      "execution_recipe": null,
+      "included_capabilities": [],
+      "replaces_operations": [],
+      "execution_resolution": {
+        "state": "missing_implementation",
+        "reason": "原内容是实验/研究编排说明，或调用未完成的原始入口；缺少可直接执行的完整任务实现。基础 Python/PyTorch 可用不代表该研究流程已定义。",
+        "source_method_id": "connectome-discovery-guided",
+        "requirements": [
+          "原始可调用实现、模型/服务资产及明确输入输出；不补写替代算法"
+        ]
+      }
+    }
+  ],
+  "selection_rules": [
+    "先确认目标产物和已有输入；只选择必要步骤，已有数据或历史结果优先复用。",
+    "输入缺少时先查询目录并请求用户绑定；不要自动追加生成该输入的步骤。",
+    "独立操作选择 Method；确需固定组合时选择 Pipeline，并检查每一步输入输出。",
+    "软件工具 Skill 用于选择实现，任务 Skill 用于组织需求，不因为同时匹配两类 Skill 重复添加方法。"
+  ],
+  "functions": [],
+  "name": "connectome-discovery",
+  "category": [
+    "任务能力",
+    "connectome"
+  ],
+  "scope": "task",
+  "applicability": [
+    "用于 connectome-discovery 的任务分析与方法说明；当前没有登记可独立执行的 Method。"
+  ],
+  "limitations": [
+    "这里只统筹已登记入口；目录收录不代表覆盖软件全部命令或参数。",
+    "环境探测与运行证据分别显示；合成数据测试不代表真实数据的科学有效性。",
+    "尚无 Method 的规划能力只能提供说明，不能当作可执行步骤。"
+  ],
+  "examples": []
+}

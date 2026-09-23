@@ -29,6 +29,7 @@ import { cancelRun, resumeRunMonitor, retryRun, startRun } from '../runs/runsApi
 import { useWorkflowRunMonitoring } from '../runs/useRunMonitoring';
 import { runStatusActive } from '../runs/runMonitor';
 import { WorkspaceOutput } from '../workspace/WorkspaceOutput';
+import { request as apiRequest } from '../../api/http';
 import { executionErrors } from './executionValidation';
 import { ExecutionSettings } from './ExecutionSettings';
 import { SampleScopeNotice } from './SampleScopeNotice';
@@ -187,6 +188,8 @@ function WorkflowCardBody({
     mutationFn: (runId: string) => resumeRunMonitor(runId)
   });
   const [operation, setOperation] = useState<OperationView | null>(null);
+  const [pipelineSaved, setPipelineSaved] = useState<number | null>(null);
+  const [pipelineSaving, setPipelineSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
 
@@ -271,7 +274,8 @@ function WorkflowCardBody({
   const runnable = workflow?.status === 'confirmed' &&
     Boolean(dryRunReport?.valid && dryRunReport.execution_enabled);
   const startRunDisabled =
-    disabled || !runnable || runActive || !draft.ready || draft.saving ||
+    disabled || !workflow?.workspace_id || !workflow?.workspace_root_path ||
+    !runnable || runActive || !draft.ready || draft.saving ||
     query.isFetching || monitoring.loading ||
     startRunMutation.isPending || retryMutation.isPending || cancelRunMutation.isPending ||
     resumeMutation.isPending || executionBlocked;
@@ -568,6 +572,15 @@ function WorkflowCardBody({
           )}
         </div>
       )}
+      <button className={BUTTON_CLASS} disabled={disabled || pipelineSaving || pipelineSaved === workflow.revision || workflow.steps.some(s=>!s.selected_method_id)} onClick={async()=>{
+        setPipelineSaving(true);
+        try {
+          await apiRequest(`/api/library/from-workflow/${encodeURIComponent(workflow.workflow_id)}`,{
+            method:'POST',body:JSON.stringify({expected_revision:workflow.revision,name:workflow.title})});
+          void queryClient.invalidateQueries({queryKey:['library']});
+          setPipelineSaved(workflow.revision);
+        } catch(failure) { fail(failure,'workflowErrorGeneric'); } finally { setPipelineSaving(false); }
+      }}>{pipelineSaved === workflow.revision?'已保存到 Pipeline 列表':'保存为可复用 Pipeline'}</button>
       <SectionLabel>{t.workflowOutputsTitle}</SectionLabel>
       <WorkspaceOutput
         workflow={workflow}

@@ -991,3 +991,12 @@ html {
   justify-content: flex-end;
   padding: 0;
 }
+
+
+/* Use the resized picker width, not the browser width, to choose its columns. */
+.dataset-picker-layout { grid-template-rows: minmax(0, 1fr) minmax(0, 0.4fr); }
+.dataset-picker-registered { border-top-width: 1px; }
+@container (min-width: 760px) {
+  .dataset-picker-layout { grid-template-columns: minmax(0, 1fr) 280px; grid-template-rows: minmax(0, 1fr); }
+  .dataset-picker-registered { border-top-width: 0; border-left-width: 1px; }
+}

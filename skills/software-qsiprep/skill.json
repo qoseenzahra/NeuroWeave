@@ -1,0 +1,5 @@
+{
+  "schema_version": 1,
+  "id": "software-qsiprep",
+  "alias_of": "qsiprep-tool"
+}

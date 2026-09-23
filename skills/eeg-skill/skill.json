@@ -1,0 +1,2837 @@
+{
+  "schema_version": 1,
+  "id": "eeg-skill",
+  "description": "统筹 eeg-skill 的 任务处理，包括EEG/MEG 数据检查、MNE LOF 坏导联检测与插值、EEG/MEG 滤波与降采样、MNE ICA 分解与指定成分去除等已接入方法。",
+  "method_refs": [
+    {
+      "capability": "skill.eeg-skill",
+      "method_id": "reviewed-inspect-mne-eeg-tool",
+      "label": "EEG/MEG 数据检查",
+      "default_recommended": true,
+      "default_reason": "",
+      "replaces_operations": [
+        "loadeeg",
+        "load-validation",
+        "load-basic-validation"
+      ],
+      "execution_resolution": {},
+      "role": "调用现有实现：mne.io.read_raw_fif, mne.io.read_raw_edf, mne.io.read_raw_bdf, mne.io.read_raw_eeglab。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.mne-eeg-tool.inspect"
+    },
+    {
+      "capability": "skill.eeg-skill",
+      "method_id": "reviewed-bad-channels-mne-eeg-tool",
+      "label": "MNE LOF 坏导联检测与插值",
+      "default_recommended": true,
+      "default_reason": "",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：mne.preprocessing.find_bad_channels_lof, mne.io.BaseRaw.interpolate_bads。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.mne-eeg-tool.bad-channels"
+    },
+    {
+      "capability": "skill.eeg-skill",
+      "method_id": "reviewed-filter-mne-eeg-tool",
+      "label": "EEG/MEG 滤波与降采样",
+      "default_recommended": true,
+      "default_reason": "",
+      "replaces_operations": [
+        "preprocessfiltering",
+        "downsampling-filtering",
+        "filtering"
+      ],
+      "execution_resolution": {},
+      "role": "调用现有实现：mne.io.BaseRaw.filter, mne.io.BaseRaw.notch_filter, mne.io.BaseRaw.resample。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.mne-eeg-tool.filter"
+    },
+    {
+      "capability": "skill.eeg-skill",
+      "method_id": "reviewed-ica-mne-eeg-tool",
+      "label": "MNE ICA 分解与指定成分去除",
+      "default_recommended": true,
+      "default_reason": "",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：mne.preprocessing.ICA.fit, mne.preprocessing.ICA.apply, mne.preprocessing.ICA.find_bads_eog, mne.preprocessing.ICA.find_bads_ecg。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.mne-eeg-tool.ica"
+    },
+    {
+      "capability": "skill.eeg-skill",
+      "method_id": "reviewed-epoch-mne-eeg-tool",
+      "label": "重参考与分段",
+      "default_recommended": true,
+      "default_reason": "",
+      "replaces_operations": [
+        "rereferenceandepoch",
+        "re-referencing-epoching",
+        "epoching"
+      ],
+      "execution_resolution": {},
+      "role": "调用现有实现：mne.Epochs, mne.make_fixed_length_epochs。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.mne-eeg-tool.epoch"
+    },
+    {
+      "capability": "skill.eeg-skill",
+      "method_id": "reviewed-autoreject-mne-eeg-tool",
+      "label": "Epoch AutoReject 自动质控",
+      "default_recommended": true,
+      "default_reason": "",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：autoreject.AutoReject.fit_transform。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.mne-eeg-tool.autoreject"
+    },
+    {
+      "capability": "skill.eeg-skill",
+      "method_id": "reviewed-connectivity-mne-eeg-tool",
+      "label": "传感器 PLV/相干/wPLI",
+      "default_recommended": true,
+      "default_reason": "",
+      "replaces_operations": [
+        "computeconnectivity",
+        "sensor-level-connectivity"
+      ],
+      "execution_resolution": {},
+      "role": "调用现有实现：mne_connectivity.spectral_connectivity_epochs。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.mne-eeg-tool.connectivity"
+    },
+    {
+      "capability": "skill.eeg-skill",
+      "method_id": "reviewed-time-frequency-mne-eeg-tool",
+      "label": "Morlet 时频功率与 ITC",
+      "default_recommended": true,
+      "default_reason": "",
+      "replaces_operations": [
+        "time-frequency-analysis"
+      ],
+      "execution_resolution": {},
+      "role": "调用现有实现：mne.Epochs.compute_tfr。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.mne-eeg-tool.time-frequency"
+    },
+    {
+      "capability": "skill.eeg-skill",
+      "method_id": "reviewed-maxwell-mne-eeg-tool",
+      "label": "MEG Maxwell 滤波",
+      "default_recommended": true,
+      "default_reason": "",
+      "replaces_operations": [
+        "maxwell-filtering"
+      ],
+      "execution_resolution": {},
+      "role": "调用现有实现：mne.preprocessing.maxwell_filter。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.mne-eeg-tool.maxwell"
+    },
+    {
+      "capability": "skill.eeg-skill",
+      "method_id": "reviewed-source-mne-eeg-tool",
+      "label": "dSPM 源定位（需前向模型和噪声协方差）",
+      "default_recommended": true,
+      "default_reason": "",
+      "replaces_operations": [
+        "source-localization"
+      ],
+      "execution_resolution": {},
+      "role": "调用现有实现：mne.minimum_norm.make_inverse_operator, mne.minimum_norm.apply_inverse_raw。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.mne-eeg-tool.source"
+    }
+  ],
+  "pipeline_refs": [],
+  "planning_capabilities": [
+    {
+      "capability": "skill.eeg-skill",
+      "method_id": "eeg-skill-guided--bad-channel-detection-interpolation",
+      "skill_id": "eeg-skill",
+      "label": "Bad-channel detection & interpolation",
+      "description": "Auto-detect + interpolate noisy channels；claw-shell (via mne-eeg-tool)；Cleaned raw data（来源：SKILL.md:L39）",
+      "runner_id": "",
+      "execution_mode": "planning",
+      "input_types": [
+        "*"
+      ],
+      "output_types": [
+        "planned_artifact"
+      ],
+      "requires_features": [],
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "parameters": [
+        {
+          "id": "operation",
+          "argument": "operation",
+          "label": "已选任务范围",
+          "description": "该值由流程中的方法选择确定。",
+          "type": "string",
+          "control": "auto",
+          "level": "basic",
+          "group": "方法与任务",
+          "unit": "",
+          "required": true,
+          "default": "bad-channel-detection-interpolation",
+          "options": [
+            {
+              "value": "bad-channel-detection-interpolation",
+              "label": "Bad-channel detection & interpolation",
+              "description": "Auto-detect + interpolate noisy channels；claw-shell (via mne-eeg-tool)；Cleaned raw data（来源：SKILL.md:L39）"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "workflow_scope",
+          "argument": "workflow-scope",
+          "label": "工作流范围",
+          "description": "选择只做预处理、提取特征或规划端到端模态流程。",
+          "type": "string",
+          "control": "auto",
+          "level": "basic",
+          "group": "常用参数",
+          "unit": "",
+          "required": true,
+          "default": "end_to_end",
+          "options": [
+            {
+              "value": "preprocess",
+              "label": "仅预处理",
+              "description": ""
+            },
+            {
+              "value": "features",
+              "label": "特征提取",
+              "description": ""
+            },
+            {
+              "value": "end_to_end",
+              "label": "端到端流程",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "quality_control",
+          "argument": "quality-control",
+          "label": "包含质量控制",
+          "description": "在流程方案中保留输入检查、中间 QC 和结果核验步骤。",
+          "type": "boolean",
+          "control": "auto",
+          "level": "basic",
+          "group": "常用参数",
+          "unit": "",
+          "required": true,
+          "default": true,
+          "options": [
+            {
+              "value": true,
+              "label": "包含",
+              "description": ""
+            },
+            {
+              "value": false,
+              "label": "不包含",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "artifact_strategy",
+          "argument": "artifact-strategy",
+          "label": "伪影处理策略",
+          "description": "选择保守标记、自动校正或排除受影响数据。",
+          "type": "string",
+          "control": "auto",
+          "level": "advanced",
+          "group": "预处理细节",
+          "unit": "",
+          "required": true,
+          "default": "correct",
+          "options": [
+            {
+              "value": "flag",
+              "label": "仅标记",
+              "description": ""
+            },
+            {
+              "value": "correct",
+              "label": "自动校正",
+              "description": ""
+            },
+            {
+              "value": "exclude",
+              "label": "排除受影响数据",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "normalization_space",
+          "argument": "normalization-space",
+          "label": "标准空间",
+          "description": "规划空间标准化目标；原生空间不会应用模板归一化。",
+          "type": "string",
+          "control": "auto",
+          "level": "advanced",
+          "group": "空间与输出",
+          "unit": "",
+          "required": true,
+          "default": "native",
+          "options": [
+            {
+              "value": "native",
+              "label": "原生空间",
+              "description": ""
+            },
+            {
+              "value": "template",
+              "label": "标准模板空间",
+              "description": ""
+            },
+            {
+              "value": "both",
+              "label": "同时保留",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "smoothing_extent",
+          "argument": "smoothing-extent",
+          "label": "平滑尺度",
+          "description": "按模态解释为空间或时间平滑尺度；0 表示关闭。",
+          "type": "number",
+          "control": "number",
+          "level": "advanced",
+          "group": "空间与输出",
+          "unit": "",
+          "required": true,
+          "default": 0,
+          "options": [],
+          "minimum": 0.0,
+          "maximum": 20.0,
+          "step": 0.5,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "compute_threads",
+          "argument": "compute-threads",
+          "label": "计算线程数",
+          "description": "为支持并行的软件规划线程数量。",
+          "type": "integer",
+          "control": "number",
+          "level": "advanced",
+          "group": "计算资源",
+          "unit": "",
+          "required": true,
+          "default": 4,
+          "options": [],
+          "minimum": 1.0,
+          "maximum": 128.0,
+          "step": 1.0,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "primary_input",
+          "type": "dataset_folder",
+          "label": "输入数据集",
+          "description": "可从已登记数据集、授权路径或上游步骤选择；具体格式仍以该 Skill 的说明为准。",
+          "required": false,
+          "required_when": {},
+          "cardinality": "one",
+          "binding": "folder",
+          "formats": [],
+          "companions": [],
+          "source_options": [
+            "dataset",
+            "existing_path",
+            "upstream_output"
+          ],
+          "validation": [
+            "path_exists"
+          ]
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "planned_output",
+          "type": "planned_artifact",
+          "label": "规划输出",
+          "description": "该 planning 步骤声明的预期产物；只有接入 runner 后才会实际生成。",
+          "format": "",
+          "primary": true,
+          "path_template": "derivatives/eeg-skill/",
+          "generated_when": {}
+        }
+      ],
+      "structure_level": "evidence",
+      "source_references": [
+        {
+          "path": "skills/eeg-skill/SKILL.md",
+          "label": "Skill 说明与方法依据",
+          "kind": "skill",
+          "line_start": 1,
+          "line_end": null
+        }
+      ],
+      "command_references": [],
+      "delegate_skill_ids": [
+        "mne-eeg-tool",
+        "claw-shell"
+      ],
+      "execution_recipe": null,
+      "included_capabilities": [],
+      "replaces_operations": [],
+      "execution_resolution": {
+        "state": "source_error",
+        "reason": "该组合依赖原 EEG 清理或特征接口中的未定义调用，或者缺少 pyentrp/mne_microstates。已就绪的独立 MNE 操作仍可选择，不能作为整个原组合的替代。",
+        "source_method_id": "eeg-skill-guided--bad-channel-detection-interpolation",
+        "requirements": [
+          "原始清理/特征定义修正",
+          "pyentrp / mne_microstates（按所选功能）"
+        ]
+      }
+    },
+    {
+      "capability": "skill.eeg-skill",
+      "method_id": "eeg-skill-guided--artifact-removal",
+      "skill_id": "eeg-skill",
+      "label": "Artifact removal",
+      "description": "ICA + AutoReject + EOG/ECG regression；claw-shell (via mne-eeg-tool)；Cleaned data（来源：SKILL.md:L41）",
+      "runner_id": "",
+      "execution_mode": "planning",
+      "input_types": [
+        "*"
+      ],
+      "output_types": [
+        "planned_artifact"
+      ],
+      "requires_features": [],
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "parameters": [
+        {
+          "id": "operation",
+          "argument": "operation",
+          "label": "已选任务范围",
+          "description": "该值由流程中的方法选择确定。",
+          "type": "string",
+          "control": "auto",
+          "level": "basic",
+          "group": "方法与任务",
+          "unit": "",
+          "required": true,
+          "default": "artifact-removal",
+          "options": [
+            {
+              "value": "artifact-removal",
+              "label": "Artifact removal",
+              "description": "ICA + AutoReject + EOG/ECG regression；claw-shell (via mne-eeg-tool)；Cleaned data（来源：SKILL.md:L41）"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "workflow_scope",
+          "argument": "workflow-scope",
+          "label": "工作流范围",
+          "description": "选择只做预处理、提取特征或规划端到端模态流程。",
+          "type": "string",
+          "control": "auto",
+          "level": "basic",
+          "group": "常用参数",
+          "unit": "",
+          "required": true,
+          "default": "end_to_end",
+          "options": [
+            {
+              "value": "preprocess",
+              "label": "仅预处理",
+              "description": ""
+            },
+            {
+              "value": "features",
+              "label": "特征提取",
+              "description": ""
+            },
+            {
+              "value": "end_to_end",
+              "label": "端到端流程",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "quality_control",
+          "argument": "quality-control",
+          "label": "包含质量控制",
+          "description": "在流程方案中保留输入检查、中间 QC 和结果核验步骤。",
+          "type": "boolean",
+          "control": "auto",
+          "level": "basic",
+          "group": "常用参数",
+          "unit": "",
+          "required": true,
+          "default": true,
+          "options": [
+            {
+              "value": true,
+              "label": "包含",
+              "description": ""
+            },
+            {
+              "value": false,
+              "label": "不包含",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "artifact_strategy",
+          "argument": "artifact-strategy",
+          "label": "伪影处理策略",
+          "description": "选择保守标记、自动校正或排除受影响数据。",
+          "type": "string",
+          "control": "auto",
+          "level": "advanced",
+          "group": "预处理细节",
+          "unit": "",
+          "required": true,
+          "default": "correct",
+          "options": [
+            {
+              "value": "flag",
+              "label": "仅标记",
+              "description": ""
+            },
+            {
+              "value": "correct",
+              "label": "自动校正",
+              "description": ""
+            },
+            {
+              "value": "exclude",
+              "label": "排除受影响数据",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "normalization_space",
+          "argument": "normalization-space",
+          "label": "标准空间",
+          "description": "规划空间标准化目标；原生空间不会应用模板归一化。",
+          "type": "string",
+          "control": "auto",
+          "level": "advanced",
+          "group": "空间与输出",
+          "unit": "",
+          "required": true,
+          "default": "native",
+          "options": [
+            {
+              "value": "native",
+              "label": "原生空间",
+              "description": ""
+            },
+            {
+              "value": "template",
+              "label": "标准模板空间",
+              "description": ""
+            },
+            {
+              "value": "both",
+              "label": "同时保留",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "smoothing_extent",
+          "argument": "smoothing-extent",
+          "label": "平滑尺度",
+          "description": "按模态解释为空间或时间平滑尺度；0 表示关闭。",
+          "type": "number",
+          "control": "number",
+          "level": "advanced",
+          "group": "空间与输出",
+          "unit": "",
+          "required": true,
+          "default": 0,
+          "options": [],
+          "minimum": 0.0,
+          "maximum": 20.0,
+          "step": 0.5,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "compute_threads",
+          "argument": "compute-threads",
+          "label": "计算线程数",
+          "description": "为支持并行的软件规划线程数量。",
+          "type": "integer",
+          "control": "number",
+          "level": "advanced",
+          "group": "计算资源",
+          "unit": "",
+          "required": true,
+          "default": 4,
+          "options": [],
+          "minimum": 1.0,
+          "maximum": 128.0,
+          "step": 1.0,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "primary_input",
+          "type": "dataset_folder",
+          "label": "输入数据集",
+          "description": "可从已登记数据集、授权路径或上游步骤选择；具体格式仍以该 Skill 的说明为准。",
+          "required": false,
+          "required_when": {},
+          "cardinality": "one",
+          "binding": "folder",
+          "formats": [],
+          "companions": [],
+          "source_options": [
+            "dataset",
+            "existing_path",
+            "upstream_output"
+          ],
+          "validation": [
+            "path_exists"
+          ]
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "planned_output",
+          "type": "planned_artifact",
+          "label": "规划输出",
+          "description": "该 planning 步骤声明的预期产物；只有接入 runner 后才会实际生成。",
+          "format": "",
+          "primary": true,
+          "path_template": "derivatives/eeg-skill/",
+          "generated_when": {}
+        }
+      ],
+      "structure_level": "evidence",
+      "source_references": [
+        {
+          "path": "skills/eeg-skill/SKILL.md",
+          "label": "Skill 说明与方法依据",
+          "kind": "skill",
+          "line_start": 1,
+          "line_end": null
+        }
+      ],
+      "command_references": [],
+      "delegate_skill_ids": [
+        "mne-eeg-tool",
+        "claw-shell"
+      ],
+      "execution_recipe": null,
+      "included_capabilities": [],
+      "replaces_operations": [],
+      "execution_resolution": {
+        "state": "source_error",
+        "reason": "该组合依赖原 EEG 清理或特征接口中的未定义调用，或者缺少 pyentrp/mne_microstates。已就绪的独立 MNE 操作仍可选择，不能作为整个原组合的替代。",
+        "source_method_id": "eeg-skill-guided--artifact-removal",
+        "requirements": [
+          "原始清理/特征定义修正",
+          "pyentrp / mne_microstates（按所选功能）"
+        ]
+      }
+    },
+    {
+      "capability": "skill.eeg-skill",
+      "method_id": "eeg-skill-guided--continuous-data-cleaning",
+      "skill_id": "eeg-skill",
+      "label": "Continuous data cleaning",
+      "description": "Resting-state pipeline (no events)；claw-shell (via mne-eeg-tool)；Cleaned continuous data（来源：SKILL.md:L42）",
+      "runner_id": "",
+      "execution_mode": "planning",
+      "input_types": [
+        "*"
+      ],
+      "output_types": [
+        "planned_artifact"
+      ],
+      "requires_features": [],
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "parameters": [
+        {
+          "id": "operation",
+          "argument": "operation",
+          "label": "已选任务范围",
+          "description": "该值由流程中的方法选择确定。",
+          "type": "string",
+          "control": "auto",
+          "level": "basic",
+          "group": "方法与任务",
+          "unit": "",
+          "required": true,
+          "default": "continuous-data-cleaning",
+          "options": [
+            {
+              "value": "continuous-data-cleaning",
+              "label": "Continuous data cleaning",
+              "description": "Resting-state pipeline (no events)；claw-shell (via mne-eeg-tool)；Cleaned continuous data（来源：SKILL.md:L42）"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "workflow_scope",
+          "argument": "workflow-scope",
+          "label": "工作流范围",
+          "description": "选择只做预处理、提取特征或规划端到端模态流程。",
+          "type": "string",
+          "control": "auto",
+          "level": "basic",
+          "group": "常用参数",
+          "unit": "",
+          "required": true,
+          "default": "end_to_end",
+          "options": [
+            {
+              "value": "preprocess",
+              "label": "仅预处理",
+              "description": ""
+            },
+            {
+              "value": "features",
+              "label": "特征提取",
+              "description": ""
+            },
+            {
+              "value": "end_to_end",
+              "label": "端到端流程",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "quality_control",
+          "argument": "quality-control",
+          "label": "包含质量控制",
+          "description": "在流程方案中保留输入检查、中间 QC 和结果核验步骤。",
+          "type": "boolean",
+          "control": "auto",
+          "level": "basic",
+          "group": "常用参数",
+          "unit": "",
+          "required": true,
+          "default": true,
+          "options": [
+            {
+              "value": true,
+              "label": "包含",
+              "description": ""
+            },
+            {
+              "value": false,
+              "label": "不包含",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "artifact_strategy",
+          "argument": "artifact-strategy",
+          "label": "伪影处理策略",
+          "description": "选择保守标记、自动校正或排除受影响数据。",
+          "type": "string",
+          "control": "auto",
+          "level": "advanced",
+          "group": "预处理细节",
+          "unit": "",
+          "required": true,
+          "default": "correct",
+          "options": [
+            {
+              "value": "flag",
+              "label": "仅标记",
+              "description": ""
+            },
+            {
+              "value": "correct",
+              "label": "自动校正",
+              "description": ""
+            },
+            {
+              "value": "exclude",
+              "label": "排除受影响数据",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "normalization_space",
+          "argument": "normalization-space",
+          "label": "标准空间",
+          "description": "规划空间标准化目标；原生空间不会应用模板归一化。",
+          "type": "string",
+          "control": "auto",
+          "level": "advanced",
+          "group": "空间与输出",
+          "unit": "",
+          "required": true,
+          "default": "native",
+          "options": [
+            {
+              "value": "native",
+              "label": "原生空间",
+              "description": ""
+            },
+            {
+              "value": "template",
+              "label": "标准模板空间",
+              "description": ""
+            },
+            {
+              "value": "both",
+              "label": "同时保留",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "smoothing_extent",
+          "argument": "smoothing-extent",
+          "label": "平滑尺度",
+          "description": "按模态解释为空间或时间平滑尺度；0 表示关闭。",
+          "type": "number",
+          "control": "number",
+          "level": "advanced",
+          "group": "空间与输出",
+          "unit": "",
+          "required": true,
+          "default": 0,
+          "options": [],
+          "minimum": 0.0,
+          "maximum": 20.0,
+          "step": 0.5,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "compute_threads",
+          "argument": "compute-threads",
+          "label": "计算线程数",
+          "description": "为支持并行的软件规划线程数量。",
+          "type": "integer",
+          "control": "number",
+          "level": "advanced",
+          "group": "计算资源",
+          "unit": "",
+          "required": true,
+          "default": 4,
+          "options": [],
+          "minimum": 1.0,
+          "maximum": 128.0,
+          "step": 1.0,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "primary_input",
+          "type": "dataset_folder",
+          "label": "输入数据集",
+          "description": "可从已登记数据集、授权路径或上游步骤选择；具体格式仍以该 Skill 的说明为准。",
+          "required": false,
+          "required_when": {},
+          "cardinality": "one",
+          "binding": "folder",
+          "formats": [],
+          "companions": [],
+          "source_options": [
+            "dataset",
+            "existing_path",
+            "upstream_output"
+          ],
+          "validation": [
+            "path_exists"
+          ]
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "planned_output",
+          "type": "planned_artifact",
+          "label": "规划输出",
+          "description": "该 planning 步骤声明的预期产物；只有接入 runner 后才会实际生成。",
+          "format": "",
+          "primary": true,
+          "path_template": "derivatives/eeg-skill/",
+          "generated_when": {}
+        }
+      ],
+      "structure_level": "evidence",
+      "source_references": [
+        {
+          "path": "skills/eeg-skill/SKILL.md",
+          "label": "Skill 说明与方法依据",
+          "kind": "skill",
+          "line_start": 1,
+          "line_end": null
+        }
+      ],
+      "command_references": [],
+      "delegate_skill_ids": [
+        "mne-eeg-tool",
+        "claw-shell"
+      ],
+      "execution_recipe": null,
+      "included_capabilities": [],
+      "replaces_operations": [],
+      "execution_resolution": {
+        "state": "source_error",
+        "reason": "该组合依赖原 EEG 清理或特征接口中的未定义调用，或者缺少 pyentrp/mne_microstates。已就绪的独立 MNE 操作仍可选择，不能作为整个原组合的替代。",
+        "source_method_id": "eeg-skill-guided--continuous-data-cleaning",
+        "requirements": [
+          "原始清理/特征定义修正",
+          "pyentrp / mne_microstates（按所选功能）"
+        ]
+      }
+    },
+    {
+      "capability": "skill.eeg-skill",
+      "method_id": "eeg-skill-guided--waveform-to-mel-spectrogram",
+      "skill_id": "eeg-skill",
+      "label": "Waveform to Mel-Spectrogram",
+      "description": "Convert raw waveform to Mel spectrogram using torchaudio；claw-shell (via mne-eeg-tool)；Mel-spectrogram tensors (.pt)（来源：SKILL.md:L44）",
+      "runner_id": "",
+      "execution_mode": "planning",
+      "input_types": [
+        "*"
+      ],
+      "output_types": [
+        "planned_artifact"
+      ],
+      "requires_features": [],
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "parameters": [
+        {
+          "id": "operation",
+          "argument": "operation",
+          "label": "已选任务范围",
+          "description": "该值由流程中的方法选择确定。",
+          "type": "string",
+          "control": "auto",
+          "level": "basic",
+          "group": "方法与任务",
+          "unit": "",
+          "required": true,
+          "default": "waveform-to-mel-spectrogram",
+          "options": [
+            {
+              "value": "waveform-to-mel-spectrogram",
+              "label": "Waveform to Mel-Spectrogram",
+              "description": "Convert raw waveform to Mel spectrogram using torchaudio；claw-shell (via mne-eeg-tool)；Mel-spectrogram tensors (.pt)（来源：SKILL.md:L44）"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "workflow_scope",
+          "argument": "workflow-scope",
+          "label": "工作流范围",
+          "description": "选择只做预处理、提取特征或规划端到端模态流程。",
+          "type": "string",
+          "control": "auto",
+          "level": "basic",
+          "group": "常用参数",
+          "unit": "",
+          "required": true,
+          "default": "end_to_end",
+          "options": [
+            {
+              "value": "preprocess",
+              "label": "仅预处理",
+              "description": ""
+            },
+            {
+              "value": "features",
+              "label": "特征提取",
+              "description": ""
+            },
+            {
+              "value": "end_to_end",
+              "label": "端到端流程",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "quality_control",
+          "argument": "quality-control",
+          "label": "包含质量控制",
+          "description": "在流程方案中保留输入检查、中间 QC 和结果核验步骤。",
+          "type": "boolean",
+          "control": "auto",
+          "level": "basic",
+          "group": "常用参数",
+          "unit": "",
+          "required": true,
+          "default": true,
+          "options": [
+            {
+              "value": true,
+              "label": "包含",
+              "description": ""
+            },
+            {
+              "value": false,
+              "label": "不包含",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "artifact_strategy",
+          "argument": "artifact-strategy",
+          "label": "伪影处理策略",
+          "description": "选择保守标记、自动校正或排除受影响数据。",
+          "type": "string",
+          "control": "auto",
+          "level": "advanced",
+          "group": "预处理细节",
+          "unit": "",
+          "required": true,
+          "default": "correct",
+          "options": [
+            {
+              "value": "flag",
+              "label": "仅标记",
+              "description": ""
+            },
+            {
+              "value": "correct",
+              "label": "自动校正",
+              "description": ""
+            },
+            {
+              "value": "exclude",
+              "label": "排除受影响数据",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "normalization_space",
+          "argument": "normalization-space",
+          "label": "标准空间",
+          "description": "规划空间标准化目标；原生空间不会应用模板归一化。",
+          "type": "string",
+          "control": "auto",
+          "level": "advanced",
+          "group": "空间与输出",
+          "unit": "",
+          "required": true,
+          "default": "native",
+          "options": [
+            {
+              "value": "native",
+              "label": "原生空间",
+              "description": ""
+            },
+            {
+              "value": "template",
+              "label": "标准模板空间",
+              "description": ""
+            },
+            {
+              "value": "both",
+              "label": "同时保留",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "smoothing_extent",
+          "argument": "smoothing-extent",
+          "label": "平滑尺度",
+          "description": "按模态解释为空间或时间平滑尺度；0 表示关闭。",
+          "type": "number",
+          "control": "number",
+          "level": "advanced",
+          "group": "空间与输出",
+          "unit": "",
+          "required": true,
+          "default": 0,
+          "options": [],
+          "minimum": 0.0,
+          "maximum": 20.0,
+          "step": 0.5,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "compute_threads",
+          "argument": "compute-threads",
+          "label": "计算线程数",
+          "description": "为支持并行的软件规划线程数量。",
+          "type": "integer",
+          "control": "number",
+          "level": "advanced",
+          "group": "计算资源",
+          "unit": "",
+          "required": true,
+          "default": 4,
+          "options": [],
+          "minimum": 1.0,
+          "maximum": 128.0,
+          "step": 1.0,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "primary_input",
+          "type": "dataset_folder",
+          "label": "输入数据集",
+          "description": "可从已登记数据集、授权路径或上游步骤选择；具体格式仍以该 Skill 的说明为准。",
+          "required": false,
+          "required_when": {},
+          "cardinality": "one",
+          "binding": "folder",
+          "formats": [],
+          "companions": [],
+          "source_options": [
+            "dataset",
+            "existing_path",
+            "upstream_output"
+          ],
+          "validation": [
+            "path_exists"
+          ]
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "planned_output",
+          "type": "planned_artifact",
+          "label": "规划输出",
+          "description": "该 planning 步骤声明的预期产物；只有接入 runner 后才会实际生成。",
+          "format": "",
+          "primary": true,
+          "path_template": "derivatives/eeg-skill/",
+          "generated_when": {}
+        }
+      ],
+      "structure_level": "evidence",
+      "source_references": [
+        {
+          "path": "skills/eeg-skill/SKILL.md",
+          "label": "Skill 说明与方法依据",
+          "kind": "skill",
+          "line_start": 1,
+          "line_end": null
+        }
+      ],
+      "command_references": [],
+      "delegate_skill_ids": [
+        "mne-eeg-tool",
+        "claw-shell"
+      ],
+      "execution_recipe": null,
+      "included_capabilities": [],
+      "replaces_operations": [],
+      "execution_resolution": {
+        "state": "missing_runtime",
+        "reason": "原 Skill 使用 torchaudio.transforms.MelSpectrogram；当前 Torch 环境没有 torchaudio。",
+        "source_method_id": "eeg-skill-guided--waveform-to-mel-spectrogram",
+        "requirements": [
+          "与当前 PyTorch/CUDA 匹配的 torchaudio"
+        ]
+      }
+    },
+    {
+      "capability": "skill.eeg-skill",
+      "method_id": "eeg-skill-guided--frequency-band-energy-extraction",
+      "skill_id": "eeg-skill",
+      "label": "Frequency-band energy extraction",
+      "description": "Extract δ/θ/α/β/γ band energy using CWT with morlet2 wavelet；claw-shell (via mne-eeg-tool)；Per-band power matrices (CSV / .npy)（来源：SKILL.md:L45）",
+      "runner_id": "",
+      "execution_mode": "planning",
+      "input_types": [
+        "*"
+      ],
+      "output_types": [
+        "planned_artifact"
+      ],
+      "requires_features": [],
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "parameters": [
+        {
+          "id": "operation",
+          "argument": "operation",
+          "label": "已选任务范围",
+          "description": "该值由流程中的方法选择确定。",
+          "type": "string",
+          "control": "auto",
+          "level": "basic",
+          "group": "方法与任务",
+          "unit": "",
+          "required": true,
+          "default": "frequency-band-energy-extraction",
+          "options": [
+            {
+              "value": "frequency-band-energy-extraction",
+              "label": "Frequency-band energy extraction",
+              "description": "Extract δ/θ/α/β/γ band energy using CWT with morlet2 wavelet；claw-shell (via mne-eeg-tool)；Per-band power matrices (CSV / .npy)（来源：SKILL.md:L45）"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "workflow_scope",
+          "argument": "workflow-scope",
+          "label": "工作流范围",
+          "description": "选择只做预处理、提取特征或规划端到端模态流程。",
+          "type": "string",
+          "control": "auto",
+          "level": "basic",
+          "group": "常用参数",
+          "unit": "",
+          "required": true,
+          "default": "end_to_end",
+          "options": [
+            {
+              "value": "preprocess",
+              "label": "仅预处理",
+              "description": ""
+            },
+            {
+              "value": "features",
+              "label": "特征提取",
+              "description": ""
+            },
+            {
+              "value": "end_to_end",
+              "label": "端到端流程",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "quality_control",
+          "argument": "quality-control",
+          "label": "包含质量控制",
+          "description": "在流程方案中保留输入检查、中间 QC 和结果核验步骤。",
+          "type": "boolean",
+          "control": "auto",
+          "level": "basic",
+          "group": "常用参数",
+          "unit": "",
+          "required": true,
+          "default": true,
+          "options": [
+            {
+              "value": true,
+              "label": "包含",
+              "description": ""
+            },
+            {
+              "value": false,
+              "label": "不包含",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "artifact_strategy",
+          "argument": "artifact-strategy",
+          "label": "伪影处理策略",
+          "description": "选择保守标记、自动校正或排除受影响数据。",
+          "type": "string",
+          "control": "auto",
+          "level": "advanced",
+          "group": "预处理细节",
+          "unit": "",
+          "required": true,
+          "default": "correct",
+          "options": [
+            {
+              "value": "flag",
+              "label": "仅标记",
+              "description": ""
+            },
+            {
+              "value": "correct",
+              "label": "自动校正",
+              "description": ""
+            },
+            {
+              "value": "exclude",
+              "label": "排除受影响数据",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "normalization_space",
+          "argument": "normalization-space",
+          "label": "标准空间",
+          "description": "规划空间标准化目标；原生空间不会应用模板归一化。",
+          "type": "string",
+          "control": "auto",
+          "level": "advanced",
+          "group": "空间与输出",
+          "unit": "",
+          "required": true,
+          "default": "native",
+          "options": [
+            {
+              "value": "native",
+              "label": "原生空间",
+              "description": ""
+            },
+            {
+              "value": "template",
+              "label": "标准模板空间",
+              "description": ""
+            },
+            {
+              "value": "both",
+              "label": "同时保留",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "smoothing_extent",
+          "argument": "smoothing-extent",
+          "label": "平滑尺度",
+          "description": "按模态解释为空间或时间平滑尺度；0 表示关闭。",
+          "type": "number",
+          "control": "number",
+          "level": "advanced",
+          "group": "空间与输出",
+          "unit": "",
+          "required": true,
+          "default": 0,
+          "options": [],
+          "minimum": 0.0,
+          "maximum": 20.0,
+          "step": 0.5,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "compute_threads",
+          "argument": "compute-threads",
+          "label": "计算线程数",
+          "description": "为支持并行的软件规划线程数量。",
+          "type": "integer",
+          "control": "number",
+          "level": "advanced",
+          "group": "计算资源",
+          "unit": "",
+          "required": true,
+          "default": 4,
+          "options": [],
+          "minimum": 1.0,
+          "maximum": 128.0,
+          "step": 1.0,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "primary_input",
+          "type": "dataset_folder",
+          "label": "输入数据集",
+          "description": "可从已登记数据集、授权路径或上游步骤选择；具体格式仍以该 Skill 的说明为准。",
+          "required": false,
+          "required_when": {},
+          "cardinality": "one",
+          "binding": "folder",
+          "formats": [],
+          "companions": [],
+          "source_options": [
+            "dataset",
+            "existing_path",
+            "upstream_output"
+          ],
+          "validation": [
+            "path_exists"
+          ]
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "planned_output",
+          "type": "planned_artifact",
+          "label": "规划输出",
+          "description": "该 planning 步骤声明的预期产物；只有接入 runner 后才会实际生成。",
+          "format": "",
+          "primary": true,
+          "path_template": "derivatives/eeg-skill/",
+          "generated_when": {}
+        }
+      ],
+      "structure_level": "evidence",
+      "source_references": [
+        {
+          "path": "skills/eeg-skill/SKILL.md",
+          "label": "Skill 说明与方法依据",
+          "kind": "skill",
+          "line_start": 1,
+          "line_end": null
+        }
+      ],
+      "command_references": [],
+      "delegate_skill_ids": [
+        "mne-eeg-tool",
+        "claw-shell"
+      ],
+      "execution_recipe": null,
+      "included_capabilities": [],
+      "replaces_operations": [],
+      "execution_resolution": {
+        "state": "source_error",
+        "reason": "原 CWT 片段使用未定义的 low_idx/high_idx，且不能把它替换成 Welch 频带功率来宣称同一算法可执行。",
+        "source_method_id": "eeg-skill-guided--frequency-band-energy-extraction",
+        "requirements": [
+          "完整可调用的原 CWT 频带定义"
+        ]
+      }
+    },
+    {
+      "capability": "skill.eeg-skill",
+      "method_id": "eeg-skill-guided--feature-extraction-core",
+      "skill_id": "eeg-skill",
+      "label": "Feature extraction (core)",
+      "description": "Band power, CSP, Hjorth, sample entropy；claw-shell (via mne-eeg-tool)；Feature matrices (CSV / .npy / .npz)（来源：SKILL.md:L46）",
+      "runner_id": "",
+      "execution_mode": "planning",
+      "input_types": [
+        "*"
+      ],
+      "output_types": [
+        "planned_artifact"
+      ],
+      "requires_features": [],
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "parameters": [
+        {
+          "id": "operation",
+          "argument": "operation",
+          "label": "已选任务范围",
+          "description": "该值由流程中的方法选择确定。",
+          "type": "string",
+          "control": "auto",
+          "level": "basic",
+          "group": "方法与任务",
+          "unit": "",
+          "required": true,
+          "default": "feature-extraction-core",
+          "options": [
+            {
+              "value": "feature-extraction-core",
+              "label": "Feature extraction (core)",
+              "description": "Band power, CSP, Hjorth, sample entropy；claw-shell (via mne-eeg-tool)；Feature matrices (CSV / .npy / .npz)（来源：SKILL.md:L46）"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "workflow_scope",
+          "argument": "workflow-scope",
+          "label": "工作流范围",
+          "description": "选择只做预处理、提取特征或规划端到端模态流程。",
+          "type": "string",
+          "control": "auto",
+          "level": "basic",
+          "group": "常用参数",
+          "unit": "",
+          "required": true,
+          "default": "end_to_end",
+          "options": [
+            {
+              "value": "preprocess",
+              "label": "仅预处理",
+              "description": ""
+            },
+            {
+              "value": "features",
+              "label": "特征提取",
+              "description": ""
+            },
+            {
+              "value": "end_to_end",
+              "label": "端到端流程",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "quality_control",
+          "argument": "quality-control",
+          "label": "包含质量控制",
+          "description": "在流程方案中保留输入检查、中间 QC 和结果核验步骤。",
+          "type": "boolean",
+          "control": "auto",
+          "level": "basic",
+          "group": "常用参数",
+          "unit": "",
+          "required": true,
+          "default": true,
+          "options": [
+            {
+              "value": true,
+              "label": "包含",
+              "description": ""
+            },
+            {
+              "value": false,
+              "label": "不包含",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "artifact_strategy",
+          "argument": "artifact-strategy",
+          "label": "伪影处理策略",
+          "description": "选择保守标记、自动校正或排除受影响数据。",
+          "type": "string",
+          "control": "auto",
+          "level": "advanced",
+          "group": "预处理细节",
+          "unit": "",
+          "required": true,
+          "default": "correct",
+          "options": [
+            {
+              "value": "flag",
+              "label": "仅标记",
+              "description": ""
+            },
+            {
+              "value": "correct",
+              "label": "自动校正",
+              "description": ""
+            },
+            {
+              "value": "exclude",
+              "label": "排除受影响数据",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "normalization_space",
+          "argument": "normalization-space",
+          "label": "标准空间",
+          "description": "规划空间标准化目标；原生空间不会应用模板归一化。",
+          "type": "string",
+          "control": "auto",
+          "level": "advanced",
+          "group": "空间与输出",
+          "unit": "",
+          "required": true,
+          "default": "native",
+          "options": [
+            {
+              "value": "native",
+              "label": "原生空间",
+              "description": ""
+            },
+            {
+              "value": "template",
+              "label": "标准模板空间",
+              "description": ""
+            },
+            {
+              "value": "both",
+              "label": "同时保留",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "smoothing_extent",
+          "argument": "smoothing-extent",
+          "label": "平滑尺度",
+          "description": "按模态解释为空间或时间平滑尺度；0 表示关闭。",
+          "type": "number",
+          "control": "number",
+          "level": "advanced",
+          "group": "空间与输出",
+          "unit": "",
+          "required": true,
+          "default": 0,
+          "options": [],
+          "minimum": 0.0,
+          "maximum": 20.0,
+          "step": 0.5,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "compute_threads",
+          "argument": "compute-threads",
+          "label": "计算线程数",
+          "description": "为支持并行的软件规划线程数量。",
+          "type": "integer",
+          "control": "number",
+          "level": "advanced",
+          "group": "计算资源",
+          "unit": "",
+          "required": true,
+          "default": 4,
+          "options": [],
+          "minimum": 1.0,
+          "maximum": 128.0,
+          "step": 1.0,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "primary_input",
+          "type": "dataset_folder",
+          "label": "输入数据集",
+          "description": "可从已登记数据集、授权路径或上游步骤选择；具体格式仍以该 Skill 的说明为准。",
+          "required": false,
+          "required_when": {},
+          "cardinality": "one",
+          "binding": "folder",
+          "formats": [],
+          "companions": [],
+          "source_options": [
+            "dataset",
+            "existing_path",
+            "upstream_output"
+          ],
+          "validation": [
+            "path_exists"
+          ]
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "planned_output",
+          "type": "planned_artifact",
+          "label": "规划输出",
+          "description": "该 planning 步骤声明的预期产物；只有接入 runner 后才会实际生成。",
+          "format": "",
+          "primary": true,
+          "path_template": "derivatives/eeg-skill/",
+          "generated_when": {}
+        }
+      ],
+      "structure_level": "evidence",
+      "source_references": [
+        {
+          "path": "skills/eeg-skill/SKILL.md",
+          "label": "Skill 说明与方法依据",
+          "kind": "skill",
+          "line_start": 1,
+          "line_end": null
+        }
+      ],
+      "command_references": [],
+      "delegate_skill_ids": [
+        "mne-eeg-tool",
+        "claw-shell"
+      ],
+      "execution_recipe": null,
+      "included_capabilities": [],
+      "replaces_operations": [],
+      "execution_resolution": {
+        "state": "source_error",
+        "reason": "该组合依赖原 EEG 清理或特征接口中的未定义调用，或者缺少 pyentrp/mne_microstates。已就绪的独立 MNE 操作仍可选择，不能作为整个原组合的替代。",
+        "source_method_id": "eeg-skill-guided--feature-extraction-core",
+        "requirements": [
+          "原始清理/特征定义修正",
+          "pyentrp / mne_microstates（按所选功能）"
+        ]
+      }
+    },
+    {
+      "capability": "skill.eeg-skill",
+      "method_id": "eeg-skill-guided--advanced-features",
+      "skill_id": "eeg-skill",
+      "label": "Advanced features",
+      "description": "Functional connectivity, ERP peaks/latency/AUC, frontal alpha asymmetry, microstates；claw-shell (via mne-eeg-tool)；Connectivity matrices, ERP CSV, asymmetry .npy, microstates .fif（来源：SKILL.md:L47）",
+      "runner_id": "",
+      "execution_mode": "planning",
+      "input_types": [
+        "*"
+      ],
+      "output_types": [
+        "planned_artifact"
+      ],
+      "requires_features": [],
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "parameters": [
+        {
+          "id": "operation",
+          "argument": "operation",
+          "label": "已选任务范围",
+          "description": "该值由流程中的方法选择确定。",
+          "type": "string",
+          "control": "auto",
+          "level": "basic",
+          "group": "方法与任务",
+          "unit": "",
+          "required": true,
+          "default": "advanced-features",
+          "options": [
+            {
+              "value": "advanced-features",
+              "label": "Advanced features",
+              "description": "Functional connectivity, ERP peaks/latency/AUC, frontal alpha asymmetry, microstates；claw-shell (via mne-eeg-tool)；Connectivity matrices, ERP CSV, asymmetry .npy, microstates .fif（来源：SKILL.md:L47）"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "workflow_scope",
+          "argument": "workflow-scope",
+          "label": "工作流范围",
+          "description": "选择只做预处理、提取特征或规划端到端模态流程。",
+          "type": "string",
+          "control": "auto",
+          "level": "basic",
+          "group": "常用参数",
+          "unit": "",
+          "required": true,
+          "default": "end_to_end",
+          "options": [
+            {
+              "value": "preprocess",
+              "label": "仅预处理",
+              "description": ""
+            },
+            {
+              "value": "features",
+              "label": "特征提取",
+              "description": ""
+            },
+            {
+              "value": "end_to_end",
+              "label": "端到端流程",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "quality_control",
+          "argument": "quality-control",
+          "label": "包含质量控制",
+          "description": "在流程方案中保留输入检查、中间 QC 和结果核验步骤。",
+          "type": "boolean",
+          "control": "auto",
+          "level": "basic",
+          "group": "常用参数",
+          "unit": "",
+          "required": true,
+          "default": true,
+          "options": [
+            {
+              "value": true,
+              "label": "包含",
+              "description": ""
+            },
+            {
+              "value": false,
+              "label": "不包含",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "artifact_strategy",
+          "argument": "artifact-strategy",
+          "label": "伪影处理策略",
+          "description": "选择保守标记、自动校正或排除受影响数据。",
+          "type": "string",
+          "control": "auto",
+          "level": "advanced",
+          "group": "预处理细节",
+          "unit": "",
+          "required": true,
+          "default": "correct",
+          "options": [
+            {
+              "value": "flag",
+              "label": "仅标记",
+              "description": ""
+            },
+            {
+              "value": "correct",
+              "label": "自动校正",
+              "description": ""
+            },
+            {
+              "value": "exclude",
+              "label": "排除受影响数据",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "normalization_space",
+          "argument": "normalization-space",
+          "label": "标准空间",
+          "description": "规划空间标准化目标；原生空间不会应用模板归一化。",
+          "type": "string",
+          "control": "auto",
+          "level": "advanced",
+          "group": "空间与输出",
+          "unit": "",
+          "required": true,
+          "default": "native",
+          "options": [
+            {
+              "value": "native",
+              "label": "原生空间",
+              "description": ""
+            },
+            {
+              "value": "template",
+              "label": "标准模板空间",
+              "description": ""
+            },
+            {
+              "value": "both",
+              "label": "同时保留",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "smoothing_extent",
+          "argument": "smoothing-extent",
+          "label": "平滑尺度",
+          "description": "按模态解释为空间或时间平滑尺度；0 表示关闭。",
+          "type": "number",
+          "control": "number",
+          "level": "advanced",
+          "group": "空间与输出",
+          "unit": "",
+          "required": true,
+          "default": 0,
+          "options": [],
+          "minimum": 0.0,
+          "maximum": 20.0,
+          "step": 0.5,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "compute_threads",
+          "argument": "compute-threads",
+          "label": "计算线程数",
+          "description": "为支持并行的软件规划线程数量。",
+          "type": "integer",
+          "control": "number",
+          "level": "advanced",
+          "group": "计算资源",
+          "unit": "",
+          "required": true,
+          "default": 4,
+          "options": [],
+          "minimum": 1.0,
+          "maximum": 128.0,
+          "step": 1.0,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "primary_input",
+          "type": "dataset_folder",
+          "label": "输入数据集",
+          "description": "可从已登记数据集、授权路径或上游步骤选择；具体格式仍以该 Skill 的说明为准。",
+          "required": false,
+          "required_when": {},
+          "cardinality": "one",
+          "binding": "folder",
+          "formats": [],
+          "companions": [],
+          "source_options": [
+            "dataset",
+            "existing_path",
+            "upstream_output"
+          ],
+          "validation": [
+            "path_exists"
+          ]
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "planned_output",
+          "type": "planned_artifact",
+          "label": "规划输出",
+          "description": "该 planning 步骤声明的预期产物；只有接入 runner 后才会实际生成。",
+          "format": "",
+          "primary": true,
+          "path_template": "derivatives/eeg-skill/",
+          "generated_when": {}
+        }
+      ],
+      "structure_level": "evidence",
+      "source_references": [
+        {
+          "path": "skills/eeg-skill/SKILL.md",
+          "label": "Skill 说明与方法依据",
+          "kind": "skill",
+          "line_start": 1,
+          "line_end": null
+        }
+      ],
+      "command_references": [],
+      "delegate_skill_ids": [
+        "mne-eeg-tool",
+        "claw-shell"
+      ],
+      "execution_recipe": null,
+      "included_capabilities": [],
+      "replaces_operations": [],
+      "execution_resolution": {
+        "state": "source_error",
+        "reason": "该组合依赖原 EEG 清理或特征接口中的未定义调用，或者缺少 pyentrp/mne_microstates。已就绪的独立 MNE 操作仍可选择，不能作为整个原组合的替代。",
+        "source_method_id": "eeg-skill-guided--advanced-features",
+        "requirements": [
+          "原始清理/特征定义修正",
+          "pyentrp / mne_microstates（按所选功能）"
+        ]
+      }
+    },
+    {
+      "capability": "skill.eeg-skill",
+      "method_id": "eeg-skill-guided--full-end-to-end-pipeline",
+      "skill_id": "eeg-skill",
+      "label": "Full end-to-end pipeline",
+      "description": "Any combination of the above for BCI, emotion, epilepsy, fatigue, etc.；claw-shell + dependency-planner；Complete processed dataset + QC report（来源：SKILL.md:L48）",
+      "runner_id": "",
+      "execution_mode": "planning",
+      "input_types": [
+        "*"
+      ],
+      "output_types": [
+        "planned_artifact"
+      ],
+      "requires_features": [],
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "parameters": [
+        {
+          "id": "operation",
+          "argument": "operation",
+          "label": "已选任务范围",
+          "description": "该值由流程中的方法选择确定。",
+          "type": "string",
+          "control": "auto",
+          "level": "basic",
+          "group": "方法与任务",
+          "unit": "",
+          "required": true,
+          "default": "full-end-to-end-pipeline",
+          "options": [
+            {
+              "value": "full-end-to-end-pipeline",
+              "label": "Full end-to-end pipeline",
+              "description": "Any combination of the above for BCI, emotion, epilepsy, fatigue, etc.；claw-shell + dependency-planner；Complete processed dataset + QC report（来源：SKILL.md:L48）"
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "workflow_scope",
+          "argument": "workflow-scope",
+          "label": "工作流范围",
+          "description": "选择只做预处理、提取特征或规划端到端模态流程。",
+          "type": "string",
+          "control": "auto",
+          "level": "basic",
+          "group": "常用参数",
+          "unit": "",
+          "required": true,
+          "default": "end_to_end",
+          "options": [
+            {
+              "value": "preprocess",
+              "label": "仅预处理",
+              "description": ""
+            },
+            {
+              "value": "features",
+              "label": "特征提取",
+              "description": ""
+            },
+            {
+              "value": "end_to_end",
+              "label": "端到端流程",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "quality_control",
+          "argument": "quality-control",
+          "label": "包含质量控制",
+          "description": "在流程方案中保留输入检查、中间 QC 和结果核验步骤。",
+          "type": "boolean",
+          "control": "auto",
+          "level": "basic",
+          "group": "常用参数",
+          "unit": "",
+          "required": true,
+          "default": true,
+          "options": [
+            {
+              "value": true,
+              "label": "包含",
+              "description": ""
+            },
+            {
+              "value": false,
+              "label": "不包含",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "artifact_strategy",
+          "argument": "artifact-strategy",
+          "label": "伪影处理策略",
+          "description": "选择保守标记、自动校正或排除受影响数据。",
+          "type": "string",
+          "control": "auto",
+          "level": "advanced",
+          "group": "预处理细节",
+          "unit": "",
+          "required": true,
+          "default": "correct",
+          "options": [
+            {
+              "value": "flag",
+              "label": "仅标记",
+              "description": ""
+            },
+            {
+              "value": "correct",
+              "label": "自动校正",
+              "description": ""
+            },
+            {
+              "value": "exclude",
+              "label": "排除受影响数据",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "normalization_space",
+          "argument": "normalization-space",
+          "label": "标准空间",
+          "description": "规划空间标准化目标；原生空间不会应用模板归一化。",
+          "type": "string",
+          "control": "auto",
+          "level": "advanced",
+          "group": "空间与输出",
+          "unit": "",
+          "required": true,
+          "default": "native",
+          "options": [
+            {
+              "value": "native",
+              "label": "原生空间",
+              "description": ""
+            },
+            {
+              "value": "template",
+              "label": "标准模板空间",
+              "description": ""
+            },
+            {
+              "value": "both",
+              "label": "同时保留",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "smoothing_extent",
+          "argument": "smoothing-extent",
+          "label": "平滑尺度",
+          "description": "按模态解释为空间或时间平滑尺度；0 表示关闭。",
+          "type": "number",
+          "control": "number",
+          "level": "advanced",
+          "group": "空间与输出",
+          "unit": "",
+          "required": true,
+          "default": 0,
+          "options": [],
+          "minimum": 0.0,
+          "maximum": 20.0,
+          "step": 0.5,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "compute_threads",
+          "argument": "compute-threads",
+          "label": "计算线程数",
+          "description": "为支持并行的软件规划线程数量。",
+          "type": "integer",
+          "control": "number",
+          "level": "advanced",
+          "group": "计算资源",
+          "unit": "",
+          "required": true,
+          "default": 4,
+          "options": [],
+          "minimum": 1.0,
+          "maximum": 128.0,
+          "step": 1.0,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        }
+      ],
+      "input_slots": [
+        {
+          "id": "primary_input",
+          "type": "dataset_folder",
+          "label": "输入数据集",
+          "description": "可从已登记数据集、授权路径或上游步骤选择；具体格式仍以该 Skill 的说明为准。",
+          "required": false,
+          "required_when": {},
+          "cardinality": "one",
+          "binding": "folder",
+          "formats": [],
+          "companions": [],
+          "source_options": [
+            "dataset",
+            "existing_path",
+            "upstream_output"
+          ],
+          "validation": [
+            "path_exists"
+          ]
+        }
+      ],
+      "output_slots": [
+        {
+          "id": "planned_output",
+          "type": "planned_artifact",
+          "label": "规划输出",
+          "description": "该 planning 步骤声明的预期产物；只有接入 runner 后才会实际生成。",
+          "format": "",
+          "primary": true,
+          "path_template": "derivatives/eeg-skill/",
+          "generated_when": {}
+        }
+      ],
+      "structure_level": "evidence",
+      "source_references": [
+        {
+          "path": "skills/eeg-skill/SKILL.md",
+          "label": "Skill 说明与方法依据",
+          "kind": "skill",
+          "line_start": 1,
+          "line_end": null
+        }
+      ],
+      "command_references": [],
+      "delegate_skill_ids": [
+        "claw-shell"
+      ],
+      "execution_recipe": null,
+      "included_capabilities": [],
+      "replaces_operations": [],
+      "execution_resolution": {
+        "state": "source_error",
+        "reason": "该组合依赖原 EEG 清理或特征接口中的未定义调用，或者缺少 pyentrp/mne_microstates。已就绪的独立 MNE 操作仍可选择，不能作为整个原组合的替代。",
+        "source_method_id": "eeg-skill-guided--full-end-to-end-pipeline",
+        "requirements": [
+          "原始清理/特征定义修正",
+          "pyentrp / mne_microstates（按所选功能）"
+        ]
+      }
+    }
+  ],
+  "selection_rules": [
+    "先确认目标产物和已有输入；只选择必要步骤，已有数据或历史结果优先复用。",
+    "输入缺少时先查询目录并请求用户绑定；不要自动追加生成该输入的步骤。",
+    "独立操作选择 Method；确需固定组合时选择 Pipeline，并检查每一步输入输出。",
+    "软件工具 Skill 用于选择实现，任务 Skill 用于组织需求，不因为同时匹配两类 Skill 重复添加方法。"
+  ],
+  "functions": [
+    {
+      "method_ref": "reviewed.mne-eeg-tool.inspect",
+      "label": "EEG/MEG 数据检查",
+      "description": "调用现有实现：mne.io.read_raw_fif, mne.io.read_raw_edf, mne.io.read_raw_bdf, mne.io.read_raw_eeglab。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.mne-eeg-tool.bad-channels",
+      "label": "MNE LOF 坏导联检测与插值",
+      "description": "调用现有实现：mne.preprocessing.find_bad_channels_lof, mne.io.BaseRaw.interpolate_bads。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.mne-eeg-tool.filter",
+      "label": "EEG/MEG 滤波与降采样",
+      "description": "调用现有实现：mne.io.BaseRaw.filter, mne.io.BaseRaw.notch_filter, mne.io.BaseRaw.resample。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.mne-eeg-tool.ica",
+      "label": "MNE ICA 分解与指定成分去除",
+      "description": "调用现有实现：mne.preprocessing.ICA.fit, mne.preprocessing.ICA.apply, mne.preprocessing.ICA.find_bads_eog, mne.preprocessing.ICA.find_bads_ecg。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.mne-eeg-tool.epoch",
+      "label": "重参考与分段",
+      "description": "调用现有实现：mne.Epochs, mne.make_fixed_length_epochs。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.mne-eeg-tool.autoreject",
+      "label": "Epoch AutoReject 自动质控",
+      "description": "调用现有实现：autoreject.AutoReject.fit_transform。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.mne-eeg-tool.connectivity",
+      "label": "传感器 PLV/相干/wPLI",
+      "description": "调用现有实现：mne_connectivity.spectral_connectivity_epochs。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.mne-eeg-tool.time-frequency",
+      "label": "Morlet 时频功率与 ITC",
+      "description": "调用现有实现：mne.Epochs.compute_tfr。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.mne-eeg-tool.maxwell",
+      "label": "MEG Maxwell 滤波",
+      "description": "调用现有实现：mne.preprocessing.maxwell_filter。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.mne-eeg-tool.source",
+      "label": "dSPM 源定位（需前向模型和噪声协方差）",
+      "description": "调用现有实现：mne.minimum_norm.make_inverse_operator, mne.minimum_norm.apply_inverse_raw。输入保持只读，输出写入独立任务目录。"
+    }
+  ],
+  "name": "eeg-skill",
+  "category": [
+    "任务能力",
+    "eeg"
+  ],
+  "scope": "modality",
+  "applicability": [
+    "需要 eeg-skill 相关处理，且目标涉及：通用生成目录、通用生成文件。",
+    "查询具体方法并检查对应输入：分析输入；不是要求一次提供目录中所有方法的输入。"
+  ],
+  "limitations": [
+    "格式和样本数量满足仅是必要条件；空间、单位、样本标识与方法假设仍须按所选方法检查。",
+    "这里只统筹已登记入口；目录收录不代表覆盖软件全部命令或参数。",
+    "环境探测与运行证据分别显示；合成数据测试不代表真实数据的科学有效性。",
+    "尚无 Method 的规划能力只能提供说明，不能当作可执行步骤。"
+  ],
+  "examples": []
+}

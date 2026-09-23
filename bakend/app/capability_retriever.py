@@ -212,7 +212,7 @@ class CapabilityRetriever:
     ) -> list[RetrievalCandidate]:
         query_tokens = _search_tokens(message)
         explicit_ids = self.explicit_capability_ids(message)
-        selected = {item.lower() for item in selected_skills or []}
+        selected = {(skill.name if (skill := self.skill_loader.find(item)) else item).lower() for item in selected_skills or []}
         candidates: list[RetrievalCandidate] = []
 
         for document in self._documents:
@@ -275,7 +275,7 @@ class CapabilityRetriever:
                 if _contains_alias(message, alias)
             ]
             if positions:
-                priority = 2 if document.skill_type in {"tool", "model"} else 1
+                priority = 2 if document.skill_type in {"tool", "software", "model"} else 1
                 matches.append(
                     (
                         priority,
@@ -299,7 +299,7 @@ class CapabilityRetriever:
 
     def _build_documents(self) -> list[_SearchDocument]:
         skills = {skill.name: skill for skill in self.skill_loader.load_all()}
-        leaves = [node for node in self.tree.leaves() if node.id.startswith("skill.")]
+        leaves = [node for node in self.tree.leaves() if node.id.startswith(("skill.", "software."))]
 
         primary_aliases: dict[str, set[str]] = {}
         secondary_aliases: dict[str, set[str]] = {}
@@ -312,6 +312,7 @@ class CapabilityRetriever:
             primary = self._identity_alias_candidates(node.id, skill_id, [])
             if skill is not None:
                 primary.update(self._identity_alias_candidates(node.id, skill.name, []))
+                primary.update(skill.aliases)
             combined = self._identity_alias_candidates(node.id, skill_id, node.keywords)
             secondary = combined - primary
             primary_aliases[node.id] = primary

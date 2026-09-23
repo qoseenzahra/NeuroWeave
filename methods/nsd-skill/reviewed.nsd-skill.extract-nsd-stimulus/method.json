@@ -1,0 +1,191 @@
+{
+  "label": "nsd 表型/刺激提取",
+  "description": "调用现有实现：skills/nsd-skill/scripts/extract_nsd_stimulus.py。输入保持只读，输出写入独立任务目录。",
+  "runner_id": "reviewed.nsd-skill.extract-nsd-stimulus",
+  "input_types": [
+    "analysis_input"
+  ],
+  "output_types": [
+    "generated_folder"
+  ],
+  "requires_features": [],
+  "parameters": [
+    {
+      "id": "subject",
+      "argument": "subject",
+      "label": "subject",
+      "description": "Extract for specific subject only (e.g., subj01)",
+      "type": "string",
+      "control": "auto",
+      "level": "basic",
+      "group": "常用参数",
+      "unit": "",
+      "required": false,
+      "default": null,
+      "options": [],
+      "minimum": null,
+      "maximum": null,
+      "step": null,
+      "placeholder": "",
+      "visible_when": {},
+      "required_when": {},
+      "enabled_when": {},
+      "conflicts_with": [],
+      "condition_help": "",
+      "usage": "参数说明直接来自 skills/nsd-skill/scripts/extract_nsd_stimulus.py:82。平台仅转发已登记选项；默认值和取值限制见本方法定义。",
+      "software_default": "",
+      "documentation_url": ""
+    }
+  ],
+  "input_slots": [
+    {
+      "id": "nsd_dir",
+      "type": "analysis_input",
+      "label": "Path to NSD root directory (BIDS format)",
+      "description": "Path to NSD root directory (BIDS format)：模型、统计或连接组分析使用的表格、数组、图结构或特征文件。。作为此方法的 nsd_dir 输入，通过文件选择或上游输出绑定。",
+      "required": true,
+      "required_when": {},
+      "cardinality": "one",
+      "binding": "folder",
+      "formats": [],
+      "companions": [],
+      "source_options": [
+        "dataset",
+        "existing_path",
+        "upstream_output"
+      ],
+      "validation": []
+    },
+    {
+      "id": "coco_dir",
+      "type": "analysis_input",
+      "label": "Path to COCO annotations directory (optional)",
+      "description": "Path to COCO annotations directory (optional)：模型、统计或连接组分析使用的表格、数组、图结构或特征文件。。作为此方法的 coco_dir 输入，通过文件选择或上游输出绑定。",
+      "required": false,
+      "required_when": {},
+      "cardinality": "one",
+      "binding": "folder",
+      "formats": [],
+      "companions": [],
+      "source_options": [
+        "dataset",
+        "existing_path",
+        "upstream_output"
+      ],
+      "validation": []
+    }
+  ],
+  "output_slots": [
+    {
+      "id": "results",
+      "type": "generated_folder",
+      "label": "分析结果",
+      "description": "分析结果：受信任 Runner 在隔离输出目录中生成并登记的目录型结果。。由此方法生成，端口 results。 运行目录内的路径：results/。",
+      "format": "",
+      "primary": true,
+      "path_template": "results/",
+      "generated_when": {}
+    },
+    {
+      "id": "file_output_csv",
+      "type": "generated_file",
+      "label": "output.csv",
+      "description": "output.csv：受信任 Runner 在隔离输出目录中生成、校验并登记的文件。。由此方法生成，端口 file_output_csv。 运行目录内的路径：results/output.csv。",
+      "format": "",
+      "primary": false,
+      "path_template": "results/output.csv",
+      "generated_when": {}
+    }
+  ],
+  "source_references": [
+    {
+      "path": "skills/nsd-skill/scripts/extract_nsd_stimulus.py",
+      "label": "现有实现调用入口",
+      "kind": "script",
+      "line_start": 1,
+      "line_end": null
+    },
+    {
+      "path": "bakend/resources/existing_implementation_sources.json",
+      "label": "实现来源与原始源码校验记录",
+      "kind": "script",
+      "line_start": 1,
+      "line_end": null
+    }
+  ],
+  "command_references": [],
+  "included_capabilities": [],
+  "schema_version": 1,
+  "id": "reviewed.nsd-skill.extract-nsd-stimulus",
+  "version": "1",
+  "kind": "method",
+  "execution": {
+    "kind": "reviewed",
+    "adapter": {
+      "runner_id": "reviewed.nsd-skill.extract-nsd-stimulus",
+      "script": "skills/nsd-skill/scripts/extract_nsd_stimulus.py",
+      "inputs": [
+        {
+          "id": "nsd_dir",
+          "flag": "--nsd-dir",
+          "path_list": false,
+          "many_args": false
+        },
+        {
+          "id": "coco_dir",
+          "flag": "--coco-dir",
+          "path_list": false,
+          "many_args": false
+        }
+      ],
+      "parameters": [
+        {
+          "id": "subject",
+          "flag": "--subject",
+          "split": false
+        }
+      ],
+      "modules": [
+        "pandas",
+        "numpy"
+      ],
+      "expected": [
+        "output.csv"
+      ],
+      "profile": "scientific",
+      "fixed_args": [],
+      "outputs": [
+        [
+          "--output",
+          "output.csv"
+        ]
+      ],
+      "required_files": [],
+      "executables": [],
+      "required_apis": [],
+      "implementation_source": {
+        "kind": "existing_project_script",
+        "entrypoints": [
+          "skills/nsd-skill/scripts/extract_nsd_stimulus.py"
+        ],
+        "source": {
+          "origin": "NeuroWeave before runtime expansion",
+          "revision": "70b681c",
+          "source_path": "skills/nsd-skill/scripts/extract_nsd_stimulus.py",
+          "source_sha256": "6a57f392383e50d146e35d1b96f56bf58272e220126e739f35a2c8c423c66469"
+        },
+        "dependencies": {},
+        "adapter_scope": "Existing calls, argument/input validation, scheduling and output collection only; no replacement algorithm."
+      },
+      "implementation_files": [
+        {
+          "path": "skills/nsd-skill/scripts/extract_nsd_stimulus.py",
+          "sha256": "6a57f392383e50d146e35d1b96f56bf58272e220126e739f35a2c8c423c66469"
+        }
+      ],
+      "artifact_types": {
+        "output.csv": "generated_file"
+      }
+    }
+  }
+}

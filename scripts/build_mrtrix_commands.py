@@ -147,18 +147,24 @@ def build(name):
         runner_id='mrtrix.command.'+name,execution_mode='runner',input_types=list(dict.fromkeys(s['type'] for s in inputs)),
         output_types=list(dict.fromkeys(s['type'] for s in outputs)),input_slots=inputs,output_slots=outputs,parameters=parameters,
         source_references=[dict(path=f'skills/dwi-skill/references/mrtrix-3.0.8/{name}.md',label='安装版本原始命令帮助',kind='command')])
-    return dict(schema_version=1,skill_id='dwi-skill',provides=[method],
-        command_contract=dict(command=name,version='3.0.8',positional=positional,options=bindings,
-            total_options=len(options),omitted_options=omitted))
+    for key in ('capability','method_id','execution_mode'):method.pop(key)
+    return dict(schema_version=1,id=method['runner_id'],version='1',kind='method',**method,
+        requires_features=[],included_capabilities=[],command_references=[],
+        execution=dict(kind='command',contract=dict(command=name,version='3.0.8',positional=positional,options=bindings,
+            total_options=len(options),omitted_options=omitted)))
+
 
 
 if __name__=='__main__':
+    import sys
+    sys.path.insert(0,str(ROOT/'bakend'))
+    from app.method_registry import MethodDefinition
     parser=argparse.ArgumentParser();parser.add_argument('--check',action='store_true');args=parser.parse_args()
     for name in COMMANDS:
-        value=build(name); path=SKILL/'commands'/f'{name}.json'
+        value=MethodDefinition.model_validate(build(name)).model_dump(mode='json'); path=ROOT/'methods/mrtrix3'/('mrtrix.command.'+name)/'method.json'
         if args.check:
-            if not path.is_file() or json.loads(path.read_text(encoding='utf-8'))!=value:raise SystemExit('Stale command: '+name)
+            if not path.is_file() or MethodDefinition.model_validate_json(path.read_text(encoding='utf-8')).model_dump(mode='json')!=value:raise SystemExit('Stale command: '+name)
         else:
-            path.parent.mkdir(exist_ok=True)
+            path.parent.mkdir(parents=True,exist_ok=True)
             path.write_text(json.dumps(value,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     print(f'{len(COMMANDS)} reviewed command contracts checked' if args.check else f'{len(COMMANDS)} reviewed command contracts generated')

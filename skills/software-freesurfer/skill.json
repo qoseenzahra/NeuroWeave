@@ -1,0 +1,5 @@
+{
+  "schema_version": 1,
+  "id": "software-freesurfer",
+  "alias_of": "freesurfer-tool"
+}

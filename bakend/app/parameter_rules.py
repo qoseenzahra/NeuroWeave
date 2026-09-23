@@ -45,3 +45,9 @@ def conflicts(spec, values):
         return []
     return [key for key in spec.conflicts_with
             if values.get(key) is not None and values[key] is not False and values[key] != '']
+
+
+def input_required(slot, values):
+    """One shared file satisfies all consumers, so any consumer can require it."""
+    return bool(slot.required or (slot.required_when and matches(slot.required_when, values))
+                or any(matches(condition, values) for condition in getattr(slot, 'required_when_any', [])))

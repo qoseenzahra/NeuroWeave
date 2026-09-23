@@ -6,20 +6,27 @@ import sys
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'bakend'))
 from app.capability_registry import CapabilityRegistry
+from app.method_validation import contract_errors, documentation_gaps
+from collections import Counter
 
 
 def report():
-    methods=CapabilityRegistry(ROOT/'skills').all_methods()
-    executable=[m for m in methods if m.execution_mode=='runner']
-    missing=[dict(skill_id=m.skill_id,capability=m.capability,method_id=m.method_id,runner_id=m.runner_id,
+    store=CapabilityRegistry(ROOT/'skills').definitions;store.load()
+    methods=list(store.methods.values())
+    executable=methods
+    missing=[dict(method_id=m.id,runner_id=m.runner_id,
                   parameters=[p.id for p in m.parameters if not p.description.strip()])
              for m in executable if any(not p.description.strip() for p in m.parameters)]
     command_coverage=[]
-    for path in sorted((ROOT/'skills').glob('*/commands/*.json')):
-        c=json.loads(path.read_text(encoding='utf-8'))['command_contract']
+    for method in methods:
+        if method.execution['kind']!='command':continue
+        c=method.execution['contract']
         command_coverage.append(dict(command=c['command'],version=c['version'],total_options=c['total_options'],
                                      exposed_options=len(c['options']),omitted_options=c['omitted_options']))
-    return dict(skill_overviews=len(list((ROOT/'skills').glob('*/OVERVIEW.md'))),registered_methods=len(methods),
+    return dict(skill_overviews=len(store.skills),skill_aliases=len(store.skill_aliases),
+        invalid_contracts={m.id:contract_errors(m) for m in methods if contract_errors(m)},
+        documentation_gaps={m.id:documentation_gaps(m) for m in methods if documentation_gaps(m)},
+        execution_evidence=dict(Counter(store.verification(m.id)['execution']['status'] for m in methods)),registered_methods=len(methods),pipelines=len(store.pipelines),
         runner_methods=len(executable),registered_parameters=sum(len(m.parameters) for m in executable),
         undocumented_parameters=sum(len(item['parameters']) for item in missing),
         methods_needing_parameter_documentation=missing,command_coverage=command_coverage,

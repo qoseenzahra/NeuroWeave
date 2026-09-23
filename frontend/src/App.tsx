@@ -36,7 +36,7 @@ import {
   useLoadOlderMessages,
   useRenameConversation
 } from './features/conversations/useConversations';
-import { SkillList } from './features/skills/SkillList';
+import { LibraryPanel as SkillList } from './features/library/LibraryPanel';
 import { SkillDetails } from './features/skills/SkillDetails';
 import type { Skill } from './features/skills/skillsApi';
 import { DatasetFilesDrawer } from './features/datasets/DatasetFilesDrawer';
@@ -150,6 +150,8 @@ function App() {
     || workflowMutations > 0 || contextLoading || mutating;
   const datasetLocked = Boolean(activeWorkflow?.locked_at || activeWorkflow?.status === 'confirmed');
   const datasetDisabled = datasetLocked || contextBusy;
+  // Output can still be chosen during parameter review; submitted plans remain immutable.
+  const outputDisabled = contextBusy || activeWorkflow?.status === 'confirmed';
   const datasetNotice = datasetLocked ? t.workflowDatasetLocked
     : activeWorkflow ? t.datasetChangeNotice : null;
   const setDatasetId = useDatasetStore(s => s.setDatasetId);
@@ -176,7 +178,7 @@ function App() {
   }, [activeWorkflow, queryClient, setDatasetId]);
 
   const handleWorkspaceSelect = async (workspace: Workspace | null) => {
-    if (datasetDisabled) throw new Error(t.workspaceLockedHint);
+    if (outputDisabled) throw new Error(t.workspaceLockedHint);
     await workspaceMutation.mutateAsync({ id: activeConversationId, workspaceId: workspace?.id ?? null });
   };
   const handleDatasetSelect = async (dataset: Dataset) => {
@@ -630,7 +632,7 @@ function App() {
               </>
             ) : sidebarView === 'skills' ? (
               <div className="view-enter min-h-0 flex-1 overflow-y-auto px-3 py-3">
-                <SkillList selectedSkillIds={selectedSkillIds} disabled={contextBusy || olderMutation.isPending}
+                <SkillList workspaceId={workspaceId} selectedSkillIds={selectedSkillIds} disabled={contextBusy || olderMutation.isPending}
                   onAdd={addSkill} onRemove={removeSkill} onDetails={setViewedSkill} onClear={clearSkills}/>
                 {skillsStats && (
                   <div className="mt-3 border-t border-line pt-2">
@@ -730,7 +732,7 @@ function App() {
           workspaceId={workspaceId}
           conversationId={activeConversationId}
           datasetId={selectedDatasetId}
-          locked={datasetDisabled}
+          locked={outputDisabled}
           onSelect={handleWorkspaceSelect}
           onClose={() => setWorkspaceOpen(false)}
         />

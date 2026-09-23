@@ -1,3 +1,4 @@
+import { MethodVerification } from './MethodVerification';
 import { useState } from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { ArrowLeft } from 'lucide-react';
@@ -9,25 +10,30 @@ import type { SkillMethodSummary } from './skillsApi';
 export function SkillMethods({ skillId }: { skillId: string }) {
   const zh = useLanguageStore(s => s.language) === 'zh';
   const [search, setSearch] = useState('');
+  const [kind, setKind] = useState('method');
   const [selected, setSelected] = useState<SkillMethodSummary | null>(null);
-  const query = useInfiniteQuery({ queryKey: ['skill-methods', skillId, search], initialPageParam: '',
-    queryFn: ({ pageParam, signal }) => fetchSkillMethods(skillId, search, pageParam, signal),
+  const query = useInfiniteQuery({ queryKey: ['skill-methods', skillId, search, kind], initialPageParam: '',
+    queryFn: ({ pageParam, signal }) => fetchSkillMethods(skillId, search, pageParam, signal, kind),
     getNextPageParam: page => page.next_cursor ?? undefined, staleTime: 60_000 });
   if (selected) return <SkillMethodDetail method={selected} onBack={() => setSelected(null)} />;
   return <section className="mt-3 min-w-0 space-y-3">
     <p className="text-meta text-muted">{zh ? '按需查看方法，不一次加载全部参数。具有执行契约不代表当前环境可用；详情列出实际支持范围。' : 'Open one method at a time. An execution contract does not guarantee runtime availability; details show the supported scope.'}</p>
+    <div className="flex flex-wrap gap-2" role="group" aria-label={zh ? '目录类型' : 'Catalog type'}>
+      {([['method',zh?'独立方法':'Methods'],['pipeline',zh?'组合流程':'Pipelines'],['capability',zh?'待接入能力':'Planning capabilities']]).map(([id,label]) =>
+        <Button key={id} variant={kind===id?'primary':'outline'} aria-pressed={kind===id} onClick={()=>{setKind(id);setSearch('');}}>{label}</Button>)}
+    </div>
     <input aria-label={zh ? '搜索命令或方法' : 'Search commands or methods'} value={search} onChange={e => setSearch(e.target.value)}
       placeholder={zh ? '命令名、方法名或用途' : 'Command, method or purpose'} className="w-full rounded-control border border-line px-3 py-2" />
     {query.isPending && <p role="status">{zh ? '正在读取方法目录…' : 'Loading methods…'}</p>}
     {query.isError && <p role="alert">{query.error.message}<Button onClick={() => void query.refetch()}>{zh ? '重试' : 'Retry'}</Button></p>}
-    {query.data && <p className="text-meta text-subtle">{query.data.pages[0].total} {zh ? '个方法' : 'methods'}</p>}
+    {query.data && <p className="text-meta text-subtle">{query.data.pages[0].total} {zh ? '个条目' : 'entries'}</p>}
     <ul className="space-y-2">{query.data?.pages.flatMap(page => page.items).map(method => <li key={`${method.capability}/${method.method_id}`}>
       <button type="button" onClick={() => setSelected(method)} className="w-full min-w-0 rounded-control border border-line p-3 text-left hover:bg-well focus-visible:outline-2">
         <span className="block break-words font-medium">{method.label}</span>
         <code className="block break-all text-meta text-subtle">{method.runner_id}</code>
         <span className="mt-1 block text-meta">{method.execution_mode === 'runner' ? (zh ? '已登记执行入口' : 'Registered runner') : (zh ? '规划条目' : 'Planning entry')}
           {' · '}{method.input_count} {zh ? '输入' : 'inputs'} · {method.output_count} {zh ? '输出' : 'outputs'} · {method.parameter_count} {zh ? '参数' : 'parameters'}</span>
-        <span className="mt-1 block break-words text-meta text-muted">{method.description}</span>
+        <span className="mt-1 block break-words text-meta text-muted">{method.role || method.description}</span>
       </button>
     </li>)}</ul>
     {query.hasNextPage && <Button onClick={() => void query.fetchNextPage()} loading={query.isFetchingNextPage}>{zh ? '加载更多' : 'Load more'}</Button>}
@@ -37,16 +43,23 @@ export function SkillMethods({ skillId }: { skillId: string }) {
 function SkillMethodDetail({ method, onBack }: { method: SkillMethodSummary; onBack: () => void }) {
   const zh = useLanguageStore(s => s.language) === 'zh';
   const [filter, setFilter] = useState('');
-  const query = useQuery({queryKey:['skill-method', method.capability, method.method_id],
-    queryFn: ({signal}) => fetchSkillMethod(method.capability, method.method_id, signal), staleTime:60_000});
+  const query = useQuery({queryKey:['skill-method', method.entry_kind, method.method_id], enabled:method.entry_kind!=='capability',
+    queryFn: ({signal}) => fetchSkillMethod(method.entry_kind || 'method', method.method_id, signal), staleTime:60_000});
   const data = query.data;
   return <section className="mt-3 min-w-0 space-y-3">
     <Button variant="outline" onClick={onBack}><ArrowLeft aria-hidden="true"/>{zh ? '返回方法目录' : 'Back to methods'}</Button>
-    {query.isPending && <p role="status">{zh ? '读取方法详情…' : 'Loading method…'}</p>}
+    {method.entry_kind === 'capability' && <><p className="font-semibold">{method.label}</p><p className="break-words">{method.description}</p><p>{zh?'该能力尚未接入独立方法，不能作为可执行入口。':'This capability has no registered executable method.'}</p></>}
+    {query.isPending && method.entry_kind !== 'capability' && <p role="status">{zh ? '读取方法详情…' : 'Loading method…'}</p>}
     {query.isError && <p role="alert">{query.error.message}<Button onClick={() => void query.refetch()}>{zh ? '重试' : 'Retry'}</Button></p>}
     {data && <>
+      {data.steps && <div className="space-y-2"><p className="font-semibold">{zh?'方法组合与数据连接':'Method composition and bindings'}</p>{data.steps.map((step,i)=><details key={step.id} className="rounded-control border border-line p-3">
+        <summary className="cursor-pointer break-words">{i+1}. {step.title} · <code>{step.method_ref}</code></summary>
+        <p className="text-meta">v{step.method_version}</p>
+        <pre className="whitespace-pre-wrap break-all text-meta">{JSON.stringify({fixed_parameters:step.fixed_parameters,parameter_bindings:step.parameter_bindings,input_bindings:step.input_bindings,when:step.when},null,2)}</pre>
+      </details>)}<details><summary>{zh?'整体输出连接':'Public output bindings'}</summary><pre className="whitespace-pre-wrap break-all text-meta">{JSON.stringify(data.output_bindings,null,2)}</pre></details></div>}
       <p className="font-semibold">{data.label}</p><p className="break-words text-meta">{data.description}</p>
       <p className="rounded-control bg-well p-3 text-meta">{data.runtime_status.available ? (zh ? '当前入口探测可用' : 'Runtime probe available') : (zh ? '当前入口不可用' : 'Runtime unavailable')}：{data.runtime_status.reason || '—'}</p>
+      <MethodVerification value={data.verification}/>
       <p className="text-meta text-muted">{zh ? '以下为平台已登记的参数与输入输出，不代表原软件全部选项。实际运行前仍须检查数据、计算节点和 Dry-run。' : 'These are registered parameters and ports, not necessarily every upstream option. Data, target nodes and dry-run still require validation.'}</p>
       {data.command_coverage && <p className="text-meta">{zh ? '命令选项覆盖' : 'Command option coverage'}：{data.command_coverage.exposed} {zh ? '已开放' : 'exposed'} / {data.command_coverage.total} {zh ? '原始选项' : 'upstream options'}
         {data.command_coverage.omitted.length > 0 && <span className="block break-words">{zh ? '由平台管理或尚未接入：' : 'Managed or unsupported: '}{data.command_coverage.omitted.join(', ')}</span>}</p>}

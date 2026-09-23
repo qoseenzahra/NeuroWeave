@@ -16,14 +16,16 @@ from ..external_command import ExternalCommandRunner
 from .mrtrix import MrtrixTckgenRunner
 
 ROOT=Path(__file__).resolve().parents[4]
-COMMANDS=('tcksift2','dwidenoise','mrdegibbs','5tt2gmwmi','mrthreshold','tckresample')
+COMMANDS=('5tt2gmwmi', '5tt2vis', '5ttedit', 'afdconnectivity', 'amp2sh', 'dirflip', 'dirgen', 'dirmerge', 'dirorder', 'dwi2adc', 'dwi2mask', 'dwi2tensor', 'dwidenoise', 'dwiextract', 'fixel2sh', 'fixel2tsf', 'fixel2voxel', 'fod2dec', 'label2colour', 'label2mesh', 'labelconvert', 'maskdump', 'maskfilter', 'mesh2voxel', 'meshconvert', 'meshfilter', 'mrcheckerboardmask', 'mrcolour', 'mrconvert', 'mrdegibbs', 'mrdump', 'mredit', 'mrgrid', 'mrhistmatch', 'mrhistogram', 'mrthreshold', 'mrtransform', 'peaks2amp', 'sh2amp', 'sh2peaks', 'sh2power', 'sh2response', 'shconv', 'tckdfc', 'tckglobal', 'tckmap', 'tckresample', 'tcksample', 'tcksift', 'tcksift2', 'tckstats', 'tcktransform', 'tensor2metric', 'transformcalc', 'transformconvert', 'tsfdivide', 'tsfsmooth', 'tsfthreshold', 'voxel2mesh', 'warp2metric', 'warpconvert', 'warpcorrect', 'warpinit', 'warpinvert')
 
 
 def command_runners():
-    return [MrtrixCommandRunner(json.loads((ROOT/'skills/dwi-skill/commands'/f'{name}.json').read_text(encoding='utf-8'))) for name in COMMANDS]
+    from ...method_registry import MethodRegistry
+    registry=MethodRegistry(ROOT)
+    return [MrtrixCommandRunner(registry.method('mrtrix.command.'+name).model_dump(mode='json')) for name in COMMANDS]
 
 
-@lru_cache(maxsize=24)
+@lru_cache(maxsize=256)
 def version_probe(path, mtime):
     try:
         result=subprocess.run([path,'-version'],capture_output=True,text=True,timeout=10,
@@ -36,10 +38,11 @@ def version_probe(path, mtime):
 
 class MrtrixCommandRunner(ExternalCommandRunner):
     def __init__(self,payload):
-        self.contract=payload['command_contract']
-        definition=payload['provides'][0]
+        self.contract=payload['execution']['contract']
+        from ...method_registry import MethodDefinition
+        definition=MethodDefinition.model_validate(payload).contract()
         self.runner_id,self.label=definition['runner_id'],definition['label']
-        self.method=MethodOption(id=definition['method_id'],skill_id=payload['skill_id'],**definition)
+        self.method=MethodOption(id=payload['id'],skill_id='',definition_id=payload['id'],definition_version=payload['version'],**definition)
         command=self.contract['command']
         if command not in COMMANDS:raise ValueError('Unreviewed MRtrix command')
         self.executable=Path(os.getenv('LOCALFLOW_MRTRIX_ROOT','/opt/software/mrtrix3-master'))/'bin'/command
@@ -103,13 +106,15 @@ class MrtrixCommandRunner(ExternalCommandRunner):
                 if not re.fullmatch(pattern,str(current)):raise ValueError('需要明确的逗号分隔数值列表：'+key)
                 parts=str(current).split(',')
                 if key.endswith(('_start','_mid','_end')) and len(parts)!=3:raise ValueError('坐标必须包含三个数值：'+key)
-                if key=='axes' and (len(parts)!=2 or len(set(parts))!=2 or any(p not in {'0','1','2'} for p in parts)):raise ValueError('处理平面需要两个不同空间轴（0、1、2）')
-                if key=='extent' and (len(parts) not in {1,3} or any(int(p)<1 or int(p)%2==0 for p in parts)):raise ValueError('窗口需要一个或三个正奇数')
-            return str(current)
+                if self.contract['command']=='mrdegibbs' and key=='axes' and (len(parts)!=2 or len(set(parts))!=2 or any(p not in {'0','1','2'} for p in parts)):raise ValueError('处理平面需要两个不同空间轴（0、1、2）')
+                if self.contract['command']=='dwidenoise' and key=='extent' and (len(parts) not in {1,3} or any(int(p)<1 or int(p)%2==0 for p in parts)):raise ValueError('窗口需要一个或三个正奇数')
+            return ('1' if current else '0') if kind=='BOOL' else str(current)
         argv=[str(self.executable)]
         for value in self.contract['positional']:
             text=resolve(value)
-            if text is None:raise ValueError('缺少位置输入：'+value['id'])
+            if text is None:
+                if value.get('optional'):continue
+                raise ValueError('缺少位置输入：'+value['id'])
             argv.append(text)
         for option in self.contract['options']:
             if not matches(option.get('when',{}),values):continue

@@ -1,0 +1,5 @@
+{
+  "schema_version": 1,
+  "id": "software-nibabel-skill",
+  "alias_of": "nibabel-skill"
+}

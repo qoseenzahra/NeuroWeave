@@ -40,7 +40,7 @@ class SkillLayerTests(unittest.TestCase):
         with self.assertRaises(ValueError):self.catalog.list_methods(limit=2000)
 
     def test_method_sections_and_reference_are_bounded_and_identity_scoped(self):
-        result=self.catalog.method('skill.dwi-skill','command-tcksift2','parameters',limit=2)
+        result=self.catalog.method('skill.dwi-skill','mrtrix.command.tcksift2','parameters',limit=2)
         self.assertEqual(len(result['items']),2)
         self.assertTrue(result['has_more'])
         reference=self.catalog.read_reference('dwi-skill',max_chars=40)
@@ -48,6 +48,13 @@ class SkillLayerTests(unittest.TestCase):
         self.assertTrue(reference['truncated'])
         with self.assertRaises(KeyError):self.catalog.read_reference('../.env')
         with self.assertRaises(KeyError):self.catalog.method('missing','tckgen')
+
+    def test_pipeline_readiness_uses_real_member_runners_and_planning_is_not_executable(self):
+        definition=self.registry.method_for('dwi.tractography','mrtrix3-act-sift2--via-existing-fod-act-sift2')
+        self.assertEqual(self.catalog.execution_runner_ids([definition]),['mrtrix.command.tcksift2','mrtrix.tckgen'])
+        self.assertEqual(self.catalog.list_methods(kind='capability',executable_only=True)['total'],0)
+        pipeline=self.catalog.pipeline(definition.definition_id)
+        self.assertEqual([s['method_ref'] for s in pipeline['steps']],['mrtrix.tckgen','mrtrix.command.tcksift2'])
 
     def test_explicit_skill_root_is_not_shadowed_by_working_directory(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -71,12 +78,12 @@ class SkillLayerTests(unittest.TestCase):
         tools.skill_catalog=self.catalog
         request=ChatRequest(message='解释参数',selected_skills=['dwi-skill'])
         self.assertTrue({t['function']['name'] for t in SKILL_TOOLS}.issubset({t['function']['name'] for t in tools.available_tools(request)}))
-        result=tools.execute('read_skill_method',{'capability':'skill.dwi-skill','method_id':'command-mrthreshold','section':'parameters','limit':1},request)
+        result=tools.execute('read_skill_method',{'capability':'skill.dwi-skill','method_id':'mrtrix.command.mrthreshold','section':'parameters','limit':1},request)
         self.assertEqual(len(result['items']),1)
         with self.assertRaises(ValueError):tools.execute('list_skill_methods',{'shell':'rm -rf /'},request)
         with self.assertRaises(ValueError):tools.execute('list_skill_methods',{'q':[]},request)
         with self.assertRaises(ValueError):tools.execute('list_skill_methods',{'limit':True},request)
-        with self.assertRaises(ValueError):tools.execute('read_skill_method',{'capability':'skill.dwi-skill','method_id':'command-mrthreshold','section':'all'},request)
+        with self.assertRaises(ValueError):tools.execute('read_skill_method',{'capability':'skill.dwi-skill','method_id':'mrtrix.command.mrthreshold','section':'all'},request)
 
 
     def test_model_loop_reads_method_before_planning_and_keeps_observations(self):
@@ -91,10 +98,10 @@ class SkillLayerTests(unittest.TestCase):
                     assert required
                     return {'role':'assistant','content':None,'tool_calls':[{'id':'m1','type':'function',
                         'function':{'name':'read_skill_method','arguments':json.dumps({
-                            'capability':'skill.dwi-skill','method_id':'command-mrthreshold',
+                            'capability':'skill.dwi-skill','method_id':'mrtrix.command.mrthreshold',
                             'section':'parameters','limit':2})}}]}
                 data=json.loads(messages[-1]['content'])
-                assert data['method_id']=='command-mrthreshold'
+                assert data['method_id']=='mrtrix.command.mrthreshold'
                 assert len(data['items'])==2 and data['has_more']
                 return {'role':'assistant','content':None,'tool_calls':[{'id':'m2','type':'function',
                     'function':{'name':'continue_workflow_planning','arguments':'{}'}}]}
@@ -104,7 +111,7 @@ class SkillLayerTests(unittest.TestCase):
         tools.skill_catalog=catalog
         request=ChatRequest(message='按绝对阈值处理影像，先检查需要的参数',interaction_mode='task')
         self.assertIsNone(asyncio.run(tools.reply(request)))
-        self.assertIn('command-mrthreshold',request.workspace_context)
+        self.assertIn('mrtrix.command.mrthreshold',request.workspace_context)
         self.assertEqual(model.calls,2)
         self.assertEqual(events.event.call_args_list[-1].args[1]['status'],'succeeded')
 

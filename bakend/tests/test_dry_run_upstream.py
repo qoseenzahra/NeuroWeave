@@ -49,7 +49,7 @@ class DryRunUpstreamTests(unittest.TestCase):
             self.addCleanup(mocked.stop)
         self.fod = self.step("dwi.fod", "mrtrix-dwi2fod", 1)
         self.tracking = self.step("dwi.tractography", "mrtrix3-existing-fod", 2)
-        self.tracking.selected_parameters.update(act_enabled=True, postprocessing="none")
+        self.tracking.selected_parameters.update(act_enabled=True)
         for name in ("dwi", "mask", "bvecs", "bvals", "wm_response"):
             self.bind_file(self.fod, name)
         self.bind_file(self.tracking, "five_tt")
@@ -145,15 +145,13 @@ class DryRunUpstreamTests(unittest.TestCase):
 
     def test_upstream_fod_does_not_skip_other_required_inputs_or_software(self):
         del self.tracking.input_bindings["five_tt"]
-        self.tracking.selected_parameters.update(seeding_strategy="roi", postprocessing="sift2")
-        runner = self.runners.get("mrtrix.tckgen")
-        runner.sift2_executable = self.root / "missing-tcksift2"
+        self.tracking.selected_parameters.update(seeding_strategy="roi")
         with patch("app.execution.runners.mrtrix.subprocess.run") as command:
             result = self.dry_run()
         command.assert_not_called()
         self.assertFalse(result.dry_run_report.valid)
         messages = " ".join(result.dry_run_report.commands[1].messages)
-        for expected in ("5TT", "种子 ROI", "SIFT2"):
+        for expected in ("5TT", "种子 ROI"):
             self.assertIn(expected, messages)
 
     def test_unexpected_input_validation_exception_becomes_a_failed_report(self):

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { GitBranch, Loader2 } from 'lucide-react';
 import { ArtifactPathPicker } from '../datasets/ArtifactPathPicker';
 import { HistoricalInputPicker } from '../datasets/HistoricalInputPicker';
@@ -8,7 +9,7 @@ import type {
   Workflow,
   WorkflowStep
 } from './workflowTypes';
-import { conditionMatches, inputRequired, parameterValues } from './workflowConditions';
+import { activeOutputSlots, displayedInputSlots } from './workflowConditions';
 import { useLanguageStore } from '../../stores/languageStore';
 import { getTranslations } from '../../lib/i18n';
 import type { TranslationKeys } from '../../types/i18n';
@@ -58,14 +59,12 @@ export function StepArtifacts({
 }: StepArtifactsProps) {
   const language = useLanguageStore((s) => s.language);
   const t = getTranslations(language);
-  const values = parameterValues(method, selectedParameters);
-  const inputSlots = method.input_slots ?? [];
-  const outputSlots = (method.output_slots ?? []).filter(
-    (slot) =>
-      Object.keys(slot.generated_when).length === 0 || conditionMatches(slot.generated_when, values)
-  );
+  const [showConditionalInputs, setShowConditionalInputs] = useState(false);
+  const inputSlots = displayedInputSlots(method, selectedParameters, step.input_bindings ?? {}, showConditionalInputs);
+  const conditionalCount = displayedInputSlots(method, selectedParameters, {}, true).filter(slot => slot.conditionalOptional).length;
+  const outputSlots = activeOutputSlots(method, selectedParameters);
   const bindings = step.input_bindings ?? {};
-  const missing = new Set(step.missing_required_inputs ?? []);
+  const missing = new Set((step.missing_required_inputs ?? []).filter(id => inputSlots.some(slot => slot.id === id && slot.requiredNow)));
   const canCompleteUpstream = inputSlots.some(
     (slot) =>
       missing.has(slot.id) &&
@@ -91,9 +90,13 @@ export function StepArtifacts({
             </span>
           )}
         </div>
+        {conditionalCount > 0 && <label className="mb-3 flex items-center gap-2 text-meta text-subtle">
+          <input type="checkbox" checked={showConditionalInputs} onChange={e => setShowConditionalInputs(e.target.checked)}/>
+          {t.workflowShowConditionalInputs}
+        </label>}
         <div className="space-y-2">
           {inputSlots.map((slot) => {
-            const required = inputRequired(slot, values) || missing.has(slot.id);
+            const required = slot.requiredNow;
             const binding = bindings[slot.id];
             return (
               <div
@@ -116,6 +119,7 @@ export function StepArtifacts({
                   </span>
                 </div>
                 <p className="mt-1 text-meta leading-4 text-subtle">{slot.description}</p>
+                {slot.conditionalOptional && <p className="mt-1 text-meta text-subtle">{t.workflowConditionalInputHint}</p>}
                 {binding && (
                   <p className="mt-1.5 break-all text-micro leading-4 text-success">
                     {bindingSummary(binding, t)}

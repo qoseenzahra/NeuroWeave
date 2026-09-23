@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import math
-from .parameter_rules import active as parameter_active, required as parameter_required, conflicts as parameter_conflicts
+from .parameter_rules import input_required, active as parameter_active, required as parameter_required, conflicts as parameter_conflicts
 
 import json
 import re
@@ -443,7 +443,7 @@ class WorkflowService:
             node = self.capability_tree.leaf(capability_id)
             for skill_id in node.skill_ids if node is not None else []:
                 skill = self.skill_loader.find(skill_id)
-                if skill is not None and skill.skill_type in {"tool", "model"}:
+                if skill is not None and skill.skill_type in {"tool", "software", "model"}:
                     has_specific_tool = True
                     break
             if has_specific_tool:
@@ -1406,16 +1406,13 @@ class WorkflowService:
             methods = self.registry.methods_for(node.id)
             if not methods:
                 continue
+            # Task names now come from explicit Skill references, not a synthetic
+            # "operation" parameter that used to mix many execution contracts.
             operation_options = [
-                {
-                    "value": option.value,
-                    "label": option.label,
-                    "description": option.description,
-                }
-                for method in methods
-                for parameter in method.parameters
-                if parameter.id == "operation"
-                for option in parameter.options[:12]
+                {"value": method.method_id, "label": method.label,
+                 "description": (method.skill_role or method.description)[:220],
+                 "entry_kind": method.entry_kind}
+                for method in methods[:24]
             ]
             catalog.append(
                 {
@@ -1818,6 +1815,9 @@ class WorkflowService:
                         "skill_id": method.skill_id,
                         "label": method.label,
                         "description": method.description,
+                        "skill_role": method.skill_role,
+                        "definition_id": method.definition_id,
+                        "entry_kind": method.entry_kind,
                         "execution_mode": method.execution_mode,
                         "input_types": method.input_types,
                         "output_types": method.output_types,
@@ -1853,6 +1853,7 @@ class WorkflowService:
                                 "description": slot.description,
                                 "required": slot.required,
                                 "required_when": slot.required_when,
+                                "required_when_any": slot.required_when_any,
                             }
                             for slot in method.input_slots
                         ],
@@ -1934,6 +1935,10 @@ class WorkflowService:
                     reasons.append(str(runtime.get("reason") or "运行环境暂不可用"))
         return MethodOption(
             id=definition.method_id,
+            skill_role=definition.skill_role,
+            definition_id=definition.definition_id,
+            definition_version=definition.definition_version,
+            entry_kind=definition.entry_kind,
             skill_id=definition.skill_id,
             label=definition.label,
             description=definition.description,
@@ -2046,9 +2051,7 @@ class WorkflowService:
 
     @classmethod
     def _slot_required(cls, slot: Any, parameters: dict[str, Any]) -> bool:
-        return bool(slot.required or (
-            slot.required_when and cls._condition_matches(slot.required_when, parameters)
-        ))
+        return input_required(slot, parameters)
 
     @classmethod
     def _output_generated(cls, slot: Any, parameters: dict[str, Any]) -> bool:

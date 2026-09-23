@@ -37,6 +37,8 @@ from .models import ChatRequest, ChatResponse
 from .neuroclaw_compat.validate_dag import find_cycles, find_missing_deps, load_skill_graph
 from .skill_loader import SkillLoader
 from .skill_catalog import SkillCatalog
+from .pipeline_library import PipelineLibrary
+from .library_routes import library_router
 from .run_models import ExecutionDraftRequest, RunCreateRequest, RunRetryRequest, WorkflowRun
 from .workflow_models import (
     InputBindingRequest,
@@ -159,9 +161,7 @@ def _skill_with_execution_status(skill: Any, methods: list[Any] | None = None,
         method for method in capability_registry.all_methods()
         if method.skill_id == skill.name
     ]
-    runner_ids = sorted(
-        {method.runner_id for method in methods if method.execution_mode == "runner"}
-    )
+    runner_ids = skill_catalog.execution_runner_ids(methods)
     ready: list[str] = []
     reasons: list[str] = []
     statuses = runtime_statuses if runtime_statuses is not None else {}
@@ -224,7 +224,7 @@ app.add_middleware(
 
 @app.middleware("http")
 async def release_maintenance(request: Request, call_next):
-    if request.method in {"POST", "PATCH", "DELETE"} and request.url.path.startswith(("/api/fs/", "/api/workspaces", "/api/output-directories")):
+    if request.method in {"POST", "PUT", "PATCH", "DELETE"} and request.url.path.startswith(("/api/fs/", "/api/workspaces", "/api/output-directories", "/api/library")):
         origin = request.headers.get("origin")
         if origin and origin not in origins and origin != str(request.base_url).rstrip("/"):
             return JSONResponse({"detail": "工作区写请求来自未授权的网页来源"}, status_code=403)
@@ -234,6 +234,11 @@ async def release_maintenance(request: Request, call_next):
         return JSONResponse({"detail":"系统正在发布维护，请稍后重试"}, status_code=503,
                             headers={"Retry-After":"30"})
     return await call_next(request)
+
+
+pipeline_library = PipelineLibrary(local_store, capability_registry)
+capability_registry.library_provider = pipeline_library.bindings
+app.include_router(library_router(pipeline_library, workflow_service, workspace_service, runner_registry))
 
 
 @app.get("/")
@@ -519,6 +524,7 @@ def get_skill(skill_name: str) -> dict[str, Any]:
         **_skill_with_execution_status(skill),
         "instructions": skill.overview or skill.prompt_excerpt(),
         "reference_chars": len(skill.instructions),
+        "orchestration": skill_catalog.skill_structure(skill.name),
         "layered": bool(skill.overview),
         "files": files,
     }
@@ -526,22 +532,24 @@ def get_skill(skill_name: str) -> dict[str, Any]:
 
 @app.get("/api/skills/{skill_name}/methods")
 def skill_methods(skill_name: str, q: str = Query('', max_length=500),
-                  cursor: str = '', limit: int = Query(20, ge=1, le=50), executable_only: bool = False):
+                  cursor: str = '', limit: int = Query(20, ge=1, le=50), executable_only: bool = False, kind: str = 'method'):
     try:
-        return skill_catalog.list_methods(skill_name, q, cursor, limit, executable_only)
+        return skill_catalog.list_methods(skill_name, q, cursor, limit, executable_only, kind)
     except KeyError as exc:
         raise HTTPException(404, str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
 
 
-@app.get("/api/skill-methods/{capability}/{method_id}")
-def skill_method(capability: str, method_id: str):
-    try:
-        return skill_catalog.method(capability, method_id)
-    except KeyError as exc:
-        raise HTTPException(404, str(exc)) from exc
+@app.get("/api/methods/{method_id}")
+def atomic_method(method_id: str):
+    try:return skill_catalog.method('method',method_id)
+    except KeyError as exc:raise HTTPException(404,str(exc)) from exc
 
+@app.get("/api/pipelines/{pipeline_id}")
+def pipeline_detail(pipeline_id: str):
+    try:return skill_catalog.pipeline(pipeline_id)
+    except KeyError as exc:raise HTTPException(404,str(exc)) from exc
 
 @app.get("/api/skills/{skill_name}/reference")
 def skill_reference(skill_name: str, offset: int = Query(0, ge=0, le=2000000),
@@ -652,13 +660,17 @@ async def chat(request: ChatRequest) -> ChatResponse:
         selected = skill_loader.infer(request.message)
         auto_selected = bool(selected)
     try:
-        workspace_answer = await workspace_tools.reply(request)
+        # Route processing intent before any open-ended filesystem/catalog loop.
+        # A lexical method search must never gate access to the semantic planner.
+        decision = await workflow_service.assess_task(request) if request.interaction_mode == "task" else None
+        routed_task = decision and (decision.get("recommend_workflow") or decision.get("recommend_skills")
+                                    or decision.get("clarification_required"))
+        workspace_answer = None if routed_task else await workspace_tools.reply(request)
         if workspace_answer is not None:
             return await finalize(ChatResponse(content=workspace_answer, provider_used=chat_service.provider_name,
                 model_used=chat_service.model or "conversation-demo", mode=chat_service.mode,
                 selected_skills=[skill.name for skill in selected], interaction_mode=request.interaction_mode))
         if request.interaction_mode == "task":
-            decision = await workflow_service.assess_task(request)
             if decision.get("clarification_required"):
                 return await finalize(ChatResponse(
                     type="done",
@@ -679,6 +691,7 @@ async def chat(request: ChatRequest) -> ChatResponse:
                     capability_routing=decision.get("routing_trace"),
                 ))
             if decision["recommend_workflow"]:
+                await workspace_tools.inspect_for_plan(request, decision, workflow_service.registry)
                 workflow, content = await workflow_service.draft(request, decision)
                 related_skill_ids = {
                     skill_id
@@ -1088,7 +1101,17 @@ def start_workflow_run(
     request: RunCreateRequest,
 ) -> WorkflowRun:
     try:
-        return run_service.create(workflow_id, request.expected_revision, request.execution)
+        # New submissions must have an explicit output selection. Existing runs
+        # and retries keep the immutable output snapshot saved with their run.
+        with run_service._lock, workflow_service._lock:
+            workflow = workflow_service.get(workflow_id)
+            if not workflow.workspace_id or not workflow.workspace_root_path:
+                raise ValueError("请先选择服务器输出目录，再提交运行")
+            selected = workspace_service.get(workflow.workspace_id)
+            if Path(selected.root_path).resolve() != Path(workflow.workspace_root_path).resolve():
+                raise ValueError("输出目录已变化，请重新选择并检查流程")
+            workspace_service.validate_output_directory(Path(selected.root_path))
+            return run_service.create(workflow_id, request.expected_revision, request.execution)
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="Workflow not found") from exc
     except (RunConflict, ValueError, OSError) as exc:

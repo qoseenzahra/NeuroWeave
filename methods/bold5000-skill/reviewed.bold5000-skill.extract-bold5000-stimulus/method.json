@@ -1,0 +1,158 @@
+{
+  "label": "bold5000 表型/刺激提取",
+  "description": "调用现有实现：skills/bold5000-skill/scripts/extract_bold5000_stimulus.py。输入保持只读，输出写入独立任务目录。",
+  "runner_id": "reviewed.bold5000-skill.extract-bold5000-stimulus",
+  "input_types": [
+    "analysis_input"
+  ],
+  "output_types": [
+    "generated_folder"
+  ],
+  "requires_features": [],
+  "parameters": [],
+  "input_slots": [
+    {
+      "id": "stimulus_dir",
+      "type": "analysis_input",
+      "label": "Path to BOLD5000 stimuli directory",
+      "description": "Path to BOLD5000 stimuli directory：模型、统计或连接组分析使用的表格、数组、图结构或特征文件。。作为此方法的 stimulus_dir 输入，通过文件选择或上游输出绑定。",
+      "required": true,
+      "required_when": {},
+      "cardinality": "one",
+      "binding": "folder",
+      "formats": [],
+      "companions": [],
+      "source_options": [
+        "dataset",
+        "existing_path",
+        "upstream_output"
+      ],
+      "validation": []
+    },
+    {
+      "id": "events_dir",
+      "type": "analysis_input",
+      "label": "Path to BOLD5000 events directory",
+      "description": "Path to BOLD5000 events directory：模型、统计或连接组分析使用的表格、数组、图结构或特征文件。。作为此方法的 events_dir 输入，通过文件选择或上游输出绑定。",
+      "required": false,
+      "required_when": {},
+      "cardinality": "one",
+      "binding": "folder",
+      "formats": [],
+      "companions": [],
+      "source_options": [
+        "dataset",
+        "existing_path",
+        "upstream_output"
+      ],
+      "validation": []
+    }
+  ],
+  "output_slots": [
+    {
+      "id": "results",
+      "type": "generated_folder",
+      "label": "分析结果",
+      "description": "分析结果：受信任 Runner 在隔离输出目录中生成并登记的目录型结果。。由此方法生成，端口 results。 运行目录内的路径：results/。",
+      "format": "",
+      "primary": true,
+      "path_template": "results/",
+      "generated_when": {}
+    },
+    {
+      "id": "file_output_csv",
+      "type": "generated_file",
+      "label": "output.csv",
+      "description": "output.csv：受信任 Runner 在隔离输出目录中生成、校验并登记的文件。。由此方法生成，端口 file_output_csv。 运行目录内的路径：results/output.csv。",
+      "format": "",
+      "primary": false,
+      "path_template": "results/output.csv",
+      "generated_when": {}
+    }
+  ],
+  "source_references": [
+    {
+      "path": "skills/bold5000-skill/scripts/extract_bold5000_stimulus.py",
+      "label": "现有实现调用入口",
+      "kind": "script",
+      "line_start": 1,
+      "line_end": null
+    },
+    {
+      "path": "bakend/resources/existing_implementation_sources.json",
+      "label": "实现来源与原始源码校验记录",
+      "kind": "script",
+      "line_start": 1,
+      "line_end": null
+    }
+  ],
+  "command_references": [],
+  "included_capabilities": [],
+  "schema_version": 1,
+  "id": "reviewed.bold5000-skill.extract-bold5000-stimulus",
+  "version": "1",
+  "kind": "method",
+  "execution": {
+    "kind": "reviewed",
+    "adapter": {
+      "runner_id": "reviewed.bold5000-skill.extract-bold5000-stimulus",
+      "script": "skills/bold5000-skill/scripts/extract_bold5000_stimulus.py",
+      "inputs": [
+        {
+          "id": "stimulus_dir",
+          "flag": "--stimulus-dir",
+          "path_list": false,
+          "many_args": false
+        },
+        {
+          "id": "events_dir",
+          "flag": "--events-dir",
+          "path_list": false,
+          "many_args": false
+        }
+      ],
+      "parameters": [],
+      "modules": [
+        "pandas",
+        "numpy"
+      ],
+      "expected": [
+        "output.csv"
+      ],
+      "profile": "scientific",
+      "fixed_args": [],
+      "outputs": [
+        [
+          "--output",
+          "output.csv"
+        ]
+      ],
+      "required_files": [],
+      "executables": [],
+      "required_apis": [],
+      "implementation_source": {
+        "kind": "existing_project_script",
+        "entrypoints": [
+          "skills/bold5000-skill/scripts/extract_bold5000_stimulus.py"
+        ],
+        "source": {
+          "origin": "NeuroWeave before runtime expansion",
+          "revision": "70b681c",
+          "source_path": "skills/bold5000-skill/scripts/extract_bold5000_stimulus.py",
+          "source_sha256": "f1e3a30d25eed2860ce7d4974af5caeb3ff89b0294630824d2e43e7e06ed71e8"
+        },
+        "dependencies": {},
+        "adapter_scope": "Existing calls, argument/input validation, scheduling and output collection only; no replacement algorithm."
+      },
+      "implementation_files": [
+        {
+          "path": "skills/bold5000-skill/scripts/extract_bold5000_stimulus.py",
+          "sha256": "f1e3a30d25eed2860ce7d4974af5caeb3ff89b0294630824d2e43e7e06ed71e8"
+        }
+      ],
+      "artifact_types": {
+        "output.csv": "generated_file"
+      }
+    }
+  }
+}

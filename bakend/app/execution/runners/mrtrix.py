@@ -15,7 +15,6 @@ class MrtrixTckgenRunner(ExternalCommandRunner):
     def __init__(self) -> None:
         root = Path(os.getenv("LOCALFLOW_MRTRIX_ROOT", "/opt/software/mrtrix3-master"))
         self.executable = root / "bin" / "tckgen"
-        self.sift2_executable = root / "bin" / "tcksift2"
         self.mrstats_executable = root / "bin" / "mrstats"
 
     def runtime_status(self) -> dict[str, object]:
@@ -28,14 +27,13 @@ class MrtrixTckgenRunner(ExternalCommandRunner):
         )
         if status["available"] and not libpng.is_file():
             status.update(available=False, reason=f"缺少 MRtrix 运行库：{libpng}")
-        status["optional_sift2"] = str(self.sift2_executable)
         status["libpng"] = str(libpng)
         if status["available"] and not self.mrstats_executable.is_file():
             status.update(available=False, reason=f"缺少 FOD 检查工具：{self.mrstats_executable}")
         return status
 
     def allowed_executables(self) -> set[Path]:
-        return {self.executable, self.sift2_executable}
+        return {self.executable}
 
     def preflight(self, context: RunnerContext) -> list[str]:
         problems = self.common_preflight(context)
@@ -74,9 +72,6 @@ class MrtrixTckgenRunner(ExternalCommandRunner):
             problems.append("启用 ACT 时必须绑定 5TT 影像")
         if self.parameter(context, "seeding_strategy", "dynamic") == "roi" and context.step.input_bindings.get("seed_roi") is None:
             problems.append("选择 ROI 播种时必须绑定种子 ROI")
-        if self.parameter(context, "postprocessing", "none") == "sift2":
-            if not self.sift2_executable.is_file() or not os.access(self.sift2_executable, os.X_OK):
-                problems.append(f"SIFT2 可执行文件不可用：{self.sift2_executable}")
         return problems
 
     @staticmethod
@@ -125,15 +120,5 @@ class MrtrixTckgenRunner(ExternalCommandRunner):
         artifacts = [
             self.artifact(context, tracks, "tractogram", "MRtrix3 纤维流线", metadata={"algorithm": self.parameter(context, "algorithm", "iFOD2")})
         ]
-        if self.parameter(context, "postprocessing", "none") == "sift2":
-            weights = context.output_directory / "sift2_weights.txt"
-            sift_argv = [
-                str(self.sift2_executable), str(tracks), str(fod), str(weights),
-                "-nthreads", str(int(self.parameter(context, "threads", 4))), "-force",
-            ]
-            if five_tt is not None:
-                sift_argv.extend(("-act", str(five_tt)))
-            self.execute(context, sift_argv, environment=self._environment(), progress_start=86.0, progress_end=96.0)
-            artifacts.append(self.artifact(context, weights, "streamline_weights", "SIFT2 流线权重", "text/plain"))
         context.log("纤维追踪输出已完成完整性校验", 100.0, "info")
         return RunnerResult(artifacts=artifacts, message=f"纤维追踪完成，生成 {len(artifacts)} 个制品。")

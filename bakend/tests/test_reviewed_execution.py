@@ -56,7 +56,7 @@ class ReviewedExecutionTests(unittest.TestCase):
         with self.assertRaises(ValueError):self.runner.checked_inputs(self.context)
 
     def test_catalog_uses_packaged_files_and_bound_output_paths(self):
-        catalog=json.loads((ROOT/'bakend/resources/reviewed_execution.json').read_text(encoding='utf-8'))['methods']
+        catalog=list(specifications().values())
         self.assertEqual(len(catalog),len(specifications()))
         for spec in catalog:
             with self.subTest(runner=spec['runner_id']):

@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react';
 import { X } from 'lucide-react';
+import { useResizablePanel } from '../../ui/useResizablePanel';
 import type { Dataset } from './datasetsApi';
 import {
   useDatasetRoots,
   useDirectoryListing,
   useInspectDataset,
   useRegisterDataset,
-  useRegisteredDatasets
+  useRegisteredDatasets,
+  useSelectedDataset
 } from './useDatasets';
 import { cancelOperation } from '../../api/operations';
 import type { OperationView } from '../../api/operations';
@@ -35,9 +37,13 @@ export function DatasetPicker({ onClose, onSelect }: DatasetPickerProps) {
   const { selectDataset } = useDatasetStore();
   const language = useLanguageStore((s) => s.language);
   const t = getTranslations(language);
-  const [rootId, setRootId] = useState('');
-  const [relativePath, setRelativePath] = useState('');
-  const [pathDraft, setPathDraft] = useState('');
+  const {panelRef, style: panelStyle, handles: resizeHandles} = useResizablePanel(language === 'zh' ? '拖动边框调整窗口大小' : 'Drag the border to resize the window');
+  const selectedDatasetId = useDatasetStore((s) => s.selectedDatasetId);
+  const selectedDatasetQuery = useSelectedDataset(selectedDatasetId);
+  // Follow the selected dataset until the user navigates. Do not fetch the root
+  // while a restored conversation's dataset metadata is still loading.
+  const [location, setLocation] = useState<{ rootId: string; relativePath: string } | null>(null);
+  const [draft, setPathDraft] = useState<string | null>(null);
   const [filter, setFilter] = useState('');
   const [operation, setOperation] = useState<OperationView | null>(null);
   const [busy, setBusy] = useState<'register' | 'inspect' | null>(null);
@@ -45,7 +51,13 @@ export function DatasetPicker({ onClose, onSelect }: DatasetPickerProps) {
   const rootsQuery = useDatasetRoots();
   const datasetsQuery = useRegisteredDatasets();
   const roots = useMemo(() => rootsQuery.data?.roots ?? [], [rootsQuery.data]);
-  const effectiveRootId = rootId || roots[0]?.root_id || '';
+  const selectedDataset = selectedDatasetQuery.data
+    ?? datasetsQuery.data?.datasets.find((dataset) => dataset.dataset_id === selectedDatasetId);
+  const effectiveRootId = location?.rootId
+    ?? (selectedDatasetId ? selectedDataset?.root_id ?? '' : roots[0]?.root_id ?? '');
+  const relativePath = location?.relativePath ?? selectedDataset?.relative_path ?? '';
+  const pathDraft = draft ?? relativePath;
+  const waitingForSelection = location === null && !!selectedDatasetId && !selectedDataset;
   const listingQuery = useDirectoryListing(effectiveRootId, relativePath);
   const registerMutation = useRegisterDataset();
   const inspectMutation = useInspectDataset();
@@ -131,19 +143,19 @@ export function DatasetPicker({ onClose, onSelect }: DatasetPickerProps) {
     setError(null);
     void rootsQuery.refetch();
     void datasetsQuery.refetch();
-    void listingQuery.refetch();
+    if (effectiveRootId) void listingQuery.refetch();
+    if (selectedDatasetId) void selectedDatasetQuery.refetch();
   };
   const goDraft = () => {
     setError(null);
-    setRelativePath(pathDraft.trim().replace(/\\/g, '/').replace(/^\/+/, ''));
+    openDir(pathDraft.trim().replace(/\\/g, '/').replace(/^\/+/, ''));
   };
   const openDir = (next: string) => {
-    if (busy) return;
+    if (busy || !effectiveRootId) return;
     setError(null);
-    setRelativePath(next);
+    setLocation({ rootId: effectiveRootId, relativePath: next });
     setPathDraft(next);
   };
-  const selectedDatasetId = useDatasetStore((s) => s.selectedDatasetId);
   const registeredList = (
     <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-4 pb-4">
       <h3 className="px-1 pt-1 text-xs font-semibold">{t.datasetRegisteredTitle}</h3>
@@ -220,7 +232,7 @@ export function DatasetPicker({ onClose, onSelect }: DatasetPickerProps) {
     </div>
   );
   const browser = (
-    <section className="flex min-h-0 flex-col">
+    <section className="flex min-h-0 min-w-0 flex-col overflow-hidden">
       <div className="flex shrink-0 flex-wrap items-center gap-2 px-5 pb-2 pt-4">
         <label className="text-xs text-muted" htmlFor="dataset-root">
           {t.datasetRootsLabel}
@@ -230,8 +242,7 @@ export function DatasetPicker({ onClose, onSelect }: DatasetPickerProps) {
           value={effectiveRootId}
           disabled={loadingRoots || busy !== null}
           onChange={(e) => {
-            setRootId(e.target.value);
-            setRelativePath('');
+            setLocation({ rootId: e.target.value, relativePath: '' });
             setPathDraft('');
             setError(null);
           }}
@@ -284,10 +295,10 @@ export function DatasetPicker({ onClose, onSelect }: DatasetPickerProps) {
       </div>
       <nav
         aria-label={t.datasetBreadcrumb}
-        className="flex flex-wrap items-center gap-1 px-5 py-1 text-xs text-subtle"
+        className="flex h-8 shrink-0 items-center gap-1 overflow-x-auto whitespace-nowrap px-5 py-1 text-xs text-subtle"
       >
         {(listing?.breadcrumbs ?? []).map((crumb, index) => (
-          <span key={crumb.relative_path} className="flex items-center gap-1">
+          <span key={crumb.relative_path} className="flex shrink-0 items-center gap-1">
             {index > 0 && <span>/</span>}
             <button
               type="button"
@@ -300,7 +311,7 @@ export function DatasetPicker({ onClose, onSelect }: DatasetPickerProps) {
           </span>
         ))}
       </nav>
-      {rootsQuery.isError || datasetsQuery.isError ? (
+      {rootsQuery.isError || datasetsQuery.isError || (waitingForSelection && selectedDatasetQuery.isError) ? (
         <div className="px-5 py-6 text-center">
           <p className="text-xs text-danger">{t.datasetLoadError}</p>
           <button
@@ -311,7 +322,7 @@ export function DatasetPicker({ onClose, onSelect }: DatasetPickerProps) {
             {t.retry}
           </button>
         </div>
-      ) : loadingRoots ? (
+      ) : loadingRoots || waitingForSelection ? (
         <p className="px-5 py-6 text-xs text-subtle">{t.datasetLoading}</p>
       ) : listingQuery.isError ? (
         <div className="px-5 py-6 text-center">
@@ -382,12 +393,15 @@ export function DatasetPicker({ onClose, onSelect }: DatasetPickerProps) {
       role="presentation"
     >
       <div
+        ref={panelRef}
+        style={panelStyle}
         role="dialog"
         aria-modal="true"
         aria-label={t.datasetPickerTitle}
         onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[86vh] w-full max-w-5xl flex-col overflow-hidden rounded-card bg-raised shadow-xl "
+        className="relative flex shrink-0 flex-col overflow-hidden rounded-card border border-line bg-raised shadow-xl"
       >
+        {resizeHandles}
         <div className="flex shrink-0 items-start justify-between gap-3 border-b border-line px-5 py-4 ">
           <div className="min-w-0">
             <h2 className="text-base font-semibold">{t.datasetPickerTitle}</h2>
@@ -402,13 +416,13 @@ export function DatasetPicker({ onClose, onSelect }: DatasetPickerProps) {
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="grid min-h-0 flex-1 gap-0 overflow-hidden md:grid-cols-[minmax(0,1fr)_280px]">
+        <div className="dataset-picker-layout grid min-h-0 flex-1 gap-0 overflow-hidden">
           {browser}
-          <aside className="flex min-h-0 flex-col border-t border-line md:border-t-0 ">
+          <aside className="dataset-picker-registered flex min-h-0 min-w-0 flex-col overflow-hidden border-line">
             {registeredList}
           </aside>
         </div>
-        <div className="shrink-0 space-y-2 border-t border-line px-5 py-3 ">
+        <div className="max-h-[25%] shrink-0 space-y-2 overflow-y-auto border-t border-line px-5 py-3">
           {operation && (
             <div className="flex items-center gap-2 text-xs text-muted">
               <span className="min-w-0 flex-1 truncate">{operation.message}</span>

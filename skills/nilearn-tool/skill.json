@@ -1,0 +1,217 @@
+{
+  "schema_version": 1,
+  "id": "nilearn-tool",
+  "description": "统筹 nilearn-tool 的 软件方法选择，包括混杂回归与去趋势、BOLD 平滑与时间滤波（保持原空间）、ROI 时间序列与功能连接、任务态一级 GLM等已接入方法。",
+  "method_refs": [
+    {
+      "capability": "skill.nilearn-tool",
+      "method_id": "reviewed-denoise-nilearn-tool",
+      "label": "混杂回归与去趋势",
+      "default_recommended": true,
+      "default_reason": "",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/nilearn-tool/scripts/denoise_timeseries_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.nilearn-tool.denoise"
+    },
+    {
+      "capability": "skill.nilearn-tool",
+      "method_id": "reviewed-preprocess-nilearn-tool",
+      "label": "BOLD 平滑与时间滤波（保持原空间）",
+      "default_recommended": true,
+      "default_reason": "",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/nilearn-tool/scripts/preprocess_bold_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.nilearn-tool.preprocess"
+    },
+    {
+      "capability": "skill.nilearn-tool",
+      "method_id": "reviewed-connectome-nilearn-tool",
+      "label": "ROI 时间序列与功能连接",
+      "default_recommended": true,
+      "default_reason": "",
+      "replaces_operations": [
+        "roi-time-series-extraction",
+        "functional-connectivity-clean"
+      ],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/nilearn-tool/scripts/connectome_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.nilearn-tool.connectome"
+    },
+    {
+      "capability": "skill.nilearn-tool",
+      "method_id": "reviewed-task-glm-nilearn-tool",
+      "label": "任务态一级 GLM",
+      "default_recommended": true,
+      "default_reason": "",
+      "replaces_operations": [
+        "first-level-glm-task-based"
+      ],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/nilearn-tool/scripts/task_glm_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.nilearn-tool.task-glm"
+    },
+    {
+      "capability": "skill.nilearn-tool",
+      "method_id": "reviewed-group-glm-nilearn-tool",
+      "label": "组水平 GLM",
+      "default_recommended": true,
+      "default_reason": "",
+      "replaces_operations": [
+        "group-level-analysis"
+      ],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/nilearn-tool/scripts/second_level_glm_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.nilearn-tool.group-glm"
+    },
+    {
+      "capability": "skill.nilearn-tool",
+      "method_id": "reviewed-ica-nilearn-tool",
+      "label": "静息态 ICA",
+      "default_recommended": true,
+      "default_reason": "",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/nilearn-tool/scripts/rest_ica_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.nilearn-tool.ica"
+    },
+    {
+      "capability": "skill.nilearn-tool",
+      "method_id": "reviewed-dictlearning-nilearn-tool",
+      "label": "静息态 DICTLEARNING",
+      "default_recommended": true,
+      "default_reason": "",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/nilearn-tool/scripts/rest_dictlearning_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.nilearn-tool.dictlearning"
+    },
+    {
+      "capability": "skill.nilearn-tool",
+      "method_id": "reviewed-kmeans-nilearn-tool",
+      "label": "kmeans 空间分区",
+      "default_recommended": true,
+      "default_reason": "",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/nilearn-tool/scripts/kmeans_parcellation_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.nilearn-tool.kmeans"
+    },
+    {
+      "capability": "skill.nilearn-tool",
+      "method_id": "reviewed-hierarchical-nilearn-tool",
+      "label": "hierarchical 空间分区",
+      "default_recommended": true,
+      "default_reason": "",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/nilearn-tool/scripts/hierarchical_parcellation_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.nilearn-tool.hierarchical"
+    },
+    {
+      "capability": "skill.nilearn-tool",
+      "method_id": "reviewed-svm-nilearn-tool",
+      "label": "SVM 分类与交叉验证",
+      "default_recommended": true,
+      "default_reason": "",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/nilearn-tool/scripts/svm_classifier_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.nilearn-tool.svm"
+    },
+    {
+      "capability": "skill.nilearn-tool",
+      "method_id": "reviewed-spacenet-nilearn-tool",
+      "label": "SpaceNet 空间正则分类",
+      "default_recommended": true,
+      "default_reason": "",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/nilearn-tool/scripts/spacenet_classifier_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.nilearn-tool.spacenet"
+    }
+  ],
+  "pipeline_refs": [],
+  "planning_capabilities": [],
+  "selection_rules": [
+    "先确认目标产物和已有输入；只选择必要步骤，已有数据或历史结果优先复用。",
+    "输入缺少时先查询目录并请求用户绑定；不要自动追加生成该输入的步骤。",
+    "独立操作选择 Method；确需固定组合时选择 Pipeline，并检查每一步输入输出。",
+    "软件工具 Skill 用于选择实现，任务 Skill 用于组织需求，不因为同时匹配两类 Skill 重复添加方法。"
+  ],
+  "functions": [
+    {
+      "method_ref": "reviewed.nilearn-tool.denoise",
+      "label": "混杂回归与去趋势",
+      "description": "调用现有实现：skills/nilearn-tool/scripts/denoise_timeseries_reference.py。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.nilearn-tool.preprocess",
+      "label": "BOLD 平滑与时间滤波（保持原空间）",
+      "description": "调用现有实现：skills/nilearn-tool/scripts/preprocess_bold_reference.py。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.nilearn-tool.connectome",
+      "label": "ROI 时间序列与功能连接",
+      "description": "调用现有实现：skills/nilearn-tool/scripts/connectome_reference.py。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.nilearn-tool.task-glm",
+      "label": "任务态一级 GLM",
+      "description": "调用现有实现：skills/nilearn-tool/scripts/task_glm_reference.py。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.nilearn-tool.group-glm",
+      "label": "组水平 GLM",
+      "description": "调用现有实现：skills/nilearn-tool/scripts/second_level_glm_reference.py。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.nilearn-tool.ica",
+      "label": "静息态 ICA",
+      "description": "调用现有实现：skills/nilearn-tool/scripts/rest_ica_reference.py。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.nilearn-tool.dictlearning",
+      "label": "静息态 DICTLEARNING",
+      "description": "调用现有实现：skills/nilearn-tool/scripts/rest_dictlearning_reference.py。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.nilearn-tool.kmeans",
+      "label": "kmeans 空间分区",
+      "description": "调用现有实现：skills/nilearn-tool/scripts/kmeans_parcellation_reference.py。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.nilearn-tool.hierarchical",
+      "label": "hierarchical 空间分区",
+      "description": "调用现有实现：skills/nilearn-tool/scripts/hierarchical_parcellation_reference.py。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.nilearn-tool.svm",
+      "label": "SVM 分类与交叉验证",
+      "description": "调用现有实现：skills/nilearn-tool/scripts/svm_classifier_reference.py。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.nilearn-tool.spacenet",
+      "label": "SpaceNet 空间正则分类",
+      "description": "调用现有实现：skills/nilearn-tool/scripts/spacenet_classifier_reference.py。输入保持只读，输出写入独立任务目录。"
+    }
+  ],
+  "name": "nilearn-tool",
+  "category": [
+    "软件工具",
+    "nilearn"
+  ],
+  "scope": "software",
+  "applicability": [
+    "需要 nilearn-tool 相关处理，且目标涉及：通用生成目录、BOLD 时间序列、ROI 连接矩阵、ROI 时间序列表、Z 统计图、对比效应图。",
+    "查询具体方法并检查对应输入：BOLD 时间序列、分析输入、脑或 DWI Mask、标签图谱；不是要求一次提供目录中所有方法的输入。"
+  ],
+  "limitations": [
+    "格式和样本数量满足仅是必要条件；空间、单位、样本标识与方法假设仍须按所选方法检查。",
+    "这里只统筹已登记入口；目录收录不代表覆盖软件全部命令或参数。",
+    "环境探测与运行证据分别显示；合成数据测试不代表真实数据的科学有效性。",
+    "尚无 Method 的规划能力只能提供说明，不能当作可执行步骤。"
+  ],
+  "examples": []
+}

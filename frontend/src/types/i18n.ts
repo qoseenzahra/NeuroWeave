@@ -198,6 +198,7 @@ export type TranslationKeys = {
   workflowStatusReady: string;
   workflowStatusConfirmed: string;
   workflowPlanAtomic: string;
+  workflowAtomicMethod: string;
   workflowPlanComposite: string;
   workflowExecutionModePlanning: string;
   workflowExecutionModeRunner: string;
@@ -262,6 +263,8 @@ export type TranslationKeys = {
   workflowInputsReady: string;
   workflowInputRequiredLabel: string;
   workflowInputOptionalLabel: string;
+  workflowShowConditionalInputs: string;
+  workflowConditionalInputHint: string;
   workflowInputUnresolved: string;
   workflowInputFromUpstream: string;
   workflowInputPerSample: string;
@@ -515,6 +518,7 @@ export type TranslationKeys = {
   workspaceToolRename: string;
   workspaceToolDelete: string;
   workspaceFoundCount: string;
+  workspaceOutputRequired: string;
   workspaceOutputTitle: string;
   workspaceOutputAdjust: string;
   workspaceOutputAria: string;

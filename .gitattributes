@@ -1,0 +1,2 @@
+# Preserve original software help snapshots, including upstream trailing spaces.
+deploy/software-contracts/mrtrix3/*.usage.txt -whitespace

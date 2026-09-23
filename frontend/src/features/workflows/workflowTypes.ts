@@ -51,6 +51,7 @@ export type InputSlotSpec = {
   description: string;
   required: boolean;
   required_when: Record<string, ParameterValue[]>;
+  required_when_any?: Record<string, ParameterValue[]>[];
   cardinality: 'one' | 'many';
   binding: 'file' | 'folder' | 'file_bundle' | 'artifact';
   formats: string[];
@@ -139,6 +140,7 @@ export type ExecutionRecipe = {
 };
 
 export type MethodOption = {
+  definition_id?: string; definition_version?: string; entry_kind?: 'method' | 'pipeline' | 'capability';
   id: string;
   skill_id: string;
   label: string;

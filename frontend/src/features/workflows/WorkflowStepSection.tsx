@@ -37,7 +37,7 @@ function methodExecutionLabel(method: MethodOption, t: TranslationKeys): string 
           '{{count}}',
           String(method.execution_recipe.steps.length)
         )
-      : 'Runner';
+      : t.workflowAtomicMethod;
   }
   const key = RESOLUTION_KEYS[method.execution_resolution?.state ?? ''];
   return key ? t[key] : t.workflowResolutionPlanningOnly;

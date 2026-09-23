@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "id": "nii2dcm",
+  "description": "统筹 nii2dcm 的 软件方法选择，包括nii2dcm 实际转换。",
+  "method_refs": [
+    {
+      "capability": "skill.nii2dcm",
+      "method_id": "nii2dcm-local-environment",
+      "label": "nii2dcm 实际转换",
+      "default_recommended": true,
+      "default_reason": "配置已有 nii2dcm 环境后可直接启用；当前环境缺失时会明确禁用。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "把一个 3D NIfTI 转换为研究用途的单帧 DICOM 序列；可从参考 DICOM 复制元数据。",
+      "method_ref": "nii2dcm.convert"
+    }
+  ],
+  "pipeline_refs": [],
+  "planning_capabilities": [],
+  "selection_rules": [
+    "先确认目标产物和已有输入；只选择必要步骤，已有数据或历史结果优先复用。",
+    "输入缺少时先查询目录并请求用户绑定；不要自动追加生成该输入的步骤。",
+    "独立操作选择 Method；确需固定组合时选择 Pipeline，并检查每一步输入输出。",
+    "软件工具 Skill 用于选择实现，任务 Skill 用于组织需求，不因为同时匹配两类 Skill 重复添加方法。"
+  ],
+  "functions": [
+    {
+      "method_ref": "nii2dcm.convert",
+      "label": "nii2dcm 实际转换",
+      "description": "把一个 3D NIfTI 转换为研究用途的单帧 DICOM 序列；可从参考 DICOM 复制元数据。"
+    }
+  ],
+  "name": "nii2dcm",
+  "category": [
+    "软件工具",
+    "nii2dcm"
+  ],
+  "scope": "software",
+  "applicability": [
+    "需要 nii2dcm 相关处理，且目标涉及：通用生成目录、执行日志。",
+    "查询具体方法并检查对应输入：影像或工具输入；不是要求一次提供目录中所有方法的输入。"
+  ],
+  "limitations": [
+    "格式和样本数量满足仅是必要条件；空间、单位、样本标识与方法假设仍须按所选方法检查。",
+    "这里只统筹已登记入口；目录收录不代表覆盖软件全部命令或参数。",
+    "环境探测与运行证据分别显示；合成数据测试不代表真实数据的科学有效性。",
+    "尚无 Method 的规划能力只能提供说明，不能当作可执行步骤。"
+  ],
+  "examples": []
+}

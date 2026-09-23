@@ -1,0 +1,11 @@
+{
+  "method_id": "mrtrix.command.dwidenoise",
+  "method_version": "1",
+  "execution_fingerprint": "6a2143e0a89d69e5014397b30e73a115f46cbfccd8d06392f00ace4272cf7205",
+  "report_path": "deploy/method-verification/reports/mrtrix-synthetic.json",
+  "report_sha256": "6d8310d324da36a02a25dcc2bddf145f22aa4783712ddddadd55abe0808bcb30",
+  "test_type": "synthetic",
+  "tested_at": "2026-09-23T08:17:03.620290+00:00",
+  "environment": "== tckgen 3.0.8 ==; Linux CPU, 1 thread",
+  "result": "passed"
+}

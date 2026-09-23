@@ -21,7 +21,8 @@ from app.run_models import RunArtifact
 from app.workflow_models import InputBinding
 import test_slurm_run_service as slurm_fixtures
 
-NOW = "2026-09-08T00:00:00+00:00"
+from datetime import datetime, timezone
+NOW = datetime.now(timezone.utc).isoformat()
 
 
 @pytest.fixture

@@ -4,7 +4,7 @@
   "root": {
     "id": "localflow-capabilities",
     "label": "NeuroWeave 本地数据处理能力",
-    "description": "完整索引所有现有 Skill；先按能力定位，再只读取命中的 SKILL.md。所有 Skill 都有结构化规划 Manifest；只有受审 runner 能力可生成执行预览。",
+    "description": "完整索引所有现有 Skill；先按能力定位，再读取命中的原生 Skill 定义和 Method 契约。Skill 引用独立方法与组合流程；只有受审 Runner 可生成执行预览。",
     "execution_level": "category",
     "children": [
       {
@@ -173,7 +173,7 @@
                   "dwi-skill",
                   "fsl-tool"
                 ],
-                "execution_level": "planning"
+                "execution_level": "structured"
               },
               {
                 "id": "dwi.connectome",
@@ -229,17 +229,10 @@
             "children": [
               {
                 "id": "skill.abcd-skill",
-                "label": "Abcd Skill",
-                "description": "Use this skill whenever the user wants an end-to-end workflow for the ABCD Study dataset, including download via NIMH Data Archive, BIDS organization, and multimodal processing of sMRI, fMRI, and dMRI.",
+                "label": "abcd-skill",
+                "description": "统筹 abcd-skill 的 任务处理，包括abcd 质控汇总、abcd 表型/刺激提取、abcd 复制整理为 BIDS 目录。",
                 "keywords": [
                   "abcd-skill",
-                  "Abcd Skill",
-                  "Use",
-                  "ABCD",
-                  "Study",
-                  "NIMH",
-                  "Data",
-                  "Archive",
                   "BIDS"
                 ],
                 "skill_ids": [
@@ -249,17 +242,10 @@
               },
               {
                 "id": "skill.aomic-skill",
-                "label": "Aomic Skill",
-                "description": "Use this skill whenever the user wants an end-to-end workflow for the AOMIC (Amsterdam Open MRI Collection) dataset, including data access, BIDS organization, and multimodal processing of sMRI, rs-fMRI, and task-fMRI.",
+                "label": "aomic-skill",
+                "description": "统筹 aomic-skill 的 任务处理，包括aomic 质控汇总、aomic 表型/刺激提取、aomic 复制整理为 BIDS 目录。",
                 "keywords": [
                   "aomic-skill",
-                  "Aomic Skill",
-                  "Use",
-                  "AOMIC",
-                  "Amsterdam",
-                  "Open",
-                  "MRI",
-                  "Collection",
                   "BIDS"
                 ],
                 "skill_ids": [
@@ -269,19 +255,11 @@
               },
               {
                 "id": "skill.camcan-skill",
-                "label": "Camcan Skill",
-                "description": "Use this skill whenever the user wants an end-to-end workflow for the Cam-CAN (Cambridge Centre for Ageing and Neuroscience) dataset, including BIDS validation, multimodal processing of sMRI, rs-fMRI, task-fMRI, and MEG, phenotype extraction, and QC integra...",
+                "label": "camcan-skill",
+                "description": "统筹 camcan-skill 的 任务处理，包括camcan 质控汇总、camcan 表型/刺激提取、camcan 数据校验、FSL 完整结构预处理（fsl_anat）等已接入方法。",
                 "keywords": [
                   "camcan-skill",
-                  "Camcan Skill",
-                  "Use",
-                  "Cam-CAN",
-                  "Cambridge",
-                  "Centre",
-                  "Ageing",
-                  "Neuroscience",
-                  "BIDS",
-                  "MEG"
+                  "FSL"
                 ],
                 "skill_ids": [
                   "camcan-skill"
@@ -290,18 +268,11 @@
               },
               {
                 "id": "skill.hbn-skill",
-                "label": "Hbn Skill",
-                "description": "Use this skill whenever the user wants an end-to-end workflow for the Healthy Brain Network (HBN) dataset, including download, BIDS organization, and multimodal processing of sMRI, dMRI, rs-fMRI, task-fMRI, and EEG data.",
+                "label": "hbn-skill",
+                "description": "统筹 hbn-skill 的 任务处理，包括hbn 表型/刺激提取、hbn 质控汇总、hbn 复制整理为 BIDS 目录。",
                 "keywords": [
                   "hbn-skill",
-                  "Hbn Skill",
-                  "Use",
-                  "Healthy",
-                  "Brain",
-                  "Network",
-                  "HBN",
-                  "BIDS",
-                  "EEG"
+                  "BIDS"
                 ],
                 "skill_ids": [
                   "hbn-skill"
@@ -310,16 +281,12 @@
               },
               {
                 "id": "skill.hcpa-skill",
-                "label": "Hcpa Skill",
-                "description": "Use this skill whenever the user wants an end-to-end workflow for the HCP Aging (HCP-A) dataset, including dataset download, BIDS organization, and multimodal processing of sMRI, fMRI, and dMRI.",
+                "label": "hcpa-skill",
+                "description": "统筹 hcpa-skill 的 任务处理，包括hcpa 表型/刺激提取、hcpa 质控汇总、hcpa 复制整理为 BIDS 目录、FSL 完整结构预处理（fsl_anat）等已接入方法。",
                 "keywords": [
                   "hcpa-skill",
-                  "Hcpa Skill",
-                  "Use",
-                  "HCP",
-                  "Aging",
-                  "HCP-A",
-                  "BIDS"
+                  "BIDS",
+                  "FSL"
                 ],
                 "skill_ids": [
                   "hcpa-skill"
@@ -328,16 +295,12 @@
               },
               {
                 "id": "skill.hcpd-skill",
-                "label": "Hcpd Skill",
-                "description": "Use this skill whenever the user wants an end-to-end workflow for the HCP Development (HCP-D) dataset, including dataset download, BIDS organization, and multimodal processing of sMRI, fMRI, and dMRI.",
+                "label": "hcpd-skill",
+                "description": "统筹 hcpd-skill 的 任务处理，包括hcpd 表型/刺激提取、hcpd 质控汇总、hcpd 复制整理为 BIDS 目录、FSL 完整结构预处理（fsl_anat）等已接入方法。",
                 "keywords": [
                   "hcpd-skill",
-                  "Hcpd Skill",
-                  "Use",
-                  "HCP",
-                  "Development",
-                  "HCP-D",
-                  "BIDS"
+                  "BIDS",
+                  "FSL"
                 ],
                 "skill_ids": [
                   "hcpd-skill"
@@ -346,18 +309,12 @@
               },
               {
                 "id": "skill.hcpya-skill",
-                "label": "Hcpya Skill",
-                "description": "Use this skill whenever the user wants an end-to-end workflow for the HCP Young Adult (HCP-YA / HCP1200) dataset, including dataset download, BIDS organization, and multimodal processing of sMRI, fMRI, and dMRI.",
+                "label": "hcpya-skill",
+                "description": "统筹 hcpya-skill 的 任务处理，包括hcpya 表型/刺激提取、hcpya 质控汇总、hcpya 复制整理为 BIDS 目录、FSL 完整结构预处理（fsl_anat）等已接入方法。",
                 "keywords": [
                   "hcpya-skill",
-                  "Hcpya Skill",
-                  "Use",
-                  "HCP",
-                  "Young",
-                  "Adult",
-                  "HCP-YA",
-                  "HCP1200",
-                  "BIDS"
+                  "BIDS",
+                  "FSL"
                 ],
                 "skill_ids": [
                   "hcpya-skill"
@@ -366,19 +323,12 @@
               },
               {
                 "id": "skill.ixi-skill",
-                "label": "Ixi Skill",
-                "description": "Use this skill whenever the user wants an end-to-end workflow for the IXI (Information eXtraction from Images) dataset, including data download, BIDS organization, and multimodal processing of T1w, T2w, and MRA.",
+                "label": "ixi-skill",
+                "description": "统筹 ixi-skill 的 任务处理，包括ixi 质控汇总、ixi 复制整理为 BIDS 目录、FSL 完整结构预处理（fsl_anat）。",
                 "keywords": [
                   "ixi-skill",
-                  "Ixi Skill",
-                  "Use",
-                  "IXI",
-                  "Information",
-                  "Images",
                   "BIDS",
-                  "T1w",
-                  "T2w",
-                  "MRA"
+                  "FSL"
                 ],
                 "skill_ids": [
                   "ixi-skill"
@@ -387,17 +337,11 @@
               },
               {
                 "id": "skill.pnc-skill",
-                "label": "Pnc Skill",
-                "description": "Use this skill whenever the user wants an end-to-end workflow for the Philadelphia Neurodevelopmental Cohort (PNC) dataset, including BIDS validation, multimodal processing of sMRI, rs-fMRI, task-fMRI, and dMRI, phenotype extraction, and QC integration.",
+                "label": "pnc-skill",
+                "description": "统筹 pnc-skill 的 任务处理，包括pnc 表型/刺激提取、pnc 质控汇总、pnc 数据校验、FSL 完整结构预处理（fsl_anat）等已接入方法。",
                 "keywords": [
                   "pnc-skill",
-                  "Pnc Skill",
-                  "Use",
-                  "Philadelphia",
-                  "Cohort",
-                  "PNC",
-                  "BIDS",
-                  "QC"
+                  "FSL"
                 ],
                 "skill_ids": [
                   "pnc-skill"
@@ -406,15 +350,10 @@
               },
               {
                 "id": "skill.ukb-skill",
-                "label": "Ukb Skill",
-                "description": "Use this skill whenever the user wants to analyze already available UK Biobank data for brain-related research, including neurological outcomes, cognitive phenotypes, brain MRI derived phenotypes, survival analysis, subgroup analysis, propensity score analy...",
+                "label": "ukb-skill",
+                "description": "统筹 ukb-skill 的 任务处理，包括UKB 生存分析数据表、ukb 表型/刺激提取、ukb 质控汇总、xgb_cox等已接入方法。",
                 "keywords": [
-                  "ukb-skill",
-                  "Ukb Skill",
-                  "Use",
-                  "UK",
-                  "Biobank",
-                  "MRI"
+                  "ukb-skill"
                 ],
                 "skill_ids": [
                   "ukb-skill"
@@ -430,18 +369,10 @@
             "children": [
               {
                 "id": "skill.abide-skill",
-                "label": "Abide Skill",
-                "description": "Use this skill whenever the user wants an end-to-end workflow for the ABIDE (Autism Brain Imaging Data Exchange) dataset, including download, BIDS organization, and processing of sMRI and rs-fMRI data.",
+                "label": "abide-skill",
+                "description": "统筹 abide-skill 的 任务处理，包括abide 质控汇总、abide 表型/刺激提取、abide 复制整理为 BIDS 目录。",
                 "keywords": [
                   "abide-skill",
-                  "Abide Skill",
-                  "Use",
-                  "ABIDE",
-                  "Autism",
-                  "Brain",
-                  "Imaging",
-                  "Data",
-                  "Exchange",
                   "BIDS"
                 ],
                 "skill_ids": [
@@ -451,13 +382,10 @@
               },
               {
                 "id": "skill.adhd200-skill",
-                "label": "Adhd200 Skill",
-                "description": "Use this skill whenever the user wants an end-to-end workflow for the ADHD-200 dataset, including download, BIDS organization, and processing of sMRI and rs-fMRI data.",
+                "label": "adhd200-skill",
+                "description": "统筹 adhd200-skill 的 任务处理，包括adhd200 质控汇总、adhd200 表型/刺激提取、adhd200 复制整理为 BIDS 目录。",
                 "keywords": [
                   "adhd200-skill",
-                  "Adhd200 Skill",
-                  "Use",
-                  "ADHD-200",
                   "BIDS"
                 ],
                 "skill_ids": [
@@ -467,17 +395,10 @@
               },
               {
                 "id": "skill.adni-skill",
-                "label": "Adni Skill",
-                "description": "Use this skill whenever the user wants an end-to-end workflow for ADNI data (fMRI + T1), including BIDS preparation, fMRIPrep preprocessing, and DK68 ROI pipeline.",
+                "label": "adni-skill",
+                "description": "统筹 adni-skill 的 任务处理，包括数据集巡检、dcm2niix 实际转换。",
                 "keywords": [
-                  "adni-skill",
-                  "Adni Skill",
-                  "Use",
-                  "ADNI",
-                  "T1",
-                  "BIDS",
-                  "DK68",
-                  "ROI"
+                  "adni-skill"
                 ],
                 "skill_ids": [
                   "adni-skill"
@@ -486,19 +407,11 @@
               },
               {
                 "id": "skill.aibl-skill",
-                "label": "Aibl Skill",
-                "description": "Use this skill whenever the user wants an end-to-end workflow for the AIBL (Australian Imaging, Biomarkers and Lifestyle) dataset, including data access guidance, BIDS organization, and multimodal processing of sMRI and PET (PiB, FDG, tau).",
+                "label": "aibl-skill",
+                "description": "统筹 aibl-skill 的 任务处理，包括aibl 质控汇总、aibl 表型/刺激提取、aibl 复制整理为 BIDS 目录。",
                 "keywords": [
                   "aibl-skill",
-                  "Aibl Skill",
-                  "Use",
-                  "AIBL",
-                  "Australian",
-                  "Imaging",
-                  "Biomarkers",
-                  "Lifestyle",
-                  "BIDS",
-                  "PET"
+                  "BIDS"
                 ],
                 "skill_ids": [
                   "aibl-skill"
@@ -507,13 +420,10 @@
               },
               {
                 "id": "skill.cobre-skill",
-                "label": "Cobre Skill",
-                "description": "Use this skill whenever the user wants an end-to-end workflow for the COBRE dataset, including download, BIDS organization, and processing of sMRI and rs-fMRI data for schizophrenia research.",
+                "label": "cobre-skill",
+                "description": "统筹 cobre-skill 的 任务处理，包括cobre 质控汇总、cobre 表型/刺激提取、cobre 复制整理为 BIDS 目录。",
                 "keywords": [
                   "cobre-skill",
-                  "Cobre Skill",
-                  "Use",
-                  "COBRE",
                   "BIDS"
                 ],
                 "skill_ids": [
@@ -523,17 +433,12 @@
               },
               {
                 "id": "skill.hcpep-skill",
-                "label": "Hcpep Skill",
-                "description": "Use this skill whenever the user wants an end-to-end workflow for the HCP Early Psychosis (HCP-EP) dataset, including dataset download, BIDS organization, and multimodal processing of sMRI, fMRI, and dMRI.",
+                "label": "hcpep-skill",
+                "description": "统筹 hcpep-skill 的 任务处理，包括hcpep 表型/刺激提取、hcpep 质控汇总、hcpep 复制整理为 BIDS 目录、FSL 完整结构预处理（fsl_anat）等已接入方法。",
                 "keywords": [
                   "hcpep-skill",
-                  "Hcpep Skill",
-                  "Use",
-                  "HCP",
-                  "Early",
-                  "Psychosis",
-                  "HCP-EP",
-                  "BIDS"
+                  "BIDS",
+                  "FSL"
                 ],
                 "skill_ids": [
                   "hcpep-skill"
@@ -542,19 +447,11 @@
               },
               {
                 "id": "skill.mnd-skill",
-                "label": "Mnd Skill",
-                "description": "Use this skill whenever the user wants an end-to-end workflow for the Motor Neuron Disease (MND) dataset from OpenNeuro ds005874, including BIDS validation, multimodal processing of rs-fMRI and task-fMRI, phenotype extraction, and QC integration.",
+                "label": "mnd-skill",
+                "description": "统筹 mnd-skill 的 任务处理，包括mnd 表型/刺激提取、mnd 质控汇总、mnd 数据校验、FSL 完整结构预处理（fsl_anat）等已接入方法。",
                 "keywords": [
                   "mnd-skill",
-                  "Mnd Skill",
-                  "Use",
-                  "Motor",
-                  "Neuron",
-                  "Disease",
-                  "MND",
-                  "OpenNeuro",
-                  "BIDS",
-                  "QC"
+                  "FSL"
                 ],
                 "skill_ids": [
                   "mnd-skill"
@@ -563,19 +460,10 @@
               },
               {
                 "id": "skill.mschallenge-skill",
-                "label": "Mschallenge Skill",
-                "description": "Use this skill whenever the user wants an end-to-end workflow for the Longitudinal MS Lesion Segmentation Challenge dataset, including data validation, multimodal processing of T1w, T2w, FLAIR, and PD, lesion segmentation, and QC integration.",
+                "label": "mschallenge-skill",
+                "description": "统筹 mschallenge-skill 的 任务处理，包括病灶负荷统计、纵向病灶变化、mschallenge 质控汇总、mschallenge 数据校验等已接入方法。",
                 "keywords": [
-                  "mschallenge-skill",
-                  "Mschallenge Skill",
-                  "Use",
-                  "Longitudinal",
-                  "MS",
-                  "Lesion",
-                  "Segmentation",
-                  "Challenge",
-                  "T1w",
-                  "T2w"
+                  "mschallenge-skill"
                 ],
                 "skill_ids": [
                   "mschallenge-skill"
@@ -584,18 +472,11 @@
               },
               {
                 "id": "skill.nifd-skill",
-                "label": "Nifd Skill",
-                "description": "Use this skill whenever the user wants an end-to-end workflow for the Neuroimaging in Frontotemporal Dementia (NIFD) dataset, including BIDS validation, multimodal processing of sMRI, rs-fMRI, and dMRI, phenotype extraction, and QC integration.",
+                "label": "nifd-skill",
+                "description": "统筹 nifd-skill 的 任务处理，包括nifd 表型/刺激提取、nifd 质控汇总、nifd 数据校验、FSL 完整结构预处理（fsl_anat）等已接入方法。",
                 "keywords": [
                   "nifd-skill",
-                  "Nifd Skill",
-                  "Use",
-                  "Neuroimaging",
-                  "Frontotemporal",
-                  "Dementia",
-                  "NIFD",
-                  "BIDS",
-                  "QC"
+                  "FSL"
                 ],
                 "skill_ids": [
                   "nifd-skill"
@@ -604,19 +485,11 @@
               },
               {
                 "id": "skill.oasis-skill",
-                "label": "Oasis Skill",
-                "description": "Use this skill whenever the user wants an end-to-end workflow for the OASIS (Open Access Series of Imaging Studies) dataset, including BIDS validation, multimodal processing of sMRI, and phenotype extraction for aging and Alzheimer's disease research.",
+                "label": "oasis-skill",
+                "description": "统筹 oasis-skill 的 任务处理，包括oasis 表型/刺激提取、oasis 质控汇总、oasis 数据校验、FSL 完整结构预处理（fsl_anat）。",
                 "keywords": [
                   "oasis-skill",
-                  "Oasis Skill",
-                  "Use",
-                  "OASIS",
-                  "Open",
-                  "Access",
-                  "Series",
-                  "Imaging",
-                  "Studies",
-                  "BIDS"
+                  "FSL"
                 ],
                 "skill_ids": [
                   "oasis-skill"
@@ -625,19 +498,11 @@
               },
               {
                 "id": "skill.ppmi-skill",
-                "label": "Ppmi Skill",
-                "description": "Use this skill whenever the user wants an end-to-end workflow for the Parkinson's Progression Markers Initiative (PPMI) dataset, including BIDS validation, multimodal processing of sMRI, rs-fMRI, and dMRI, phenotype extraction, and QC integration.",
+                "label": "ppmi-skill",
+                "description": "统筹 ppmi-skill 的 任务处理，包括ppmi 表型/刺激提取、ppmi 质控汇总、ppmi 数据校验、FSL 完整结构预处理（fsl_anat）等已接入方法。",
                 "keywords": [
                   "ppmi-skill",
-                  "Ppmi Skill",
-                  "Use",
-                  "Parkinson",
-                  "Progression",
-                  "Markers",
-                  "Initiative",
-                  "PPMI",
-                  "BIDS",
-                  "QC"
+                  "FSL"
                 ],
                 "skill_ids": [
                   "ppmi-skill"
@@ -646,19 +511,10 @@
               },
               {
                 "id": "skill.rest-mneta-mdd-skill",
-                "label": "Rest Mneta Mdd Skill",
-                "description": "Use this skill whenever the user wants an end-to-end workflow for the REST-meta-MDD (Resting-State Meta-Major Depressive Disorder) dataset, including BIDS validation, processing of rs-fMRI, phenotype extraction, and QC integration.",
+                "label": "rest-mneta-mdd-skill",
+                "description": "统筹 rest-mneta-mdd-skill 的 任务处理，包括站点协变量校正、rest-mneta-mdd 表型/刺激提取、rest-mneta-mdd 质控汇总、rest-mneta-mdd 数据校验等已接入方法。",
                 "keywords": [
-                  "rest-mneta-mdd-skill",
-                  "Rest Mneta Mdd Skill",
-                  "Use",
-                  "REST-meta-MDD",
-                  "Resting-State",
-                  "Meta-Major",
-                  "Depressive",
-                  "Disorder",
-                  "BIDS",
-                  "QC"
+                  "rest-mneta-mdd-skill"
                 ],
                 "skill_ids": [
                   "rest-mneta-mdd-skill"
@@ -667,18 +523,11 @@
               },
               {
                 "id": "skill.tcp-skill",
-                "label": "Tcp Skill",
-                "description": "Use this skill whenever the user wants an end-to-end workflow for the Transdiagnostic Connectome Project (TCP) dataset, including BIDS validation, multimodal processing of sMRI, rs-fMRI, and dMRI, phenotype extraction, and QC integration.",
+                "label": "tcp-skill",
+                "description": "统筹 tcp-skill 的 任务处理，包括tcp 表型/刺激提取、tcp 质控汇总、tcp 数据校验、FSL 完整结构预处理（fsl_anat）等已接入方法。",
                 "keywords": [
                   "tcp-skill",
-                  "Tcp Skill",
-                  "Use",
-                  "Transdiagnostic",
-                  "Connectome",
-                  "Project",
-                  "TCP",
-                  "BIDS",
-                  "QC"
+                  "FSL"
                 ],
                 "skill_ids": [
                   "tcp-skill"
@@ -687,19 +536,11 @@
               },
               {
                 "id": "skill.ucla-cnp-skill",
-                "label": "Ucla Cnp Skill",
-                "description": "Use this skill whenever the user wants an end-to-end workflow for the UCLA CNP (Consortium for Neuropsychiatric Phenomics) dataset, including BIDS validation, multimodal processing of sMRI, task-fMRI, and dMRI, phenotype extraction, and QC integration.",
+                "label": "ucla-cnp-skill",
+                "description": "统筹 ucla-cnp-skill 的 任务处理，包括ucla-cnp 表型/刺激提取、ucla-cnp 质控汇总、ucla-cnp 数据校验、FSL 完整结构预处理（fsl_anat）等已接入方法。",
                 "keywords": [
                   "ucla-cnp-skill",
-                  "Ucla Cnp Skill",
-                  "Use",
-                  "UCLA",
-                  "CNP",
-                  "Consortium",
-                  "Neuropsychiatric",
-                  "Phenomics",
-                  "BIDS",
-                  "QC"
+                  "FSL"
                 ],
                 "skill_ids": [
                   "ucla-cnp-skill"
@@ -715,13 +556,10 @@
             "children": [
               {
                 "id": "skill.bold5000-skill",
-                "label": "Bold5000 Skill",
-                "description": "Use this skill whenever the user wants an end-to-end workflow for the BOLD5000 dataset, including download, BIDS organization, and processing of task-fMRI data with visual image stimuli.",
+                "label": "bold5000-skill",
+                "description": "统筹 bold5000-skill 的 任务处理，包括bold5000 质控汇总、bold5000 表型/刺激提取、bold5000 复制整理为 BIDS 目录。",
                 "keywords": [
                   "bold5000-skill",
-                  "Bold5000 Skill",
-                  "Use",
-                  "BOLD5000",
                   "BIDS"
                 ],
                 "skill_ids": [
@@ -731,13 +569,10 @@
               },
               {
                 "id": "skill.dmt-har-med-skill",
-                "label": "Dmt Har Med Skill",
-                "description": "Use this skill whenever the user wants an end-to-end workflow for the DMT-HAR-MED dataset (ds006644), including download, BIDS organization, and processing of rs-fMRI data from a psychedelic intervention study.",
+                "label": "dmt-har-med-skill",
+                "description": "统筹 dmt-har-med-skill 的 任务处理，包括dmt-har-med 质控汇总、dmt-har-med 表型/刺激提取、dmt-har-med 复制整理为 BIDS 目录。",
                 "keywords": [
                   "dmt-har-med-skill",
-                  "Dmt Har Med Skill",
-                  "Use",
-                  "DMT-HAR-MED",
                   "BIDS"
                 ],
                 "skill_ids": [
@@ -747,19 +582,11 @@
               },
               {
                 "id": "skill.nsd-skill",
-                "label": "Nsd Skill",
-                "description": "Use this skill whenever the user wants an end-to-end workflow for the Natural Scenes Dataset (NSD), including data access, BIDS validation, multimodal processing of task-fMRI and structural MRI, stimulus metadata extraction, and QC integration.",
+                "label": "nsd-skill",
+                "description": "统筹 nsd-skill 的 任务处理，包括nsd 表型/刺激提取、nsd 质控汇总、nsd 数据校验、FSL 完整结构预处理（fsl_anat）等已接入方法。",
                 "keywords": [
                   "nsd-skill",
-                  "Nsd Skill",
-                  "Use",
-                  "Natural",
-                  "Scenes",
-                  "Dataset",
-                  "NSD",
-                  "BIDS",
-                  "MRI",
-                  "QC"
+                  "FSL"
                 ],
                 "skill_ids": [
                   "nsd-skill"
@@ -768,14 +595,12 @@
               },
               {
                 "id": "skill.scan-skill",
-                "label": "Scan Skill",
-                "description": "Use this skill to turn an approved SCAN export into an auditable multimodal workflow. Keep access control, identifier handling, staging, phenotype linkage, and modality processing explicit.",
+                "label": "scan-skill",
+                "description": "统筹 scan-skill 的 任务处理，包括按显式键连接已批准的表格、BIDS Organizer、数据集巡检、dcm2niix 实际转换等已接入方法。",
                 "keywords": [
                   "scan-skill",
-                  "Scan Skill",
-                  "Use",
-                  "SCAN",
-                  "Keep"
+                  "BIDS",
+                  "Organizer"
                 ],
                 "skill_ids": [
                   "scan-skill"
@@ -791,17 +616,13 @@
             "children": [
               {
                 "id": "skill.seed-iv-skill",
-                "label": "Seed Iv Skill",
-                "description": "Use this skill whenever the user wants an end-to-end workflow for the SEED-IV (SJTU Emotion EEG Dataset - 4 emotions) dataset, including EEG validation, preprocessing, feature extraction, and emotion classification.",
+                "label": "seed-iv-skill",
+                "description": "统筹 seed-iv-skill 的 任务处理，包括SEED 频带特征提取、SEED 按受试者留一交叉验证、seed-iv 数据校验、EEG/MEG 数据检查等已接入方法。",
                 "keywords": [
                   "seed-iv-skill",
-                  "Seed Iv Skill",
-                  "Use",
-                  "SEED-IV",
-                  "SJTU",
-                  "Emotion",
+                  "SEED",
                   "EEG",
-                  "Dataset"
+                  "MEG"
                 ],
                 "skill_ids": [
                   "seed-iv-skill"
@@ -810,18 +631,13 @@
               },
               {
                 "id": "skill.seed-vig-skill",
-                "label": "Seed Vig Skill",
-                "description": "Use this skill whenever the user wants an end-to-end workflow for the SEED-VIG (SJTU Emotion EEG Dataset - Vigilance) dataset, including EEG validation, preprocessing, feature extraction, and vigilance/fatigue detection.",
+                "label": "seed-vig-skill",
+                "description": "统筹 seed-vig-skill 的 任务处理，包括SEED 频带特征提取、SEED 按受试者留一交叉验证、seed-vig 数据校验、EEG/MEG 数据检查等已接入方法。",
                 "keywords": [
                   "seed-vig-skill",
-                  "Seed Vig Skill",
-                  "Use",
-                  "SEED-VIG",
-                  "SJTU",
-                  "Emotion",
+                  "SEED",
                   "EEG",
-                  "Dataset",
-                  "Vigilance"
+                  "MEG"
                 ],
                 "skill_ids": [
                   "seed-vig-skill"
@@ -846,18 +662,13 @@
               {
                 "id": "skill.asl-skill",
                 "label": "ASL 灌注成像处理",
-                "description": "Use this skill whenever the user wants to process Arterial Spin Labeling (ASL) perfusion MRI data including CBF (cerebral blood flow) quantification, ASL preprocessing (motion correction, partial volume correction, M0 normalization), or ASL-based brain perf...",
+                "description": "统筹 asl-skill 的 任务处理，包括ASL CBF 实际定量、FSL 应用形变、分区影像统计。",
                 "keywords": [
                   "asl-skill",
-                  "Asl Skill",
                   "ASL",
                   "CBF",
                   "脑灌注",
-                  "Use",
-                  "Arterial",
-                  "Spin",
-                  "Labeling",
-                  "MRI"
+                  "FSL"
                 ],
                 "skill_ids": [
                   "asl-skill"
@@ -867,21 +678,15 @@
               {
                 "id": "skill.dwi-skill",
                 "label": "DWI 扩散成像工作流",
-                "description": "Use this skill whenever the user wants to preprocess diffusion MRI / DWI data, compute diffusion metrics (FA/MD/AD/RD, etc.), extract ROI-wise diffusion features, or run tractography/connectome-related workflows.",
+                "description": "组织扩散 MRI 的预处理、响应函数与 FOD 估计、组织约束纤维追踪及连接组分析。",
                 "keywords": [
                   "dwi-skill",
-                  "Dwi Skill",
                   "DWI",
                   "DTI",
                   "扩散磁共振",
                   "纤维追踪",
-                  "Use",
                   "MRI",
-                  "FA",
-                  "MD",
-                  "AD",
-                  "RD",
-                  "ROI-wise"
+                  "FOD"
                 ],
                 "skill_ids": [
                   "dwi-skill"
@@ -891,15 +696,17 @@
               {
                 "id": "skill.eeg-skill",
                 "label": "EEG 脑电处理工作流",
-                "description": "Use this skill whenever the user wants to load, preprocess, epoch, filter, or extract features from EEG data (resting-state, task-based, BCI, clinical, motor imagery, emotion, epilepsy, fatigue, etc.).",
+                "description": "统筹 eeg-skill 的 任务处理，包括EEG/MEG 数据检查、MNE LOF 坏导联检测与插值、EEG/MEG 滤波与降采样、MNE ICA 分解与指定成分去除等已接入方法。",
                 "keywords": [
                   "eeg-skill",
-                  "Eeg Skill",
                   "EEG",
                   "脑电",
                   "ERP",
                   "BCI",
-                  "Use"
+                  "MEG",
+                  "MNE",
+                  "LOF",
+                  "ICA"
                 ],
                 "skill_ids": [
                   "eeg-skill"
@@ -909,19 +716,14 @@
               {
                 "id": "skill.fmri-skill",
                 "label": "fMRI 功能成像工作流",
-                "description": "Use this skill whenever the user wants to perform fMRI preprocessing, first-level analysis, ROI extraction, functional connectivity, effective connectivity, or atlas-based alignment to MNI152 space using either fMRIPrep, HCP-style pipelines, or CONN Toolbox...",
+                "description": "统筹 fmri-skill 的 任务处理，包括ROI 时间序列与功能连接、任务态一级 GLM、组水平 GLM、FSL 运动校正等已接入方法。",
                 "keywords": [
                   "fmri-skill",
-                  "Fmri Skill",
                   "fMRI",
                   "功能磁共振",
                   "功能连接",
-                  "Use",
-                  "ROI",
-                  "MNI152",
-                  "HCP-style",
-                  "CONN",
-                  "Toolbox"
+                  "GLM",
+                  "FSL"
                 ],
                 "skill_ids": [
                   "fmri-skill"
@@ -931,16 +733,16 @@
               {
                 "id": "skill.meg-skill",
                 "label": "MEG 脑磁处理工作流",
-                "description": "Use this skill whenever the user wants to process MEG (magnetoencephalography) data including source localization, time-frequency analysis, connectivity analysis, sensor-level preprocessing, or MEG-specific feature extraction.",
+                "description": "统筹 meg-skill 的 任务处理，包括EEG/MEG 数据检查、EEG/MEG 滤波与降采样、MNE ICA 分解与指定成分去除、重参考与分段等已接入方法。",
                 "keywords": [
                   "meg-skill",
-                  "Meg Skill",
                   "MEG",
                   "脑磁",
                   "源定位",
                   "时频分析",
-                  "Use",
-                  "MEG-specific"
+                  "EEG",
+                  "MNE",
+                  "ICA"
                 ],
                 "skill_ids": [
                   "meg-skill"
@@ -950,18 +752,13 @@
               {
                 "id": "skill.pet-skill",
                 "label": "PET 成像处理工作流",
-                "description": "Use this skill whenever the user wants to process PET neuroimaging data including spatial normalization to T1w/MNI space, SUVR computation, reference region quantification, partial volume correction, or tracer-specific workflows (PiB amyloid, FDG metabolism...",
+                "description": "统筹 pet-skill 的 任务处理，包括PET SUVR 实际定量、FSL 非线性配准、FSL 应用形变。",
                 "keywords": [
                   "pet-skill",
-                  "Pet Skill",
                   "PET",
                   "SUVR",
                   "部分容积校正",
-                  "Use",
-                  "T1w",
-                  "MNI",
-                  "PiB",
-                  "FDG"
+                  "FSL"
                 ],
                 "skill_ids": [
                   "pet-skill"
@@ -971,20 +768,16 @@
               {
                 "id": "skill.smri-skill",
                 "label": "sMRI 结构成像工作流",
-                "description": "Use this skill whenever the user wants to process structural MRI (sMRI) such as T1w/T2w/FLAIR for brain extraction, bias correction, tissue segmentation (GM/WM/CSF), registration to MNI, cortical/subcortical parcellation, cortical thickness/volumetry (FreeS...",
+                "description": "统筹 smri-skill 的 任务处理，包括ANTs Registration、分区影像统计、FSL 脑提取、FSL 组织分割等已接入方法。",
                 "keywords": [
                   "smri-skill",
-                  "Smri Skill",
                   "sMRI",
                   "T1w",
                   "T2w",
                   "FLAIR",
                   "结构磁共振",
-                  "Use",
-                  "MRI",
-                  "GM",
-                  "WM",
-                  "CSF"
+                  "Registration",
+                  "FSL"
                 ],
                 "skill_ids": [
                   "smri-skill"
@@ -1009,10 +802,9 @@
               {
                 "id": "skill.dataset-inspector",
                 "label": "数据集巡检",
-                "description": "在开始处理前建立数据概况。先确认用户允许访问的根目录，再汇总文件数量、扩展名、大小和目录层级；对表格抽取字段与缺失率，对影像只读取必要的元数据。",
+                "description": "统筹 dataset-inspector 的 任务处理，包括数据集巡检、表字段、缺失和主键候选检查。",
                 "keywords": [
                   "dataset-inspector",
-                  "数据集巡检",
                   "数据巡检",
                   "文件检查",
                   "元数据"
@@ -1025,10 +817,9 @@
               {
                 "id": "skill.table-cleaning",
                 "label": "表格清洗",
-                "description": "先确认主键、目标字段和不可修改字段。生成清洗方案时保留原始文件，记录每个规则影响的行数，并在输出前执行模式和行数校验。",
+                "description": "统筹 table-cleaning 的 任务处理，包括Pandas 表格清洗。",
                 "keywords": [
                   "table-cleaning",
-                  "表格清洗",
                   "CSV",
                   "TSV",
                   "Excel",
@@ -1043,10 +834,11 @@
               {
                 "id": "skill.image-batch-processing",
                 "label": "影像批处理",
-                "description": "先识别输入格式、空间信息与命名规则，再选择已经安装的软件或开源方法。任何批处理都应先对单个样本试运行，并保留输入输出映射和失败清单。",
+                "description": "统筹 image-batch-processing 的 任务处理，包括数据集巡检、NiBabel NIfTI 保存／格式转换、NIfTI 头信息与空间检查。",
                 "keywords": [
                   "image-batch-processing",
-                  "影像批处理"
+                  "NiBabel",
+                  "NIfTI"
                 ],
                 "skill_ids": [
                   "image-batch-processing"
@@ -1063,20 +855,13 @@
               {
                 "id": "skill.bids-organizer",
                 "label": "BIDS 数据组织",
-                "description": "Use this skill whenever the user wants to automatically organize raw neuroimaging data (DICOM, NIfTI, EEG, etc.) into a valid BIDS (Brain Imaging Data Structure) dataset.",
+                "description": "统筹 bids-organizer 的 软件方法选择，包括BIDS Organizer、BIDS 元数据生成、按用户文件映射整理 BIDS（文件名检查）。",
                 "keywords": [
                   "bids-organizer",
-                  "Bids Organizer",
                   "BIDS",
                   "数据整理",
                   "数据组织",
-                  "Use",
-                  "DICOM",
-                  "NIfTI",
-                  "EEG",
-                  "Brain",
-                  "Imaging",
-                  "Data"
+                  "Organizer"
                 ],
                 "skill_ids": [
                   "bids-organizer"
@@ -1085,18 +870,13 @@
               },
               {
                 "id": "skill.dcm2nii",
-                "label": "Dcm2Nii",
-                "description": "Use this skill whenever the user wants to convert DICOM files or folders to NIfTI format (.nii or .nii.gz), extract neuroimaging volumes from clinical DICOM series (MRI, CT, PET, etc.), prepare raw DICOM data for research processing pipelines, anonymize whi...",
+                "label": "dcm2nii",
+                "description": "统筹 dcm2nii 的 软件方法选择，包括dcm2niix 实际转换。",
                 "keywords": [
                   "dcm2nii",
-                  "Dcm2Nii",
                   "DICOM",
                   "NIfTI",
-                  "格式转换",
-                  "Use",
-                  "MRI",
-                  "CT",
-                  "PET"
+                  "格式转换"
                 ],
                 "skill_ids": [
                   "dcm2nii"
@@ -1105,16 +885,13 @@
               },
               {
                 "id": "skill.nii2dcm",
-                "label": "Nii2Dcm",
-                "description": "Use this skill whenever the user wants to convert NIfTI files (.nii or .nii.gz) to DICOM format, create DICOM series from processed neuroimaging results, write segmentation/registration/analysis outputs back to DICOM for PACS compatibility or clinical viewe...",
+                "label": "nii2dcm",
+                "description": "统筹 nii2dcm 的 软件方法选择，包括nii2dcm 实际转换。",
                 "keywords": [
                   "nii2dcm",
-                  "Nii2Dcm",
                   "NIfTI",
                   "DICOM",
-                  "格式转换",
-                  "Use",
-                  "PACS"
+                  "格式转换"
                 ],
                 "skill_ids": [
                   "nii2dcm"
@@ -1123,17 +900,14 @@
               },
               {
                 "id": "skill.nibabel-skill",
-                "label": "Nibabel Skill",
-                "description": "Use this skill whenever NeuroClaw needs concrete nibabel operations for neuroimaging files: loading and validating NIfTI images, inspecting shapes and affine matrices, saving derived images, converting voxel coordinates to MNI/world coordinates, or reading...",
+                "label": "nibabel-skill",
+                "description": "统筹 nibabel-skill 的 软件方法选择，包括Nibabel NIfTI 实际检查、图谱坐标提取、NIfTI 头信息与空间检查、FreeSurfer 表面与分区读取等已接入方法。",
                 "keywords": [
                   "nibabel-skill",
-                  "Nibabel Skill",
                   "NIfTI",
                   "affine",
                   "影像读写",
-                  "Use",
-                  "NeuroClaw",
-                  "MNI"
+                  "FreeSurfer"
                 ],
                 "skill_ids": [
                   "nibabel-skill"
@@ -1157,15 +931,12 @@
             "children": [
               {
                 "id": "skill.fmriprep-tool",
-                "label": "Fmriprep Tool",
-                "description": "Use this skill whenever the user wants to perform standardized preprocessing of functional MRI (fMRI) and anatomical MRI data using fMRIPrep.",
+                "label": "fmriprep-tool",
+                "description": "统筹 fmriprep-tool 的 软件方法选择，包括fMRIPrep 本地环境执行。",
                 "keywords": [
                   "fmriprep-tool",
-                  "Fmriprep Tool",
                   "fMRIPrep",
-                  "fMRI 预处理",
-                  "Use",
-                  "MRI"
+                  "fMRI 预处理"
                 ],
                 "skill_ids": [
                   "fmriprep-tool"
@@ -1174,19 +945,13 @@
               },
               {
                 "id": "skill.freesurfer-tool",
-                "label": "Freesurfer Tool",
-                "description": "Use this skill whenever the user wants to process structural MRI data (T1w, T2w, FLAIR, etc.) with FreeSurfer, especially for cortical/subcortical segmentation, surface reconstruction, parcellation, cortical thickness, volume statistics, or full recon-all p...",
+                "label": "freesurfer-tool",
+                "description": "统筹 freesurfer-tool 的 软件方法选择，包括FreeSurfer recon-all（可执行）。",
                 "keywords": [
                   "freesurfer-tool",
-                  "Freesurfer Tool",
                   "FreeSurfer",
                   "皮层重建",
-                  "分割",
-                  "Use",
-                  "MRI",
-                  "T1w",
-                  "T2w",
-                  "FLAIR"
+                  "分割"
                 ],
                 "skill_ids": [
                   "freesurfer-tool"
@@ -1195,21 +960,15 @@
               },
               {
                 "id": "skill.fsl-tool",
-                "label": "Fsl Tool",
-                "description": "Use this skill whenever the user wants to process neuroimaging data with FSL (FMRIB Software Library), covering structural MRI, functional MRI (fMRI), and diffusion MRI (dMRI/DTI).",
+                "label": "fsl-tool",
+                "description": "选择已接入的 FSL 校正、分割、配准及扩散建模方法，并说明输入与使用条件。",
                 "keywords": [
                   "fsl-tool",
-                  "Fsl Tool",
                   "FSL",
                   "FLIRT",
                   "FEAT",
                   "eddy",
-                  "配准",
-                  "Use",
-                  "FMRIB",
-                  "Software",
-                  "Library",
-                  "MRI"
+                  "配准"
                 ],
                 "skill_ids": [
                   "fsl-tool"
@@ -1218,39 +977,26 @@
               },
               {
                 "id": "skill.hcppipeline-tool",
-                "label": "Hcppipeline Tool",
-                "description": "Use this skill whenever the user wants to perform high-quality, HCP-style preprocessing of multimodal MRI data (structural, functional, diffusion) using the official HCP Pipelines.",
+                "label": "hcppipeline-tool",
+                "description": "可调用的独立操作：暂无已登记的独立执行方法。",
                 "keywords": [
-                  "hcppipeline-tool",
-                  "Hcppipeline Tool",
-                  "Use",
-                  "HCP-style",
-                  "MRI",
-                  "HCP",
-                  "Pipelines"
+                  "hcppipeline-tool"
                 ],
                 "skill_ids": [
                   "hcppipeline-tool"
                 ],
-                "execution_level": "structured"
+                "execution_level": "planning"
               },
               {
                 "id": "skill.qsiprep-tool",
-                "label": "Qsiprep Tool",
-                "description": "Use this skill whenever the user wants to run QSIPrep (BIDS App) for diffusion MRI (DWI) preprocessing with best-practice workflows (topup/eddy, denoising/unringing options, susceptibility/motion correction, coregistration/normalization, QC reports) on BIDS...",
+                "label": "qsiprep-tool",
+                "description": "统筹 qsiprep-tool 的 软件方法选择，包括QSIPrep。",
                 "keywords": [
                   "qsiprep-tool",
-                  "Qsiprep Tool",
                   "QSIPrep",
                   "DWI 预处理",
                   "topup",
-                  "eddy",
-                  "Use",
-                  "BIDS",
-                  "App",
-                  "MRI",
-                  "DWI",
-                  "QC"
+                  "eddy"
                 ],
                 "skill_ids": [
                   "qsiprep-tool"
@@ -1266,18 +1012,10 @@
             "children": [
               {
                 "id": "skill.conn-tool",
-                "label": "Conn Tool",
-                "description": "Use this skill whenever the user wants to perform advanced functional connectivity (ROI-to-ROI, seed-to-voxel, ICA) or effective connectivity (PPI, gPPI, DCM) analysis using the CONN Toolbox.",
+                "label": "conn-tool",
+                "description": "可调用的独立操作：暂无已登记的独立执行方法。",
                 "keywords": [
-                  "conn-tool",
-                  "Conn Tool",
-                  "Use",
-                  "ROI-to-ROI",
-                  "ICA",
-                  "PPI",
-                  "DCM",
-                  "CONN",
-                  "Toolbox"
+                  "conn-tool"
                 ],
                 "skill_ids": [
                   "conn-tool"
@@ -1286,18 +1024,12 @@
               },
               {
                 "id": "skill.dipy-tool",
-                "label": "Dipy Tool",
-                "description": "Use this skill whenever any NeuroClaw diffusion MRI / DWI modality skill needs to execute concrete DIPY operations: load DWI (NIfTI+bvals+bvecs), optional masking, DTI fitting, compute FA/MD/AD/RD, and extract ROI statistics.",
+                "label": "dipy-tool",
+                "description": "统筹 dipy-tool 的 软件方法选择，包括DIPY TensorModel、DWI 载入与脑掩膜、分区影像统计。",
                 "keywords": [
                   "dipy-tool",
-                  "Dipy Tool",
-                  "Use",
-                  "NeuroClaw",
-                  "MRI",
-                  "DWI",
-                  "DIPY",
-                  "NIfTI",
-                  "DTI"
+                  "TensorModel",
+                  "DWI"
                 ],
                 "skill_ids": [
                   "dipy-tool"
@@ -1306,18 +1038,16 @@
               },
               {
                 "id": "skill.mne-eeg-tool",
-                "label": "Mne Eeg Tool",
-                "description": "Use this skill whenever any NeuroClaw modality skill (especially eeg-skill) needs to execute concrete MNE-Python operations for EEG loading, preprocessing, filtering, artifact removal, epoching, frequency-band analysis, or feature extraction.",
+                "label": "mne-eeg-tool",
+                "description": "统筹 mne-eeg-tool 的 软件方法选择，包括EEG/MEG 数据检查、MNE LOF 坏导联检测与插值、EEG/MEG 滤波与降采样、MNE ICA 分解与指定成分去除等已接入方法。",
                 "keywords": [
                   "mne-eeg-tool",
-                  "Mne Eeg Tool",
                   "MNE",
                   "EEG",
                   "ICA",
                   "脑电预处理",
-                  "Use",
-                  "NeuroClaw",
-                  "MNE-Python"
+                  "MEG",
+                  "LOF"
                 ],
                 "skill_ids": [
                   "mne-eeg-tool"
@@ -1326,19 +1056,15 @@
               },
               {
                 "id": "skill.nilearn-tool",
-                "label": "Nilearn Tool",
-                "description": "Use this skill whenever any NeuroClaw fMRI modality skill needs to execute concrete Nilearn operations: ROI/atlas time-series extraction, confounds handling (fMRIPrep), seed-based connectivity maps, ROI-to-ROI connectivity matrices, and optional GLM/decodin...",
+                "label": "nilearn-tool",
+                "description": "统筹 nilearn-tool 的 软件方法选择，包括混杂回归与去趋势、BOLD 平滑与时间滤波（保持原空间）、ROI 时间序列与功能连接、任务态一级 GLM等已接入方法。",
                 "keywords": [
                   "nilearn-tool",
-                  "Nilearn Tool",
                   "Nilearn",
                   "ROI",
                   "功能连接",
                   "解码",
-                  "Use",
-                  "NeuroClaw",
-                  "ROI-to-ROI",
-                  "GLM"
+                  "BOLD"
                 ],
                 "skill_ids": [
                   "nilearn-tool"
@@ -1355,14 +1081,12 @@
               {
                 "id": "skill.harmonization-tool",
                 "label": "多中心数据 Harmonization",
-                "description": "Use this skill whenever the user wants to remove site/scanner/batch effects from neuroimaging features before running downstream models, run mega-analysis across multiple datasets, or evaluate models with leave-site-out / site-stratified protocols.",
+                "description": "统筹 harmonization-tool 的 软件方法选择，包括站点协变量校正、原项目多站点校正：none、原项目多站点校正：combat、原项目多站点校正：combat-gam等已接入方法。",
                 "keywords": [
                   "harmonization-tool",
-                  "Harmonization Tool",
                   "ComBat",
                   "批次效应",
-                  "多中心",
-                  "Use"
+                  "多中心"
                 ],
                 "skill_ids": [
                   "harmonization-tool"
@@ -1372,17 +1096,12 @@
               {
                 "id": "skill.wmh-segmentation",
                 "label": "白质高信号分割",
-                "description": "Use this skill whenever the user wants to perform automated white matter hyperintensity (WMH) segmentation on structural MRI data using the MARS-WMH nnU-Net model.",
+                "description": "可调用的独立操作：暂无已登记的独立执行方法。",
                 "keywords": [
                   "wmh-segmentation",
-                  "Wmh Segmentation",
                   "WMH",
                   "FLAIR",
-                  "白质高信号",
-                  "Use",
-                  "MRI",
-                  "MARS-WMH",
-                  "Net"
+                  "白质高信号"
                 ],
                 "skill_ids": [
                   "wmh-segmentation"
@@ -1406,12 +1125,10 @@
             "children": [
               {
                 "id": "skill.bnt",
-                "label": "Bnt",
-                "description": "Use this model doc whenever the user wants to run BrainNetworkTransformer for fMRI phenotype prediction, including data loading, training, and evaluation.",
+                "label": "bnt",
+                "description": "统筹 bnt 的 任务处理，包括BNT 原项目训练脚本。",
                 "keywords": [
-                  "bnt",
-                  "Bnt",
-                  "Use"
+                  "bnt"
                 ],
                 "skill_ids": [
                   "bnt"
@@ -1420,13 +1137,10 @@
               },
               {
                 "id": "skill.braingnn",
-                "label": "Braingnn",
-                "description": "Use this model doc whenever the user wants to run BrainGNN for fMRI phenotype prediction, including graph construction, training, and evaluation.",
+                "label": "braingnn",
+                "description": "可调用的独立操作：暂无已登记的独立执行方法。",
                 "keywords": [
-                  "braingnn",
-                  "Braingnn",
-                  "Use",
-                  "BrainGNN"
+                  "braingnn"
                 ],
                 "skill_ids": [
                   "braingnn"
@@ -1435,14 +1149,10 @@
               },
               {
                 "id": "skill.brainnetcnn",
-                "label": "Brainnetcnn",
-                "description": "Train and evaluate BrainNetCNN for classification or regression from dense ROI connectivity matrices.",
+                "label": "brainnetcnn",
+                "description": "统筹 brainnetcnn 的 任务处理，包括BRAINNETCNN 原项目训练脚本。",
                 "keywords": [
-                  "brainnetcnn",
-                  "Brainnetcnn",
-                  "Train",
-                  "BrainNetCNN",
-                  "ROI"
+                  "brainnetcnn"
                 ],
                 "skill_ids": [
                   "brainnetcnn"
@@ -1451,12 +1161,10 @@
               },
               {
                 "id": "skill.cnn3d",
-                "label": "Cnn3D",
-                "description": "Canonical compact residual 3D CNN for voxel-level neuroimaging classification and regression.",
+                "label": "cnn3d",
+                "description": "统筹 cnn3d 的 任务处理，包括3D CNN 训练。",
                 "keywords": [
                   "cnn3d",
-                  "Cnn3D",
-                  "Canonical",
                   "CNN"
                 ],
                 "skill_ids": [
@@ -1466,16 +1174,10 @@
               },
               {
                 "id": "skill.combraintf",
-                "label": "Combraintf",
-                "description": "Use this model doc whenever the user wants to run Com-BrainTF (Community-aware Brain Transformer) for fMRI phenotype prediction.",
+                "label": "combraintf",
+                "description": "统筹 combraintf 的 任务处理，包括COMBRAINTF 原项目训练脚本。",
                 "keywords": [
-                  "combraintf",
-                  "Combraintf",
-                  "Use",
-                  "Com-BrainTF",
-                  "Community-aware",
-                  "Brain",
-                  "Transformer"
+                  "combraintf"
                 ],
                 "skill_ids": [
                   "combraintf"
@@ -1484,14 +1186,10 @@
               },
               {
                 "id": "skill.fm-app",
-                "label": "Fm App",
-                "description": "Use this model doc whenever the user wants to run FM-APP for phenotype prediction using fMRI ROI features and optional sMRI features.",
+                "label": "fm_app",
+                "description": "可调用的独立操作：暂无已登记的独立执行方法。",
                 "keywords": [
-                  "fm_app",
-                  "Fm App",
-                  "Use",
-                  "FM-APP",
-                  "ROI"
+                  "fm_app"
                 ],
                 "skill_ids": [
                   "fm_app"
@@ -1500,18 +1198,10 @@
               },
               {
                 "id": "skill.ibgnn",
-                "label": "Ibgnn",
-                "description": "Use this model doc whenever the user wants to run IBGNN (Interpretable Brain Graph Neural Network) for fMRI phenotype prediction.",
+                "label": "ibgnn",
+                "description": "可调用的独立操作：暂无已登记的独立执行方法。",
                 "keywords": [
-                  "ibgnn",
-                  "Ibgnn",
-                  "Use",
-                  "IBGNN",
-                  "Interpretable",
-                  "Brain",
-                  "Graph",
-                  "Neural",
-                  "Network"
+                  "ibgnn"
                 ],
                 "skill_ids": [
                   "ibgnn"
@@ -1520,15 +1210,10 @@
               },
               {
                 "id": "skill.lggnn",
-                "label": "Lggnn",
-                "description": "Use this model doc whenever the user wants to run LG-GNN (Local-to-Global GNN) for fMRI phenotype prediction.",
+                "label": "lggnn",
+                "description": "可调用的独立操作：暂无已登记的独立执行方法。",
                 "keywords": [
-                  "lggnn",
-                  "Lggnn",
-                  "Use",
-                  "LG-GNN",
-                  "Local-to-Global",
-                  "GNN"
+                  "lggnn"
                 ],
                 "skill_ids": [
                   "lggnn"
@@ -1537,14 +1222,10 @@
               },
               {
                 "id": "skill.neurostorm",
-                "label": "Neurostorm",
-                "description": "Use this skill whenever the user wants to run the NeuroSTORM multi-model fMRI platform: preprocessing, pretraining (MAE or contrastive), fine-tuning, inference, or benchmarking.",
+                "label": "neurostorm",
+                "description": "可调用的独立操作：暂无已登记的独立执行方法。",
                 "keywords": [
-                  "neurostorm",
-                  "Neurostorm",
-                  "Use",
-                  "NeuroSTORM",
-                  "MAE"
+                  "neurostorm"
                 ],
                 "skill_ids": [
                   "neurostorm"
@@ -1561,12 +1242,9 @@
               {
                 "id": "skill.brain-age-modeling",
                 "label": "脑龄建模",
-                "description": "Cross-validated brain-age workflow with training-fold-only age-bias correction and Brain-PAD export.",
+                "description": "统筹 brain-age-modeling 的 任务处理，包括脑龄预测与偏差校正。",
                 "keywords": [
-                  "brain-age-modeling",
-                  "Brain Age Modeling",
-                  "Cross-validated",
-                  "Brain-PAD"
+                  "brain-age-modeling"
                 ],
                 "skill_ids": [
                   "brain-age-modeling"
@@ -1575,15 +1253,10 @@
               },
               {
                 "id": "skill.causal-treatment-models",
-                "label": "Causal Treatment Models",
-                "description": "Treatment-effect model family covering IPW, meta-learners, doubly robust learning, causal forests, TARNet, and DragonNet.",
+                "label": "causal-treatment-models",
+                "description": "统筹 causal-treatment-models 的 任务处理，包括处理效应估计。",
                 "keywords": [
-                  "causal-treatment-models",
-                  "Causal Treatment Models",
-                  "Treatment-effect",
-                  "IPW",
-                  "TARNet",
-                  "DragonNet"
+                  "causal-treatment-models"
                 ],
                 "skill_ids": [
                   "causal-treatment-models"
@@ -1592,15 +1265,11 @@
               },
               {
                 "id": "skill.cpm",
-                "label": "Cpm",
-                "description": "Canonical Connectome Predictive Modeling with fold-local functional-connectivity edge selection.",
+                "label": "cpm",
+                "description": "统筹 cpm 的 任务处理，包括连接组预测模型 CPM。",
                 "keywords": [
                   "cpm",
-                  "Cpm",
-                  "Canonical",
-                  "Connectome",
-                  "Predictive",
-                  "Modeling"
+                  "CPM"
                 ],
                 "skill_ids": [
                   "cpm"
@@ -1609,15 +1278,10 @@
               },
               {
                 "id": "skill.glm",
-                "label": "Glm",
-                "description": "Use this model doc whenever the user wants to run a classical General Linear Model (GLM) for task-evoked fMRI activation analysis.",
+                "label": "glm",
+                "description": "统筹 glm 的 任务处理，包括任务态一级 GLM、组水平 GLM。",
                 "keywords": [
                   "glm",
-                  "Glm",
-                  "Use",
-                  "General",
-                  "Linear",
-                  "Model",
                   "GLM"
                 ],
                 "skill_ids": [
@@ -1627,17 +1291,10 @@
               },
               {
                 "id": "skill.imaging-genetics-models",
-                "label": "Imaging Genetics Models",
-                "description": "Imaging-genetics model family for association, LMM, PRS, PLS, CCA, and PLINK2 command construction.",
+                "label": "imaging-genetics-models",
+                "description": "统筹 imaging-genetics-models 的 任务处理，包括影像遗传关联。",
                 "keywords": [
-                  "imaging-genetics-models",
-                  "Imaging Genetics Models",
-                  "Imaging-genetics",
-                  "LMM",
-                  "PRS",
-                  "PLS",
-                  "CCA",
-                  "PLINK2"
+                  "imaging-genetics-models"
                 ],
                 "skill_ids": [
                   "imaging-genetics-models"
@@ -1646,13 +1303,10 @@
               },
               {
                 "id": "skill.spacenet",
-                "label": "Spacenet",
-                "description": "Use this model doc whenever the user wants to perform disease classification with SpaceNet.",
+                "label": "spacenet",
+                "description": "统筹 spacenet 的 任务处理，包括SpaceNet 空间正则分类。",
                 "keywords": [
-                  "spacenet",
-                  "Spacenet",
-                  "Use",
-                  "SpaceNet"
+                  "spacenet"
                 ],
                 "skill_ids": [
                   "spacenet"
@@ -1662,18 +1316,9 @@
               {
                 "id": "skill.statistical-ml",
                 "label": "统计与机器学习",
-                "description": "Canonical tabular statistical and machine-learning family for OLS/GLM, SVM/SVR, Ridge, Elastic Net, XGBoost, and mixed effects.",
+                "description": "统筹 statistical-ml 的 任务处理，包括统计学习：分类、统计学习：回归。",
                 "keywords": [
-                  "statistical-ml",
-                  "Statistical Ml",
-                  "Canonical",
-                  "OLS",
-                  "GLM",
-                  "SVM",
-                  "SVR",
-                  "Ridge",
-                  "Elastic",
-                  "Net"
+                  "statistical-ml"
                 ],
                 "skill_ids": [
                   "statistical-ml"
@@ -1682,14 +1327,10 @@
               },
               {
                 "id": "skill.subject-subtyping",
-                "label": "Subject Subtyping",
-                "description": "Subject-level disease subtyping with clustering, consensus analysis, PCA, NMF, and autoencoder embeddings.",
+                "label": "subject-subtyping",
+                "description": "统筹 subject-subtyping 的 任务处理，包括受试者分型。",
                 "keywords": [
-                  "subject-subtyping",
-                  "Subject Subtyping",
-                  "Subject-level",
-                  "PCA",
-                  "NMF"
+                  "subject-subtyping"
                 ],
                 "skill_ids": [
                   "subject-subtyping"
@@ -1698,18 +1339,10 @@
               },
               {
                 "id": "skill.survival-models",
-                "label": "Survival Models",
-                "description": "Censor-aware survival model family with Cox, Random Survival Forest, DeepSurv, and XGBoost survival.",
+                "label": "survival-models",
+                "description": "统筹 survival-models 的 任务处理，包括生存模型（scientific）、生存模型（torch）。",
                 "keywords": [
-                  "survival-models",
-                  "Survival Models",
-                  "Censor-aware",
-                  "Cox",
-                  "Random",
-                  "Survival",
-                  "Forest",
-                  "DeepSurv",
-                  "XGBoost"
+                  "survival-models"
                 ],
                 "skill_ids": [
                   "survival-models"
@@ -1718,16 +1351,10 @@
               },
               {
                 "id": "skill.temporal-models",
-                "label": "Temporal Models",
-                "description": "Shared sequence-model family for LSTM, GRU, TCN, and temporal Transformer experiments.",
+                "label": "temporal-models",
+                "description": "统筹 temporal-models 的 任务处理，包括时序模型训练。",
                 "keywords": [
-                  "temporal-models",
-                  "Temporal Models",
-                  "Shared",
-                  "LSTM",
-                  "GRU",
-                  "TCN",
-                  "Transformer"
+                  "temporal-models"
                 ],
                 "skill_ids": [
                   "temporal-models"
@@ -1743,12 +1370,10 @@
             "children": [
               {
                 "id": "skill.detrending",
-                "label": "Detrending",
-                "description": "Use this model doc whenever the user wants to perform neuroimaging signal denoising with classical detrending methods.",
+                "label": "detrending",
+                "description": "统筹 detrending 的 任务处理，包括混杂回归与去趋势。",
                 "keywords": [
-                  "detrending",
-                  "Detrending",
-                  "Use"
+                  "detrending"
                 ],
                 "skill_ids": [
                   "detrending"
@@ -1757,13 +1382,11 @@
               },
               {
                 "id": "skill.dictlearning",
-                "label": "Dictlearning",
-                "description": "Use this model doc whenever the user wants to perform resting-state network decomposition using DictLearning.",
+                "label": "dictlearning",
+                "description": "统筹 dictlearning 的 任务处理，包括静息态 DICTLEARNING。",
                 "keywords": [
                   "dictlearning",
-                  "Dictlearning",
-                  "Use",
-                  "DictLearning"
+                  "DICTLEARNING"
                 ],
                 "skill_ids": [
                   "dictlearning"
@@ -1772,12 +1395,10 @@
               },
               {
                 "id": "skill.filtering",
-                "label": "Filtering",
-                "description": "Use this model doc whenever the user wants to perform neuroimaging signal denoising with classical temporal filtering methods.",
+                "label": "filtering",
+                "description": "统筹 filtering 的 任务处理，包括BOLD 平滑与时间滤波（保持原空间）。",
                 "keywords": [
-                  "filtering",
-                  "Filtering",
-                  "Use"
+                  "filtering"
                 ],
                 "skill_ids": [
                   "filtering"
@@ -1786,12 +1407,10 @@
               },
               {
                 "id": "skill.hierarchical",
-                "label": "Hierarchical",
-                "description": "Use this model doc whenever the user wants to perform brain parcellation using Hierarchical clustering.",
+                "label": "hierarchical",
+                "description": "统筹 hierarchical 的 任务处理，包括hierarchical 空间分区。",
                 "keywords": [
-                  "hierarchical",
-                  "Hierarchical",
-                  "Use"
+                  "hierarchical"
                 ],
                 "skill_ids": [
                   "hierarchical"
@@ -1800,12 +1419,10 @@
               },
               {
                 "id": "skill.ica",
-                "label": "Ica",
-                "description": "Use this model doc whenever the user wants to perform resting-state network decomposition using ICA.",
+                "label": "ica",
+                "description": "统筹 ica 的 任务处理，包括静息态 ICA。",
                 "keywords": [
                   "ica",
-                  "Ica",
-                  "Use",
                   "ICA"
                 ],
                 "skill_ids": [
@@ -1815,14 +1432,10 @@
               },
               {
                 "id": "skill.kmeans",
-                "label": "Kmeans",
-                "description": "Use this model doc whenever the user wants to perform brain parcellation using K-means. This is a non-deep-learning unsupervised route focused on parcel discovery, voxel or vertex grouping, and atlas-like region generation from neuroimaging features.",
+                "label": "kmeans",
+                "description": "统筹 kmeans 的 任务处理，包括kmeans 空间分区。",
                 "keywords": [
-                  "kmeans",
-                  "Kmeans",
-                  "Use",
-                  "K-means",
-                  "This"
+                  "kmeans"
                 ],
                 "skill_ids": [
                   "kmeans"
@@ -1838,12 +1451,10 @@
             "children": [
               {
                 "id": "skill.connectome-discovery",
-                "label": "Connectome Discovery",
-                "description": "Workflow for map similarity, permutation significance, atlas-aware interpretation, and connectome target ranking.",
+                "label": "connectome-discovery",
+                "description": "可调用的独立操作：暂无已登记的独立执行方法。",
                 "keywords": [
-                  "connectome-discovery",
-                  "Connectome Discovery",
-                  "Workflow"
+                  "connectome-discovery"
                 ],
                 "skill_ids": [
                   "connectome-discovery"
@@ -1852,16 +1463,10 @@
               },
               {
                 "id": "skill.kg-link-prediction",
-                "label": "Kg Link Prediction",
-                "description": "NeuroOracle link-prediction family with ComplEx, R-GCN, GraphSAGE, and GAT.",
+                "label": "kg-link-prediction",
+                "description": "统筹 kg-link-prediction 的 任务处理，包括ComplEx 知识图谱链路预测。",
                 "keywords": [
-                  "kg-link-prediction",
-                  "Kg Link Prediction",
-                  "NeuroOracle",
-                  "ComplEx",
-                  "R-GCN",
-                  "GraphSAGE",
-                  "GAT"
+                  "kg-link-prediction"
                 ],
                 "skill_ids": [
                   "kg-link-prediction"
@@ -1870,15 +1475,13 @@
               },
               {
                 "id": "skill.neuroimaging-decoding",
-                "label": "Neuroimaging Decoding",
-                "description": "Workflow coordinating ROI MVPA, ROI GLM, and voxel-wise SearchLight decoding.",
+                "label": "neuroimaging-decoding",
+                "description": "统筹 neuroimaging-decoding 的 任务处理，包括ROI 多变量解码、ROI GLM 与 FDR、SearchLight 分类。",
                 "keywords": [
                   "neuroimaging-decoding",
-                  "Neuroimaging Decoding",
-                  "Workflow",
                   "ROI",
-                  "MVPA",
                   "GLM",
+                  "FDR",
                   "SearchLight"
                 ],
                 "skill_ids": [
@@ -1889,11 +1492,10 @@
               {
                 "id": "skill.run-models",
                 "label": "预测模型选择与运行指南",
-                "description": "Use this skill whenever the user wants to run phenotype-prediction models, browse model cards, map model inputs/outputs, or choose an execution route for fMRI/sMRI based models.",
+                "description": "统筹 run_models 的 任务处理，包括xgboost、连接组预测模型 CPM、脑龄预测与偏差校正、consensus等已接入方法。",
                 "keywords": [
                   "run_models",
-                  "Run Models",
-                  "Use"
+                  "CPM"
                 ],
                 "skill_ids": [
                   "run_models"
@@ -1918,11 +1520,9 @@
               {
                 "id": "skill.academic-research-hub",
                 "label": "学术文献检索与下载",
-                "description": "Use this skill when users need to search academic papers, download research documents, extract citations, or gather scholarly information.",
+                "description": "可调用的独立操作：暂无已登记的独立执行方法。",
                 "keywords": [
-                  "academic-research-hub",
-                  "Academic Research Hub",
-                  "Use"
+                  "academic-research-hub"
                 ],
                 "skill_ids": [
                   "academic-research-hub"
@@ -1932,15 +1532,9 @@
               {
                 "id": "skill.multi-search-engine",
                 "label": "多搜索引擎检索",
-                "description": "Multi search engine integration with 17 engines (8 CN + 9 Global). Supports advanced search operators, time filters, site search, privacy engines, and WolframAlpha knowledge queries.",
+                "description": "可调用的独立操作：暂无已登记的独立执行方法。",
                 "keywords": [
-                  "multi-search-engine",
-                  "Multi Search Engine",
-                  "Multi",
-                  "CN",
-                  "Global",
-                  "Supports",
-                  "WolframAlpha"
+                  "multi-search-engine"
                 ],
                 "skill_ids": [
                   "multi-search-engine"
@@ -1950,11 +1544,9 @@
               {
                 "id": "skill.research-idea",
                 "label": "研究选题与构思",
-                "description": "Use this skill whenever the user wants to generate or refine a research idea through literature search and discussion.",
+                "description": "可调用的独立操作：暂无已登记的独立执行方法。",
                 "keywords": [
-                  "research-idea",
-                  "Research Idea",
-                  "Use"
+                  "research-idea"
                 ],
                 "skill_ids": [
                   "research-idea"
@@ -1964,11 +1556,9 @@
               {
                 "id": "skill.knowledge-graph-builder",
                 "label": "知识图谱构建",
-                "description": "Use this skill when users need to build, populate, or extend a domain-specific knowledge graph from literature and structured databases.",
+                "description": "可调用的独立操作：暂无已登记的独立执行方法。",
                 "keywords": [
-                  "knowledge-graph-builder",
-                  "Knowledge Graph Builder",
-                  "Use"
+                  "knowledge-graph-builder"
                 ],
                 "skill_ids": [
                   "knowledge-graph-builder"
@@ -1978,11 +1568,9 @@
               {
                 "id": "skill.method-design",
                 "label": "研究方法设计",
-                "description": "Use this skill whenever the user wants to formalize a network architecture and derive theoretical components from a research idea.",
+                "description": "可调用的独立操作：暂无已登记的独立执行方法。",
                 "keywords": [
-                  "method-design",
-                  "Method Design",
-                  "Use"
+                  "method-design"
                 ],
                 "skill_ids": [
                   "method-design"
@@ -1999,11 +1587,9 @@
               {
                 "id": "skill.experiment-controller",
                 "label": "实验执行与记录",
-                "description": "Use this skill whenever the user wants to execute experiments based on a finalized method and record results.",
+                "description": "可调用的独立操作：暂无已登记的独立执行方法。",
                 "keywords": [
-                  "experiment-controller",
-                  "Experiment Controller",
-                  "Use"
+                  "experiment-controller"
                 ],
                 "skill_ids": [
                   "experiment-controller"
@@ -2013,11 +1599,9 @@
               {
                 "id": "skill.paper-writing",
                 "label": "论文写作",
-                "description": "Use this skill whenever the user wants to generate a full academic paper draft from existing research materials.",
+                "description": "可调用的独立操作：暂无已登记的独立执行方法。",
                 "keywords": [
-                  "paper-writing",
-                  "Paper Writing",
-                  "Use"
+                  "paper-writing"
                 ],
                 "skill_ids": [
                   "paper-writing"
@@ -2026,15 +1610,10 @@
               },
               {
                 "id": "skill.overleaf-skill",
-                "label": "Overleaf Skill",
-                "description": "Use this skill whenever the user wants to synchronize NeuroClaw-generated LaTeX manuscripts with Overleaf, read/write .tex files, download/upload projects, create/rename/archive projects, compare versions, or manage project structure.",
+                "label": "overleaf-skill",
+                "description": "可调用的独立操作：暂无已登记的独立执行方法。",
                 "keywords": [
-                  "overleaf-skill",
-                  "Overleaf Skill",
-                  "Use",
-                  "NeuroClaw-",
-                  "LaTeX",
-                  "Overleaf"
+                  "overleaf-skill"
                 ],
                 "skill_ids": [
                   "overleaf-skill"
@@ -2051,12 +1630,13 @@
               {
                 "id": "skill.brain-visualization",
                 "label": "脑影像结果可视化",
-                "description": "Use this skill whenever the user wants to visualize neuroimaging analysis results, including 3D brain connectivity networks, atlas-based regional activation summaries, or FreeSurfer cortical surface meshes with anatomical colors.",
+                "description": "统筹 brain-visualization 的 软件方法选择，包括脑连接图、FreeSurfer 表面导出 PLY、原脚本 BOLD 频带波动区域摘要（STD 指标）。",
                 "keywords": [
                   "brain-visualization",
-                  "Brain Visualization",
-                  "Use",
-                  "FreeSurfer"
+                  "FreeSurfer",
+                  "PLY",
+                  "BOLD",
+                  "STD"
                 ],
                 "skill_ids": [
                   "brain-visualization"
@@ -2066,10 +1646,9 @@
               {
                 "id": "skill.report-builder",
                 "label": "结果与质控报告",
-                "description": "围绕需求、输入、方法、结果、异常和复现信息组织报告。优先使用结构化摘要，并明确哪些结论来自真实计算、哪些只是建议或推断。",
+                "description": "统筹 report-builder 的 任务处理，包括结果报告。",
                 "keywords": [
-                  "report-builder",
-                  "结果报告"
+                  "report-builder"
                 ],
                 "skill_ids": [
                   "report-builder"
@@ -2094,11 +1673,9 @@
               {
                 "id": "skill.conda-env-manager",
                 "label": "Conda 环境管理",
-                "description": "Use this skill whenever the user wants to create, activate, list, export, update, clone, remove, or otherwise manage conda environments, or when a deep-learning / model skill requires a clean, isolated conda environment (e.g.",
+                "description": "可调用的独立操作：暂无已登记的独立执行方法。",
                 "keywords": [
-                  "conda-env-manager",
-                  "Conda Env Manager",
-                  "Use"
+                  "conda-env-manager"
                 ],
                 "skill_ids": [
                   "conda-env-manager"
@@ -2108,14 +1685,9 @@
               {
                 "id": "skill.docker-env-manager",
                 "label": "Docker 环境管理",
-                "description": "Use this skill whenever the user wants to pull, run, build, compose, list, prune, manage, or otherwise handle Docker containers, images, volumes, networks, or Docker Compose projects, or when a NeuroClaw skill (e.g.",
+                "description": "可调用的独立操作：暂无已登记的独立执行方法。",
                 "keywords": [
-                  "docker-env-manager",
-                  "Docker Env Manager",
-                  "Use",
-                  "Docker",
-                  "Compose",
-                  "NeuroClaw"
+                  "docker-env-manager"
                 ],
                 "skill_ids": [
                   "docker-env-manager"
@@ -2125,12 +1697,9 @@
               {
                 "id": "skill.dependency-planner",
                 "label": "依赖规划",
-                "description": "Use this skill whenever a NeuroClaw skill, model, or sub-agent reports a missing dependency (e.g.",
+                "description": "可调用的独立操作：暂无已登记的独立执行方法。",
                 "keywords": [
-                  "dependency-planner",
-                  "Dependency Planner",
-                  "Use",
-                  "NeuroClaw"
+                  "dependency-planner"
                 ],
                 "skill_ids": [
                   "dependency-planner"
@@ -2147,12 +1716,9 @@
               {
                 "id": "skill.claw-shell",
                 "label": "安全命令执行",
-                "description": "Use this skill whenever any NeuroClaw skill, sub-agent, or model needs to execute shell commands safely (e.g.",
+                "description": "可调用的独立操作：暂无已登记的独立执行方法。",
                 "keywords": [
-                  "claw-shell",
-                  "Claw Shell",
-                  "Use",
-                  "NeuroClaw"
+                  "claw-shell"
                 ],
                 "skill_ids": [
                   "claw-shell"
@@ -2161,13 +1727,10 @@
               },
               {
                 "id": "skill.git-essentials",
-                "label": "Git Essentials",
-                "description": "Essential Git commands and workflows for version control, branching, and collaboration.",
+                "label": "git-essentials",
+                "description": "可调用的独立操作：暂无已登记的独立执行方法。",
                 "keywords": [
-                  "git-essentials",
-                  "Git Essentials",
-                  "Essential",
-                  "Git"
+                  "git-essentials"
                 ],
                 "skill_ids": [
                   "git-essentials"
@@ -2176,13 +1739,10 @@
               },
               {
                 "id": "skill.git-workflows",
-                "label": "Git Workflows",
-                "description": "Advanced git operations beyond add/commit/push. Use when rebasing, bisecting bugs, using worktrees for parallel development, recovering with reflog, managing subtrees/submodules, resolving merge conflicts, cherry-picking across branches, or working with mon...",
+                "label": "git-workflows",
+                "description": "可调用的独立操作：暂无已登记的独立执行方法。",
                 "keywords": [
-                  "git-workflows",
-                  "Git Workflows",
-                  "Advanced",
-                  "Use"
+                  "git-workflows"
                 ],
                 "skill_ids": [
                   "git-workflows"
@@ -2198,13 +1758,10 @@
             "children": [
               {
                 "id": "skill.harness-core",
-                "label": "Harness Core",
-                "description": "Core harness library providing standardized self-verification, checkpoint management, drift detection, and audit logging utilities for all NeuroClaw skills.",
+                "label": "harness-core",
+                "description": "可调用的独立操作：暂无已登记的独立执行方法。",
                 "keywords": [
-                  "harness-core",
-                  "Harness Core",
-                  "Core",
-                  "NeuroClaw"
+                  "harness-core"
                 ],
                 "skill_ids": [
                   "harness-core"
@@ -2214,13 +1771,9 @@
               {
                 "id": "skill.skill-updater",
                 "label": "Skill 经验更新",
-                "description": "Use this skill after a task succeeds (user confirms 'success' or tools report success). It extracts new experience from the session log + daily memory, locates relevant skills, and proposes diff-formatted updates to SKILL.md files with a clear summary for t...",
+                "description": "可调用的独立操作：暂无已登记的独立执行方法。",
                 "keywords": [
-                  "skill-updater",
-                  "Skill Updater",
-                  "Use",
-                  "It",
-                  "SKILL"
+                  "skill-updater"
                 ],
                 "skill_ids": [
                   "skill-updater"
@@ -2230,15 +1783,55 @@
               {
                 "id": "skill.beautiful-log",
                 "label": "对话日志整理",
-                "description": "Use this skill after a conversation or task is completed when the user wants a clean, beautiful HTML chat log.",
+                "description": "统筹 beautiful-log 的 软件方法选择，包括beautiful-log 日志报告。",
                 "keywords": [
-                  "beautiful-log",
-                  "Beautiful Log",
-                  "Use",
-                  "HTML"
+                  "beautiful-log"
                 ],
                 "skill_ids": [
                   "beautiful-log"
+                ],
+                "execution_level": "structured"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "software-catalog",
+        "label": "软件与最小命令",
+        "description": "原生软件 Skill 统筹已注册 Method；按具体处理目标选择。",
+        "execution_level": "category",
+        "children": [
+          {
+            "id": "software-commands",
+            "label": "软件命令",
+            "execution_level": "category",
+            "children": [
+              {
+                "id": "software.ants",
+                "label": "ants",
+                "description": "选择已接入的 ANTs 配准方法，确定移动影像、参考影像及配准策略。",
+                "keywords": [
+                  "software-ants",
+                  "ants",
+                  "ANTs"
+                ],
+                "skill_ids": [
+                  "software-ants"
+                ],
+                "execution_level": "structured"
+              },
+              {
+                "id": "software.mrtrix3",
+                "label": "mrtrix3",
+                "description": "选择已接入的 MRtrix3 命令，解释其输入、输出、参数条件及相互衔接方式。",
+                "keywords": [
+                  "software-mrtrix3",
+                  "mrtrix3",
+                  "MRtrix3"
+                ],
+                "skill_ids": [
+                  "software-mrtrix3"
                 ],
                 "execution_level": "structured"
               }

@@ -1,0 +1,5 @@
+{
+  "schema_version": 1,
+  "id": "software-dipy",
+  "alias_of": "dipy-tool"
+}

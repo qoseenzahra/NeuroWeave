@@ -63,6 +63,8 @@ class InputSlotSpec(BaseModel):
     description: str = ""
     required: bool = True
     required_when: dict[str, list[Any]] = Field(default_factory=dict)
+    # Shared inputs are needed if any consumer needs them (OR of AND conditions).
+    required_when_any: list[dict[str, list[Any]]] = Field(default_factory=list)
     cardinality: Literal["one", "many"] = "one"
     binding: Literal["file", "folder", "file_bundle", "artifact"] = "artifact"
     formats: list[str] = Field(default_factory=list)
@@ -169,6 +171,7 @@ class RecipeOutputBindingSpec(BaseModel):
 
 
 class ExecutionRecipeStepSpec(BaseModel):
+    when: dict[str, list[Any]] = Field(default_factory=dict)
     id: str
     title: str
     capability: str
@@ -197,6 +200,10 @@ class ExecutionRecipeSpec(BaseModel):
 
 
 class MethodOption(BaseModel):
+    skill_role: str = ""
+    definition_id: str = ""
+    definition_version: str = ""
+    entry_kind: Literal["method", "pipeline", "capability"] = "method"
     id: str
     skill_id: str
     label: str

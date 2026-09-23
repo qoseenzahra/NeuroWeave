@@ -15,14 +15,14 @@ from ...parameter_rules import active
 from ..external_command import ExternalCommandRunner
 
 ROOT = Path(__file__).resolve().parents[4]
-CATALOG = ROOT / 'bakend/resources/reviewed_execution.json'
+from ...method_registry import MethodRegistry
 
 
 @lru_cache(maxsize=1)
 def specifications() -> dict[str, dict]:
     retired = set(json.loads((ROOT/'bakend/resources/withdrawn_execution.json').read_text(encoding='utf-8'))['runner_ids'])
     result = {}
-    for item in json.loads(CATALOG.read_text(encoding='utf-8'))['methods']:
+    for item in MethodRegistry(ROOT).reviewed_specs().values():
         if item['runner_id'] in retired:
             raise ValueError('已撤回的接口不能重新注册：'+item['runner_id'])
         if item.get('implementation_source', {}).get('kind') not in {'existing_project_script','library_api','software_command'}:

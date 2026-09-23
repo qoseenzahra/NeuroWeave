@@ -1,0 +1,5 @@
+{
+  "schema_version": 1,
+  "id": "software-fsl-tool",
+  "alias_of": "fsl-tool"
+}

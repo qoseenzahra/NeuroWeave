@@ -1,0 +1,376 @@
+{
+  "schema_version": 1,
+  "id": "git-essentials",
+  "description": "可调用的独立操作：暂无已登记的独立执行方法。",
+  "method_refs": [],
+  "pipeline_refs": [],
+  "planning_capabilities": [
+    {
+      "capability": "skill.git-essentials",
+      "method_id": "git-essentials-guided",
+      "skill_id": "git-essentials",
+      "label": "Git Essentials 受约束方案",
+      "description": "依据 git-essentials/SKILL.md 生成结构化步骤；当前为规划型方法，不对应可直接执行的 runner。",
+      "runner_id": "",
+      "execution_mode": "planning",
+      "input_types": [
+        "*"
+      ],
+      "output_types": [
+        "planned_artifact"
+      ],
+      "requires_features": [],
+      "default_recommended": true,
+      "default_reason": "该规划方法包含从 SKILL.md 提取的任务选项、脚本或命令依据。",
+      "parameters": [
+        {
+          "id": "change_policy",
+          "argument": "change-policy",
+          "label": "变更策略",
+          "description": "当前平台只支持检查、方案和验证型 Dry-run，不执行系统修改。",
+          "type": "string",
+          "control": "auto",
+          "level": "basic",
+          "group": "常用参数",
+          "unit": "",
+          "required": true,
+          "default": "plan_only",
+          "options": [
+            {
+              "value": "inspection_only",
+              "label": "仅检查",
+              "description": ""
+            },
+            {
+              "value": "plan_only",
+              "label": "只生成方案",
+              "description": ""
+            },
+            {
+              "value": "validated_dry_run",
+              "label": "验证型 Dry-run",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "preserve_existing",
+          "argument": "preserve-existing",
+          "label": "保留现有状态",
+          "description": "要求方案默认不覆盖已有环境、文件或版本状态。",
+          "type": "boolean",
+          "control": "auto",
+          "level": "basic",
+          "group": "常用参数",
+          "unit": "",
+          "required": true,
+          "default": true,
+          "options": [
+            {
+              "value": true,
+              "label": "保留",
+              "description": ""
+            },
+            {
+              "value": false,
+              "label": "允许替换方案",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "isolation_mode",
+          "argument": "isolation-mode",
+          "label": "隔离方式",
+          "description": "规划原生环境、Conda 环境或容器隔离。",
+          "type": "string",
+          "control": "auto",
+          "level": "advanced",
+          "group": "环境隔离",
+          "unit": "",
+          "required": true,
+          "default": "existing",
+          "options": [
+            {
+              "value": "existing",
+              "label": "使用现有环境",
+              "description": ""
+            },
+            {
+              "value": "conda",
+              "label": "Conda 环境",
+              "description": ""
+            },
+            {
+              "value": "container",
+              "label": "容器",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "rollback_plan",
+          "argument": "rollback-plan",
+          "label": "生成回滚方案",
+          "description": "对可能改变环境或文件状态的步骤生成回滚说明。",
+          "type": "boolean",
+          "control": "auto",
+          "level": "advanced",
+          "group": "安全与审计",
+          "unit": "",
+          "required": true,
+          "default": true,
+          "options": [
+            {
+              "value": true,
+              "label": "生成",
+              "description": ""
+            },
+            {
+              "value": false,
+              "label": "不生成",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "log_level",
+          "argument": "log-level",
+          "label": "日志级别",
+          "description": "控制规划中建议保留的日志详细程度。",
+          "type": "string",
+          "control": "auto",
+          "level": "advanced",
+          "group": "安全与审计",
+          "unit": "",
+          "required": true,
+          "default": "info",
+          "options": [
+            {
+              "value": "warning",
+              "label": "仅警告",
+              "description": ""
+            },
+            {
+              "value": "info",
+              "label": "标准",
+              "description": ""
+            },
+            {
+              "value": "debug",
+              "label": "调试",
+              "description": ""
+            }
+          ],
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        },
+        {
+          "id": "timeout_minutes",
+          "argument": "timeout-minutes",
+          "label": "步骤超时",
+          "description": "单个外部软件或命令步骤的计划超时时间。",
+          "type": "integer",
+          "control": "number",
+          "level": "advanced",
+          "group": "执行限制",
+          "unit": "分钟",
+          "required": true,
+          "default": 60,
+          "options": [],
+          "minimum": 1.0,
+          "maximum": 10080.0,
+          "step": 1.0,
+          "placeholder": "",
+          "visible_when": {},
+          "required_when": {},
+          "enabled_when": {},
+          "conflicts_with": [],
+          "condition_help": "",
+          "usage": "",
+          "software_default": "",
+          "documentation_url": ""
+        }
+      ],
+      "input_slots": [],
+      "output_slots": [],
+      "structure_level": "evidence",
+      "source_references": [
+        {
+          "path": "skills/git-essentials/SKILL.md",
+          "label": "Skill 说明与方法依据",
+          "kind": "skill",
+          "line_start": 1,
+          "line_end": null
+        },
+        {
+          "path": "skills/git-essentials/SKILL.md",
+          "label": "已提取 8 条参考命令",
+          "kind": "command",
+          "line_start": null,
+          "line_end": null
+        }
+      ],
+      "command_references": [
+        {
+          "command": "git config --global user.name \"Your Name\"",
+          "language": "bash",
+          "source_path": "skills/git-essentials/SKILL.md",
+          "line_start": 21,
+          "kind": "operation",
+          "executable": false
+        },
+        {
+          "command": "git config --global user.email \"your@email.com\"",
+          "language": "bash",
+          "source_path": "skills/git-essentials/SKILL.md",
+          "line_start": 22,
+          "kind": "operation",
+          "executable": false
+        },
+        {
+          "command": "git init",
+          "language": "bash",
+          "source_path": "skills/git-essentials/SKILL.md",
+          "line_start": 25,
+          "kind": "operation",
+          "executable": false
+        },
+        {
+          "command": "git status",
+          "language": "bash",
+          "source_path": "skills/git-essentials/SKILL.md",
+          "line_start": 37,
+          "kind": "operation",
+          "executable": false
+        },
+        {
+          "command": "git add file.txt",
+          "language": "bash",
+          "source_path": "skills/git-essentials/SKILL.md",
+          "line_start": 40,
+          "kind": "operation",
+          "executable": false
+        },
+        {
+          "command": "git add .",
+          "language": "bash",
+          "source_path": "skills/git-essentials/SKILL.md",
+          "line_start": 41,
+          "kind": "operation",
+          "executable": false
+        },
+        {
+          "command": "git clone https://github.com/user/repo.git",
+          "language": "bash",
+          "source_path": "skills/git-essentials/SKILL.md",
+          "line_start": 28,
+          "kind": "setup",
+          "executable": false
+        },
+        {
+          "command": "git clone https://github.com/user/repo.git custom-name",
+          "language": "bash",
+          "source_path": "skills/git-essentials/SKILL.md",
+          "line_start": 29,
+          "kind": "setup",
+          "executable": false
+        }
+      ],
+      "delegate_skill_ids": [
+        "[]"
+      ],
+      "execution_recipe": null,
+      "included_capabilities": [],
+      "replaces_operations": [],
+      "execution_resolution": {
+        "state": "interactive",
+        "reason": "此 Skill 是交互式管理/讨论流程，依赖用户指定命令、仓库、安装目标或研究方案，没有固定科学任务契约；现有平台仍负责审批、环境管理、日志和任务调度。",
+        "source_method_id": "git-essentials-guided",
+        "requirements": [
+          "明确管理对象与动作；不能把文档中的任意 shell 命令直接注册为算法"
+        ]
+      }
+    }
+  ],
+  "selection_rules": [
+    "先确认目标产物和已有输入；只选择必要步骤，已有数据或历史结果优先复用。",
+    "输入缺少时先查询目录并请求用户绑定；不要自动追加生成该输入的步骤。",
+    "独立操作选择 Method；确需固定组合时选择 Pipeline，并检查每一步输入输出。",
+    "软件工具 Skill 用于选择实现，任务 Skill 用于组织需求，不因为同时匹配两类 Skill 重复添加方法。"
+  ],
+  "functions": [],
+  "name": "git-essentials",
+  "category": [
+    "软件工具",
+    "git"
+  ],
+  "scope": "software",
+  "applicability": [
+    "用于 git-essentials 的任务分析与方法说明；当前没有登记可独立执行的 Method。"
+  ],
+  "limitations": [
+    "这里只统筹已登记入口；目录收录不代表覆盖软件全部命令或参数。",
+    "环境探测与运行证据分别显示；合成数据测试不代表真实数据的科学有效性。",
+    "尚无 Method 的规划能力只能提供说明，不能当作可执行步骤。"
+  ],
+  "examples": []
+}

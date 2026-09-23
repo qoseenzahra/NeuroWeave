@@ -246,7 +246,7 @@ await test('workflow launch requires dry-run execution approval and no active ru
   ]) {
     const client=new QueryClient({defaultOptions:{queries:{retry:false}}});
     const wf={workflow_id:'launch',revision:1,title:'Fixture',status:'confirmed',execution_mode:'runner',steps:[],dataset:null,
-      requested_capabilities:[],warnings:[],locked_at:'now',dry_run_report:{valid:scenario.valid,execution_enabled:scenario.enabled,commands:[],warnings:[]}};
+      workspace_id:'ws',workspace_root_path:'/synthetic',requested_capabilities:[],warnings:[],locked_at:'now',dry_run_report:{valid:scenario.valid,execution_enabled:scenario.enabled,commands:[],warnings:[]}};
     const run=scenario.status?{run_id:'run',status:scenario.status,execution:{backend:'slurm'},progress:0,steps:[],artifacts:[],output_directory:'/synthetic'}:null;
     client.setQueryData(['workflow-run','launch'],run);
     try {
@@ -286,4 +286,25 @@ await test('rail label flips left and shifts vertically near the bottom-right ed
     assert.equal(parameterValues({parameters:[{id:'optional',default:42}]},{optional:null}).optional,undefined);
   });
 
+await test('Skill catalog distinguishes atomic methods, pipelines and unavailable capabilities', async () => {
+  const { SkillMethods } = await load('features/skills/SkillMethods.tsx');
+  const client=new QueryClient({defaultOptions:{queries:{retry:false}}});
+  client.setQueryData(['skill-methods','dwi-skill','','method'],{pages:[{items:[{entry_kind:'method',method_id:'mrtrix.tckgen',capability:'dwi.tractography',label:'独立追踪',role:'复用已有 FOD',runner_id:'mrtrix.tckgen',execution_mode:'runner',input_count:3,output_count:1,parameter_count:10}],total:1,next_cursor:null}],pageParams:['']});
+  const html=renderToStaticMarkup(createElement(QueryClientProvider,{client},createElement(SkillMethods,{skillId:'dwi-skill'})));
+  for(const label of ['Methods','Pipelines','Planning capabilities','复用已有 FOD','mrtrix.tckgen']) assert.ok(html.includes(label),label);
+  client.clear();
+});
+await test('method detail API uses the canonical identity and distinct pipeline endpoint', async () => {
+  const {fetchSkillMethod,fetchSkillMethods}=await load('features/skills/skillsApi.ts');
+  const original=globalThis.fetch;const urls=[];
+  globalThis.fetch=async url=>{urls.push(String(url));return new Response('{}',{status:200,headers:{'content-type':'application/json'}});};
+  try {
+    await fetchSkillMethod('method','mrtrix.tckgen');
+    await fetchSkillMethod('pipeline','act-sift2');
+    await fetchSkillMethods('dwi-skill','','',undefined,'pipeline');
+    assert.ok(urls[0].endsWith('/api/methods/mrtrix.tckgen'));
+    assert.ok(urls[1].endsWith('/api/pipelines/act-sift2'));
+    assert.ok(urls[2].includes('kind=pipeline'));
+  } finally {globalThis.fetch=original;}
+});
 } finally { await server.close(); }

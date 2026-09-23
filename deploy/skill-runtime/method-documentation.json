@@ -1,1155 +1,18 @@
 {
-  "skill_overviews": 103,
-  "registered_methods": 381,
-  "runner_methods": 276,
-  "registered_parameters": 850,
-  "undocumented_parameters": 384,
-  "methods_needing_parameter_documentation": [
-    {
-      "skill_id": "bids-organizer",
-      "capability": "skill.bids-organizer",
-      "method_id": "reviewed-explicit-metadata-bids-organizer",
-      "runner_id": "reviewed.bids-organizer.explicit-metadata",
-      "parameters": [
-        "name"
-      ]
-    },
-    {
-      "skill_id": "bids-organizer",
-      "capability": "skill.bids-organizer",
-      "method_id": "reviewed-explicit-stage-bids-organizer",
-      "runner_id": "reviewed.bids-organizer.explicit-stage",
-      "parameters": [
-        "name"
-      ]
-    },
-    {
-      "skill_id": "bnt",
-      "capability": "skill.bnt",
-      "method_id": "reviewed-original-trainer-bnt",
-      "runner_id": "reviewed.bnt.original-trainer",
-      "parameters": [
-        "atlas",
-        "subject_col",
-        "label_col",
-        "task",
-        "fold",
-        "kfold",
-        "seed",
-        "n_epochs",
-        "batch_size",
-        "lr",
-        "nclass",
-        "nhead",
-        "dec_weight",
-        "pos_embed_dim"
-      ]
-    },
-    {
-      "skill_id": "brain-age-modeling",
-      "capability": "skill.brain-age-modeling",
-      "method_id": "reviewed-train-brain-age-modeling",
-      "runner_id": "reviewed.brain-age-modeling.train",
-      "parameters": [
-        "model",
-        "age_col",
-        "folds",
-        "seed",
-        "subject_col"
-      ]
-    },
-    {
-      "skill_id": "brainnetcnn",
-      "capability": "skill.brainnetcnn",
-      "method_id": "reviewed-original-trainer-brainnetcnn",
-      "runner_id": "reviewed.brainnetcnn.original-trainer",
-      "parameters": [
-        "atlas",
-        "subject_col",
-        "label_col",
-        "task",
-        "fold",
-        "kfold",
-        "seed",
-        "n_epochs",
-        "batch_size",
-        "lr",
-        "nclass",
-        "device",
-        "dropout",
-        "weight_decay"
-      ]
-    },
-    {
-      "skill_id": "causal-treatment-models",
-      "capability": "skill.causal-treatment-models",
-      "method_id": "reviewed-cate-causal-treatment-models",
-      "runner_id": "reviewed.causal-treatment-models.cate",
-      "parameters": [
-        "operation",
-        "treatment_col",
-        "outcome_col",
-        "epochs",
-        "device",
-        "folds",
-        "seed",
-        "subject_col"
-      ]
-    },
-    {
-      "skill_id": "cnn3d",
-      "capability": "skill.cnn3d",
-      "method_id": "reviewed-train-cnn3d",
-      "runner_id": "reviewed.cnn3d.train",
-      "parameters": [
-        "task",
-        "epochs",
-        "batch_size",
-        "lr",
-        "device",
-        "folds",
-        "seed",
-        "base_channels"
-      ]
-    },
-    {
-      "skill_id": "combraintf",
-      "capability": "skill.combraintf",
-      "method_id": "reviewed-original-trainer-combraintf",
-      "runner_id": "reviewed.combraintf.original-trainer",
-      "parameters": [
-        "atlas",
-        "subject_col",
-        "label_col",
-        "task",
-        "fold",
-        "kfold",
-        "seed",
-        "n_epochs",
-        "batch_size",
-        "lr",
-        "nclass",
-        "nhead",
-        "dec_weight",
-        "hidden_size",
-        "n_clusters",
-        "wd"
-      ]
-    },
-    {
-      "skill_id": "cpm",
-      "capability": "skill.cpm",
-      "method_id": "reviewed-train-cpm",
-      "runner_id": "reviewed.cpm.train",
-      "parameters": [
-        "task",
-        "target",
-        "p_threshold",
-        "folds",
-        "seed",
-        "subject_col"
-      ]
-    },
-    {
-      "skill_id": "dwi-skill",
-      "capability": "skill.dwi-skill",
-      "method_id": "reviewed-dwifslpreproc-dwi-skill",
-      "runner_id": "reviewed.dwi-skill.dwifslpreproc",
-      "parameters": [
-        "pe_dir",
-        "readout"
-      ]
-    },
-    {
-      "skill_id": "dwi-skill",
-      "capability": "skill.dwi-skill",
-      "method_id": "reviewed-sift-existing-dwi-skill",
-      "runner_id": "reviewed.dwi-skill.sift-existing",
-      "parameters": [
-        "term_number"
-      ]
-    },
-    {
-      "skill_id": "dwi-skill",
-      "capability": "skill.dwi-skill",
-      "method_id": "reviewed-bedpostx-dwi-skill",
-      "runner_id": "reviewed.dwi-skill.bedpostx",
-      "parameters": [
-        "fibres",
-        "burnin",
-        "jumps",
-        "sample_every"
-      ]
-    },
-    {
-      "skill_id": "dwi-skill",
-      "capability": "skill.dwi-skill",
-      "method_id": "reviewed-probtrackx-existing-dwi-skill",
-      "runner_id": "reviewed.dwi-skill.probtrackx-existing",
-      "parameters": [
-        "nsamples",
-        "nsteps",
-        "step_length",
-        "curvature"
-      ]
-    },
-    {
-      "skill_id": "eeg-skill",
-      "capability": "skill.eeg-skill",
-      "method_id": "reviewed-filter-mne-eeg-tool",
-      "runner_id": "reviewed.mne-eeg-tool.filter",
-      "parameters": [
-        "high_pass",
-        "low_pass",
-        "notch",
-        "sfreq"
-      ]
-    },
-    {
-      "skill_id": "eeg-skill",
-      "capability": "skill.eeg-skill",
-      "method_id": "reviewed-ica-mne-eeg-tool",
-      "runner_id": "reviewed.mne-eeg-tool.ica",
-      "parameters": [
-        "components",
-        "exclude_components"
-      ]
-    },
-    {
-      "skill_id": "eeg-skill",
-      "capability": "skill.eeg-skill",
-      "method_id": "reviewed-epoch-mne-eeg-tool",
-      "runner_id": "reviewed.mne-eeg-tool.epoch",
-      "parameters": [
-        "epoch_seconds",
-        "tmin",
-        "tmax"
-      ]
-    },
-    {
-      "skill_id": "eeg-skill",
-      "capability": "skill.eeg-skill",
-      "method_id": "reviewed-autoreject-mne-eeg-tool",
-      "runner_id": "reviewed.mne-eeg-tool.autoreject",
-      "parameters": [
-        "epoch_seconds",
-        "tmin",
-        "tmax"
-      ]
-    },
-    {
-      "skill_id": "eeg-skill",
-      "capability": "skill.eeg-skill",
-      "method_id": "reviewed-connectivity-mne-eeg-tool",
-      "runner_id": "reviewed.mne-eeg-tool.connectivity",
-      "parameters": [
-        "epoch_seconds",
-        "tmin",
-        "tmax",
-        "freq_min",
-        "freq_max"
-      ]
-    },
-    {
-      "skill_id": "eeg-skill",
-      "capability": "skill.eeg-skill",
-      "method_id": "reviewed-time-frequency-mne-eeg-tool",
-      "runner_id": "reviewed.mne-eeg-tool.time-frequency",
-      "parameters": [
-        "epoch_seconds",
-        "tmin",
-        "tmax",
-        "freq_min",
-        "freq_max"
-      ]
-    },
-    {
-      "skill_id": "fmri-skill",
-      "capability": "skill.fmri-skill",
-      "method_id": "reviewed-slicetimer-fsl-tool",
-      "runner_id": "reviewed.fsl-tool.slicetimer",
-      "parameters": [
-        "tr",
-        "slice_axis",
-        "slice_order"
-      ]
-    },
-    {
-      "skill_id": "fsl-tool",
-      "capability": "skill.fsl-tool",
-      "method_id": "reviewed-bet-fsl-tool",
-      "runner_id": "reviewed.fsl-tool.bet",
-      "parameters": [
-        "fraction"
-      ]
-    },
-    {
-      "skill_id": "fsl-tool",
-      "capability": "skill.fsl-tool",
-      "method_id": "reviewed-fast-fsl-tool",
-      "runner_id": "reviewed.fsl-tool.fast",
-      "parameters": [
-        "classes"
-      ]
-    },
-    {
-      "skill_id": "fsl-tool",
-      "capability": "skill.fsl-tool",
-      "method_id": "reviewed-slicetimer-fsl-tool",
-      "runner_id": "reviewed.fsl-tool.slicetimer",
-      "parameters": [
-        "tr",
-        "slice_axis",
-        "slice_order"
-      ]
-    },
-    {
-      "skill_id": "fsl-tool",
-      "capability": "skill.fsl-tool",
-      "method_id": "reviewed-applywarp-fsl-tool",
-      "runner_id": "reviewed.fsl-tool.applywarp",
-      "parameters": [
-        "interp"
-      ]
-    },
-    {
-      "skill_id": "fsl-tool",
-      "capability": "skill.fsl-tool",
-      "method_id": "reviewed-bedpostx-dwi-skill",
-      "runner_id": "reviewed.dwi-skill.bedpostx",
-      "parameters": [
-        "fibres",
-        "burnin",
-        "jumps",
-        "sample_every"
-      ]
-    },
-    {
-      "skill_id": "fsl-tool",
-      "capability": "skill.fsl-tool",
-      "method_id": "reviewed-probtrackx-existing-dwi-skill",
-      "runner_id": "reviewed.dwi-skill.probtrackx-existing",
-      "parameters": [
-        "nsamples",
-        "nsteps",
-        "step_length",
-        "curvature"
-      ]
-    },
-    {
-      "skill_id": "harmonization-tool",
-      "capability": "skill.harmonization-tool",
-      "method_id": "reviewed-site-covar-harmonization-tool",
-      "runner_id": "reviewed.harmonization-tool.site-covar",
-      "parameters": [
-        "seed"
-      ]
-    },
-    {
-      "skill_id": "harmonization-tool",
-      "capability": "skill.harmonization-tool",
-      "method_id": "reviewed-none-harmonization-tool",
-      "runner_id": "reviewed.harmonization-tool.none",
-      "parameters": [
-        "seed"
-      ]
-    },
-    {
-      "skill_id": "harmonization-tool",
-      "capability": "skill.harmonization-tool",
-      "method_id": "reviewed-combat-harmonization-tool",
-      "runner_id": "reviewed.harmonization-tool.combat",
-      "parameters": [
-        "seed"
-      ]
-    },
-    {
-      "skill_id": "harmonization-tool",
-      "capability": "skill.harmonization-tool",
-      "method_id": "reviewed-combat-gam-harmonization-tool",
-      "runner_id": "reviewed.harmonization-tool.combat-gam",
-      "parameters": [
-        "seed"
-      ]
-    },
-    {
-      "skill_id": "harmonization-tool",
-      "capability": "skill.harmonization-tool",
-      "method_id": "reviewed-covbat-harmonization-tool",
-      "runner_id": "reviewed.harmonization-tool.covbat",
-      "parameters": [
-        "seed"
-      ]
-    },
-    {
-      "skill_id": "hcpa-skill",
-      "capability": "skill.hcpa-skill",
-      "method_id": "reviewed-hcpa-qc-summary-hcpa-skill",
-      "runner_id": "reviewed.hcpa-skill.hcpa-qc-summary",
-      "parameters": [
-        "fd_threshold"
-      ]
-    },
-    {
-      "skill_id": "hcpd-skill",
-      "capability": "skill.hcpd-skill",
-      "method_id": "reviewed-extract-hcpd-phenotype-hcpd-skill",
-      "runner_id": "reviewed.hcpd-skill.extract-hcpd-phenotype",
-      "parameters": [
-        "columns"
-      ]
-    },
-    {
-      "skill_id": "hcpep-skill",
-      "capability": "skill.hcpep-skill",
-      "method_id": "reviewed-extract-hcpep-phenotype-hcpep-skill",
-      "runner_id": "reviewed.hcpep-skill.extract-hcpep-phenotype",
-      "parameters": [
-        "columns"
-      ]
-    },
-    {
-      "skill_id": "hcpep-skill",
-      "capability": "skill.hcpep-skill",
-      "method_id": "reviewed-hcpep-qc-summary-hcpep-skill",
-      "runner_id": "reviewed.hcpep-skill.hcpep-qc-summary",
-      "parameters": [
-        "fd_threshold"
-      ]
-    },
-    {
-      "skill_id": "imaging-genetics-models",
-      "capability": "skill.imaging-genetics-models",
-      "method_id": "reviewed-association-imaging-genetics-models",
-      "runner_id": "reviewed.imaging-genetics-models.association",
-      "parameters": [
-        "operation",
-        "components"
-      ]
-    },
-    {
-      "skill_id": "kg-link-prediction",
-      "capability": "skill.kg-link-prediction",
-      "method_id": "reviewed-complex-kg-link-prediction",
-      "runner_id": "reviewed.kg-link-prediction.complex",
-      "parameters": [
-        "epochs",
-        "embedding_dim",
-        "negatives",
-        "device",
-        "seed"
-      ]
-    },
-    {
-      "skill_id": "meg-skill",
-      "capability": "skill.meg-skill",
-      "method_id": "reviewed-filter-mne-eeg-tool",
-      "runner_id": "reviewed.mne-eeg-tool.filter",
-      "parameters": [
-        "high_pass",
-        "low_pass",
-        "notch",
-        "sfreq"
-      ]
-    },
-    {
-      "skill_id": "meg-skill",
-      "capability": "skill.meg-skill",
-      "method_id": "reviewed-ica-mne-eeg-tool",
-      "runner_id": "reviewed.mne-eeg-tool.ica",
-      "parameters": [
-        "components",
-        "exclude_components"
-      ]
-    },
-    {
-      "skill_id": "meg-skill",
-      "capability": "skill.meg-skill",
-      "method_id": "reviewed-epoch-mne-eeg-tool",
-      "runner_id": "reviewed.mne-eeg-tool.epoch",
-      "parameters": [
-        "epoch_seconds",
-        "tmin",
-        "tmax"
-      ]
-    },
-    {
-      "skill_id": "meg-skill",
-      "capability": "skill.meg-skill",
-      "method_id": "reviewed-autoreject-mne-eeg-tool",
-      "runner_id": "reviewed.mne-eeg-tool.autoreject",
-      "parameters": [
-        "epoch_seconds",
-        "tmin",
-        "tmax"
-      ]
-    },
-    {
-      "skill_id": "meg-skill",
-      "capability": "skill.meg-skill",
-      "method_id": "reviewed-connectivity-mne-eeg-tool",
-      "runner_id": "reviewed.mne-eeg-tool.connectivity",
-      "parameters": [
-        "epoch_seconds",
-        "tmin",
-        "tmax",
-        "freq_min",
-        "freq_max"
-      ]
-    },
-    {
-      "skill_id": "meg-skill",
-      "capability": "skill.meg-skill",
-      "method_id": "reviewed-time-frequency-mne-eeg-tool",
-      "runner_id": "reviewed.mne-eeg-tool.time-frequency",
-      "parameters": [
-        "epoch_seconds",
-        "tmin",
-        "tmax",
-        "freq_min",
-        "freq_max"
-      ]
-    },
-    {
-      "skill_id": "mne-eeg-tool",
-      "capability": "skill.mne-eeg-tool",
-      "method_id": "reviewed-filter-mne-eeg-tool",
-      "runner_id": "reviewed.mne-eeg-tool.filter",
-      "parameters": [
-        "high_pass",
-        "low_pass",
-        "notch",
-        "sfreq"
-      ]
-    },
-    {
-      "skill_id": "mne-eeg-tool",
-      "capability": "skill.mne-eeg-tool",
-      "method_id": "reviewed-ica-mne-eeg-tool",
-      "runner_id": "reviewed.mne-eeg-tool.ica",
-      "parameters": [
-        "components",
-        "exclude_components"
-      ]
-    },
-    {
-      "skill_id": "mne-eeg-tool",
-      "capability": "skill.mne-eeg-tool",
-      "method_id": "reviewed-epoch-mne-eeg-tool",
-      "runner_id": "reviewed.mne-eeg-tool.epoch",
-      "parameters": [
-        "epoch_seconds",
-        "tmin",
-        "tmax"
-      ]
-    },
-    {
-      "skill_id": "mne-eeg-tool",
-      "capability": "skill.mne-eeg-tool",
-      "method_id": "reviewed-autoreject-mne-eeg-tool",
-      "runner_id": "reviewed.mne-eeg-tool.autoreject",
-      "parameters": [
-        "epoch_seconds",
-        "tmin",
-        "tmax"
-      ]
-    },
-    {
-      "skill_id": "mne-eeg-tool",
-      "capability": "skill.mne-eeg-tool",
-      "method_id": "reviewed-connectivity-mne-eeg-tool",
-      "runner_id": "reviewed.mne-eeg-tool.connectivity",
-      "parameters": [
-        "epoch_seconds",
-        "tmin",
-        "tmax",
-        "freq_min",
-        "freq_max"
-      ]
-    },
-    {
-      "skill_id": "mne-eeg-tool",
-      "capability": "skill.mne-eeg-tool",
-      "method_id": "reviewed-time-frequency-mne-eeg-tool",
-      "runner_id": "reviewed.mne-eeg-tool.time-frequency",
-      "parameters": [
-        "epoch_seconds",
-        "tmin",
-        "tmax",
-        "freq_min",
-        "freq_max"
-      ]
-    },
-    {
-      "skill_id": "neuroimaging-decoding",
-      "capability": "skill.neuroimaging-decoding",
-      "method_id": "reviewed-mvpa-neuroimaging-decoding",
-      "runner_id": "reviewed.neuroimaging-decoding.mvpa",
-      "parameters": [
-        "task",
-        "target",
-        "model",
-        "folds",
-        "seed",
-        "subject_col"
-      ]
-    },
-    {
-      "skill_id": "neuroimaging-decoding",
-      "capability": "skill.neuroimaging-decoding",
-      "method_id": "reviewed-roi-glm-neuroimaging-decoding",
-      "runner_id": "reviewed.neuroimaging-decoding.roi-glm",
-      "parameters": [
-        "subject_col",
-        "contrast_index"
-      ]
-    },
-    {
-      "skill_id": "neuroimaging-decoding",
-      "capability": "skill.neuroimaging-decoding",
-      "method_id": "reviewed-searchlight-neuroimaging-decoding",
-      "runner_id": "reviewed.neuroimaging-decoding.searchlight",
-      "parameters": [
-        "target",
-        "folds",
-        "seed"
-      ]
-    },
-    {
-      "skill_id": "nifd-skill",
-      "capability": "skill.nifd-skill",
-      "method_id": "reviewed-extract-nifd-phenotype-nifd-skill",
-      "runner_id": "reviewed.nifd-skill.extract-nifd-phenotype",
-      "parameters": [
-        "columns"
-      ]
-    },
-    {
-      "skill_id": "nifd-skill",
-      "capability": "skill.nifd-skill",
-      "method_id": "reviewed-nifd-qc-summary-nifd-skill",
-      "runner_id": "reviewed.nifd-skill.nifd-qc-summary",
-      "parameters": [
-        "fd_threshold"
-      ]
-    },
-    {
-      "skill_id": "oasis-skill",
-      "capability": "skill.oasis-skill",
-      "method_id": "reviewed-extract-oasis-phenotype-oasis-skill",
-      "runner_id": "reviewed.oasis-skill.extract-oasis-phenotype",
-      "parameters": [
-        "columns"
-      ]
-    },
-    {
-      "skill_id": "oasis-skill",
-      "capability": "skill.oasis-skill",
-      "method_id": "reviewed-oasis-qc-summary-oasis-skill",
-      "runner_id": "reviewed.oasis-skill.oasis-qc-summary",
-      "parameters": [
-        "fd_threshold"
-      ]
-    },
-    {
-      "skill_id": "pnc-skill",
-      "capability": "skill.pnc-skill",
-      "method_id": "reviewed-extract-pnc-phenotype-pnc-skill",
-      "runner_id": "reviewed.pnc-skill.extract-pnc-phenotype",
-      "parameters": [
-        "columns"
-      ]
-    },
-    {
-      "skill_id": "ppmi-skill",
-      "capability": "skill.ppmi-skill",
-      "method_id": "reviewed-extract-ppmi-phenotype-ppmi-skill",
-      "runner_id": "reviewed.ppmi-skill.extract-ppmi-phenotype",
-      "parameters": [
-        "columns"
-      ]
-    },
-    {
-      "skill_id": "ppmi-skill",
-      "capability": "skill.ppmi-skill",
-      "method_id": "reviewed-ppmi-qc-summary-ppmi-skill",
-      "runner_id": "reviewed.ppmi-skill.ppmi-qc-summary",
-      "parameters": [
-        "fd_threshold"
-      ]
-    },
-    {
-      "skill_id": "rest-mneta-mdd-skill",
-      "capability": "skill.rest-mneta-mdd-skill",
-      "method_id": "reviewed-site-covar-harmonization-tool",
-      "runner_id": "reviewed.harmonization-tool.site-covar",
-      "parameters": [
-        "seed"
-      ]
-    },
-    {
-      "skill_id": "rest-mneta-mdd-skill",
-      "capability": "skill.rest-mneta-mdd-skill",
-      "method_id": "reviewed-extract-rest-mdd-phenotype-rest-mneta-mdd-skill",
-      "runner_id": "reviewed.rest-mneta-mdd-skill.extract-rest-mdd-phenotype",
-      "parameters": [
-        "columns"
-      ]
-    },
-    {
-      "skill_id": "rest-mneta-mdd-skill",
-      "capability": "skill.rest-mneta-mdd-skill",
-      "method_id": "reviewed-rest-mdd-qc-summary-rest-mneta-mdd-skill",
-      "runner_id": "reviewed.rest-mneta-mdd-skill.rest-mdd-qc-summary",
-      "parameters": [
-        "fd_threshold"
-      ]
-    },
-    {
-      "skill_id": "run_models",
-      "capability": "skill.run-models",
-      "method_id": "reviewed-classification-statistical-ml",
-      "runner_id": "reviewed.statistical-ml.classification",
-      "parameters": [
-        "operation",
-        "target",
-        "group_col",
-        "folds",
-        "seed",
-        "subject_col"
-      ]
-    },
-    {
-      "skill_id": "run_models",
-      "capability": "skill.run-models",
-      "method_id": "reviewed-regression-statistical-ml",
-      "runner_id": "reviewed.statistical-ml.regression",
-      "parameters": [
-        "operation",
-        "target",
-        "group_col",
-        "folds",
-        "seed",
-        "subject_col"
-      ]
-    },
-    {
-      "skill_id": "run_models",
-      "capability": "skill.run-models",
-      "method_id": "reviewed-train-cpm",
-      "runner_id": "reviewed.cpm.train",
-      "parameters": [
-        "task",
-        "target",
-        "p_threshold",
-        "folds",
-        "seed",
-        "subject_col"
-      ]
-    },
-    {
-      "skill_id": "run_models",
-      "capability": "skill.run-models",
-      "method_id": "reviewed-train-brain-age-modeling",
-      "runner_id": "reviewed.brain-age-modeling.train",
-      "parameters": [
-        "model",
-        "age_col",
-        "folds",
-        "seed",
-        "subject_col"
-      ]
-    },
-    {
-      "skill_id": "run_models",
-      "capability": "skill.run-models",
-      "method_id": "reviewed-cluster-subject-subtyping",
-      "runner_id": "reviewed.subject-subtyping.cluster",
-      "parameters": [
-        "operation",
-        "n_clusters",
-        "subject_col",
-        "seed"
-      ]
-    },
-    {
-      "skill_id": "run_models",
-      "capability": "skill.run-models",
-      "method_id": "reviewed-association-imaging-genetics-models",
-      "runner_id": "reviewed.imaging-genetics-models.association",
-      "parameters": [
-        "operation",
-        "components"
-      ]
-    },
-    {
-      "skill_id": "run_models",
-      "capability": "skill.run-models",
-      "method_id": "reviewed-train-temporal-models",
-      "runner_id": "reviewed.temporal-models.train",
-      "parameters": [
-        "operation",
-        "task",
-        "epochs",
-        "batch_size",
-        "lr",
-        "device",
-        "folds",
-        "seed",
-        "hidden_dim",
-        "layers"
-      ]
-    },
-    {
-      "skill_id": "run_models",
-      "capability": "skill.run-models",
-      "method_id": "reviewed-train-cnn3d",
-      "runner_id": "reviewed.cnn3d.train",
-      "parameters": [
-        "task",
-        "epochs",
-        "batch_size",
-        "lr",
-        "device",
-        "folds",
-        "seed",
-        "base_channels"
-      ]
-    },
-    {
-      "skill_id": "run_models",
-      "capability": "skill.run-models",
-      "method_id": "reviewed-survival-scientific-survival-models",
-      "runner_id": "reviewed.survival-models.survival-scientific",
-      "parameters": [
-        "operation",
-        "duration_col",
-        "event_col",
-        "epochs",
-        "device",
-        "folds",
-        "seed",
-        "subject_col"
-      ]
-    },
-    {
-      "skill_id": "run_models",
-      "capability": "skill.run-models",
-      "method_id": "reviewed-survival-torch-survival-models",
-      "runner_id": "reviewed.survival-models.survival-torch",
-      "parameters": [
-        "operation",
-        "duration_col",
-        "event_col",
-        "epochs",
-        "device",
-        "folds",
-        "seed",
-        "subject_col"
-      ]
-    },
-    {
-      "skill_id": "run_models",
-      "capability": "skill.run-models",
-      "method_id": "reviewed-cate-causal-treatment-models",
-      "runner_id": "reviewed.causal-treatment-models.cate",
-      "parameters": [
-        "operation",
-        "treatment_col",
-        "outcome_col",
-        "epochs",
-        "device",
-        "folds",
-        "seed",
-        "subject_col"
-      ]
-    },
-    {
-      "skill_id": "run_models",
-      "capability": "skill.run-models",
-      "method_id": "reviewed-mvpa-neuroimaging-decoding",
-      "runner_id": "reviewed.neuroimaging-decoding.mvpa",
-      "parameters": [
-        "task",
-        "target",
-        "model",
-        "folds",
-        "seed",
-        "subject_col"
-      ]
-    },
-    {
-      "skill_id": "run_models",
-      "capability": "skill.run-models",
-      "method_id": "reviewed-roi-glm-neuroimaging-decoding",
-      "runner_id": "reviewed.neuroimaging-decoding.roi-glm",
-      "parameters": [
-        "subject_col",
-        "contrast_index"
-      ]
-    },
-    {
-      "skill_id": "run_models",
-      "capability": "skill.run-models",
-      "method_id": "reviewed-searchlight-neuroimaging-decoding",
-      "runner_id": "reviewed.neuroimaging-decoding.searchlight",
-      "parameters": [
-        "target",
-        "folds",
-        "seed"
-      ]
-    },
-    {
-      "skill_id": "run_models",
-      "capability": "skill.run-models",
-      "method_id": "reviewed-original-trainer-bnt",
-      "runner_id": "reviewed.bnt.original-trainer",
-      "parameters": [
-        "atlas",
-        "subject_col",
-        "label_col",
-        "task",
-        "fold",
-        "kfold",
-        "seed",
-        "n_epochs",
-        "batch_size",
-        "lr",
-        "nclass",
-        "nhead",
-        "dec_weight",
-        "pos_embed_dim"
-      ]
-    },
-    {
-      "skill_id": "run_models",
-      "capability": "skill.run-models",
-      "method_id": "reviewed-original-trainer-brainnetcnn",
-      "runner_id": "reviewed.brainnetcnn.original-trainer",
-      "parameters": [
-        "atlas",
-        "subject_col",
-        "label_col",
-        "task",
-        "fold",
-        "kfold",
-        "seed",
-        "n_epochs",
-        "batch_size",
-        "lr",
-        "nclass",
-        "device",
-        "dropout",
-        "weight_decay"
-      ]
-    },
-    {
-      "skill_id": "run_models",
-      "capability": "skill.run-models",
-      "method_id": "reviewed-original-trainer-combraintf",
-      "runner_id": "reviewed.combraintf.original-trainer",
-      "parameters": [
-        "atlas",
-        "subject_col",
-        "label_col",
-        "task",
-        "fold",
-        "kfold",
-        "seed",
-        "n_epochs",
-        "batch_size",
-        "lr",
-        "nclass",
-        "nhead",
-        "dec_weight",
-        "hidden_size",
-        "n_clusters",
-        "wd"
-      ]
-    },
-    {
-      "skill_id": "scan-skill",
-      "capability": "skill.scan-skill",
-      "method_id": "reviewed-table-join-scan-skill",
-      "runner_id": "reviewed.scan-skill.table-join",
-      "parameters": [
-        "keys",
-        "how",
-        "validate"
-      ]
-    },
-    {
-      "skill_id": "seed-vig-skill",
-      "capability": "skill.seed-vig-skill",
-      "method_id": "reviewed-classify-seed-vig-skill",
-      "runner_id": "reviewed.seed-vig-skill.classify",
-      "parameters": [
-        "method"
-      ]
-    },
-    {
-      "skill_id": "smri-skill",
-      "capability": "skill.smri-skill",
-      "method_id": "reviewed-bet-fsl-tool",
-      "runner_id": "reviewed.fsl-tool.bet",
-      "parameters": [
-        "fraction"
-      ]
-    },
-    {
-      "skill_id": "smri-skill",
-      "capability": "skill.smri-skill",
-      "method_id": "reviewed-fast-fsl-tool",
-      "runner_id": "reviewed.fsl-tool.fast",
-      "parameters": [
-        "classes"
-      ]
-    },
-    {
-      "skill_id": "smri-skill",
-      "capability": "skill.smri-skill",
-      "method_id": "reviewed-applywarp-fsl-tool",
-      "runner_id": "reviewed.fsl-tool.applywarp",
-      "parameters": [
-        "interp"
-      ]
-    },
-    {
-      "skill_id": "smri-skill",
-      "capability": "skill.smri-skill",
-      "method_id": "reviewed-ants-apply-smri-skill",
-      "runner_id": "reviewed.smri-skill.ants-apply",
-      "parameters": [
-        "interp"
-      ]
-    },
-    {
-      "skill_id": "statistical-ml",
-      "capability": "skill.statistical-ml",
-      "method_id": "reviewed-classification-statistical-ml",
-      "runner_id": "reviewed.statistical-ml.classification",
-      "parameters": [
-        "operation",
-        "target",
-        "group_col",
-        "folds",
-        "seed",
-        "subject_col"
-      ]
-    },
-    {
-      "skill_id": "statistical-ml",
-      "capability": "skill.statistical-ml",
-      "method_id": "reviewed-regression-statistical-ml",
-      "runner_id": "reviewed.statistical-ml.regression",
-      "parameters": [
-        "operation",
-        "target",
-        "group_col",
-        "folds",
-        "seed",
-        "subject_col"
-      ]
-    },
-    {
-      "skill_id": "subject-subtyping",
-      "capability": "skill.subject-subtyping",
-      "method_id": "reviewed-cluster-subject-subtyping",
-      "runner_id": "reviewed.subject-subtyping.cluster",
-      "parameters": [
-        "operation",
-        "n_clusters",
-        "subject_col",
-        "seed"
-      ]
-    },
-    {
-      "skill_id": "survival-models",
-      "capability": "skill.survival-models",
-      "method_id": "reviewed-survival-scientific-survival-models",
-      "runner_id": "reviewed.survival-models.survival-scientific",
-      "parameters": [
-        "operation",
-        "duration_col",
-        "event_col",
-        "epochs",
-        "device",
-        "folds",
-        "seed",
-        "subject_col"
-      ]
-    },
-    {
-      "skill_id": "survival-models",
-      "capability": "skill.survival-models",
-      "method_id": "reviewed-survival-torch-survival-models",
-      "runner_id": "reviewed.survival-models.survival-torch",
-      "parameters": [
-        "operation",
-        "duration_col",
-        "event_col",
-        "epochs",
-        "device",
-        "folds",
-        "seed",
-        "subject_col"
-      ]
-    },
-    {
-      "skill_id": "tcp-skill",
-      "capability": "skill.tcp-skill",
-      "method_id": "reviewed-extract-tcp-phenotype-tcp-skill",
-      "runner_id": "reviewed.tcp-skill.extract-tcp-phenotype",
-      "parameters": [
-        "columns"
-      ]
-    },
-    {
-      "skill_id": "tcp-skill",
-      "capability": "skill.tcp-skill",
-      "method_id": "reviewed-tcp-qc-summary-tcp-skill",
-      "runner_id": "reviewed.tcp-skill.tcp-qc-summary",
-      "parameters": [
-        "fd_threshold"
-      ]
-    },
-    {
-      "skill_id": "temporal-models",
-      "capability": "skill.temporal-models",
-      "method_id": "reviewed-train-temporal-models",
-      "runner_id": "reviewed.temporal-models.train",
-      "parameters": [
-        "operation",
-        "task",
-        "epochs",
-        "batch_size",
-        "lr",
-        "device",
-        "folds",
-        "seed",
-        "hidden_dim",
-        "layers"
-      ]
-    },
-    {
-      "skill_id": "ucla-cnp-skill",
-      "capability": "skill.ucla-cnp-skill",
-      "method_id": "reviewed-extract-ucla-cnp-phenotype-ucla-cnp-skill",
-      "runner_id": "reviewed.ucla-cnp-skill.extract-ucla-cnp-phenotype",
-      "parameters": [
-        "columns"
-      ]
-    },
-    {
-      "skill_id": "ucla-cnp-skill",
-      "capability": "skill.ucla-cnp-skill",
-      "method_id": "reviewed-ucla-cnp-qc-summary-ucla-cnp-skill",
-      "runner_id": "reviewed.ucla-cnp-skill.ucla-cnp-qc-summary",
-      "parameters": [
-        "fd_threshold"
-      ]
-    }
-  ],
+  "skill_overviews": 105,
+  "skill_aliases": 70,
+  "invalid_contracts": {},
+  "documentation_gaps": {},
+  "execution_evidence": {
+    "not_recorded": 236,
+    "passed": 13
+  },
+  "registered_methods": 249,
+  "pipelines": 28,
+  "runner_methods": 249,
+  "registered_parameters": 941,
+  "undocumented_parameters": 0,
+  "methods_needing_parameter_documentation": [],
   "command_coverage": [
     {
       "command": "5tt2gmwmi",
@@ -1161,6 +24,139 @@
         "config": "不开放任意软件配置键，以免绕过路径、线程及运行环境管理。",
         "help": "通过命令说明面板提供，不作为计算参数。",
         "version": "由运行环境探测提供。"
+      }
+    },
+    {
+      "command": "5tt2vis",
+      "version": "3.0.8",
+      "total_options": 14,
+      "exposed_options": 10,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "5ttedit",
+      "version": "3.0.8",
+      "total_options": 14,
+      "exposed_options": 10,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "afdconnectivity",
+      "version": "3.0.8",
+      "total_options": 11,
+      "exposed_options": 7,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "amp2sh",
+      "version": "3.0.8",
+      "total_options": 16,
+      "exposed_options": 11,
+      "omitted_options": {
+        "strides": "重复参数、文本或自定义路径语法需专用校验；完整原始帮助已保留。",
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "dirflip",
+      "version": "3.0.8",
+      "total_options": 10,
+      "exposed_options": 6,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "dirgen",
+      "version": "3.0.8",
+      "total_options": 13,
+      "exposed_options": 9,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "dirmerge",
+      "version": "3.0.8",
+      "total_options": 9,
+      "exposed_options": 5,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "dirorder",
+      "version": "3.0.8",
+      "total_options": 9,
+      "exposed_options": 5,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "dwi2adc",
+      "version": "3.0.8",
+      "total_options": 10,
+      "exposed_options": 6,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "dwi2mask",
+      "version": "3.0.8",
+      "total_options": 11,
+      "exposed_options": 7,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "dwi2tensor",
+      "version": "3.0.8",
+      "total_options": 16,
+      "exposed_options": 12,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
       }
     },
     {
@@ -1176,6 +172,206 @@
       }
     },
     {
+      "command": "dwiextract",
+      "version": "3.0.8",
+      "total_options": 21,
+      "exposed_options": 16,
+      "omitted_options": {
+        "strides": "重复参数、文本或自定义路径语法需专用校验；完整原始帮助已保留。",
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "fixel2sh",
+      "version": "3.0.8",
+      "total_options": 9,
+      "exposed_options": 5,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "fixel2tsf",
+      "version": "3.0.8",
+      "total_options": 9,
+      "exposed_options": 5,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "fixel2voxel",
+      "version": "3.0.8",
+      "total_options": 11,
+      "exposed_options": 7,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "fod2dec",
+      "version": "3.0.8",
+      "total_options": 15,
+      "exposed_options": 11,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "label2colour",
+      "version": "3.0.8",
+      "total_options": 9,
+      "exposed_options": 5,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "label2mesh",
+      "version": "3.0.8",
+      "total_options": 9,
+      "exposed_options": 5,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "labelconvert",
+      "version": "3.0.8",
+      "total_options": 9,
+      "exposed_options": 5,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "maskdump",
+      "version": "3.0.8",
+      "total_options": 8,
+      "exposed_options": 4,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "maskfilter",
+      "version": "3.0.8",
+      "total_options": 15,
+      "exposed_options": 10,
+      "omitted_options": {
+        "strides": "重复参数、文本或自定义路径语法需专用校验；完整原始帮助已保留。",
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "mesh2voxel",
+      "version": "3.0.8",
+      "total_options": 8,
+      "exposed_options": 4,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "meshconvert",
+      "version": "3.0.8",
+      "total_options": 10,
+      "exposed_options": 6,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "meshfilter",
+      "version": "3.0.8",
+      "total_options": 10,
+      "exposed_options": 6,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "mrcheckerboardmask",
+      "version": "3.0.8",
+      "total_options": 11,
+      "exposed_options": 7,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "mrcolour",
+      "version": "3.0.8",
+      "total_options": 11,
+      "exposed_options": 7,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "mrconvert",
+      "version": "3.0.8",
+      "total_options": 31,
+      "exposed_options": 21,
+      "omitted_options": {
+        "coord": "重复参数、文本或自定义路径语法需专用校验；完整原始帮助已保留。",
+        "clear_property": "重复参数、文本或自定义路径语法需专用校验；完整原始帮助已保留。",
+        "set_property": "重复参数、文本或自定义路径语法需专用校验；完整原始帮助已保留。",
+        "append_property": "重复参数、文本或自定义路径语法需专用校验；完整原始帮助已保留。",
+        "copy_properties": "重复参数、文本或自定义路径语法需专用校验；完整原始帮助已保留。",
+        "strides": "重复参数、文本或自定义路径语法需专用校验；完整原始帮助已保留。",
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
       "command": "mrdegibbs",
       "version": "3.0.8",
       "total_options": 13,
@@ -1185,6 +381,71 @@
         "config": "不开放任意软件配置键，以免绕过路径、线程及运行环境管理。",
         "help": "通过命令说明面板提供，不作为计算参数。",
         "version": "由运行环境探测提供。"
+      }
+    },
+    {
+      "command": "mrdump",
+      "version": "3.0.8",
+      "total_options": 9,
+      "exposed_options": 5,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "mredit",
+      "version": "3.0.8",
+      "total_options": 12,
+      "exposed_options": 5,
+      "omitted_options": {
+        "plane": "重复参数、文本或自定义路径语法需专用校验；完整原始帮助已保留。",
+        "sphere": "重复参数、文本或自定义路径语法需专用校验；完整原始帮助已保留。",
+        "voxel": "重复参数、文本或自定义路径语法需专用校验；完整原始帮助已保留。",
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "mrgrid",
+      "version": "3.0.8",
+      "total_options": 23,
+      "exposed_options": 17,
+      "omitted_options": {
+        "axis": "重复参数、文本或自定义路径语法需专用校验；完整原始帮助已保留。",
+        "strides": "重复参数、文本或自定义路径语法需专用校验；完整原始帮助已保留。",
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "mrhistmatch",
+      "version": "3.0.8",
+      "total_options": 11,
+      "exposed_options": 7,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "mrhistogram",
+      "version": "3.0.8",
+      "total_options": 13,
+      "exposed_options": 9,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
       }
     },
     {
@@ -1200,6 +461,132 @@
       }
     },
     {
+      "command": "mrtransform",
+      "version": "3.0.8",
+      "total_options": 32,
+      "exposed_options": 27,
+      "omitted_options": {
+        "strides": "重复参数、文本或自定义路径语法需专用校验；完整原始帮助已保留。",
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "peaks2amp",
+      "version": "3.0.8",
+      "total_options": 8,
+      "exposed_options": 4,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "sh2amp",
+      "version": "3.0.8",
+      "total_options": 13,
+      "exposed_options": 8,
+      "omitted_options": {
+        "strides": "重复参数、文本或自定义路径语法需专用校验；完整原始帮助已保留。",
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "sh2peaks",
+      "version": "3.0.8",
+      "total_options": 15,
+      "exposed_options": 10,
+      "omitted_options": {
+        "direction": "重复参数、文本或自定义路径语法需专用校验；完整原始帮助已保留。",
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "sh2power",
+      "version": "3.0.8",
+      "total_options": 9,
+      "exposed_options": 5,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "sh2response",
+      "version": "3.0.8",
+      "total_options": 10,
+      "exposed_options": 6,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "shconv",
+      "version": "3.0.8",
+      "total_options": 10,
+      "exposed_options": 5,
+      "omitted_options": {
+        "strides": "重复参数、文本或自定义路径语法需专用校验；完整原始帮助已保留。",
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "tckdfc",
+      "version": "3.0.8",
+      "total_options": 15,
+      "exposed_options": 11,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "tckglobal",
+      "version": "3.0.8",
+      "total_options": 29,
+      "exposed_options": 24,
+      "omitted_options": {
+        "riso": "重复参数、文本或自定义路径语法需专用校验；完整原始帮助已保留。",
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "tckmap",
+      "version": "3.0.8",
+      "total_options": 26,
+      "exposed_options": 21,
+      "omitted_options": {
+        "dixel": "重复参数、文本或自定义路径语法需专用校验；完整原始帮助已保留。",
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
       "command": "tckresample",
       "version": "3.0.8",
       "total_options": 15,
@@ -1209,6 +596,30 @@
         "config": "不开放任意软件配置键，以免绕过路径、线程及运行环境管理。",
         "help": "通过命令说明面板提供，不作为计算参数。",
         "version": "由运行环境探测提供。"
+      }
+    },
+    {
+      "command": "tcksample",
+      "version": "3.0.8",
+      "total_options": 12,
+      "exposed_options": 8,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "tcksift",
+      "version": "3.0.8",
+      "total_options": 24,
+      "exposed_options": 20,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
       }
     },
     {
@@ -1222,6 +633,176 @@
         "config": "不开放任意软件配置键，以免绕过路径、线程及运行环境管理。",
         "help": "通过命令说明面板提供，不作为计算参数。",
         "version": "由运行环境探测提供。"
+      }
+    },
+    {
+      "command": "tckstats",
+      "version": "3.0.8",
+      "total_options": 13,
+      "exposed_options": 8,
+      "omitted_options": {
+        "output": "重复参数、文本或自定义路径语法需专用校验；完整原始帮助已保留。",
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "tcktransform",
+      "version": "3.0.8",
+      "total_options": 8,
+      "exposed_options": 4,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "tensor2metric",
+      "version": "3.0.8",
+      "total_options": 20,
+      "exposed_options": 16,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "transformcalc",
+      "version": "3.0.8",
+      "total_options": 8,
+      "exposed_options": 4,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "transformconvert",
+      "version": "3.0.8",
+      "total_options": 8,
+      "exposed_options": 4,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "tsfdivide",
+      "version": "3.0.8",
+      "total_options": 8,
+      "exposed_options": 4,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "tsfsmooth",
+      "version": "3.0.8",
+      "total_options": 9,
+      "exposed_options": 5,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "tsfthreshold",
+      "version": "3.0.8",
+      "total_options": 9,
+      "exposed_options": 5,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "voxel2mesh",
+      "version": "3.0.8",
+      "total_options": 10,
+      "exposed_options": 6,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "warp2metric",
+      "version": "3.0.8",
+      "total_options": 11,
+      "exposed_options": 6,
+      "omitted_options": {
+        "fc": "重复参数、文本或自定义路径语法需专用校验；完整原始帮助已保留。",
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "warpconvert",
+      "version": "3.0.8",
+      "total_options": 11,
+      "exposed_options": 7,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "warpcorrect",
+      "version": "3.0.8",
+      "total_options": 10,
+      "exposed_options": 6,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "warpinit",
+      "version": "3.0.8",
+      "total_options": 8,
+      "exposed_options": 4,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
+      }
+    },
+    {
+      "command": "warpinvert",
+      "version": "3.0.8",
+      "total_options": 10,
+      "exposed_options": 6,
+      "omitted_options": {
+        "force": "平台为每次运行创建独立输出目录，禁止覆盖既有数据。",
+        "config": "任意配置键由部署管理员管理，防止绕过目录及资源边界。",
+        "help": "原始帮助作为文档提供。",
+        "version": "平台自动检查安装版本。"
       }
     }
   ],

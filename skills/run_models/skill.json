@@ -1,0 +1,680 @@
+{
+  "schema_version": 1,
+  "id": "run_models",
+  "description": "统筹 run_models 的 任务处理，包括xgboost、连接组预测模型 CPM、脑龄预测与偏差校正、consensus等已接入方法。",
+  "method_refs": [
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-classification-statistical-ml--logistic",
+      "label": "logistic",
+      "default_recommended": true,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.statistical-ml.classification"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-classification-statistical-ml--ridge",
+      "label": "ridge",
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.statistical-ml.classification"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-classification-statistical-ml--elastic-net",
+      "label": "elastic_net",
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.statistical-ml.classification"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-classification-statistical-ml--svm",
+      "label": "svm",
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.statistical-ml.classification"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-classification-statistical-ml--random-forest",
+      "label": "random_forest",
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.statistical-ml.classification"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-classification-statistical-ml--extra-trees",
+      "label": "extra_trees",
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.statistical-ml.classification"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-classification-statistical-ml--hist-gradient-boosting",
+      "label": "hist_gradient_boosting",
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.statistical-ml.classification"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-classification-statistical-ml--xgboost",
+      "label": "xgboost",
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.statistical-ml.classification"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-regression-statistical-ml--ols",
+      "label": "ols",
+      "default_recommended": true,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.statistical-ml.regression"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-regression-statistical-ml--ridge",
+      "label": "ridge",
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.statistical-ml.regression"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-regression-statistical-ml--elastic-net",
+      "label": "elastic_net",
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.statistical-ml.regression"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-regression-statistical-ml--svm",
+      "label": "svm",
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.statistical-ml.regression"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-regression-statistical-ml--random-forest",
+      "label": "random_forest",
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.statistical-ml.regression"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-regression-statistical-ml--extra-trees",
+      "label": "extra_trees",
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.statistical-ml.regression"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-regression-statistical-ml--hist-gradient-boosting",
+      "label": "hist_gradient_boosting",
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.statistical-ml.regression"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-regression-statistical-ml--xgboost",
+      "label": "xgboost",
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.statistical-ml.regression"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-train-cpm",
+      "label": "连接组预测模型 CPM",
+      "default_recommended": true,
+      "default_reason": "",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/cpm/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.cpm.train"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-train-brain-age-modeling",
+      "label": "脑龄预测与偏差校正",
+      "default_recommended": true,
+      "default_reason": "",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/brain-age-modeling/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.brain-age-modeling.train"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-cluster-subject-subtyping--kmeans",
+      "label": "kmeans",
+      "default_recommended": true,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/subject-subtyping/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.subject-subtyping.cluster"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-cluster-subject-subtyping--gmm",
+      "label": "gmm",
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/subject-subtyping/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.subject-subtyping.cluster"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-cluster-subject-subtyping--spectral",
+      "label": "spectral",
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/subject-subtyping/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.subject-subtyping.cluster"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-cluster-subject-subtyping--nmf",
+      "label": "nmf",
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/subject-subtyping/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.subject-subtyping.cluster"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-cluster-subject-subtyping--consensus",
+      "label": "consensus",
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/subject-subtyping/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.subject-subtyping.cluster"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-association-imaging-genetics-models--association",
+      "label": "association",
+      "default_recommended": true,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/imaging-genetics-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.imaging-genetics-models.association"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-association-imaging-genetics-models--lmm",
+      "label": "lmm",
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/imaging-genetics-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.imaging-genetics-models.association"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-association-imaging-genetics-models--prs",
+      "label": "prs",
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/imaging-genetics-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.imaging-genetics-models.association"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-association-imaging-genetics-models--cca",
+      "label": "cca",
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/imaging-genetics-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.imaging-genetics-models.association"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-association-imaging-genetics-models--pls",
+      "label": "pls",
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/imaging-genetics-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.imaging-genetics-models.association"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-train-temporal-models--lstm",
+      "label": "lstm",
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/temporal-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.temporal-models.train"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-train-temporal-models--gru",
+      "label": "gru",
+      "default_recommended": true,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/temporal-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.temporal-models.train"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-train-temporal-models--tcn",
+      "label": "tcn",
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/temporal-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.temporal-models.train"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-train-temporal-models--transformer",
+      "label": "transformer",
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/temporal-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.temporal-models.train"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-train-cnn3d",
+      "label": "3D CNN 训练",
+      "default_recommended": true,
+      "default_reason": "",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/cnn3d/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.cnn3d.train"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-survival-scientific-survival-models--cox",
+      "label": "cox",
+      "default_recommended": true,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/survival-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.survival-models.survival-scientific"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-survival-scientific-survival-models--rsf",
+      "label": "rsf",
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/survival-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.survival-models.survival-scientific"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-survival-scientific-survival-models--xgb-cox",
+      "label": "xgb_cox",
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/survival-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.survival-models.survival-scientific"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-survival-torch-survival-models",
+      "label": "生存模型（torch）",
+      "default_recommended": true,
+      "default_reason": "",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/survival-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.survival-models.survival-torch"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-cate-causal-treatment-models--ipw",
+      "label": "ipw",
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/causal-treatment-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.causal-treatment-models.cate"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-cate-causal-treatment-models--s-learner",
+      "label": "s_learner",
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/causal-treatment-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.causal-treatment-models.cate"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-cate-causal-treatment-models--t-learner",
+      "label": "t_learner",
+      "default_recommended": true,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/causal-treatment-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.causal-treatment-models.cate"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-cate-causal-treatment-models--x-learner",
+      "label": "x_learner",
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/causal-treatment-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.causal-treatment-models.cate"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-cate-causal-treatment-models--doubly-robust",
+      "label": "doubly_robust",
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/causal-treatment-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.causal-treatment-models.cate"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-cate-causal-treatment-models--policy-learner",
+      "label": "policy_learner",
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/causal-treatment-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.causal-treatment-models.cate"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-cate-causal-treatment-models--tarnet",
+      "label": "tarnet",
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/causal-treatment-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.causal-treatment-models.cate"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-cate-causal-treatment-models--dragonnet",
+      "label": "dragonnet",
+      "default_recommended": false,
+      "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/causal-treatment-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.causal-treatment-models.cate"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-mvpa-neuroimaging-decoding",
+      "label": "ROI 多变量解码",
+      "default_recommended": true,
+      "default_reason": "",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/neuroimaging-decoding/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.neuroimaging-decoding.mvpa"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-roi-glm-neuroimaging-decoding",
+      "label": "ROI GLM 与 FDR",
+      "default_recommended": true,
+      "default_reason": "",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/neuroimaging-decoding/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.neuroimaging-decoding.roi-glm"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-searchlight-neuroimaging-decoding",
+      "label": "SearchLight 分类",
+      "default_recommended": true,
+      "default_reason": "",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/neuroimaging-decoding/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.neuroimaging-decoding.searchlight"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-original-trainer-bnt",
+      "label": "BNT 原项目训练脚本",
+      "default_recommended": true,
+      "default_reason": "",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/bnt/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.bnt.original-trainer"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-original-trainer-brainnetcnn",
+      "label": "BRAINNETCNN 原项目训练脚本",
+      "default_recommended": true,
+      "default_reason": "",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：models/brainnetcnn/scripts/train.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.brainnetcnn.original-trainer"
+    },
+    {
+      "capability": "skill.run-models",
+      "method_id": "reviewed-original-trainer-combraintf",
+      "label": "COMBRAINTF 原项目训练脚本",
+      "default_recommended": true,
+      "default_reason": "",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/combraintf/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.combraintf.original-trainer"
+    }
+  ],
+  "pipeline_refs": [],
+  "planning_capabilities": [],
+  "selection_rules": [
+    "先确认目标产物和已有输入；只选择必要步骤，已有数据或历史结果优先复用。",
+    "输入缺少时先查询目录并请求用户绑定；不要自动追加生成该输入的步骤。",
+    "独立操作选择 Method；确需固定组合时选择 Pipeline，并检查每一步输入输出。",
+    "软件工具 Skill 用于选择实现，任务 Skill 用于组织需求，不因为同时匹配两类 Skill 重复添加方法。"
+  ],
+  "functions": [
+    {
+      "method_ref": "reviewed.statistical-ml.classification",
+      "label": "xgboost",
+      "description": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.statistical-ml.regression",
+      "label": "xgboost",
+      "description": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.cpm.train",
+      "label": "连接组预测模型 CPM",
+      "description": "调用现有实现：skills/cpm/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.brain-age-modeling.train",
+      "label": "脑龄预测与偏差校正",
+      "description": "调用现有实现：skills/brain-age-modeling/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.subject-subtyping.cluster",
+      "label": "consensus",
+      "description": "调用现有实现：skills/subject-subtyping/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.imaging-genetics-models.association",
+      "label": "pls",
+      "description": "调用现有实现：skills/imaging-genetics-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.temporal-models.train",
+      "label": "transformer",
+      "description": "调用现有实现：skills/temporal-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.cnn3d.train",
+      "label": "3D CNN 训练",
+      "description": "调用现有实现：skills/cnn3d/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.survival-models.survival-scientific",
+      "label": "xgb_cox",
+      "description": "调用现有实现：skills/survival-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.survival-models.survival-torch",
+      "label": "生存模型（torch）",
+      "description": "调用现有实现：skills/survival-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.causal-treatment-models.cate",
+      "label": "dragonnet",
+      "description": "调用现有实现：skills/causal-treatment-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.neuroimaging-decoding.mvpa",
+      "label": "ROI 多变量解码",
+      "description": "调用现有实现：skills/neuroimaging-decoding/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.neuroimaging-decoding.roi-glm",
+      "label": "ROI GLM 与 FDR",
+      "description": "调用现有实现：skills/neuroimaging-decoding/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.neuroimaging-decoding.searchlight",
+      "label": "SearchLight 分类",
+      "description": "调用现有实现：skills/neuroimaging-decoding/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.bnt.original-trainer",
+      "label": "BNT 原项目训练脚本",
+      "description": "调用现有实现：skills/bnt/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.brainnetcnn.original-trainer",
+      "label": "BRAINNETCNN 原项目训练脚本",
+      "description": "调用现有实现：models/brainnetcnn/scripts/train.py。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.combraintf.original-trainer",
+      "label": "COMBRAINTF 原项目训练脚本",
+      "description": "调用现有实现：skills/combraintf/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。"
+    }
+  ],
+  "name": "run_models",
+  "category": [
+    "任务能力",
+    "run_models"
+  ],
+  "scope": "model",
+  "applicability": [
+    "需要 run_models 相关处理，且目标涉及：通用生成目录、通用生成文件。",
+    "查询具体方法并检查对应输入：分析输入、脑或 DWI Mask；不是要求一次提供目录中所有方法的输入。"
+  ],
+  "limitations": [
+    "格式和样本数量满足仅是必要条件；空间、单位、样本标识与方法假设仍须按所选方法检查。",
+    "这里只统筹已登记入口；目录收录不代表覆盖软件全部命令或参数。",
+    "环境探测与运行证据分别显示；合成数据测试不代表真实数据的科学有效性。",
+    "尚无 Method 的规划能力只能提供说明，不能当作可执行步骤。"
+  ],
+  "examples": []
+}

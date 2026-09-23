@@ -11,23 +11,31 @@ from app.capability_registry import CapabilityRegistry
 
 
 def main():
-    from build_planning_resolution import build
-    resolution=root/'bakend/resources/planning_resolution.json'
-    if json.loads(resolution.read_text(encoding='utf-8')) != build():
-        raise RuntimeError("Planning execution mappings need review/regeneration")
+    from app.method_registry import MethodRegistry
+    from app.execution.runner_registry import RunnerRegistry
     from build_skill_layers import build as build_layers
     from build_mrtrix_commands import build as build_command, COMMANDS
+    store=MethodRegistry(root);store.load(force=True)
+    if set(store.methods) != RunnerRegistry().ids():
+        raise RuntimeError('Atomic method catalog and Runner allowlist differ')
     for path, content in build_layers().items():
         if not path.is_file() or path.read_text(encoding='utf-8') != content:
             raise RuntimeError('Skill overview is stale: '+str(path))
+    from app.method_registry import MethodDefinition
     for command in COMMANDS:
-        path=root/'skills/dwi-skill/commands'/f'{command}.json'
-        if json.loads(path.read_text(encoding='utf-8')) != build_command(command):
+        definition=MethodDefinition.model_validate(build_command(command))
+        if definition != store.methods['mrtrix.command.'+command]:
             raise RuntimeError('Command definition is stale: '+command)
-    registry = CapabilityRegistry(root / "skills")
-    methods = registry.all_methods()
-    if not methods:
-        raise RuntimeError("No capability methods loaded")
+    methods=list(store.methods.values())
+    from app.method_validation import documentation_gaps
+    for method in methods:
+        if documentation_gaps(method):
+            raise RuntimeError('Missing method documentation: '+method.id)
+    referenced={ref['method_ref'] for skill in store.skills.values() for ref in skill['method_refs']}
+    if set(store.methods) - referenced:
+        raise RuntimeError('Methods missing from canonical Skill catalog')
+    for p in store.pipelines.values():
+        store.pipeline_recipe(p['id'])
     for path in (root / "scripts").glob("*.py"):
         ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     package = json.loads((root / "frontend/package.json").read_text(encoding="utf-8"))
@@ -39,7 +47,7 @@ def main():
         for line in (root / filename).read_text(encoding="utf-8").splitlines():
             if line and not line.startswith(("#", "-r ")) and "==" not in line:
                 raise RuntimeError("Unpinned backend dependency")
-    print(f"Release structure valid: {len(methods)} methods; dependency locks present")
+    print(f"Release structure valid: {len(methods)} atomic methods, {len(store.pipelines)} pipelines, {len(store.skills)} skills; dependency locks present")
 
 
 if __name__ == "__main__":

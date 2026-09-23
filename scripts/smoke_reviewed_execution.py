@@ -234,7 +234,8 @@ def main():
     os.environ['LOCALFLOW_SKILL_PYTHON']='/opt/neuroweave/envs/scientific-py311/bin/python'
     os.environ['LOCALFLOW_TORCH_PYTHON']='/opt/neuroweave/envs/torch-cu128-py311/bin/python'
     data=args.reuse_data or fixtures(root/'inputs')
-    specs=json.loads((ROOT/'bakend/resources/reviewed_execution.json').read_text(encoding='utf-8'))['methods']
+    from app.execution.runners.reviewed import specifications
+    specs=list(specifications().values())
     records=[]
     for spec in specs:
         if args.only and not any(x in spec['runner_id'] for x in args.only.split(',')):continue

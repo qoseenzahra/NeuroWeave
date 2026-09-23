@@ -48,11 +48,18 @@ export function SkillDetails({ skill, selected, disabled, onAdd, onRemove, onClo
     {query.isError && <div role="alert" className="py-4 text-danger">
       <p>{query.error.message}</p><Button onClick={() => void query.refetch()} loading={query.isFetching}>{t.retry}</Button>
     </div>}
-    {tab === 'methods' && <SkillMethods key={skill.name} skillId={skill.name}/>}
+    {tab === 'instructions' && details?.orchestration && <section className="my-3 space-y-2 rounded-control border border-line p-3">
+      <p className="font-medium">{zh?'Skill 的统筹职责':'Skill orchestration'}</p><p>{details.orchestration.description}</p>
+      {[[zh?'适用情况':'When to use', details.orchestration.applicability], [zh?'限制':'Limitations', details.orchestration.limitations]].map(([label, items]) => Array.isArray(items) && items.length > 0 && <div key={String(label)}><p className="font-medium">{String(label)}</p><ul className="list-disc space-y-1 pl-5 text-meta">{items.map(item => <li key={item}>{item}</li>)}</ul></div>)}
+      <p className="font-medium">{zh?'选择依据':'Selection guidance'}</p>
+      <ul className="list-disc space-y-1 pl-5 text-meta">{details.orchestration.selection_rules.map(rule=><li key={rule}>{rule}</li>)}</ul>
+      {details.orchestration.examples?.map(example=><div key={example.request} className="rounded-control bg-well p-2 text-meta"><p>{example.request}</p><p className="mt-1 text-muted">{example.decision}</p></div>)}
+    </section>}
+    {tab === 'methods'  && <SkillMethods key={skill.name} skillId={skill.name}/>}
     {tab === 'reference' && <SkillReference key={skill.name} skillId={skill.name}/>}
     {details && (tab === 'instructions'
       // Render source as text: Skill documents may contain HTML or executable examples.
-      ? <pre className="mt-3 whitespace-pre-wrap break-words rounded-control border border-line bg-well p-4 font-mono text-meta leading-6">{details.instructions || t.skillNoInstructions}</pre>
+      ? !details.orchestration && <pre className="mt-3 whitespace-pre-wrap break-words rounded-control border border-line bg-well p-4 font-mono text-meta leading-6">{details.instructions || t.skillNoInstructions}</pre>
       : tab === 'files' ? <ul className="mt-3 space-y-2">{details.files.map(file => <li key={file} className="flex min-w-0 items-start gap-2 text-meta">
         <FileText className="mt-0.5 size-4 shrink-0" aria-hidden="true"/><code className="break-all">{file}</code>
       </li>)}</ul> : null)}

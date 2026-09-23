@@ -34,8 +34,8 @@ def history_case(tmp_path, monkeypatch):
     store = LocalStore(tmp_path / "history.sqlite3")
     datasets = DatasetService(PROJECT, store)
     dataset = datasets.register(datasets.roots()[0].root_id, "")
-    method_data = json.loads((PROJECT / "skills/dwi-skill/tool.manifest.json").read_text(encoding="utf-8"))["provides"][0]
-    method = MethodOption(id=method_data["method_id"], skill_id="dwi-skill", **method_data)
+    definition = CapabilityRegistry(PROJECT/'skills').method_for('method','mrtrix.tckgen')
+    method = MethodOption(id=definition.method_id, **definition.model_dump(exclude={'method_id'}))
     slot = next(item for item in method.input_slots if item.id == "five_tt")
     step = WorkflowStep(id="track", order=1, title="Tractography", description="fixture",
         capability="dwi.tractography", status="method_selected", method_options=[method],

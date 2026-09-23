@@ -26,10 +26,8 @@ export function SkillCard({ skill, selected, onDetails, onAdd, onRemove, disable
   const language = useLanguageStore((state) => state.language);
   const t = getTranslations(language);
 
-  const title =
-    language === 'zh'
-      ? (skill.summary_zh ?? skill.display_name)
-      : (skill.summary_en ?? skill.display_name);
+  // Summaries describe a Skill; its stable name is the list heading.
+  const title = skill.display_name.trim() || skill.name;
   const kind = kindForSkill(skill);
   // Catalog status describes the imported definition, not server readiness.
   // Older backends without runtime evidence must never imply executability.
@@ -46,7 +44,7 @@ export function SkillCard({ skill, selected, onDetails, onAdd, onRemove, disable
     <button
       type="button"
       onClick={onDetails}
-      aria-label={`${t.skillViewDetails}: ${skill.display_name}`}
+      aria-label={`${t.skillViewDetails}: ${title}`}
       title={runtimeReasons || runtimeLabel}
       className={cx(
         'w-full rounded-card border p-3 text-left transition-control focus-ring-inset',
@@ -73,8 +71,8 @@ export function SkillCard({ skill, selected, onDetails, onAdd, onRemove, disable
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <p className="min-w-0 flex-1 truncate text-body font-medium">
-              {title || skill.display_name || skill.name}
+            <p title={title} className="min-w-0 flex-1 truncate text-body font-medium">
+              {title}
             </p>
 
             <span
@@ -108,7 +106,7 @@ export function SkillCard({ skill, selected, onDetails, onAdd, onRemove, disable
     <div className="flex flex-wrap items-center justify-between gap-2 px-3 pb-3">
       <span className="text-micro text-subtle">{selected ? t.skillAdded : t.skillViewDetails}</span>
       <Button size="sm" disabled={disabled} onClick={selected ? onRemove : onAdd}
-        aria-label={`${selected ? t.skillRemove : t.skillAdd}: ${skill.display_name}`}>
+        aria-label={`${selected ? t.skillRemove : t.skillAdd}: ${title}`}>
         {selected ? t.skillRemove : t.skillAdd}
       </Button>
     </div>

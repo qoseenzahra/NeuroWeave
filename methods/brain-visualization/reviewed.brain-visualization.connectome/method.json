@@ -1,0 +1,276 @@
+{
+  "label": "脑连接图",
+  "description": "调用现有实现：skills/brain-visualization/scripts/connectome_reference.py。输入保持只读，输出写入独立任务目录。",
+  "runner_id": "reviewed.brain-visualization.connectome",
+  "input_types": [
+    "analysis_input"
+  ],
+  "output_types": [
+    "generated_folder"
+  ],
+  "requires_features": [],
+  "parameters": [
+    {
+      "id": "top_k",
+      "argument": "top-k",
+      "label": "top-k",
+      "description": "Number of strongest positive connections to keep.",
+      "type": "integer",
+      "control": "auto",
+      "level": "basic",
+      "group": "常用参数",
+      "unit": "",
+      "required": true,
+      "default": 20,
+      "options": [],
+      "minimum": 0.0,
+      "maximum": 100000.0,
+      "step": null,
+      "placeholder": "",
+      "visible_when": {},
+      "required_when": {},
+      "enabled_when": {},
+      "conflicts_with": [],
+      "condition_help": "",
+      "usage": "参数说明直接来自 skills/brain-visualization/scripts/connectome_reference.py:90。平台仅转发已登记选项；默认值和取值限制见本方法定义。",
+      "software_default": "",
+      "documentation_url": ""
+    },
+    {
+      "id": "node_size",
+      "argument": "node-size",
+      "label": "node-size",
+      "description": "Node marker size.",
+      "type": "integer",
+      "control": "auto",
+      "level": "basic",
+      "group": "常用参数",
+      "unit": "",
+      "required": true,
+      "default": 30,
+      "options": [],
+      "minimum": 1.0,
+      "maximum": 1000.0,
+      "step": null,
+      "placeholder": "",
+      "visible_when": {},
+      "required_when": {},
+      "enabled_when": {},
+      "conflicts_with": [],
+      "condition_help": "",
+      "usage": "参数说明直接来自 skills/brain-visualization/scripts/connectome_reference.py:91。平台仅转发已登记选项；默认值和取值限制见本方法定义。",
+      "software_default": "",
+      "documentation_url": ""
+    },
+    {
+      "id": "brain_opacity",
+      "argument": "brain-opacity",
+      "label": "brain-opacity",
+      "description": "Background template opacity.",
+      "type": "number",
+      "control": "auto",
+      "level": "basic",
+      "group": "常用参数",
+      "unit": "",
+      "required": true,
+      "default": 0.2,
+      "options": [],
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "step": null,
+      "placeholder": "",
+      "visible_when": {},
+      "required_when": {},
+      "enabled_when": {},
+      "conflicts_with": [],
+      "condition_help": "",
+      "usage": "参数说明直接来自 skills/brain-visualization/scripts/connectome_reference.py:92。平台仅转发已登记选项；默认值和取值限制见本方法定义。",
+      "software_default": "",
+      "documentation_url": ""
+    }
+  ],
+  "input_slots": [
+    {
+      "id": "atlas",
+      "type": "label_image",
+      "label": "分区图谱",
+      "description": "分区图谱：标签图谱；运行时验证实际产物。。作为此方法的 atlas 输入，通过文件选择或上游输出绑定。",
+      "required": true,
+      "required_when": {},
+      "cardinality": "one",
+      "binding": "file",
+      "formats": [],
+      "companions": [],
+      "source_options": [
+        "dataset",
+        "existing_path",
+        "upstream_output"
+      ],
+      "validation": []
+    },
+    {
+      "id": "template",
+      "type": "analysis_input",
+      "label": "背景模板",
+      "description": "背景模板：模型、统计或连接组分析使用的表格、数组、图结构或特征文件。。作为此方法的 template 输入，通过文件选择或上游输出绑定。",
+      "required": true,
+      "required_when": {},
+      "cardinality": "one",
+      "binding": "file",
+      "formats": [],
+      "companions": [],
+      "source_options": [
+        "dataset",
+        "existing_path",
+        "upstream_output"
+      ],
+      "validation": []
+    },
+    {
+      "id": "matrix",
+      "type": "analysis_input",
+      "label": "连接矩阵",
+      "description": "连接矩阵：模型、统计或连接组分析使用的表格、数组、图结构或特征文件。。作为此方法的 matrix 输入，通过文件选择或上游输出绑定。",
+      "required": true,
+      "required_when": {},
+      "cardinality": "one",
+      "binding": "file",
+      "formats": [],
+      "companions": [],
+      "source_options": [
+        "dataset",
+        "existing_path",
+        "upstream_output"
+      ],
+      "validation": []
+    }
+  ],
+  "output_slots": [
+    {
+      "id": "results",
+      "type": "generated_folder",
+      "label": "分析结果",
+      "description": "分析结果：受信任 Runner 在隔离输出目录中生成并登记的目录型结果。。由此方法生成，端口 results。 运行目录内的路径：results/。",
+      "format": "",
+      "primary": true,
+      "path_template": "results/",
+      "generated_when": {}
+    },
+    {
+      "id": "file_connectome_png",
+      "type": "generated_file",
+      "label": "connectome.png",
+      "description": "connectome.png：受信任 Runner 在隔离输出目录中生成、校验并登记的文件。。由此方法生成，端口 file_connectome_png。 运行目录内的路径：results/connectome.png。",
+      "format": "",
+      "primary": false,
+      "path_template": "results/connectome.png",
+      "generated_when": {}
+    }
+  ],
+  "source_references": [
+    {
+      "path": "skills/brain-visualization/scripts/connectome_reference.py",
+      "label": "现有实现调用入口",
+      "kind": "script",
+      "line_start": 1,
+      "line_end": null
+    },
+    {
+      "path": "bakend/resources/existing_implementation_sources.json",
+      "label": "实现来源与原始源码校验记录",
+      "kind": "script",
+      "line_start": 1,
+      "line_end": null
+    }
+  ],
+  "command_references": [],
+  "included_capabilities": [],
+  "schema_version": 1,
+  "id": "reviewed.brain-visualization.connectome",
+  "version": "1",
+  "kind": "method",
+  "execution": {
+    "kind": "reviewed",
+    "adapter": {
+      "runner_id": "reviewed.brain-visualization.connectome",
+      "script": "skills/brain-visualization/scripts/connectome_reference.py",
+      "inputs": [
+        {
+          "id": "atlas",
+          "flag": "--atlas",
+          "path_list": false,
+          "many_args": false
+        },
+        {
+          "id": "template",
+          "flag": "--template",
+          "path_list": false,
+          "many_args": false
+        },
+        {
+          "id": "matrix",
+          "flag": "--matrix",
+          "path_list": false,
+          "many_args": false
+        }
+      ],
+      "parameters": [
+        {
+          "id": "top_k",
+          "flag": "--top-k"
+        },
+        {
+          "id": "node_size",
+          "flag": "--node-size"
+        },
+        {
+          "id": "brain_opacity",
+          "flag": "--brain-opacity"
+        }
+      ],
+      "modules": [
+        "numpy",
+        "pandas",
+        "nibabel",
+        "nilearn"
+      ],
+      "expected": [
+        "connectome.png"
+      ],
+      "profile": "scientific",
+      "fixed_args": [],
+      "outputs": [
+        [
+          "--output",
+          "connectome.png"
+        ]
+      ],
+      "required_files": [],
+      "executables": [],
+      "required_apis": [],
+      "implementation_source": {
+        "kind": "existing_project_script",
+        "entrypoints": [
+          "skills/brain-visualization/scripts/connectome_reference.py"
+        ],
+        "source": {
+          "origin": "NeuroWeave before runtime expansion",
+          "revision": "70b681c",
+          "source_path": "skills/brain-visualization/scripts/connectome_reference.py",
+          "source_sha256": "f9bd87fde658a0b3daed741321681d870d8f038763eea32f916211b564768b00"
+        },
+        "dependencies": {},
+        "adapter_scope": "Existing calls, argument/input validation, scheduling and output collection only; no replacement algorithm."
+      },
+      "implementation_files": [
+        {
+          "path": "skills/brain-visualization/scripts/connectome_reference.py",
+          "sha256": "f9bd87fde658a0b3daed741321681d870d8f038763eea32f916211b564768b00"
+        }
+      ],
+      "artifact_types": {
+        "connectome.png": "generated_file"
+      }
+    }
+  }
+}

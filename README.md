@@ -28,7 +28,7 @@ Slurm 执行已启用：主节点提交，三个 RTX 5060 计算节点执行 GPU
 - SQLite 持久化的数据集、Workflow、完整对话消息与审计事件
 - 可切换的对话历史列表：自动标题、最近消息预览、消息数、新建与历史恢复
 - Codex 风格会话记忆：较早消息压缩为工作摘要，同时保留近期原始消息
-- 独立的工具能力清单（`tool.manifest.json`）、统一制品类型目录和输入/输出兼容性过滤
+- 独立方法契约（`methods/*/*/method.json`）、统一制品类型目录和输入/输出兼容性过滤
 - 覆盖全部 103 个 Skill 的分层能力树、planning Manifest、方法依据追踪、按需检索和动态单步/组合任务规划
 - 无模型配置时可用的本地对话演示模式
 - 可选的 OpenAI-compatible 模型接口
@@ -37,7 +37,7 @@ Slurm 执行已启用：主节点提交，三个 RTX 5060 计算节点执行 GPU
 - 可信 Runner 注册表、后台执行队列、取消、进度/日志、制品校验与 SQLite 运行审计
 - 本地或 Slurm 执行选择、CPU/内存/GPU/时限申请、Job ID 展示与持久恢复监控
 
-当前目录共有 103 个 Skill（99 个 NeuroClaw 上游 Skill 和 4 个 NeuroWeave Skill），每个 Skill 都有 `planning.manifest.json`，因此都能进入任务卡并选择受约束参数。生成器会优先从 `SKILL.md` 的方法表、快速参考和命令块中提取操作选项，再补充适合该能力类别的常用与高级规划参数；当前 103 个 planning manifest 都有来源依据，60 个 Skill 提取出了方法级操作选项，共登记 330 条只读参考命令。运行时会把命中 Skill 的多值 `operation` 选项展开为独立候选方法，而不修改能力树或一次读取全部 Skill；当前 114 个能力、375 个原始方法可展开为 770 个可选择方法（包括同一实现的模型选项和跨 Skill 入口）。任务卡可以展开查看 Skill、脚本和命令的来源位置，参数下拉项也可以显示选项说明。
+当前目录共有 103 个 Skill（99 个 NeuroClaw 上游 Skill 和 4 个 NeuroWeave Skill）、191 个独立可执行方法契约和 28 个组合流程。Skill 的 `skill.json` 描述功能、方法角色与选择规则，通过 ID 引用 `methods/` 和 `pipelines/`；方法参数和输入输出只有一份定义。尚无可审核实现的 169 个规划条目单独保留，不成为执行入口。模型按需检索方法摘要与参数，任务卡展示独立方法或组合流程，原始 SKILL.md 作为背景参考。详见 [结构与维护指南](deploy/structured-skill-methods.md)。
 
 平台只调用或管理原有项目实现、现有库 API 和已有软件命令；不根据方法名称、文档公式或基础库可用性补写算法。缺少原始可用入口的内容保留规划。Manifest 的 `runner_id` 只是执行契约，不等于已经有执行代码。只有同时出现在后端可信 Runner 注册表、并通过服务器运行时探测的方法才会在 Dry-run 后标记为可执行。从文档提取的命令始终是只读参考，不会被模型或后端直接运行。当前显式注册 187 个经过审核的 Runner；三个计算节点的公共环境中 180 个已就绪。103 个 Skill 中，75 个至少有一项可运行方法，共 566 个就绪的候选方法入口；另有 37 个入口缺少运行条件、167 个入口仍有明确的规划缺项。原 358 个规划入口中，191 个已映射到现有调用或具体组合。fMRIPrep、QSIPrep、nii2dcm 等已有契约仍缺软件，HCP Pipelines 仍缺完整环境。详细范围、输入要求及测试证据见 [Skill 执行配置](deploy/skill-runtime/README.md) 和 [逐方法清单](deploy/skill-runtime/readiness.json)。输入只读，本地结果写入 `LOCALFLOW_OUTPUT_ROOT/run_*/step/`，Slurm 结果写入共享的 `/home/data/neuroweave/runs/hipeson/run_*/step/`，并记录命令日志、进度、校验和与运行事件。
 
@@ -51,14 +51,14 @@ LocalFlow/
 │  ├─ app/
 │  └─ data/localflow.db   # 本地默认数据库；服务器使用 runtime/localflow.db
 ├─ skills/
-│  └─ <skill-name>/       # SKILL.md / workflow.manifest.json / tool.manifest.json
+│  └─ <skill-name>/       # SKILL.md / OVERVIEW.md / skill.json
 ├─ scripts/               # Skill 清单生成、环境检查、部署与合成数据验证
 └─ THIRD_PARTY_NOTICES/   # NeuroClaw MIT 许可证
 ```
 
 ## 代码维护
 
-- `bakend/app/workflow_service.py` 管理流程状态、输入绑定和审核；方法及算法参数以 `skills/*/*manifest.json` 的既有定义为准。
+- `bakend/app/workflow_service.py` 管理流程状态、输入绑定和审核；方法契约以 `methods/*/*/method.json` 为准，组合连线在 `pipelines/*/pipeline.json` 中定义。
 - `bakend/app/execution/sample_plan.py` 分配样本并生成稳定步骤标识；`sample_execution.py` 限制每节点并行数量，恢复运行时沿用原步骤和 Slurm Job ID。
 - `bakend/app/execution/base.py` 定义 Runner 上下文和共用的可取消文件校验；各 Runner 只负责调用现有实现及整理结果。
 - `frontend/src/features/conversations/useConversations.ts` 管理列表缓存、翻页与过时请求；完整消息仍在打开对话时读取。
@@ -227,11 +227,11 @@ Runner 的受审核输入，产物仍限定写入项目 `outputs` 目录。网�
   → 操作确实存在歧义：先向用户提出一个简短澄清问题
   → 到达一个或多个 capability 叶子（不向模型发送整棵树）
   → 后端只读取命中的 SKILL.md 摘要
-  → 方法展开：把命中 Skill 的 operation 任务选项转换为独立、稳定的方法候选
+  → 方法目录：读取命中 Skill 的方法引用与显式 Pipeline 候选
   → 本地方法过滤：先排除与当前操作无关的病种、模态、阶段和运行选项
   → 方法排序：模型只看到过滤后的同类候选，返回一个推荐方法和相关备选，后端再次校验 ID
-  → structured：读取 tool.manifest.json，推荐受审 runner 方法并生成任务卡
-  → planning：读取 planning.manifest.json，生成可选参数的规划型任务步骤
+  → structured：解析 skill.json 引用的 methods / pipelines，生成任务卡
+  → planning：读取 skill.json 的 planning_capabilities，保持不可执行状态
   → Dry-run：校验 Manifest 契约、路径、Runner 运行时与方法级输入内容检查
   → 显式运行：仅确认后且 execution_enabled=true 的不可变流程快照可进入 Worker
   → 后端不从 SKILL.md 或模型文本直接拼接命令
@@ -240,7 +240,7 @@ Runner 的受审核输入，产物仍限定写入项目 `outputs` 目录。网�
 当前能力树文件为 `skills/capability.tree.json`，结构化规划文件由以下命令生成：
 
 ```powershell
-python scripts/build_structured_skill_manifests.py
+python scripts/build_skill_layers.py
 python scripts/build_capability_tree.py
 ```
 
@@ -262,22 +262,9 @@ python scripts/build_capability_tree.py
   → 组合任务：dwi.preprocess → dwi.tractography
 ```
 
-模型只能返回能力树中的叶子 ID。对于 `structured` 叶子，它还只能从
-`tool.manifest.json` 的注册方法中选择；对于 `planning` 叶子，后端先将命中
-`planning.manifest.json` 方法中的多值 `operation` 选项展开为独立方法，再让模型从这个受约束
-列表中返回推荐项和相关备选项。模型返回的未知方法 ID 会被丢弃，推荐项也必须包含在备选列表中。
-规划型步骤会显示 `PLAN` 参数快照，
-不会伪装成命令。当前图像配准复用现有 `fsl-tool` Skill 中的 FLIRT 能力；DWI
-纤维追踪支持已有 FOD/5TT 的 ACT + SIFT2，以及明确选择重建 FOD 或追加连接矩阵的组合；FSL 提供已有 BEDPOSTX 结果追踪或 BEDPOSTX → ProbtrackX 组合。各方案按真实输入和输出执行，详见 [规划入口执行说明](deploy/skill-runtime/planning-resolution.md)。
+模型只能返回能力树中的叶子 ID 和 Skill 目录中的候选 ID。独立方法契约存放于 `methods/`，Skill 仅引用与描述方法；多个方法的执行顺序、参数映射和端口连接存放于 `pipelines/`。同一方法可以由多个 Skill 统筹，不能在 Skill 内重复或覆盖执行契约。
 
-经过人工审核的规划选项可以在同一 Skill 目录增加 `recipes.manifest.json`。配方只允许引用
-可信目录中已经注册的 Runner 方法，并显式声明固定参数、每阶段参数映射、工作流输入、步骤输出和
-公开输出映射。用户仍然在方法阶段选择一个方案；锁定后只配置配方公开的输入和参数，Dry-run
-会把方案展开成实际 Runner 步骤。运行时每一步产生的真实制品路径会替换上游占位符，再交给
-下一 Runner。FreeSurfer 的“Fast subcortical + basic surfaces”是首个样例，会在同一
-`SUBJECTS_DIR` 中依次运行 `autorecon1 → autorecon2 → autorecon3`，只有第一步导入 T1w。
-T2、FLAIR、线程数等属于 Runner 参数，不再作为独立任务方法。跨 Skill 的审核映射统一由 `scripts/build_planning_resolution.py` 生成，原定义指纹变更时回到待审核；没有受审核调用或配方的选项仍保持
-规划型，模型不能把参考命令自动提升为执行权限。
+组合流程在 Dry-run/执行前编译为明确的独立方法，每一步的真实制品交给后续步骤。`mrtrix.tckgen` 只生成流线，SIFT2 是独立步骤；已有 FOD/5TT 可以直接复用。缺少受审核实现的规划能力保持不可执行，模型不能从参考命令自动提升执行权限。当前分支不兼容旧 manifest 或工作流快照；完整结构、维护与隔离测试方式见 [结构化方法说明](deploy/structured-skill-methods.md)。
 
 Prompt 使用 `planner-v4-recipe-aware` 分为任务语义标准化、分层能力路由和受约束方法排序三段。当前消息定义本轮任务范围，历史摘要和已选 Skill 仅是弱提示；缺少输入或软件被视为执行约束，不再自动扩大成完整上游流程；当用户要求实际处理时，模型优先排序语义匹配的 Runner 或受审核 Runner 配方，并优先复用数据集中已经检测到的 FOD/5TT 等中间制品。配方内部步骤由后端固定，模型不能改写或重排。`GET /api/health` 会返回当前 `prompt_version`。
 
@@ -303,13 +290,12 @@ Skill 只有在当前需求提供相应语义时才能优先命中；同一目�
 `minimum` / `maximum` / `step` 以及 `visible_when`。非必选参数可以保持空值，此时命令
 预览不会生成对应参数，而是交由软件使用默认行为。前端默认只展示常用参数；展开
 “高级参数”后按组显示方法细节。后端只校验并预览当前条件下可见的参数，模型不能添加
-manifest 未声明的参数。批量规划 manifest 的参数模板维护在
-`scripts/build_structured_skill_manifests.py`，修改后重新运行生成器即可同步全部 Skill。
+方法未声明的参数。每个独立契约维护在 `methods/<group>/<id>/method.json`；修改后运行发布检查和相关测试。
 
 ### DWI 输入与输出声明
 
 全局制品类型定义在 `skills/artifact-types.json`。DWI 预处理和纤维追踪相关方法在各自
-manifest 中通过 `input_slots` / `output_slots` 声明：
+method.json 中通过 `input_slots` / `output_slots` 声明：
 
 - 输入槽包含制品类型、用途说明、允许格式、文件或文件夹绑定方式、伴随文件和条件必选规则。
 - 输出槽包含制品类型、格式、逻辑路径模板和条件生成规则，可自动绑定到后续步骤。
@@ -490,4 +476,6 @@ DeepSeek 官方 tokenizer 的精确计数。压缩默认保留最近 8 条原始
 
 Skill 目录、SkillLoader、依赖图校验、离线摘要、103 个 Skill 及其配套文件直接复用自同级 NeuroClaw 项目。NeuroWeave 在外层增加缓存、来源标记、检索 API 和对话适配。具体清单见 `UPSTREAM.md`。
 
-环境管理类 Skill 和上游命令 handler 虽已保留，但只作为说明文件展示；后端不会执行其中的任意命令。样例流程使用独立的 `tool.manifest.json` 声明 capability、输入输出类型、参数和 `runner_id`，实际执行还必须由 `bakend/app/execution/runner_registry.py` 显式注册经过代码审查的 Runner。模型文本、SKILL.md 命令块和前端命令预览都不能越过这个白名单。NeuroClaw 使用 MIT License，许可证副本位于 `THIRD_PARTY_NOTICES/NeuroClaw-LICENSE.txt`。
+环境管理类 Skill 和上游命令 handler 虽已保留，但只作为说明文件展示；后端不会执行其中的任意命令。独立的 `method.json` 声明 capability、输入输出类型、参数和 `runner_id`，实际执行还必须由 `bakend/app/execution/runner_registry.py` 显式注册经过代码审查的 Runner。模型文本、SKILL.md 命令块和前端命令预览都不能越过这个白名单。NeuroClaw 使用 MIT License，许可证副本位于 `THIRD_PARTY_NOTICES/NeuroClaw-LICENSE.txt`。
+
+方法契约检查、Skill 去重与运行证据规则见 [catalog-quality.md](deploy/catalog-quality.md)。

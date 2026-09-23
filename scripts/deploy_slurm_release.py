@@ -209,7 +209,7 @@ def command(argv):
 
 def worker_files(files):
     return {name: content for name, content in files.items()
-            if name.startswith(('bakend/app/', 'bakend/resources/', 'skills/', 'models/'))}
+            if name.startswith(('bakend/app/', 'bakend/resources/', 'skills/', 'methods/', 'pipelines/', 'models/'))}
 
 
 def publish_worker(revision, files):

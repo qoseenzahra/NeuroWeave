@@ -448,6 +448,10 @@ Return exactly one JSON object:
 
 Rules:
 - Use task for a request to perform, configure, plan, inspect, or continue data processing.
+- Requests only to list/search/read files or to create/copy/move/rename/delete filesystem
+  entries are chat/file-tool requests, not scientific processing tasks. A mentioned FOD,
+  tractogram or software name alone does not turn file management into a processing request.
+- A processing request remains task even when it also asks to inspect existing inputs first.
 - Extract only operations explicitly requested in the current message. Do not add prerequisite,
   upstream, quality-control, or optimization operations merely because they are normally useful.
 - Missing files, missing software, and incompatible data are execution constraints. They do not

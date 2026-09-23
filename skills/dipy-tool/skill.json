@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "id": "dipy-tool",
+  "description": "统筹 dipy-tool 的 软件方法选择，包括DIPY TensorModel、DWI 载入与脑掩膜、分区影像统计。",
+  "method_refs": [
+    {
+      "capability": "dwi.tensor_metrics",
+      "method_id": "dipy",
+      "label": "DIPY TensorModel",
+      "default_recommended": true,
+      "default_reason": "适合 FA/MD 指标计算和后续扩展。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "Python 路线，便于扩展、自定义和生成结构化扩散指标。",
+      "method_ref": "dipy.tensor_fit"
+    },
+    {
+      "capability": "skill.dipy-tool",
+      "method_id": "reviewed-mask-dipy-tool",
+      "label": "DWI 载入与脑掩膜",
+      "default_recommended": true,
+      "default_reason": "",
+      "replaces_operations": [
+        "load-dwi-gradients",
+        "brain-mask"
+      ],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/dipy-tool/scripts/load_and_mask_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.dipy-tool.mask"
+    },
+    {
+      "capability": "skill.dipy-tool",
+      "method_id": "reviewed-roi-stats-dipy-tool",
+      "label": "分区影像统计",
+      "default_recommended": true,
+      "default_reason": "",
+      "replaces_operations": [
+        "roi-stats",
+        "roi-wise-diffusion-features",
+        "roi-wise-feature-extraction"
+      ],
+      "execution_resolution": {},
+      "role": "调用现有实现：skills/dipy-tool/scripts/roi_stats_reference.py。输入保持只读，输出写入独立任务目录。",
+      "method_ref": "reviewed.dipy-tool.roi-stats"
+    },
+    {
+      "capability": "skill.dipy-tool",
+      "method_id": "linked-dipy",
+      "label": "DIPY TensorModel",
+      "default_recommended": false,
+      "default_reason": "适合 FA/MD 指标计算和后续扩展。",
+      "replaces_operations": [],
+      "execution_resolution": {},
+      "role": "Python 路线，便于扩展、自定义和生成结构化扩散指标。",
+      "method_ref": "dipy.tensor_fit"
+    },
+    {
+      "capability": "skill.dipy-tool",
+      "method_id": "dipy-tool-guided--dti-fit",
+      "label": "DIPY TensorModel",
+      "default_recommended": false,
+      "default_reason": "适合 FA/MD 指标计算和后续扩展。",
+      "replaces_operations": [],
+      "execution_resolution": {
+        "state": "mapped",
+        "reason": "已核对到现有实现；选择具体入口后按其真实输入、参数和输出执行。",
+        "source_method_id": "dipy-tool-guided--dti-fit",
+        "target_method_id": "dipy"
+      },
+      "role": "Python 路线，便于扩展、自定义和生成结构化扩散指标。",
+      "method_ref": "dipy.tensor_fit"
+    },
+    {
+      "capability": "skill.dipy-tool",
+      "method_id": "dipy-tool-guided--export-tensor-metrics",
+      "label": "DIPY TensorModel",
+      "default_recommended": false,
+      "default_reason": "适合 FA/MD 指标计算和后续扩展。",
+      "replaces_operations": [],
+      "execution_resolution": {
+        "state": "mapped",
+        "reason": "已核对到现有实现；选择具体入口后按其真实输入、参数和输出执行。",
+        "source_method_id": "dipy-tool-guided--export-tensor-metrics",
+        "target_method_id": "dipy"
+      },
+      "role": "Python 路线，便于扩展、自定义和生成结构化扩散指标。",
+      "method_ref": "dipy.tensor_fit"
+    }
+  ],
+  "pipeline_refs": [],
+  "planning_capabilities": [],
+  "selection_rules": [
+    "先确认目标产物和已有输入；只选择必要步骤，已有数据或历史结果优先复用。",
+    "输入缺少时先查询目录并请求用户绑定；不要自动追加生成该输入的步骤。",
+    "独立操作选择 Method；确需固定组合时选择 Pipeline，并检查每一步输入输出。",
+    "软件工具 Skill 用于选择实现，任务 Skill 用于组织需求，不因为同时匹配两类 Skill 重复添加方法。"
+  ],
+  "functions": [
+    {
+      "method_ref": "dipy.tensor_fit",
+      "label": "DIPY TensorModel",
+      "description": "Python 路线，便于扩展、自定义和生成结构化扩散指标。"
+    },
+    {
+      "method_ref": "reviewed.dipy-tool.mask",
+      "label": "DWI 载入与脑掩膜",
+      "description": "调用现有实现：skills/dipy-tool/scripts/load_and_mask_reference.py。输入保持只读，输出写入独立任务目录。"
+    },
+    {
+      "method_ref": "reviewed.dipy-tool.roi-stats",
+      "label": "分区影像统计",
+      "description": "调用现有实现：skills/dipy-tool/scripts/roi_stats_reference.py。输入保持只读，输出写入独立任务目录。"
+    }
+  ],
+  "name": "dipy-tool",
+  "category": [
+    "软件工具",
+    "dipy"
+  ],
+  "scope": "software",
+  "applicability": [
+    "需要 dipy-tool 相关处理，且目标涉及：扩散张量指标、执行日志、通用生成目录、脑或 DWI Mask、通用生成文件。",
+    "查询具体方法并检查对应输入：预处理后的 DWI、扩散梯度表、脑或 DWI Mask、扩散 b 值、扩散梯度方向、分析输入；不是要求一次提供目录中所有方法的输入。"
+  ],
+  "limitations": [
+    "格式和样本数量满足仅是必要条件；空间、单位、样本标识与方法假设仍须按所选方法检查。",
+    "这里只统筹已登记入口；目录收录不代表覆盖软件全部命令或参数。",
+    "环境探测与运行证据分别显示；合成数据测试不代表真实数据的科学有效性。",
+    "尚无 Method 的规划能力只能提供说明，不能当作可执行步骤。"
+  ],
+  "examples": []
+}

@@ -1,4 +1,4 @@
-"""NeuroWeave adapter around NeuroClaw's reused SkillLoader."""
+"""Native JSON Skill orchestration catalog; executable contracts live in Methods."""
 
 from __future__ import annotations
 
@@ -8,12 +8,8 @@ from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+from .skill_definitions import canonical_skills
 
-from .neuroclaw_compat.loader import (
-    SkillLoader as NeuroClawSkillLoader,
-    _parse_frontmatter,
-    _strip_frontmatter,
-)
 
 
 LOCALFLOW_SKILLS = {
@@ -33,7 +29,7 @@ def _as_string_list(value: Any) -> list[str]:
 
 
 def _normalize_skill_token(text: str) -> str:
-    """Match NeuroClaw's robust skill-name mention normalization."""
+    """Normalize explicit native Skill identifiers for mention matching."""
     return re.sub(r"[^a-z0-9]+", "", str(text or "").lower())
 
 
@@ -59,6 +55,7 @@ class Skill:
     skill_md: Path
     instructions: str
     overview: str = ""
+    aliases: tuple[str, ...] = ()
 
     def public_dict(self) -> dict[str, Any]:
         return {
@@ -81,7 +78,7 @@ class Skill:
         }
 
     def prompt_excerpt(self, max_chars: int = 1_800) -> str:
-        """Reuse NeuroClaw's compact SKILL.md context strategy."""
+        """Provide the native Skill overview within the prompt budget."""
         excerpt = re.sub(r"```[\s\S]*?```", "", self.overview or self.instructions)
         excerpt = re.sub(r"\n{3,}", "\n\n", excerpt).strip()
         if len(excerpt) > max_chars:
@@ -90,7 +87,7 @@ class Skill:
 
 
 class SkillLoader:
-    """Cached NeuroWeave view over the copied NeuroClaw loader and skill tree."""
+    """Native Skill definitions with cached orchestration summaries."""
 
     def __init__(self, skills_dir: Path, summaries_file: Path | None = None) -> None:
         self.skills_dir = skills_dir.resolve()
@@ -103,9 +100,7 @@ class SkillLoader:
         paths = [
             *self.skills_dir.glob("*/SKILL.md"),
             *self.skills_dir.glob("*/OVERVIEW.md"),
-            *self.skills_dir.glob("*/tool.manifest.json"),
-            *self.skills_dir.glob("*/execution.manifest.json"),
-            *self.skills_dir.glob("*/planning.manifest.json"),
+            *self.skills_dir.glob("*/skill.json"),
         ]
         for path in sorted(paths):
             stat = path.stat()
@@ -122,84 +117,43 @@ class SkillLoader:
         return payload if isinstance(payload, dict) else {}
 
     def load_all(self) -> list[Skill]:
+        """Load native orchestration definitions; Markdown is reference material only."""
         signature = self._signature()
         if signature == self._cache_signature:
             return self._cache
-
-        upstream_skills = NeuroClawSkillLoader(self.skills_dir).load_all()
-        offline_summaries = self._offline_summaries()
-        skills: list[Skill] = []
-
-        for descriptor in upstream_skills:
-            # The upstream loader also discovers cwd/skills. NeuroWeave must use
-            # its explicit project root, otherwise a CLI launched elsewhere can
-            # mix two projects and expose the wrong method documentation.
-            if not Path(descriptor["skill_md"]).resolve().is_relative_to(self.skills_dir):
+        skills = []
+        raw = {value["id"]: value for p in self.skills_dir.glob("*/skill.json") if (value := json.loads(p.read_text(encoding="utf-8")))}
+        definitions, aliases = canonical_skills(raw)
+        self._aliases = aliases
+        for path in sorted(self.skills_dir.glob('*/skill.json')):
+            value = json.loads(path.read_text(encoding='utf-8'))
+            name = value['id']
+            if name not in definitions:
                 continue
-            skill_md = Path(descriptor["skill_md"])
-            skill_path = Path(descriptor["path"])
-            text = skill_md.read_text(encoding="utf-8")
-            metadata = _parse_frontmatter(text)
-            name = str(descriptor.get("name") or skill_path.name)
-            source = "LocalFlow" if skill_path.name in LOCALFLOW_SKILLS else "NeuroClaw"
-            offline = offline_summaries.get(name, {})
-            scripts_dir = skill_path / "scripts"
-            script_count = (
-                sum(1 for item in scripts_dir.rglob("*") if item.is_file())
-                if scripts_dir.is_dir()
-                else 0
-            )
-            handler = descriptor.get("handler")
-            fallback_runtime = "Script / external tools" if script_count or handler else "SKILL.md workflow"
-            structure_mode = (
-                "runner"
-                if any(
-                    method.get("execution_mode", "runner") == "runner"
-                    for manifest_name in ("tool.manifest.json", "execution.manifest.json")
-                    if (skill_path / manifest_name).is_file()
-                    for method in json.loads((skill_path / manifest_name).read_text(encoding="utf-8")).get("provides", [])
-                )
-                else "planning"
-                if (skill_path / "planning.manifest.json").is_file()
-                else "advisory"
-            )
-
-            skills.append(
-                Skill(
-                    name=name,
-                    display_name=str(
-                        metadata.get("display_name")
-                        or metadata.get("title")
-                        or name.replace("-", " ").replace("_", " ").title()
-                    ),
-                    description=str(descriptor.get("description") or ""),
-                    summary_en=str(offline.get("en") or descriptor.get("summary_en") or ""),
-                    summary_zh=str(offline.get("zh") or descriptor.get("summary_zh") or ""),
-                    layer=str(descriptor.get("layer") or "workflow"),
-                    skill_type=str(descriptor.get("skill_type") or "workflow"),
-                    runtime=str(metadata.get("runtime") or fallback_runtime),
-                    status=str(metadata.get("status") or ("ready" if source == "LocalFlow" else "imported")),
-                    dependencies=_as_string_list(descriptor.get("dependencies")),
-                    complementary_skills=_as_string_list(descriptor.get("complementary_skills")),
-                    source=source,
-                    script_count=script_count,
-                    has_handler=bool(handler),
-                    executable=structure_mode == "runner",
-                    structure_mode=structure_mode,
-                    path=skill_path,
-                    skill_md=skill_md,
-                    instructions=_strip_frontmatter(text).strip(),
-                    overview=(skill_path / 'OVERVIEW.md').read_text(encoding='utf-8')
-                        if (skill_path / 'OVERVIEW.md').is_file() else '',
-                )
-            )
-
-        self._cache_signature = signature
-        self._cache = skills
+            methods = value.get('method_refs', [])
+            pipelines = value.get('pipeline_refs', [])
+            description = value.get('description', '')
+            rules = value.get('selection_rules', [])
+            overview = '\n'.join([value.get('name', name), description,
+                '按需通过 list_skill_methods 浏览，再 read_skill_method / read_skill_pipeline 读取准确契约。',
+                '适用情况：', *value.get('applicability', []), '选择规则：', *rules,
+                '限制：', *value.get('limitations', []),
+                f'统筹 {len({r["method_ref"] for r in methods})} 个 Method 与 {len({r["pipeline_ref"] for r in pipelines})} 个 Pipeline。'])
+            mode = 'runner' if methods or pipelines else 'planning'
+            skills.append(Skill(name=name, display_name=value.get('name', name), description=description,
+                summary_en=description, summary_zh=description, layer='orchestration', skill_type=value.get('scope','workflow'),
+                runtime='registered-methods', status='ready' if mode=='runner' else 'planning',
+                dependencies=[], complementary_skills=[], source='NeuroWeave', script_count=0, has_handler=False,
+                executable=mode=='runner', structure_mode=mode, path=path.parent, skill_md=path,
+                instructions=json.dumps(value, ensure_ascii=False, indent=2), overview=overview,
+                aliases=tuple(key for key, target in aliases.items() if target == name)))
+        self._cache_signature=signature
+        self._cache=skills
         return skills
 
     def find(self, name: str) -> Skill | None:
-        normalized = name.strip().lower()
+        self.load_all()
+        normalized = self._aliases.get(name.strip().lower(), name.strip().lower())
         return next((skill for skill in self.load_all() if skill.name.lower() == normalized), None)
 
     def infer(self, user_text: str, limit: int = 5) -> list[Skill]:
@@ -210,7 +164,7 @@ class SkillLoader:
 
         inferred: list[Skill] = []
         for skill in self.load_all():
-            candidates = (skill.name, skill.path.name)
+            candidates = (skill.name, skill.path.name, *skill.aliases)
             if any(
                 token and token in normalized_message
                 for candidate in candidates

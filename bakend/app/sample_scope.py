@@ -6,6 +6,7 @@ fail provenance/preflight checks rather than silently shrinking an approved run.
 """
 from __future__ import annotations
 
+from .parameter_rules import input_required
 from .workflow_models import SampleScope, SkippedSample, Workflow
 
 
@@ -27,11 +28,10 @@ def partial_sample_scope(workflow: Workflow) -> SampleScope | None:
             continue
         for slot in method.input_slots:
             # Inactive conditional inputs do not narrow the selected algorithm.
-            condition = all(step.selected_parameters.get(k) in values for k, values in slot.required_when.items())
-            if slot.required_when and not condition and not slot.required:
+            required = input_required(slot, step.selected_parameters)
+            if (slot.required_when or slot.required_when_any) and not required:
                 continue
             binding = step.input_bindings.get(slot.id)
-            required = slot.required or (bool(slot.required_when) and condition)
             if binding is None:
                 if required:
                     for messages in reasons.values():
@@ -63,8 +63,8 @@ def restrict_sample_bindings(workflow: Workflow, scope: SampleScope | None) -> W
         method = next((m for m in step.method_options if m.id == step.selected_method_id), None)
         if method:
             for slot in method.input_slots:
-                if (slot.required_when and not slot.required
-                        and not all(step.selected_parameters.get(k) in v for k, v in slot.required_when.items())):
+                if ((slot.required_when or slot.required_when_any)
+                        and not input_required(slot, step.selected_parameters)):
                     step.input_bindings.pop(slot.id, None)
         for binding in step.input_bindings.values():
             if binding.binding_mode != "per_sample":
