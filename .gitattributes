@@ -1,2 +1,4 @@
 # Preserve original software help snapshots, including upstream trailing spaces.
 deploy/software-contracts/mrtrix3/*.usage.txt -whitespace
+# Evidence report checksums must survive Windows checkouts and archives.
+deploy/method-verification/reports/*.json text eol=lf

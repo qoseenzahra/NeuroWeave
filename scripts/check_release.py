@@ -31,6 +31,8 @@ def main():
     for method in methods:
         if documentation_gaps(method):
             raise RuntimeError('Missing method documentation: '+method.id)
+        if store.verification(method.id)['execution']['status'] == 'invalid':
+            raise RuntimeError('Invalid execution evidence: '+method.id)
     referenced={ref['method_ref'] for skill in store.skills.values() for ref in skill['method_refs']}
     if set(store.methods) - referenced:
         raise RuntimeError('Methods missing from canonical Skill catalog')
