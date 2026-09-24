@@ -1,6 +1,6 @@
 {
   "label": "表字段、缺失和主键候选检查",
-  "description": "调用现有实现：pandas.read_csv, pandas.DataFrame.duplicated。输入保持只读，输出写入独立任务目录。",
+  "description": "Inspect CSV/TSV columns, data types, missing values, duplicate rows and unique non-null key candidates with pandas; write the findings as a JSON report。 Inputs: input: CSV/TSV 表格 (file). Registered outputs: results/table_report.json. Fixed invocation options: --operation inspect.",
   "runner_id": "reviewed.dataset-inspector.table-inspect",
   "input_types": [
     "analysis_input"
@@ -15,7 +15,7 @@
       "id": "input",
       "type": "analysis_input",
       "label": "CSV/TSV 表格",
-      "description": "CSV/TSV 表格：模型、统计或连接组分析使用的表格、数组、图结构或特征文件。。作为此方法的 input 输入，通过文件选择或上游输出绑定。",
+      "description": "CSV/TSV 表格. Required file input for 表字段、缺失和主键候选检查; bind to port input.",
       "required": true,
       "required_when": {},
       "cardinality": "one",
@@ -35,7 +35,7 @@
       "id": "results",
       "type": "generated_folder",
       "label": "分析结果",
-      "description": "分析结果：受信任 Runner 在隔离输出目录中生成并登记的目录型结果。。由此方法生成，端口 results。 运行目录内的路径：results/。",
+      "description": "Result directory for 表字段、缺失和主键候选检查. Contains this operation's generated files, including results/table_report.json; ancillary files remain available here. Relative run path: results/.",
       "format": "",
       "primary": true,
       "path_template": "results/",
@@ -45,7 +45,7 @@
       "id": "file_table_report_json",
       "type": "generated_file",
       "label": "table_report.json",
-      "description": "table_report.json：受信任 Runner 在隔离输出目录中生成、校验并登记的文件。。由此方法生成，端口 file_table_report_json。 运行目录内的路径：results/table_report.json。",
+      "description": "table_report.json: output of 表字段、缺失和主键候选检查. Relative run path: results/table_report.json.",
       "format": "",
       "primary": false,
       "path_template": "results/table_report.json",

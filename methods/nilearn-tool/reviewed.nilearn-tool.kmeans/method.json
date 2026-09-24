@@ -1,6 +1,6 @@
 {
   "label": "kmeans 空间分区",
-  "description": "调用现有实现：skills/nilearn-tool/scripts/kmeans_parcellation_reference.py。输入保持只读，输出写入独立任务目录。",
+  "description": "Reference snippet for K-means-based neuroimaging parcellation。 Inputs: input_list: 影像路径清单 (file); mask: 脑掩膜 (file). Registered outputs: results/parcel_labels.nii.gz.",
   "runner_id": "reviewed.nilearn-tool.kmeans",
   "input_types": [
     "analysis_input"
@@ -42,7 +42,7 @@
       "id": "input_list",
       "type": "analysis_input",
       "label": "影像路径清单",
-      "description": "影像路径清单：模型、统计或连接组分析使用的表格、数组、图结构或特征文件。。作为此方法的 input_list 输入，通过文件选择或上游输出绑定。",
+      "description": "Text file listing aligned images. Required file input for kmeans 空间分区; bind to port input_list.",
       "required": true,
       "required_when": {},
       "cardinality": "one",
@@ -60,7 +60,7 @@
       "id": "mask",
       "type": "brain_mask",
       "label": "脑掩膜",
-      "description": "脑掩膜：限制拟合、配准或统计范围的二值掩膜影像。。作为此方法的 mask 输入，通过文件选择或上游输出绑定。",
+      "description": "Mask image defining spatial units. Required file input for kmeans 空间分区; bind to port mask.",
       "required": true,
       "required_when": {},
       "cardinality": "one",
@@ -80,7 +80,7 @@
       "id": "results",
       "type": "generated_folder",
       "label": "分析结果",
-      "description": "分析结果：受信任 Runner 在隔离输出目录中生成并登记的目录型结果。。由此方法生成，端口 results。 运行目录内的路径：results/。",
+      "description": "Result directory for kmeans 空间分区. Contains this operation's generated files, including results/parcel_labels.nii.gz; ancillary files remain available here. Relative run path: results/.",
       "format": "",
       "primary": true,
       "path_template": "results/",
@@ -90,7 +90,7 @@
       "id": "file_parcel_labels_nii_gz",
       "type": "generated_file",
       "label": "parcel_labels.nii.gz",
-      "description": "parcel_labels.nii.gz：受信任 Runner 在隔离输出目录中生成、校验并登记的文件。。由此方法生成，端口 file_parcel_labels_nii_gz。 运行目录内的路径：results/parcel_labels.nii.gz。",
+      "description": "parcel_labels.nii.gz: output of kmeans 空间分区. Relative run path: results/parcel_labels.nii.gz.",
       "format": "",
       "primary": false,
       "path_template": "results/parcel_labels.nii.gz",

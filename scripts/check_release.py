@@ -13,19 +13,23 @@ from app.capability_registry import CapabilityRegistry
 def main():
     from app.method_registry import MethodRegistry
     from app.execution.runner_registry import RunnerRegistry
-    from build_skill_layers import build as build_layers
     from build_mrtrix_commands import build as build_command, COMMANDS
     store=MethodRegistry(root);store.load(force=True)
     if set(store.methods) != RunnerRegistry().ids():
         raise RuntimeError('Atomic method catalog and Runner allowlist differ')
-    for path, content in build_layers().items():
-        if not path.is_file() or path.read_text(encoding='utf-8') != content:
-            raise RuntimeError('Skill overview is stale: '+str(path))
     from app.method_registry import MethodDefinition
     for command in COMMANDS:
         definition=MethodDefinition.model_validate(build_command(command))
         if definition != store.methods['mrtrix.command.'+command]:
             raise RuntimeError('Command definition is stale: '+command)
+    from build_scientific_commands import build as build_scientific
+    for definition in build_scientific()[0]:
+        if definition != store.methods[definition.id]:
+            raise RuntimeError('Scientific command definition is stale: '+definition.id)
+    from catalog_translation import check as check_translations
+    locale = check_translations(root)
+    if locale['missing'] or locale['invalid_placeholders']:
+        raise RuntimeError('Catalog translations are incomplete; run scripts/catalog_translation.py check')
     methods=list(store.methods.values())
     from app.method_validation import documentation_gaps
     for method in methods:

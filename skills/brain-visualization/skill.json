@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "id": "brain-visualization",
-  "description": "统筹 brain-visualization 的 软件方法选择，包括脑连接图、FreeSurfer 表面导出 PLY、原脚本 BOLD 频带波动区域摘要（STD 指标）。",
+  "description": "brain-visualization 统筹已登记的独立方法和可复用流程。支持：脑连接图；FreeSurfer 表面导出 PLY；原脚本 BOLD 频带波动区域摘要（STD 指标）。",
   "method_refs": [
     {
       "capability": "skill.brain-visualization",
@@ -14,7 +14,7 @@
         "publication-ready-snapshots"
       ],
       "execution_resolution": {},
-      "role": "调用现有实现：skills/brain-visualization/scripts/connectome_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Reference script for 3D brain connectome plotting。 Inputs: atlas: 分区图谱 (file); template: 背景模板 (file); matrix: 连接矩阵 (file). Registered outputs: results/connectome.png.",
       "method_ref": "reviewed.brain-visualization.connectome"
     },
     {
@@ -27,7 +27,7 @@
         "freesurfer-surface-export"
       ],
       "execution_resolution": {},
-      "role": "调用现有实现：skills/brain-visualization/scripts/freesurfer_ply_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Reference script for exporting FreeSurfer surfaces to colored PLY。 Inputs: surf: FreeSurfer 表面 (file); annot: 分区标注 (file). Registered outputs: results/surface.ply.",
       "method_ref": "reviewed.brain-visualization.surface-ply"
     },
     {
@@ -38,34 +38,17 @@
       "default_reason": "",
       "replaces_operations": [],
       "execution_resolution": {},
-      "role": "调用现有实现：skills/brain-visualization/scripts/zalff_summary_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Resample BOLD to the mask grid, detrend and filter at 0.01–0.1 Hz, compute temporal standard deviation and normalize that map within the mask. Summarize values and ROI centres by atlas. The source names this zALFF, but this adapter computes filtered-signal STD, not Fourier-amplitude ALFF. Inputs: bold: 原脚本所需 4D BOLD (file); atlas: 同空间分区图谱 (file); labels: 图谱标签 (file); mask: 分析掩膜 (file). Registered outputs: results/TOP_active_regions.csv, results/top_coordinates.csv, results/all_brain_regions_activity.csv.",
       "method_ref": "reviewed.brain-visualization.original-region-summary"
     }
   ],
   "pipeline_refs": [],
   "planning_capabilities": [],
   "selection_rules": [
-    "先确认目标产物和已有输入；只选择必要步骤，已有数据或历史结果优先复用。",
+    "先确认目标产物、允许使用的已有输入与禁止复用的结果；仅在用户允许时复用已有数据，不默认追加上游步骤。",
     "输入缺少时先查询目录并请求用户绑定；不要自动追加生成该输入的步骤。",
     "独立操作选择 Method；确需固定组合时选择 Pipeline，并检查每一步输入输出。",
     "软件工具 Skill 用于选择实现，任务 Skill 用于组织需求，不因为同时匹配两类 Skill 重复添加方法。"
-  ],
-  "functions": [
-    {
-      "method_ref": "reviewed.brain-visualization.connectome",
-      "label": "脑连接图",
-      "description": "调用现有实现：skills/brain-visualization/scripts/connectome_reference.py。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "reviewed.brain-visualization.surface-ply",
-      "label": "FreeSurfer 表面导出 PLY",
-      "description": "调用现有实现：skills/brain-visualization/scripts/freesurfer_ply_reference.py。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "reviewed.brain-visualization.original-region-summary",
-      "label": "原脚本 BOLD 频带波动区域摘要（STD 指标）",
-      "description": "调用现有实现：skills/brain-visualization/scripts/zalff_summary_reference.py。输入保持只读，输出写入独立任务目录。"
-    }
   ],
   "name": "brain-visualization",
   "category": [
@@ -74,8 +57,7 @@
   ],
   "scope": "software",
   "applicability": [
-    "需要 brain-visualization 相关处理，且目标涉及：通用生成目录、通用生成文件。",
-    "查询具体方法并检查对应输入：标签图谱、分析输入、BOLD 时间序列、脑或 DWI Mask；不是要求一次提供目录中所有方法的输入。"
+    "根据目标选择对应 Method 或 Pipeline；每个入口的输入格式、必要参数和产物以其独立契约为准。"
   ],
   "limitations": [
     "格式和样本数量满足仅是必要条件；空间、单位、样本标识与方法假设仍须按所选方法检查。",
@@ -83,5 +65,17 @@
     "环境探测与运行证据分别显示；合成数据测试不代表真实数据的科学有效性。",
     "尚无 Method 的规划能力只能提供说明，不能当作可执行步骤。"
   ],
-  "examples": []
+  "examples": [
+    {
+      "request": "查看 脑连接图 所需的输入和参数",
+      "decision": "查询 reviewed.brain-visualization.connectome 的契约，绑定文件后再规划执行。"
+    }
+  ],
+  "keywords": [
+    "brain-visualization",
+    "FreeSurfer",
+    "PLY",
+    "BOLD",
+    "STD"
+  ]
 }

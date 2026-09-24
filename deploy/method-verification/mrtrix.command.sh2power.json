@@ -1,11 +1,11 @@
 {
   "method_id": "mrtrix.command.sh2power",
   "method_version": "1",
-  "execution_fingerprint": "19b31f348b861edd797087fbc886bc32ed37ae17d0268552cd1d32fd9cefca05",
+  "execution_fingerprint": "2e1ce8c1fc704702c6e87253532916a984d30133b6c96adb0c39d7dd830c42fa",
   "report_path": "deploy/method-verification/reports/mrtrix-synthetic.json",
-  "report_sha256": "6d8310d324da36a02a25dcc2bddf145f22aa4783712ddddadd55abe0808bcb30",
+  "report_sha256": "d6d912b68614456127212d2d91018c81fb94720ff99765a4c4e90fb76b74dee3",
   "test_type": "synthetic",
-  "tested_at": "2026-09-23T08:17:03.620290+00:00",
+  "tested_at": "2026-09-23T13:39:05.650280+00:00",
   "environment": "== tckgen 3.0.8 ==; Linux CPU, 1 thread",
   "result": "passed"
 }

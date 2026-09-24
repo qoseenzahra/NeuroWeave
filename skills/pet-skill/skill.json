@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "id": "pet-skill",
-  "description": "统筹 pet-skill 的 任务处理，包括PET SUVR 实际定量、FSL 非线性配准、FSL 应用形变。",
+  "description": "pet-skill 统筹已登记的独立方法和可复用流程。支持：PET SUVR 实际定量；FSL 非线性配准；FSL 应用形变；PET → T1w 刚体配准。",
   "method_refs": [
     {
       "capability": "skill.pet-skill",
@@ -27,7 +27,7 @@
         "source_method_id": "pet-skill-guided--t1w-to-mni-normalization",
         "target_method_id": "reviewed-fnirt-fsl-tool"
       },
-      "role": "调用现有实现：/opt/software/fsl/bin/fnirt。输入保持只读，输出写入独立任务目录。",
+      "role": "Register an input image nonlinearly to a reference with FSL FNIRT, optionally initialized by a supplied affine matrix; write the warped image and warp coefficients。 Inputs: input: 输入影像 (file); reference: 参考影像 (file); transform: 变换/形变场 (file). Registered outputs: results/image.nii.gz. Fixed invocation options: --operation fnirt.",
       "method_ref": "reviewed.fsl-tool.fnirt"
     },
     {
@@ -43,7 +43,7 @@
         "source_method_id": "pet-skill-guided--t1w-to-mni-normalization",
         "target_method_id": "reviewed-applywarp-fsl-tool"
       },
-      "role": "调用现有实现：/opt/software/fsl/bin/applywarp。输入保持只读，输出写入独立任务目录。",
+      "role": "Apply an existing FSL warp to the input image on the supplied reference grid, using linear or nearest-neighbour interpolation. This entry does not estimate a new registration。 Inputs: input: 输入影像 (file); reference: 参考影像 (file); transform: 变换/形变场 (file). Registered outputs: results/image.nii.gz. Fixed invocation options: --operation applywarp.",
       "method_ref": "reviewed.fsl-tool.applywarp"
     }
   ],
@@ -1466,27 +1466,10 @@
     }
   ],
   "selection_rules": [
-    "先确认目标产物和已有输入；只选择必要步骤，已有数据或历史结果优先复用。",
+    "先确认目标产物、允许使用的已有输入与禁止复用的结果；仅在用户允许时复用已有数据，不默认追加上游步骤。",
     "输入缺少时先查询目录并请求用户绑定；不要自动追加生成该输入的步骤。",
     "独立操作选择 Method；确需固定组合时选择 Pipeline，并检查每一步输入输出。",
     "软件工具 Skill 用于选择实现，任务 Skill 用于组织需求，不因为同时匹配两类 Skill 重复添加方法。"
-  ],
-  "functions": [
-    {
-      "method_ref": "pet.compute_suvr",
-      "label": "PET SUVR 实际定量",
-      "description": "使用 Skill 自带且已审核的脚本，从 PET、参考区 Mask 和目标 Mask 计算 SUVR 表格与影像。"
-    },
-    {
-      "method_ref": "reviewed.fsl-tool.fnirt",
-      "label": "FSL 非线性配准",
-      "description": "调用现有实现：/opt/software/fsl/bin/fnirt。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "reviewed.fsl-tool.applywarp",
-      "label": "FSL 应用形变",
-      "description": "调用现有实现：/opt/software/fsl/bin/applywarp。输入保持只读，输出写入独立任务目录。"
-    }
   ],
   "name": "pet-skill",
   "category": [
@@ -1495,8 +1478,7 @@
   ],
   "scope": "modality",
   "applicability": [
-    "需要 pet-skill 相关处理，且目标涉及：通用生成文件、执行日志、通用生成目录。",
-    "查询具体方法并检查对应输入：影像或工具输入、脑或 DWI Mask、目标 Mask/ROI、分析输入；不是要求一次提供目录中所有方法的输入。"
+    "根据目标选择对应 Method 或 Pipeline；每个入口的输入格式、必要参数和产物以其独立契约为准。"
   ],
   "limitations": [
     "格式和样本数量满足仅是必要条件；空间、单位、样本标识与方法假设仍须按所选方法检查。",
@@ -1504,5 +1486,17 @@
     "环境探测与运行证据分别显示；合成数据测试不代表真实数据的科学有效性。",
     "尚无 Method 的规划能力只能提供说明，不能当作可执行步骤。"
   ],
-  "examples": []
+  "examples": [
+    {
+      "request": "查看 PET SUVR 实际定量 所需的输入和参数",
+      "decision": "查询 pet.compute_suvr 的契约，绑定文件后再规划执行。"
+    }
+  ],
+  "keywords": [
+    "pet-skill",
+    "PET",
+    "SUVR",
+    "部分容积校正",
+    "FSL"
+  ]
 }

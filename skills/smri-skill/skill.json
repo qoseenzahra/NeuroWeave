@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "id": "smri-skill",
-  "description": "统筹 smri-skill 的 任务处理，包括ANTs Registration、分区影像统计、FSL 脑提取、FSL 组织分割等已接入方法。",
+  "description": "smri-skill 统筹已登记的独立方法和可复用流程。支持：ANTs Registration；分区影像统计；FSL 脑提取；FSL 组织分割；FSL 非线性配准；FSL 应用形变；ANTs 应用变换；FSL 完整结构预处理（fsl_anat）；其他方法可在详情中分页查询。",
   "method_refs": [
     {
       "capability": "image.registration",
@@ -26,7 +26,7 @@
         "roi-wise-feature-extraction"
       ],
       "execution_resolution": {},
-      "role": "调用现有实现：skills/dipy-tool/scripts/roi_stats_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Reference DIPY snippet for atlas-based ROI statistics on tensor metrics。 Inputs: metric: 标量影像 (file); roi: 分区图谱 (file); labels: 标签表 (file). Registered outputs: results/roi_stats.csv.",
       "method_ref": "reviewed.dipy-tool.roi-stats"
     },
     {
@@ -37,7 +37,7 @@
       "default_reason": "",
       "replaces_operations": [],
       "execution_resolution": {},
-      "role": "调用现有实现：/opt/software/fsl/bin/bet。输入保持只读，输出写入独立任务目录。",
+      "role": "Extract brain tissue from the input image with FSL BET, controlling the fractional intensity threshold; save the extracted image and BET mask inside the result directory。 Inputs: input: 输入影像 (file). Registered outputs: results/image.nii.gz. Fixed invocation options: --operation bet.",
       "method_ref": "reviewed.fsl-tool.bet"
     },
     {
@@ -48,7 +48,7 @@
       "default_reason": "",
       "replaces_operations": [],
       "execution_resolution": {},
-      "role": "调用现有实现：/opt/software/fsl/bin/fast。输入保持只读，输出写入独立任务目录。",
+      "role": "Segment the input brain image into the requested number of tissue classes with FSL FAST; expose the tissue segmentation and preserve additional FAST products in the result directory。 Inputs: input: 输入影像 (file). Registered outputs: results/tissue_seg.nii.gz. Fixed invocation options: --operation fast.",
       "method_ref": "reviewed.fsl-tool.fast"
     },
     {
@@ -59,7 +59,7 @@
       "default_reason": "",
       "replaces_operations": [],
       "execution_resolution": {},
-      "role": "调用现有实现：/opt/software/fsl/bin/fnirt。输入保持只读，输出写入独立任务目录。",
+      "role": "Register an input image nonlinearly to a reference with FSL FNIRT, optionally initialized by a supplied affine matrix; write the warped image and warp coefficients。 Inputs: input: 输入影像 (file); reference: 参考影像 (file); transform: 变换/形变场 (file). Registered outputs: results/image.nii.gz. Fixed invocation options: --operation fnirt.",
       "method_ref": "reviewed.fsl-tool.fnirt"
     },
     {
@@ -70,7 +70,7 @@
       "default_reason": "",
       "replaces_operations": [],
       "execution_resolution": {},
-      "role": "调用现有实现：/opt/software/fsl/bin/applywarp。输入保持只读，输出写入独立任务目录。",
+      "role": "Apply an existing FSL warp to the input image on the supplied reference grid, using linear or nearest-neighbour interpolation. This entry does not estimate a new registration。 Inputs: input: 输入影像 (file); reference: 参考影像 (file); transform: 变换/形变场 (file). Registered outputs: results/image.nii.gz. Fixed invocation options: --operation applywarp.",
       "method_ref": "reviewed.fsl-tool.applywarp"
     },
     {
@@ -81,7 +81,7 @@
       "default_reason": "",
       "replaces_operations": [],
       "execution_resolution": {},
-      "role": "调用现有实现：/opt/software/ants-2.6.5/bin/antsApplyTransforms。输入保持只读，输出写入独立任务目录。",
+      "role": "Apply an existing ANTs transform to a 3D image on the supplied reference grid with linear or nearest-neighbour interpolation; do not estimate a new transform。 Inputs: input: 输入影像 (file); reference: 参考影像 (file); transform: 变换/形变场 (file). Registered outputs: results/image.nii.gz. Fixed invocation options: --operation ants-apply.",
       "method_ref": "reviewed.smri-skill.ants-apply"
     },
     {
@@ -92,7 +92,7 @@
       "default_reason": "",
       "replaces_operations": [],
       "execution_resolution": {},
-      "role": "调用现有实现：/opt/software/fsl/bin/fsl_anat, /opt/software/fsl/bin/fsl_sub, /opt/software/fsl/bin/fslreorient2std, /opt/software/fsl/bin/robustfov, /opt/software/fsl/bin/bet, /opt/software/fsl/bin/fast, /opt/software/fsl/bin/flirt, /opt/software/fsl/bin/fnirt, /opt/software/fsl/bin/run_first_all。输入保持只读，输出写入独立任务目录。",
+      "role": "Invoke the existing FSL fsl_anat workflow on a T1-weighted image and retain its structural.anat directory, including the bias-corrected brain image。 Inputs: input: T1w NIfTI (file). Registered outputs: results/structural.anat/T1_biascorr_brain.nii.gz. Fixed invocation options: --operation fsl-anat.",
       "method_ref": "reviewed.fsl-tool.fsl-anat"
     },
     {
@@ -146,7 +146,7 @@
         "source_method_id": "smri-skill-guided--organize-to-bids",
         "target_method_id": "reviewed-explicit-stage-bids-organizer"
       },
-      "role": "调用现有实现：json.dump, shutil.copyfile, bids_validator.BIDSValidator.is_bids。输入保持只读，输出写入独立任务目录。",
+      "role": "Copy files according to an explicit source-relative to BIDS-relative JSON mapping, check destination filenames with BIDSValidator, and write dataset metadata and a staging report. It does not infer missing entities or perform full dataset validation。 Inputs: input: 源数据集目录 (directory); mapping: 显式文件映射 JSON（源相对路径 → BIDS 相对路径） (file). Registered outputs: results/dataset_description.json, results/staging_report.json. Fixed invocation options: --operation stage.",
       "method_ref": "reviewed.bids-organizer.explicit-stage"
     },
     {
@@ -970,72 +970,10 @@
     }
   ],
   "selection_rules": [
-    "先确认目标产物和已有输入；只选择必要步骤，已有数据或历史结果优先复用。",
+    "先确认目标产物、允许使用的已有输入与禁止复用的结果；仅在用户允许时复用已有数据，不默认追加上游步骤。",
     "输入缺少时先查询目录并请求用户绑定；不要自动追加生成该输入的步骤。",
     "独立操作选择 Method；确需固定组合时选择 Pipeline，并检查每一步输入输出。",
     "软件工具 Skill 用于选择实现，任务 Skill 用于组织需求，不因为同时匹配两类 Skill 重复添加方法。"
-  ],
-  "functions": [
-    {
-      "method_ref": "ants.registration",
-      "label": "ANTs Registration",
-      "description": "使用 ANTs 完成刚体、仿射或 SyN 非线性配准，并保存复合变换与完整日志。"
-    },
-    {
-      "method_ref": "reviewed.dipy-tool.roi-stats",
-      "label": "分区影像统计",
-      "description": "调用现有实现：skills/dipy-tool/scripts/roi_stats_reference.py。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "reviewed.fsl-tool.bet",
-      "label": "FSL 脑提取",
-      "description": "调用现有实现：/opt/software/fsl/bin/bet。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "reviewed.fsl-tool.fast",
-      "label": "FSL 组织分割",
-      "description": "调用现有实现：/opt/software/fsl/bin/fast。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "reviewed.fsl-tool.fnirt",
-      "label": "FSL 非线性配准",
-      "description": "调用现有实现：/opt/software/fsl/bin/fnirt。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "reviewed.fsl-tool.applywarp",
-      "label": "FSL 应用形变",
-      "description": "调用现有实现：/opt/software/fsl/bin/applywarp。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "reviewed.smri-skill.ants-apply",
-      "label": "ANTs 应用变换",
-      "description": "调用现有实现：/opt/software/ants-2.6.5/bin/antsApplyTransforms。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "reviewed.fsl-tool.fsl-anat",
-      "label": "FSL 完整结构预处理（fsl_anat）",
-      "description": "调用现有实现：/opt/software/fsl/bin/fsl_anat, /opt/software/fsl/bin/fsl_sub, /opt/software/fsl/bin/fslreorient2std, /opt/software/fsl/bin/robustfov, /opt/software/fsl/bin/bet, /opt/softwa"
-    },
-    {
-      "method_ref": "freesurfer.recon_all",
-      "label": "FreeSurfer recon-all（可执行）",
-      "description": "使用服务器现有 FreeSurfer 7.4.1 执行完整 recon-all，或在同一 SUBJECTS_DIR 中连续执行 autorecon1/2/3，并登记受试者目录制品。"
-    },
-    {
-      "method_ref": "dcm2niix.convert",
-      "label": "dcm2niix 实际转换",
-      "description": "调用服务器现有 dcm2niix，将只读 DICOM 输入转换到隔离输出目录并生成 JSON sidecar。"
-    },
-    {
-      "method_ref": "reviewed.bids-organizer.explicit-stage",
-      "label": "按用户文件映射整理 BIDS（文件名检查）",
-      "description": "调用现有实现：json.dump, shutil.copyfile, bids_validator.BIDSValidator.is_bids。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "fmriprep.run",
-      "label": "fMRIPrep 本地环境执行",
-      "description": "通过 NeuroClaw 式可执行环境路径运行单个受试者的 fMRIPrep；环境未配置时保留为明确的禁用选项。"
-    }
   ],
   "name": "smri-skill",
   "category": [
@@ -1044,8 +982,7 @@
   ],
   "scope": "modality",
   "applicability": [
-    "需要 smri-skill 相关处理，且目标涉及：配准后影像、空间变换、执行日志、通用生成目录、通用生成文件、FreeSurfer 受试者目录。",
-    "查询具体方法并检查对应输入：影像或工具输入、脑或 DWI Mask、分析输入、标签图谱、T1w 结构像、FreeSurfer 受试者目录；不是要求一次提供目录中所有方法的输入。"
+    "根据目标选择对应 Method 或 Pipeline；每个入口的输入格式、必要参数和产物以其独立契约为准。"
   ],
   "limitations": [
     "格式和样本数量满足仅是必要条件；空间、单位、样本标识与方法假设仍须按所选方法检查。",
@@ -1053,5 +990,20 @@
     "环境探测与运行证据分别显示；合成数据测试不代表真实数据的科学有效性。",
     "尚无 Method 的规划能力只能提供说明，不能当作可执行步骤。"
   ],
-  "examples": []
+  "examples": [
+    {
+      "request": "查看 ANTs Registration 所需的输入和参数",
+      "decision": "查询 ants.registration 的契约，绑定文件后再规划执行。"
+    }
+  ],
+  "keywords": [
+    "smri-skill",
+    "sMRI",
+    "T1w",
+    "T2w",
+    "FLAIR",
+    "结构磁共振",
+    "Registration",
+    "FSL"
+  ]
 }

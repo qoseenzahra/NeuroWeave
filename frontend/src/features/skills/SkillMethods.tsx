@@ -8,11 +8,12 @@ import { fetchSkillMethods, fetchSkillMethod, fetchSkillReference } from './skil
 import type { SkillMethodSummary } from './skillsApi';
 
 export function SkillMethods({ skillId }: { skillId: string }) {
-  const zh = useLanguageStore(s => s.language) === 'zh';
+  const language = useLanguageStore(s => s.language);
+  const zh = language === 'zh';
   const [search, setSearch] = useState('');
   const [kind, setKind] = useState('method');
   const [selected, setSelected] = useState<SkillMethodSummary | null>(null);
-  const query = useInfiniteQuery({ queryKey: ['skill-methods', skillId, search, kind], initialPageParam: '',
+  const query = useInfiniteQuery({ queryKey: ['skill-methods', skillId, search, kind, language], initialPageParam: '',
     queryFn: ({ pageParam, signal }) => fetchSkillMethods(skillId, search, pageParam, signal, kind),
     getNextPageParam: page => page.next_cursor ?? undefined, staleTime: 60_000 });
   if (selected) return <SkillMethodDetail method={selected} onBack={() => setSelected(null)} />;
@@ -41,9 +42,10 @@ export function SkillMethods({ skillId }: { skillId: string }) {
 }
 
 function SkillMethodDetail({ method, onBack }: { method: SkillMethodSummary; onBack: () => void }) {
-  const zh = useLanguageStore(s => s.language) === 'zh';
+  const language = useLanguageStore(s => s.language);
+  const zh = language === 'zh';
   const [filter, setFilter] = useState('');
-  const query = useQuery({queryKey:['skill-method', method.entry_kind, method.method_id], enabled:method.entry_kind!=='capability',
+  const query = useQuery({queryKey:['skill-method', method.entry_kind, method.method_id, language], enabled:method.entry_kind!=='capability',
     queryFn: ({signal}) => fetchSkillMethod(method.entry_kind || 'method', method.method_id, signal), staleTime:60_000});
   const data = query.data;
   return <section className="mt-3 min-w-0 space-y-3">
@@ -61,7 +63,7 @@ function SkillMethodDetail({ method, onBack }: { method: SkillMethodSummary; onB
       <p className="rounded-control bg-well p-3 text-meta">{data.runtime_status.available ? (zh ? '当前入口探测可用' : 'Runtime probe available') : (zh ? '当前入口不可用' : 'Runtime unavailable')}：{data.runtime_status.reason || '—'}</p>
       <MethodVerification value={data.verification}/>
       <p className="text-meta text-muted">{zh ? '以下为平台已登记的参数与输入输出，不代表原软件全部选项。实际运行前仍须检查数据、计算节点和 Dry-run。' : 'These are registered parameters and ports, not necessarily every upstream option. Data, target nodes and dry-run still require validation.'}</p>
-      {data.command_coverage && <p className="text-meta">{zh ? '命令选项覆盖' : 'Command option coverage'}：{data.command_coverage.exposed} {zh ? '已开放' : 'exposed'} / {data.command_coverage.total} {zh ? '原始选项' : 'upstream options'}
+      {data.command_coverage && <p className="text-meta">{data.command_coverage.total === null ? (zh ? '已登记参数' : 'Registered parameters') : (zh ? '命令选项覆盖' : 'Command option coverage')}：{data.command_coverage.exposed} {data.command_coverage.total !== null && <>/ {data.command_coverage.total} {zh ? '原始选项' : 'upstream options'}</>}
         {data.command_coverage.omitted.length > 0 && <span className="block break-words">{zh ? '由平台管理或尚未接入：' : 'Managed or unsupported: '}{data.command_coverage.omitted.join(', ')}</span>}</p>}
       {[{title: zh ? '输入' : 'Inputs', items:data.input_slots}, {title:zh ? '输出' : 'Outputs',items:data.output_slots}].map(group =>
         <div key={group.title}><p className="mb-2 font-medium">{group.title}</p><ul className="space-y-2">{group.items.map(slot => <li key={slot.id} className="rounded-control border border-line p-2 text-meta">
@@ -94,9 +96,10 @@ function SkillMethodDetail({ method, onBack }: { method: SkillMethodSummary; onB
 }
 
 export function SkillReference({skillId}: {skillId:string}) {
-  const zh = useLanguageStore(s => s.language) === 'zh';
+  const language = useLanguageStore(s => s.language);
+  const zh = language === 'zh';
   const [offset,setOffset] = useState(0);
-  const query = useQuery({queryKey:['skill-reference',skillId,offset],
+  const query = useQuery({queryKey:['skill-reference',skillId,offset,language],
     queryFn:({signal})=>fetchSkillReference(skillId,offset,signal),staleTime:60_000});
   return <section className="mt-3 space-y-3">
     {query.isPending && <p role="status">{zh ? '读取参考文档…' : 'Loading reference…'}</p>}

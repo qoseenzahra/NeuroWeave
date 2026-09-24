@@ -1,11 +1,11 @@
 {
   "method_id": "mrtrix.command.mrconvert",
   "method_version": "1",
-  "execution_fingerprint": "b890b522ade97a8f39611846544eb1fb4c7df2a7016ca2c7915a8436576e53e2",
+  "execution_fingerprint": "7752943020b7dd1e5ed1a079e75e4579779ce662912debffdb5dfd4f2d0f6b4e",
   "report_path": "deploy/method-verification/reports/mrtrix-synthetic.json",
-  "report_sha256": "6d8310d324da36a02a25dcc2bddf145f22aa4783712ddddadd55abe0808bcb30",
+  "report_sha256": "d6d912b68614456127212d2d91018c81fb94720ff99765a4c4e90fb76b74dee3",
   "test_type": "synthetic",
-  "tested_at": "2026-09-23T08:17:03.620290+00:00",
+  "tested_at": "2026-09-23T13:39:05.650280+00:00",
   "environment": "== tckgen 3.0.8 ==; Linux CPU, 1 thread",
   "result": "passed"
 }

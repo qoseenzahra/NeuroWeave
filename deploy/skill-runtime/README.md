@@ -27,7 +27,7 @@
 - **现有软件命令**：固定调用 FSL、ANTs、MRtrix3 和既有 FreeSurfer 等命令，不接受用户或模型生成的可执行文件路径。
 - **来源与代码一致性**：每个新增调用适配记录入口及所需源码的校验值；文件变化后预检拒绝执行，需先重新核对来源。参数、文件读写和兼容性修复不得引入算法替代。
 
-逐适配的来源、实际 API/软件入口及源码校验记录见 [reviewed_execution.json](../../bakend/resources/reviewed_execution.json)。生成器只接受已登记的原脚本或明确列出的 API/软件适配；缺少现成实现时保留规划，不根据文档公式补写实现。
+逐适配的来源、实际 API/软件入口及源码校验记录见 各 [Method 契约](../../methods/) 中的 `execution.adapter` 和 [源码记录](../../bakend/resources/existing_implementation_sources.json)。生成器只接受已登记的原脚本或明确列出的 API/软件适配；缺少现成实现时保留规划，不根据文档公式补写实现。
 
 ## 保持撤回的替代实现
 

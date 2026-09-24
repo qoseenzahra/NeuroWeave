@@ -15,17 +15,15 @@
 ```text
 methods/<software-or-group>/<method-id>/
   method.json                    # 唯一参数、端口、执行适配器契约
-  README.md                      # 简短用途说明
 skills/<skill>/
-  skill.json                     # functions / selection_rules / method_refs / pipeline_refs
-  OVERVIEW.md                    # 由 skill.json 生成的紧凑入口
+  skill.json                     # selection_rules / method_refs / pipeline_refs
   SKILL.md                       # 原始参考，按需分页读取
   references/                    # 固定版本原始帮助与来源
 pipelines/<pipeline-id>/
   pipeline.json                  # 显式步骤、参数和端口连线
 ```
 
-目前有 191 个独立方法、103 个 Skill、28 个组合流程。原来的两套去噪/Gibbs 入口已合并；169 个缺少可审核实现的规划条目单独保存在 Skill 的 planning_capabilities，不能伪装成可执行方法。方法数量不代表全部已安装软件的命令覆盖率，更不代表所有方法已通过真实数据验证。
+目前有 328 个独立方法、105 个规范 Skill、28 个内置组合流程（2026-09-24）。原来的两套去噪/Gibbs 入口已合并；169 个缺少可审核实现的规划条目单独保存在 Skill 的 planning_capabilities，不能伪装成可执行方法。方法数量不代表全部已安装软件的命令覆盖率，更不代表所有方法已通过真实数据验证。
 
 ## 调用链
 
@@ -67,7 +65,7 @@ npm run lint
 npm run build
 ```
 
-六个 MRtrix 3.0.8 命令由固定帮助快照生成：dwidenoise、mrdegibbs、5tt2gmwmi、tcksift2、mrthreshold、tckresample。`force/config` 等选项由平台管理或禁止，排除原因有明确记录。其他方法契约直接在 methods 中审核维护，不再通过旧 planning/execution manifest 生成器反向生成。
+MRtrix 命令及新增的 FSL、ANTs、FreeSurfer 命令由审核定义和版本帮助快照生成。`force/config` 等选项由平台管理或禁止，排除原因有明确记录。其他方法契约直接在 methods 中审核维护，不再通过旧 planning/execution manifest 生成器反向生成。
 
 ## 边界与部署
 

@@ -18,6 +18,7 @@ from .runners.freesurfer import FreeSurferReconAllRunner
 from .runners.fsl import FslDtifitRunner, FslEddyRunner, FslFlirtRunner
 from .runners.mrtrix import MrtrixTckgenRunner
 from .runners.mrtrix_commands import command_runners
+from .runners.scientific_commands import scientific_runners
 from .runners.mrtrix_pipeline import (
     MrtrixDwi2FodRunner,
     MrtrixDwi2ResponseRunner,
@@ -61,6 +62,7 @@ class RunnerRegistry:
         ]
         runners.extend(ReviewedRunner(spec) for spec in specifications().values())
         runners.extend(command_runners())
+        runners.extend(scientific_runners())
         self._runners = {runner.runner_id: runner for runner in runners}
 
     def ids(self) -> set[str]:

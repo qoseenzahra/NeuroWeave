@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 
 from .conversation_models import ConversationMemoryStatus
 from .workflow_models import Workflow
+from .task_contract import TaskContract
 
 
 class Message(BaseModel):
@@ -14,6 +15,7 @@ class Message(BaseModel):
 
 
 class ChatRequest(BaseModel):
+    task_contract: TaskContract = Field(default_factory=TaskContract, exclude=True)
     workspace_id: str | None = None
     client_turn_id: str | None = Field(default=None, min_length=16, max_length=100)
     workspace_context: str = Field(default="", exclude=True, repr=False)
@@ -71,6 +73,9 @@ class CapabilityRoutingTrace(BaseModel):
     semantic_hints: list[str] = Field(default_factory=list)
     reused_input_capabilities: list[str] = Field(default_factory=list)
     confidence: float = 0.0
+    retrieval: dict[str, Any] = Field(default_factory=dict)
+    diagnostics: list[dict[str, Any]] = Field(default_factory=list)
+    task_contract: TaskContract = Field(default_factory=TaskContract)
 
 
 class ChatResponse(BaseModel):

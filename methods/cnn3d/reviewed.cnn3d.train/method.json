@@ -1,6 +1,6 @@
 {
   "label": "3D CNN 训练",
-  "description": "调用现有实现：skills/cnn3d/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+  "description": "Cross-validated trainer for the canonical CNN3D model。 Inputs: input: NPZ 训练数据（X、y） (file). Registered outputs: results/metrics.json, results/predictions.csv.",
   "runner_id": "reviewed.cnn3d.train",
   "input_types": [
     "analysis_input"
@@ -251,7 +251,7 @@
       "id": "input",
       "type": "analysis_input",
       "label": "NPZ 训练数据（X、y）",
-      "description": "NPZ 训练数据（X、y）：模型、统计或连接组分析使用的表格、数组、图结构或特征文件。。作为此方法的 input 输入，通过文件选择或上游输出绑定。",
+      "description": "NPZ with X and y. Required file input for 3D CNN 训练; bind to port input.",
       "required": true,
       "required_when": {},
       "cardinality": "one",
@@ -271,7 +271,7 @@
       "id": "results",
       "type": "generated_folder",
       "label": "分析结果",
-      "description": "分析结果：受信任 Runner 在隔离输出目录中生成并登记的目录型结果。。由此方法生成，端口 results。 运行目录内的路径：results/。",
+      "description": "Result directory for 3D CNN 训练. Contains this operation's generated files, including results/metrics.json, results/predictions.csv; ancillary files remain available here. Relative run path: results/.",
       "format": "",
       "primary": true,
       "path_template": "results/",
@@ -281,7 +281,7 @@
       "id": "file_metrics_json",
       "type": "generated_file",
       "label": "metrics.json",
-      "description": "metrics.json：受信任 Runner 在隔离输出目录中生成、校验并登记的文件。。由此方法生成，端口 file_metrics_json。 运行目录内的路径：results/metrics.json。",
+      "description": "metrics.json: output of 3D CNN 训练. Relative run path: results/metrics.json.",
       "format": "",
       "primary": false,
       "path_template": "results/metrics.json",
@@ -291,7 +291,7 @@
       "id": "file_predictions_csv",
       "type": "generated_file",
       "label": "predictions.csv",
-      "description": "predictions.csv：受信任 Runner 在隔离输出目录中生成、校验并登记的文件。。由此方法生成，端口 file_predictions_csv。 运行目录内的路径：results/predictions.csv。",
+      "description": "predictions.csv: output of 3D CNN 训练. Relative run path: results/predictions.csv.",
       "format": "",
       "primary": false,
       "path_template": "results/predictions.csv",

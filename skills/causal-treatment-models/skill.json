@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "id": "causal-treatment-models",
-  "description": "统筹 causal-treatment-models 的 任务处理，包括处理效应估计。",
+  "description": "causal-treatment-models 统筹已登记的独立方法和可复用流程。支持：处理效应估计。",
   "method_refs": [
     {
       "capability": "skill.causal-treatment-models",
@@ -11,7 +11,7 @@
       "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
       "replaces_operations": [],
       "execution_resolution": {},
-      "role": "调用现有实现：skills/causal-treatment-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Cross-fitted treatment-effect and policy evaluation CLI。 Inputs: features: 特征 CSV (file). Registered outputs: results/metrics.json, results/predictions.csv.",
       "method_ref": "reviewed.causal-treatment-models.cate"
     },
     {
@@ -22,7 +22,7 @@
       "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
       "replaces_operations": [],
       "execution_resolution": {},
-      "role": "调用现有实现：skills/causal-treatment-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Cross-fitted treatment-effect and policy evaluation CLI。 Inputs: features: 特征 CSV (file). Registered outputs: results/metrics.json, results/predictions.csv.",
       "method_ref": "reviewed.causal-treatment-models.cate"
     },
     {
@@ -33,7 +33,7 @@
       "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
       "replaces_operations": [],
       "execution_resolution": {},
-      "role": "调用现有实现：skills/causal-treatment-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Cross-fitted treatment-effect and policy evaluation CLI。 Inputs: features: 特征 CSV (file). Registered outputs: results/metrics.json, results/predictions.csv.",
       "method_ref": "reviewed.causal-treatment-models.cate"
     },
     {
@@ -44,7 +44,7 @@
       "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
       "replaces_operations": [],
       "execution_resolution": {},
-      "role": "调用现有实现：skills/causal-treatment-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Cross-fitted treatment-effect and policy evaluation CLI。 Inputs: features: 特征 CSV (file). Registered outputs: results/metrics.json, results/predictions.csv.",
       "method_ref": "reviewed.causal-treatment-models.cate"
     },
     {
@@ -55,7 +55,7 @@
       "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
       "replaces_operations": [],
       "execution_resolution": {},
-      "role": "调用现有实现：skills/causal-treatment-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Cross-fitted treatment-effect and policy evaluation CLI。 Inputs: features: 特征 CSV (file). Registered outputs: results/metrics.json, results/predictions.csv.",
       "method_ref": "reviewed.causal-treatment-models.cate"
     },
     {
@@ -66,7 +66,7 @@
       "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
       "replaces_operations": [],
       "execution_resolution": {},
-      "role": "调用现有实现：skills/causal-treatment-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Cross-fitted treatment-effect and policy evaluation CLI。 Inputs: features: 特征 CSV (file). Registered outputs: results/metrics.json, results/predictions.csv.",
       "method_ref": "reviewed.causal-treatment-models.cate"
     },
     {
@@ -77,7 +77,7 @@
       "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
       "replaces_operations": [],
       "execution_resolution": {},
-      "role": "调用现有实现：skills/causal-treatment-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Cross-fitted treatment-effect and policy evaluation CLI。 Inputs: features: 特征 CSV (file). Registered outputs: results/metrics.json, results/predictions.csv.",
       "method_ref": "reviewed.causal-treatment-models.cate"
     },
     {
@@ -88,24 +88,17 @@
       "default_reason": "该方法来自命中 Skill 的任务选项；模型会结合当前需求在相关实现中排序推荐。",
       "replaces_operations": [],
       "execution_resolution": {},
-      "role": "调用现有实现：skills/causal-treatment-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Cross-fitted treatment-effect and policy evaluation CLI。 Inputs: features: 特征 CSV (file). Registered outputs: results/metrics.json, results/predictions.csv.",
       "method_ref": "reviewed.causal-treatment-models.cate"
     }
   ],
   "pipeline_refs": [],
   "planning_capabilities": [],
   "selection_rules": [
-    "先确认目标产物和已有输入；只选择必要步骤，已有数据或历史结果优先复用。",
+    "先确认目标产物、允许使用的已有输入与禁止复用的结果；仅在用户允许时复用已有数据，不默认追加上游步骤。",
     "输入缺少时先查询目录并请求用户绑定；不要自动追加生成该输入的步骤。",
     "独立操作选择 Method；确需固定组合时选择 Pipeline，并检查每一步输入输出。",
     "软件工具 Skill 用于选择实现，任务 Skill 用于组织需求，不因为同时匹配两类 Skill 重复添加方法。"
-  ],
-  "functions": [
-    {
-      "method_ref": "reviewed.causal-treatment-models.cate",
-      "label": "处理效应估计",
-      "description": "调用现有实现：skills/causal-treatment-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。"
-    }
   ],
   "name": "causal-treatment-models",
   "category": [
@@ -114,8 +107,7 @@
   ],
   "scope": "model",
   "applicability": [
-    "需要 causal-treatment-models 相关处理，且目标涉及：通用生成目录、通用生成文件。",
-    "查询具体方法并检查对应输入：分析输入；不是要求一次提供目录中所有方法的输入。"
+    "根据目标选择对应 Method 或 Pipeline；每个入口的输入格式、必要参数和产物以其独立契约为准。"
   ],
   "limitations": [
     "格式和样本数量满足仅是必要条件；空间、单位、样本标识与方法假设仍须按所选方法检查。",
@@ -123,5 +115,13 @@
     "环境探测与运行证据分别显示；合成数据测试不代表真实数据的科学有效性。",
     "尚无 Method 的规划能力只能提供说明，不能当作可执行步骤。"
   ],
-  "examples": []
+  "examples": [
+    {
+      "request": "查看 处理效应估计 所需的输入和参数",
+      "decision": "查询 reviewed.causal-treatment-models.cate 的契约，绑定文件后再规划执行。"
+    }
+  ],
+  "keywords": [
+    "causal-treatment-models"
+  ]
 }

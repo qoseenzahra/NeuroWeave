@@ -62,7 +62,7 @@ class SkillLayerTests(unittest.TestCase):
             foreign.mkdir(parents=True)
             (foreign/'SKILL.md').write_text('---\nname: dwi-skill\n---\nFOREIGN', encoding='utf-8')
             loader = SkillLoader(ROOT/'skills')
-            with patch('app.neuroclaw_compat.loader.Path.cwd',return_value=Path(tmp)):
+            with patch('pathlib.Path.cwd',return_value=Path(tmp)):
                 skill = loader.find('dwi-skill')
             self.assertTrue(skill.skill_md.is_relative_to(ROOT/'skills'))
             self.assertNotEqual(skill.instructions, 'FOREIGN')

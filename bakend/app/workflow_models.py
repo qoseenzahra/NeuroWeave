@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
+from .task_contract import TaskContract
 
 from .dataset_models import (
     DatasetPathPreview,
@@ -276,6 +277,9 @@ class DryRunReport(BaseModel):
 
 
 class Workflow(BaseModel):
+    task_contract: TaskContract = Field(default_factory=TaskContract)
+    planning_diagnostics: dict[str, Any] = Field(default_factory=dict)
+    contract_errors: list[str] = Field(default_factory=list)
     workspace_id: str | None = None
     workspace_root_path: str | None = None
     output_relative_path: str = "outputs"

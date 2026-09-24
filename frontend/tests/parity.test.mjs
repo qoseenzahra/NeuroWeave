@@ -289,7 +289,7 @@ await test('rail label flips left and shifts vertically near the bottom-right ed
 await test('Skill catalog distinguishes atomic methods, pipelines and unavailable capabilities', async () => {
   const { SkillMethods } = await load('features/skills/SkillMethods.tsx');
   const client=new QueryClient({defaultOptions:{queries:{retry:false}}});
-  client.setQueryData(['skill-methods','dwi-skill','','method'],{pages:[{items:[{entry_kind:'method',method_id:'mrtrix.tckgen',capability:'dwi.tractography',label:'独立追踪',role:'复用已有 FOD',runner_id:'mrtrix.tckgen',execution_mode:'runner',input_count:3,output_count:1,parameter_count:10}],total:1,next_cursor:null}],pageParams:['']});
+  client.setQueryData(['skill-methods','dwi-skill','','method','en'],{pages:[{items:[{entry_kind:'method',method_id:'mrtrix.tckgen',capability:'dwi.tractography',label:'独立追踪',role:'复用已有 FOD',runner_id:'mrtrix.tckgen',execution_mode:'runner',input_count:3,output_count:1,parameter_count:10}],total:1,next_cursor:null}],pageParams:['']});
   const html=renderToStaticMarkup(createElement(QueryClientProvider,{client},createElement(SkillMethods,{skillId:'dwi-skill'})));
   for(const label of ['Methods','Pipelines','Planning capabilities','复用已有 FOD','mrtrix.tckgen']) assert.ok(html.includes(label),label);
   client.clear();

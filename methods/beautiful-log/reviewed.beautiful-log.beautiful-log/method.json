@@ -1,6 +1,6 @@
 {
   "label": "beautiful-log 日志报告",
-  "description": "调用现有实现：skills/beautiful-log/scripts/beautiful_log.py。输入保持只读，输出写入独立任务目录。",
+  "description": "Generate a clean HTML conversation log for NeuroClaw sessions. This script keeps only direct User <-> NeuroClaw dialogue and filters system/tool/internal traces when they are available in the transcript format。 Inputs: input: Input transcript file (.json, .jsonl, .md, .txt) (file). Registered outputs: results/output.html.",
   "runner_id": "reviewed.beautiful-log.beautiful-log",
   "input_types": [
     "analysis_input"
@@ -42,7 +42,7 @@
       "id": "input",
       "type": "analysis_input",
       "label": "Input transcript file (.json, .jsonl, .md, .txt)",
-      "description": "Input transcript file (.json, .jsonl, .md, .txt)：模型、统计或连接组分析使用的表格、数组、图结构或特征文件。。作为此方法的 input 输入，通过文件选择或上游输出绑定。",
+      "description": "Input transcript file (.json, .jsonl, .md, .txt). Required file input for beautiful-log 日志报告; bind to port input.",
       "required": true,
       "required_when": {},
       "cardinality": "one",
@@ -62,7 +62,7 @@
       "id": "results",
       "type": "generated_folder",
       "label": "分析结果",
-      "description": "分析结果：受信任 Runner 在隔离输出目录中生成并登记的目录型结果。。由此方法生成，端口 results。 运行目录内的路径：results/。",
+      "description": "Result directory for beautiful-log 日志报告. Contains this operation's generated files, including results/output.html; ancillary files remain available here. Relative run path: results/.",
       "format": "",
       "primary": true,
       "path_template": "results/",
@@ -72,7 +72,7 @@
       "id": "file_output_html",
       "type": "generated_file",
       "label": "output.html",
-      "description": "output.html：受信任 Runner 在隔离输出目录中生成、校验并登记的文件。。由此方法生成，端口 file_output_html。 运行目录内的路径：results/output.html。",
+      "description": "Output HTML path: output of beautiful-log 日志报告. Relative run path: results/output.html.",
       "format": "",
       "primary": false,
       "path_template": "results/output.html",

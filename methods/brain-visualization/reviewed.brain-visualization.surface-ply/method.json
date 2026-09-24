@@ -1,6 +1,6 @@
 {
   "label": "FreeSurfer 表面导出 PLY",
-  "description": "调用现有实现：skills/brain-visualization/scripts/freesurfer_ply_reference.py。输入保持只读，输出写入独立任务目录。",
+  "description": "Reference script for exporting FreeSurfer surfaces to colored PLY。 Inputs: surf: FreeSurfer 表面 (file); annot: 分区标注 (file). Registered outputs: results/surface.ply.",
   "runner_id": "reviewed.brain-visualization.surface-ply",
   "input_types": [
     "analysis_input"
@@ -15,7 +15,7 @@
       "id": "surf",
       "type": "analysis_input",
       "label": "FreeSurfer 表面",
-      "description": "FreeSurfer 表面：模型、统计或连接组分析使用的表格、数组、图结构或特征文件。。作为此方法的 surf 输入，通过文件选择或上游输出绑定。",
+      "description": "FreeSurfer surface file such as lh.pial or rh.pial. Required file input for FreeSurfer 表面导出 PLY; bind to port surf.",
       "required": true,
       "required_when": {},
       "cardinality": "one",
@@ -33,7 +33,7 @@
       "id": "annot",
       "type": "analysis_input",
       "label": "分区标注",
-      "description": "分区标注：模型、统计或连接组分析使用的表格、数组、图结构或特征文件。。作为此方法的 annot 输入，通过文件选择或上游输出绑定。",
+      "description": "Optional FreeSurfer annotation; gray surface when omitted. Optional file input for FreeSurfer 表面导出 PLY; bind to port annot.",
       "required": false,
       "required_when": {},
       "cardinality": "one",
@@ -53,7 +53,7 @@
       "id": "results",
       "type": "generated_folder",
       "label": "分析结果",
-      "description": "分析结果：受信任 Runner 在隔离输出目录中生成并登记的目录型结果。。由此方法生成，端口 results。 运行目录内的路径：results/。",
+      "description": "Result directory for FreeSurfer 表面导出 PLY. Contains this operation's generated files, including results/surface.ply; ancillary files remain available here. Relative run path: results/.",
       "format": "",
       "primary": true,
       "path_template": "results/",
@@ -63,7 +63,7 @@
       "id": "file_surface_ply",
       "type": "generated_file",
       "label": "surface.ply",
-      "description": "surface.ply：受信任 Runner 在隔离输出目录中生成、校验并登记的文件。。由此方法生成，端口 file_surface_ply。 运行目录内的路径：results/surface.ply。",
+      "description": "Output PLY path.: output of FreeSurfer 表面导出 PLY. Relative run path: results/surface.ply.",
       "format": "",
       "primary": false,
       "path_template": "results/surface.ply",

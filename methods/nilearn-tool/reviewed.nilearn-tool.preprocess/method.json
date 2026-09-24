@@ -1,6 +1,6 @@
 {
   "label": "BOLD 平滑与时间滤波（保持原空间）",
-  "description": "调用现有实现：skills/nilearn-tool/scripts/preprocess_bold_reference.py。输入保持只读，输出写入独立任务目录。",
+  "description": "Drop the requested initial BOLD volumes, apply the original spatial smoothing and temporal band-pass filtering, and save the processed series. Geometry stays in the input space; this entry does not estimate registration or motion correction. Inputs: bold: 预处理 BOLD 影像 (file). Registered outputs: results/preprocessed_bold.nii.gz.",
   "runner_id": "reviewed.nilearn-tool.preprocess",
   "input_types": [
     "analysis_input"
@@ -146,7 +146,7 @@
       "id": "bold",
       "type": "bold_image",
       "label": "预处理 BOLD 影像",
-      "description": "预处理 BOLD 影像：BOLD 时间序列；运行时验证实际产物。。作为此方法的 bold 输入，通过文件选择或上游输出绑定。",
+      "description": "Input 4D BOLD NIfTI. Required file input for BOLD 平滑与时间滤波（保持原空间）; bind to port bold.",
       "required": true,
       "required_when": {},
       "cardinality": "one",
@@ -166,7 +166,7 @@
       "id": "results",
       "type": "generated_folder",
       "label": "分析结果",
-      "description": "分析结果：受信任 Runner 在隔离输出目录中生成并登记的目录型结果。。由此方法生成，端口 results。 运行目录内的路径：results/。",
+      "description": "Result directory for BOLD 平滑与时间滤波（保持原空间）. Contains this operation's generated files, including results/preprocessed_bold.nii.gz; ancillary files remain available here. Relative run path: results/.",
       "format": "",
       "primary": true,
       "path_template": "results/",
@@ -176,7 +176,7 @@
       "id": "file_preprocessed_bold_nii_gz",
       "type": "bold_image",
       "label": "preprocessed_bold.nii.gz",
-      "description": "preprocessed_bold.nii.gz：BOLD 时间序列；运行时验证实际产物。。由此方法生成，端口 file_preprocessed_bold_nii_gz。 运行目录内的路径：results/preprocessed_bold.nii.gz。",
+      "description": "Output preprocessed BOLD NIfTI.: output of BOLD 平滑与时间滤波（保持原空间）. Relative run path: results/preprocessed_bold.nii.gz.",
       "format": "",
       "primary": false,
       "path_template": "results/preprocessed_bold.nii.gz",

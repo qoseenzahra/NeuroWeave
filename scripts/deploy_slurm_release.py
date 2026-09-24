@@ -35,7 +35,7 @@ SERVICE = 'localflow-backend.service'
 CORE_FILES = (
     'bakend/app/main.py', 'bakend/app/local_store.py',
     'bakend/app/execution/slurm_backend.py', 'bakend/app/execution/slurm_worker.py',
-    'bakend/resources/neuroclaw_skill_summaries.json', 'bakend/requirements.txt',
+    'bakend/resources/scientific-command-allowlist.json', 'bakend/requirements.txt',
     'skills/capability.tree.json', 'frontend/package.json', 'compose.yaml',
 )
 EXCLUDED_DIRS = {

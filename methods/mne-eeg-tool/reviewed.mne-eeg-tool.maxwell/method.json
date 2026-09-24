@@ -1,6 +1,6 @@
 {
   "label": "MEG Maxwell 滤波",
-  "description": "调用现有实现：mne.preprocessing.maxwell_filter。输入保持只读，输出写入独立任务目录。",
+  "description": "Apply MNE Maxwell filtering to continuous MEG using the adapter origin (0, 0, 0.04 m); MEG sensors and a device-to-head transform are required。 Inputs: input: EEG/MEG 原始文件（FIF/EDF/BDF/SET） (file). Registered outputs: results/processed-raw.fif. Fixed invocation options: --operation maxwell.",
   "runner_id": "reviewed.mne-eeg-tool.maxwell",
   "input_types": [
     "analysis_input"
@@ -15,7 +15,7 @@
       "id": "input",
       "type": "analysis_input",
       "label": "EEG/MEG 原始文件（FIF/EDF/BDF/SET）",
-      "description": "EEG/MEG 原始文件（FIF/EDF/BDF/SET）：模型、统计或连接组分析使用的表格、数组、图结构或特征文件。。作为此方法的 input 输入，通过文件选择或上游输出绑定。",
+      "description": "EEG/MEG 原始文件（FIF/EDF/BDF/SET）. Required file input for MEG Maxwell 滤波; bind to port input.",
       "required": true,
       "required_when": {},
       "cardinality": "one",
@@ -35,7 +35,7 @@
       "id": "results",
       "type": "generated_folder",
       "label": "分析结果",
-      "description": "分析结果：受信任 Runner 在隔离输出目录中生成并登记的目录型结果。。由此方法生成，端口 results。 运行目录内的路径：results/。",
+      "description": "Result directory for MEG Maxwell 滤波. Contains this operation's generated files, including results/processed-raw.fif; ancillary files remain available here. Relative run path: results/.",
       "format": "",
       "primary": true,
       "path_template": "results/",
@@ -45,7 +45,7 @@
       "id": "file_processed_raw_fif",
       "type": "generated_file",
       "label": "processed-raw.fif",
-      "description": "processed-raw.fif：受信任 Runner 在隔离输出目录中生成、校验并登记的文件。。由此方法生成，端口 file_processed_raw_fif。 运行目录内的路径：results/processed-raw.fif。",
+      "description": "processed-raw.fif: output of MEG Maxwell 滤波. Relative run path: results/processed-raw.fif.",
       "format": "",
       "primary": false,
       "path_template": "results/processed-raw.fif",

@@ -108,7 +108,7 @@ class SkillCatalog:
                         entry_kind=kind,
                         skill_id=skill["id"],
                         label=label,
-                        description=description[:350],
+                        description=description,
                         role=ref.get("role", ""),
                         runner_id=rid,
                         execution_mode="planning" if kind == "capability" else "runner",
@@ -133,9 +133,18 @@ class SkillCatalog:
         skill_id = self._skill(skill_id).name
         self.registry.definitions.load()
         value = self.registry.definitions.skills[skill_id]
-        return {
-            key: value.get(key, []) for key in ("description", "functions", "selection_rules", "applicability", "limitations", "examples")
-        }
+        store = self.registry.definitions
+        result = {key: value.get(key, []) for key in
+                  ("description", "selection_rules", "applicability", "limitations", "examples")}
+        # Descriptions have one owner. Derive the detail view from live contracts
+        # rather than storing a second, easily outdated copy in each Skill.
+        result["functions"] = [dict(method_ref=ref["method_ref"],
+            label=store.methods[ref["method_ref"]].label,
+            description=store.methods[ref["method_ref"]].description) for ref in value["method_refs"]]
+        result["functions"] += [dict(pipeline_ref=ref["pipeline_ref"],
+            label=store.pipelines[ref["pipeline_ref"]]["label"],
+            description=store.pipelines[ref["pipeline_ref"]]["description"]) for ref in value["pipeline_refs"]]
+        return result
 
     def pipeline(self, identity):
         store = self.registry.definitions
@@ -231,8 +240,8 @@ class SkillCatalog:
         if runner and hasattr(runner, "contract"):
             c = runner.contract
             identity["command_coverage"] = dict(
-                total=c["total_options"],
-                exposed=len(c["options"]),
+                total=c.get("total_options"),
+                exposed=len(c.get("options", {})) if "options" in c else len(method.parameters),
                 omitted=list(c["omitted_options"]),
             )
         if section == "all":
@@ -261,7 +270,7 @@ class SkillCatalog:
             total_chars=len(text),
             truncated=end < len(text),
             next_offset=end if end < len(text) else None,
-            source=f"skills/{skill.name}/{'SKILL.md' if reference.is_file() else 'OVERVIEW.md'}",
+            source=f"skills/{skill.name}/{'SKILL.md' if reference.is_file() else 'skill.json'}",
         )
 
 

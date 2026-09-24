@@ -54,11 +54,10 @@ def main():
                                 recipe_runners=[member.runner_id for member in members] if method.execution_recipe else [],
                                 implementation_source=state.get('implementation_source') if state else None))
     skills=[]
-    for directory in sorted((ROOT/'skills').iterdir()):
-        if not (directory/'SKILL.md').is_file():continue
-        capability='skill.'+re.sub('[^a-z0-9]+','-',directory.name.lower()).strip('-')
-        own=[m for m in records if m['capability']==capability]
-        skills.append(dict(skill=directory.name,**dict(Counter(m['status'] for m in own))))
+    registry.definitions.load()
+    for identity in sorted(registry.definitions.skills):
+        own=[m for m in records if m['skill']==identity]
+        skills.append(dict(skill=identity,**dict(Counter(m['status'] for m in own))))
     summary=dict(skills=len(skills),skills_with_ready_methods=sum(s.get('ready',0)>0 for s in skills),
                  registered_runners=len(runtime),ready_runners=sum(bool(s.get('available')) for s in runtime.values()),
                  selectable_methods=len(records),**dict(Counter(m['status'] for m in records)))

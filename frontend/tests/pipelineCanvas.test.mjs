@@ -9,6 +9,8 @@ import {QueryClient,QueryClientProvider} from '@tanstack/react-query';
 const root=resolve(import.meta.dirname,'..');
 const server=await createServer({root,configFile:false,server:{middlewareMode:true,hmr:false,ws:false},appType:'custom'});
 try{
+const {useLanguageStore}=await server.ssrLoadModule('/src/stores/languageStore.ts');
+useLanguageStore.setState({language:'zh'});
 const graph=await server.ssrLoadModule('/src/features/library/pipelineGraph.ts');
 const method=JSON.parse(await readFile(resolve(root,'../methods/mrtrix3/mrtrix.command.mrconvert/method.json'),'utf8'));
 method.runtime_status={available:true};
@@ -66,7 +68,7 @@ await test('real canvas and editor render nodes, ports, links and parameters wit
   assert.match(canvas,/data-pipeline-input="input"/);
   assert.match(canvas,/自动排列/);
   const client=new QueryClient({defaultOptions:{queries:{retry:false}}});
-  client.setQueryData(['library-method',method.id],method);
+  client.setQueryData(['library-method',method.id,'en'],method);
   const html=renderToStaticMarkup(createElement(QueryClientProvider,{client},createElement(PipelineEditor,{initial:{id:'saved',version:'1',editor:{name:'saved graph',description:'',steps}},onClose:noop,onSaved:noop})));
   assert.match(html,/Pipeline 节点编排/);assert.match(html,/步骤参数/);assert.match(html,/nthreads/);
   assert.doesNotMatch(html,/Pipeline 编辑器遇到错误/);

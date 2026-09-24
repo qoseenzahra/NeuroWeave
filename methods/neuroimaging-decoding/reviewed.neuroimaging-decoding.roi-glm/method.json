@@ -1,6 +1,6 @@
 {
   "label": "ROI GLM 与 FDR",
-  "description": "调用现有实现：skills/neuroimaging-decoding/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+  "description": "Join ROI features and the design table by subject ID, fit the original ROI-wise GLM with the selected contrast column, and export ROI test results and FDR summary counts. Inputs: features: 特征 CSV (file); design: 设计矩阵 CSV (file). Registered outputs: results/roi_glm_results.csv. Fixed invocation options: --mode roi-glm.",
   "runner_id": "reviewed.neuroimaging-decoding.roi-glm",
   "input_types": [
     "analysis_input"
@@ -68,7 +68,7 @@
       "id": "features",
       "type": "analysis_input",
       "label": "特征 CSV",
-      "description": "特征 CSV：模型、统计或连接组分析使用的表格、数组、图结构或特征文件。。作为此方法的 features 输入，通过文件选择或上游输出绑定。",
+      "description": "特征 CSV. Required file input for ROI GLM 与 FDR; bind to port features.",
       "required": true,
       "required_when": {},
       "cardinality": "one",
@@ -86,7 +86,7 @@
       "id": "design",
       "type": "analysis_input",
       "label": "设计矩阵 CSV",
-      "description": "设计矩阵 CSV：模型、统计或连接组分析使用的表格、数组、图结构或特征文件。。作为此方法的 design 输入，通过文件选择或上游输出绑定。",
+      "description": "设计矩阵 CSV. Required file input for ROI GLM 与 FDR; bind to port design.",
       "required": true,
       "required_when": {},
       "cardinality": "one",
@@ -106,7 +106,7 @@
       "id": "results",
       "type": "generated_folder",
       "label": "分析结果",
-      "description": "分析结果：受信任 Runner 在隔离输出目录中生成并登记的目录型结果。。由此方法生成，端口 results。 运行目录内的路径：results/。",
+      "description": "Result directory for ROI GLM 与 FDR. Contains this operation's generated files, including results/roi_glm_results.csv; ancillary files remain available here. Relative run path: results/.",
       "format": "",
       "primary": true,
       "path_template": "results/",
@@ -116,7 +116,7 @@
       "id": "file_roi_glm_results_csv",
       "type": "generated_file",
       "label": "roi_glm_results.csv",
-      "description": "roi_glm_results.csv：受信任 Runner 在隔离输出目录中生成、校验并登记的文件。。由此方法生成，端口 file_roi_glm_results_csv。 运行目录内的路径：results/roi_glm_results.csv。",
+      "description": "roi_glm_results.csv: output of ROI GLM 与 FDR. Relative run path: results/roi_glm_results.csv.",
       "format": "",
       "primary": false,
       "path_template": "results/roi_glm_results.csv",

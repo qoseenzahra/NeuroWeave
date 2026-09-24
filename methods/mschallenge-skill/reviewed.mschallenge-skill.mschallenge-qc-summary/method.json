@@ -1,6 +1,6 @@
 {
   "label": "mschallenge 质控汇总",
-  "description": "调用现有实现：skills/mschallenge-skill/scripts/mschallenge_qc_summary.py。输入保持只读，输出写入独立任务目录。",
+  "description": "Generate per-subject QC summaries for MS Challenge processing. Checks modality completeness, ground truth presence, and data quality。 Inputs: input: Path to MS Challenge directory (directory). Registered outputs: results/output.csv.",
   "runner_id": "reviewed.mschallenge-skill.mschallenge-qc-summary",
   "input_types": [
     "analysis_input"
@@ -42,7 +42,7 @@
       "id": "input",
       "type": "analysis_input",
       "label": "Path to MS Challenge directory",
-      "description": "Path to MS Challenge directory：模型、统计或连接组分析使用的表格、数组、图结构或特征文件。。作为此方法的 input 输入，通过文件选择或上游输出绑定。",
+      "description": "Path to MS Challenge directory. Required directory input for mschallenge 质控汇总; bind to port input.",
       "required": true,
       "required_when": {},
       "cardinality": "one",
@@ -62,7 +62,7 @@
       "id": "results",
       "type": "generated_folder",
       "label": "分析结果",
-      "description": "分析结果：受信任 Runner 在隔离输出目录中生成并登记的目录型结果。。由此方法生成，端口 results。 运行目录内的路径：results/。",
+      "description": "Result directory for mschallenge 质控汇总. Contains this operation's generated files, including results/output.csv; ancillary files remain available here. Relative run path: results/.",
       "format": "",
       "primary": true,
       "path_template": "results/",
@@ -72,7 +72,7 @@
       "id": "file_output_csv",
       "type": "generated_file",
       "label": "output.csv",
-      "description": "output.csv：受信任 Runner 在隔离输出目录中生成、校验并登记的文件。。由此方法生成，端口 file_output_csv。 运行目录内的路径：results/output.csv。",
+      "description": "Output path for QC summary CSV: output of mschallenge 质控汇总. Relative run path: results/output.csv.",
       "format": "",
       "primary": false,
       "path_template": "results/output.csv",

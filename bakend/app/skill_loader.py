@@ -12,22 +12,6 @@ from .skill_definitions import canonical_skills
 
 
 
-LOCALFLOW_SKILLS = {
-    "dataset-inspector",
-    "image-batch-processing",
-    "report-builder",
-    "table-cleaning",
-}
-
-
-def _as_string_list(value: Any) -> list[str]:
-    if isinstance(value, list):
-        return [str(item).strip() for item in value if str(item).strip()]
-    if isinstance(value, str) and value.strip():
-        return [item.strip() for item in value.split(",") if item.strip()]
-    return []
-
-
 def _normalize_skill_token(text: str) -> str:
     """Normalize explicit native Skill identifiers for mention matching."""
     return re.sub(r"[^a-z0-9]+", "", str(text or "").lower())
@@ -89,9 +73,8 @@ class Skill:
 class SkillLoader:
     """Native Skill definitions with cached orchestration summaries."""
 
-    def __init__(self, skills_dir: Path, summaries_file: Path | None = None) -> None:
+    def __init__(self, skills_dir: Path) -> None:
         self.skills_dir = skills_dir.resolve()
-        self.summaries_file = summaries_file.resolve() if summaries_file else None
         self._cache_signature: tuple[tuple[str, int, int], ...] | None = None
         self._cache: list[Skill] = []
 
@@ -99,7 +82,6 @@ class SkillLoader:
         entries: list[tuple[str, int, int]] = []
         paths = [
             *self.skills_dir.glob("*/SKILL.md"),
-            *self.skills_dir.glob("*/OVERVIEW.md"),
             *self.skills_dir.glob("*/skill.json"),
         ]
         for path in sorted(paths):
@@ -107,26 +89,19 @@ class SkillLoader:
             entries.append((f"{path.parent.name}/{path.name}", stat.st_mtime_ns, stat.st_size))
         return tuple(entries)
 
-    def _offline_summaries(self) -> dict[str, dict[str, str]]:
-        if self.summaries_file is None or not self.summaries_file.exists():
-            return {}
-        try:
-            payload = json.loads(self.summaries_file.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            return {}
-        return payload if isinstance(payload, dict) else {}
-
     def load_all(self) -> list[Skill]:
         """Load native orchestration definitions; Markdown is reference material only."""
         signature = self._signature()
         if signature == self._cache_signature:
             return self._cache
         skills = []
-        raw = {value["id"]: value for p in self.skills_dir.glob("*/skill.json") if (value := json.loads(p.read_text(encoding="utf-8")))}
+        # Read each native definition once per changed filesystem signature.
+        loaded = [(path, json.loads(path.read_text(encoding='utf-8')))
+                  for path in sorted(self.skills_dir.glob('*/skill.json'))]
+        raw = {value['id']: value for _, value in loaded}
         definitions, aliases = canonical_skills(raw)
         self._aliases = aliases
-        for path in sorted(self.skills_dir.glob('*/skill.json')):
-            value = json.loads(path.read_text(encoding='utf-8'))
+        for path, value in loaded:
             name = value['id']
             if name not in definitions:
                 continue
@@ -157,7 +132,7 @@ class SkillLoader:
         return next((skill for skill in self.load_all() if skill.name.lower() == normalized), None)
 
     def infer(self, user_text: str, limit: int = 5) -> list[Skill]:
-        """Infer explicitly mentioned skills using NeuroClaw's name-matching rule."""
+        """Infer explicitly mentioned skills by their registered identifiers and aliases."""
         normalized_message = _normalize_skill_token(user_text)
         if not normalized_message:
             return []

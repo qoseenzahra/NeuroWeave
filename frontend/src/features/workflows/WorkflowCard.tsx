@@ -156,6 +156,7 @@ function WorkflowCardBody({
   expanded,
   onToggle
 }: WorkflowCardBodyProps) {
+  const language = useLanguageStore(s => s.language);
   const detailsId = useId();
   const query = useWorkflowQuery(workflowId, initialWorkflow);
   const workflow = query.data ?? null;
@@ -580,7 +581,7 @@ function WorkflowCardBody({
           void queryClient.invalidateQueries({queryKey:['library']});
           setPipelineSaved(workflow.revision);
         } catch(failure) { fail(failure,'workflowErrorGeneric'); } finally { setPipelineSaving(false); }
-      }}>{pipelineSaved === workflow.revision?'已保存到 Pipeline 列表':'保存为可复用 Pipeline'}</button>
+      }}>{pipelineSaved === workflow.revision?(language === 'zh' ? '已保存到 Pipeline 列表' : 'Saved to Pipeline library'):(language === 'zh' ? '保存为可复用 Pipeline' : 'Save as reusable Pipeline')}</button>
       <SectionLabel>{t.workflowOutputsTitle}</SectionLabel>
       <WorkspaceOutput
         workflow={workflow}

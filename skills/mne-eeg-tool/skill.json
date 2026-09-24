@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "id": "mne-eeg-tool",
-  "description": "统筹 mne-eeg-tool 的 软件方法选择，包括EEG/MEG 数据检查、MNE LOF 坏导联检测与插值、EEG/MEG 滤波与降采样、MNE ICA 分解与指定成分去除等已接入方法。",
+  "description": "mne-eeg-tool 统筹已登记的独立方法和可复用流程。支持：EEG/MEG 数据检查；MNE LOF 坏导联检测与插值；EEG/MEG 滤波与降采样；MNE ICA 分解与指定成分去除；重参考与分段；Epoch AutoReject 自动质控；传感器 PLV/相干/wPLI；Morlet 时频功率与 ITC；其他方法可在详情中分页查询。",
   "method_refs": [
     {
       "capability": "skill.mne-eeg-tool",
@@ -15,7 +15,7 @@
         "load-basic-validation"
       ],
       "execution_resolution": {},
-      "role": "调用现有实现：mne.io.read_raw_fif, mne.io.read_raw_edf, mne.io.read_raw_bdf, mne.io.read_raw_eeglab。输入保持只读，输出写入独立任务目录。",
+      "role": "Read a supported continuous EEG/MEG recording, reject non-finite data, report channel/sample counts and sampling frequency, and save the recording as FIF。 Inputs: input: EEG/MEG 原始文件（FIF/EDF/BDF/SET） (file). Registered outputs: results/processed-raw.fif. Fixed invocation options: --operation inspect.",
       "method_ref": "reviewed.mne-eeg-tool.inspect"
     },
     {
@@ -26,7 +26,7 @@
       "default_reason": "",
       "replaces_operations": [],
       "execution_resolution": {},
-      "role": "调用现有实现：mne.preprocessing.find_bad_channels_lof, mne.io.BaseRaw.interpolate_bads。输入保持只读，输出写入独立任务目录。",
+      "role": "Detect EEG bad channels using MNE local-outlier-factor detection and interpolate them using channel positions; retain the detected-channel list in the summary。 Inputs: input: EEG/MEG 原始文件（FIF/EDF/BDF/SET） (file). Registered outputs: results/processed-raw.fif. Fixed invocation options: --operation bad-channels.",
       "method_ref": "reviewed.mne-eeg-tool.bad-channels"
     },
     {
@@ -41,7 +41,7 @@
         "filtering"
       ],
       "execution_resolution": {},
-      "role": "调用现有实现：mne.io.BaseRaw.filter, mne.io.BaseRaw.notch_filter, mne.io.BaseRaw.resample。输入保持只读，输出写入独立任务目录。",
+      "role": "Apply MNE IIR band-pass filtering, optional notch filtering and optional downsampling to continuous data; validate cutoffs against the original and requested Nyquist frequencies。 Inputs: input: EEG/MEG 原始文件（FIF/EDF/BDF/SET） (file). Registered outputs: results/processed-raw.fif. Fixed invocation options: --operation filter.",
       "method_ref": "reviewed.mne-eeg-tool.filter"
     },
     {
@@ -52,7 +52,7 @@
       "default_reason": "",
       "replaces_operations": [],
       "execution_resolution": {},
-      "role": "调用现有实现：mne.preprocessing.ICA.fit, mne.preprocessing.ICA.apply, mne.preprocessing.ICA.find_bads_eog, mne.preprocessing.ICA.find_bads_ecg。输入保持只读，输出写入独立任务目录。",
+      "role": "Fit MNE ICA on a high-pass-filtered copy, identify EOG/ECG-related components when corresponding channels exist, combine explicit exclusions and apply the fitted cleaning to the recording。 Inputs: input: EEG/MEG 原始文件（FIF/EDF/BDF/SET） (file). Registered outputs: results/processed-raw.fif. Fixed invocation options: --operation ica.",
       "method_ref": "reviewed.mne-eeg-tool.ica"
     },
     {
@@ -67,7 +67,7 @@
         "epoching"
       ],
       "execution_resolution": {},
-      "role": "调用现有实现：mne.Epochs, mne.make_fixed_length_epochs。输入保持只读，输出写入独立任务目录。",
+      "role": "Create MNE epochs from supplied events and time limits, or fixed-duration epochs when events are absent; apply average EEG referencing and save accepted epochs as FIF。 Inputs: input: EEG/MEG 原始文件（FIF/EDF/BDF/SET） (file); events: MNE 事件文件 (file). Registered outputs: results/processed-epo.fif. Fixed invocation options: --operation epoch.",
       "method_ref": "reviewed.mne-eeg-tool.epoch"
     },
     {
@@ -78,7 +78,7 @@
       "default_reason": "",
       "replaces_operations": [],
       "execution_resolution": {},
-      "role": "调用现有实现：autoreject.AutoReject.fit_transform。输入保持只读，输出写入独立任务目录。",
+      "role": "Create epochs and run AutoReject with cross-validation to repair/reject contaminated epochs. At least four epochs and valid sensor positions are required。 Inputs: input: EEG/MEG 原始文件（FIF/EDF/BDF/SET） (file); events: MNE 事件文件 (file). Registered outputs: results/processed-epo.fif. Fixed invocation options: --operation autoreject.",
       "method_ref": "reviewed.mne-eeg-tool.autoreject"
     },
     {
@@ -92,7 +92,7 @@
         "sensor-level-connectivity"
       ],
       "execution_resolution": {},
-      "role": "调用现有实现：mne_connectivity.spectral_connectivity_epochs。输入保持只读，输出写入独立任务目录。",
+      "role": "Create epochs and compute spectral PLV, coherence and wPLI in the requested frequency band using mne-connectivity; export matrices and channel names in NPZ。 Inputs: input: EEG/MEG 原始文件（FIF/EDF/BDF/SET） (file); events: MNE 事件文件 (file). Registered outputs: results/connectivity.npz. Fixed invocation options: --operation connectivity.",
       "method_ref": "reviewed.mne-eeg-tool.connectivity"
     },
     {
@@ -105,7 +105,7 @@
         "time-frequency-analysis"
       ],
       "execution_resolution": {},
-      "role": "调用现有实现：mne.Epochs.compute_tfr。输入保持只读，输出写入独立任务目录。",
+      "role": "Compute averaged Morlet time-frequency power and inter-trial coherence from epochs at twelve frequencies spanning the selected band; export power, ITC, frequencies and times。 Inputs: input: EEG/MEG 原始文件（FIF/EDF/BDF/SET） (file); events: MNE 事件文件 (file). Registered outputs: results/time_frequency.npz. Fixed invocation options: --operation time-frequency.",
       "method_ref": "reviewed.mne-eeg-tool.time-frequency"
     },
     {
@@ -118,7 +118,7 @@
         "maxwell-filtering"
       ],
       "execution_resolution": {},
-      "role": "调用现有实现：mne.preprocessing.maxwell_filter。输入保持只读，输出写入独立任务目录。",
+      "role": "Apply MNE Maxwell filtering to continuous MEG using the adapter origin (0, 0, 0.04 m); MEG sensors and a device-to-head transform are required。 Inputs: input: EEG/MEG 原始文件（FIF/EDF/BDF/SET） (file). Registered outputs: results/processed-raw.fif. Fixed invocation options: --operation maxwell.",
       "method_ref": "reviewed.mne-eeg-tool.maxwell"
     },
     {
@@ -131,7 +131,7 @@
         "source-localization"
       ],
       "execution_resolution": {},
-      "role": "调用现有实现：mne.minimum_norm.make_inverse_operator, mne.minimum_norm.apply_inverse_raw。输入保持只读，输出写入独立任务目录。",
+      "role": "Construct an MNE inverse operator from the supplied forward solution and noise covariance, then apply dSPM to continuous data with lambda2=1/9; export source amplitudes, times and vertices。 Inputs: input: EEG/MEG 原始文件（FIF/EDF/BDF/SET） (file); forward: 前向模型 FIF (file); noise_cov: 噪声协方差 FIF (file). Registered outputs: results/source.npz. Fixed invocation options: --operation source.",
       "method_ref": "reviewed.mne-eeg-tool.source"
     },
     {
@@ -142,7 +142,7 @@
       "default_reason": "",
       "replaces_operations": [],
       "execution_resolution": {},
-      "role": "调用现有实现：skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Use the original function to filter delta, theta, alpha, beta and gamma bands, compute channel-wise mean Welch spectral power and export band-specific FIF recordings plus band_power.csv. Inputs: input: 原始 EEG 文件 (file). Registered outputs: results/band_power.csv. Fixed invocation options: --operation bands.",
       "method_ref": "reviewed.mne-eeg-tool.original-bands"
     },
     {
@@ -153,7 +153,7 @@
       "default_reason": "",
       "replaces_operations": [],
       "execution_resolution": {},
-      "role": "调用现有实现：skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Average existing MNE epochs and extract each channel’s maximum-absolute ERP peak, peak latency and trapezoidal sum of absolute amplitudes. The original AUC calculation integrates over sample indices, without a time-spacing factor. Inputs: input: Epochs FIF (file). Registered outputs: results/erp_features.csv. Fixed invocation options: --operation erp.",
       "method_ref": "reviewed.mne-eeg-tool.original-erp"
     },
     {
@@ -164,7 +164,7 @@
       "default_reason": "",
       "replaces_operations": [],
       "execution_resolution": {},
-      "role": "调用现有实现：skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Filter continuous EEG at 8–13 Hz, split into 2-second epochs and compute (F3 mean - F4 mean) / (F3 mean + F4 mean), as implemented by the original function. Both F3 and F4 channels are required. This is a ratio of mean signals, not logarithmic alpha-power asymmetry. Inputs: input: 原始 EEG 文件 (file). Registered outputs: results/alpha_asymmetry.npy. Fixed invocation options: --operation alpha-ratio.",
       "method_ref": "reviewed.mne-eeg-tool.original-alpha-ratio"
     },
     {
@@ -175,7 +175,7 @@
       "default_reason": "",
       "replaces_operations": [],
       "execution_resolution": {},
-      "role": "调用现有实现：skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "From existing labelled MNE epochs, call the original feature extractor for alpha-band multitaper power, four supervised CSP components, Hjorth mobility and sample entropy. Save the feature arrays in NPZ; the original CSP fit is not a cross-validated prediction test. Inputs: input: Epochs FIF (file). Registered outputs: results/features.npz. Fixed invocation options: --operation features.",
       "method_ref": "reviewed.mne-eeg-tool.original-features"
     },
     {
@@ -186,7 +186,7 @@
       "default_reason": "",
       "replaces_operations": [],
       "execution_resolution": {},
-      "role": "调用现有实现：skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Fit the original mne_microstates Microstates model with four states to a continuous recording and save its FIF output. No alternative clustering implementation is substituted. Inputs: input: 原始 EEG 文件 (file). Registered outputs: results/microstates.fif. Fixed invocation options: --operation microstates.",
       "method_ref": "reviewed.mne-eeg-tool.original-microstates"
     }
   ],
@@ -1292,87 +1292,10 @@
     }
   ],
   "selection_rules": [
-    "先确认目标产物和已有输入；只选择必要步骤，已有数据或历史结果优先复用。",
+    "先确认目标产物、允许使用的已有输入与禁止复用的结果；仅在用户允许时复用已有数据，不默认追加上游步骤。",
     "输入缺少时先查询目录并请求用户绑定；不要自动追加生成该输入的步骤。",
     "独立操作选择 Method；确需固定组合时选择 Pipeline，并检查每一步输入输出。",
     "软件工具 Skill 用于选择实现，任务 Skill 用于组织需求，不因为同时匹配两类 Skill 重复添加方法。"
-  ],
-  "functions": [
-    {
-      "method_ref": "reviewed.mne-eeg-tool.inspect",
-      "label": "EEG/MEG 数据检查",
-      "description": "调用现有实现：mne.io.read_raw_fif, mne.io.read_raw_edf, mne.io.read_raw_bdf, mne.io.read_raw_eeglab。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "reviewed.mne-eeg-tool.bad-channels",
-      "label": "MNE LOF 坏导联检测与插值",
-      "description": "调用现有实现：mne.preprocessing.find_bad_channels_lof, mne.io.BaseRaw.interpolate_bads。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "reviewed.mne-eeg-tool.filter",
-      "label": "EEG/MEG 滤波与降采样",
-      "description": "调用现有实现：mne.io.BaseRaw.filter, mne.io.BaseRaw.notch_filter, mne.io.BaseRaw.resample。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "reviewed.mne-eeg-tool.ica",
-      "label": "MNE ICA 分解与指定成分去除",
-      "description": "调用现有实现：mne.preprocessing.ICA.fit, mne.preprocessing.ICA.apply, mne.preprocessing.ICA.find_bads_eog, mne.preprocessing.ICA.find_bads_ecg。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "reviewed.mne-eeg-tool.epoch",
-      "label": "重参考与分段",
-      "description": "调用现有实现：mne.Epochs, mne.make_fixed_length_epochs。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "reviewed.mne-eeg-tool.autoreject",
-      "label": "Epoch AutoReject 自动质控",
-      "description": "调用现有实现：autoreject.AutoReject.fit_transform。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "reviewed.mne-eeg-tool.connectivity",
-      "label": "传感器 PLV/相干/wPLI",
-      "description": "调用现有实现：mne_connectivity.spectral_connectivity_epochs。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "reviewed.mne-eeg-tool.time-frequency",
-      "label": "Morlet 时频功率与 ITC",
-      "description": "调用现有实现：mne.Epochs.compute_tfr。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "reviewed.mne-eeg-tool.maxwell",
-      "label": "MEG Maxwell 滤波",
-      "description": "调用现有实现：mne.preprocessing.maxwell_filter。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "reviewed.mne-eeg-tool.source",
-      "label": "dSPM 源定位（需前向模型和噪声协方差）",
-      "description": "调用现有实现：mne.minimum_norm.make_inverse_operator, mne.minimum_norm.apply_inverse_raw。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "reviewed.mne-eeg-tool.original-bands",
-      "label": "原脚本 Welch 频带功率与分频文件",
-      "description": "调用现有实现：skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "reviewed.mne-eeg-tool.original-erp",
-      "label": "原脚本 ERP 峰值、潜伏期与 AUC",
-      "description": "调用现有实现：skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "reviewed.mne-eeg-tool.original-alpha-ratio",
-      "label": "原脚本 F3/F4 滤波后均值比值（非对数功率差）",
-      "description": "调用现有实现：skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "reviewed.mne-eeg-tool.original-features",
-      "label": "原脚本 CSP、频带、Hjorth 与熵特征",
-      "description": "调用现有实现：skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "reviewed.mne-eeg-tool.original-microstates",
-      "label": "原脚本 mne_microstates 分析",
-      "description": "调用现有实现：skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py。输入保持只读，输出写入独立任务目录。"
-    }
   ],
   "name": "mne-eeg-tool",
   "category": [
@@ -1381,8 +1304,7 @@
   ],
   "scope": "software",
   "applicability": [
-    "需要 mne-eeg-tool 相关处理，且目标涉及：通用生成目录、通用生成文件。",
-    "查询具体方法并检查对应输入：分析输入；不是要求一次提供目录中所有方法的输入。"
+    "根据目标选择对应 Method 或 Pipeline；每个入口的输入格式、必要参数和产物以其独立契约为准。"
   ],
   "limitations": [
     "格式和样本数量满足仅是必要条件；空间、单位、样本标识与方法假设仍须按所选方法检查。",
@@ -1390,5 +1312,19 @@
     "环境探测与运行证据分别显示；合成数据测试不代表真实数据的科学有效性。",
     "尚无 Method 的规划能力只能提供说明，不能当作可执行步骤。"
   ],
-  "examples": []
+  "examples": [
+    {
+      "request": "查看 EEG/MEG 数据检查 所需的输入和参数",
+      "decision": "查询 reviewed.mne-eeg-tool.inspect 的契约，绑定文件后再规划执行。"
+    }
+  ],
+  "keywords": [
+    "mne-eeg-tool",
+    "MNE",
+    "EEG",
+    "ICA",
+    "脑电预处理",
+    "MEG",
+    "LOF"
+  ]
 }

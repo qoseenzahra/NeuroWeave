@@ -200,30 +200,34 @@ class PipelineLibrary:
             db.execute('INSERT INTO pipeline_library VALUES (?,?,?)',(identity,version,json.dumps(p,ensure_ascii=False)))
             return p
 
-    def catalog(self, kind, q='', offset=0, limit=50):
-        definitions=self.registry.definitions;definitions.load();items=[]
-        if kind=='method':
-            groups={json.loads(p.read_text(encoding='utf-8'))['id']:p.parent.parent.name for p in definitions.root.glob('methods/*/*/method.json')}
-            for m in definitions.methods.values():
-                items.append({'id':m.id,'label':m.label,'description':m.description,'version':m.version,
-                              'category':['软件',groups.get(m.id,'其他')],'kind':kind})
-        elif kind=='pipeline':
-            latest={p['id']:p for p in self.records()}
-            for p in [*definitions.pipelines.values(),*latest.values()]:
-                items.append({'id':p['id'],'label':p['label'],'description':p.get('description',''),'version':p['version'],
-                              'category':p.get('category',['内置 Pipeline']), 'kind':kind,'step_count':len(p['steps'])})
-        else:
-            for s in definitions.skills.values():
-                items.append({'id':s['id'],'label':s.get('name',s['id']),'description':s.get('description',''),
-                              'category':s.get('category',['任务能力']), 'kind':'skill',
-                              'method_count':len(s['method_refs']),'pipeline_count':len(s['pipeline_refs'])})
-        terms=q.lower().split()
-        items=[p for p in items if all(t in json.dumps(p,ensure_ascii=False).lower() for t in terms)]
-        for item in items:
-            item['description'] = item['description'][:350]
-        items.sort(key=lambda p:(p['category'],p['label'],p['id']))
-        return {'items':items[offset:offset+limit],'total':len(items),'has_more':offset+limit<len(items),
-                'next_cursor':offset+limit if offset+limit<len(items) else None}
+    def catalog(self, kind, q='', offset=0, limit=50, category='', software='', language='zh'):
+        from .catalog_taxonomy import catalog_entries, facets, category_labels
+        items = [item for item in catalog_entries(self.registry.definitions, self.records()) if item['kind'] == kind]
+        terms = q.casefold().split()
+        # Index both locale projections, so switching language never hides a
+        # canonical command, Chinese task phrase or English scientific term.
+        from .catalog_locale import localize
+        if terms:
+            items = [item for item in items if all(term in (json.dumps(item, ensure_ascii=False) +
+                json.dumps(localize(item, 'en'), ensure_ascii=False) +
+                json.dumps(localize(item, 'zh'), ensure_ascii=False)).casefold() for term in terms)]
+        software_facets = facets(items, language)['software']
+        if software:
+            items = [item for item in items if software in item['software']]
+        navigation = facets(items, language)
+        navigation['software'] = software_facets
+        if category:
+            prefix = category.split('/')
+            items = [item for item in items if any(path[:len(prefix)] == prefix
+                for path in item.get('categories', [item['category_ids']]))]
+        items.sort(key=lambda item: (item['category_ids'], item['label'].casefold(), item['id']))
+        page=[]
+        for original in items[offset:offset+limit]:
+            item=localize(original, language)
+            item['category']=category_labels(item['category_ids'], language)
+            page.append(item)
+        return {'items': page, 'total': len(items), 'has_more': offset+limit<len(items),
+                'next_cursor': offset+limit if offset+limit<len(items) else None, 'facets': navigation}
 
     def from_workflow(self, workflow, name):
         # Reuse the real compiler to flatten nested recipes and retain the exact

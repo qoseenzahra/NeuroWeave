@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "id": "aomic-skill",
-  "description": "统筹 aomic-skill 的 任务处理，包括aomic 质控汇总、aomic 表型/刺激提取、aomic 复制整理为 BIDS 目录。",
+  "description": "AOMIC 数据集专属适配，按该数据集的命名、目录或表字段约定选择处理方法。支持：aomic 质控汇总；aomic 表型/刺激提取；aomic 复制整理为 BIDS 目录。",
   "method_refs": [
     {
       "capability": "skill.aomic-skill",
@@ -13,7 +13,7 @@
         "qc-summary"
       ],
       "execution_resolution": {},
-      "role": "调用现有实现：skills/aomic-skill/scripts/aomic_qc_summary.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Generate per-subject QC summaries and exclusion lists for AOMIC. Combines fMRIPrep confounds and FreeSurfer recon-all metrics to produce a unified QC report with configurable exclusion criteria。 Inputs: fmriprep_dir: Path to fMRIPrep output directory (directory); freesurfer_dir: Path to FreeSurfer output directory (directory). Registered outputs: results/output.csv.",
       "method_ref": "reviewed.aomic-skill.aomic-qc-summary"
     },
     {
@@ -27,7 +27,7 @@
         "stimulus-extraction"
       ],
       "execution_resolution": {},
-      "role": "调用现有实现：skills/aomic-skill/scripts/extract_aomic_phenotype.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Extract and merge AOMIC phenotype tables for downstream analysis. Reads AOMIC phenotype files (Big Five personality, Raven's progressive matrices, demographics), selects columns, and optionally cross-references with imaging subject lists。 Inputs: phenotype_dir: Directory containing AOMIC phenotype CSV/TSV files (directory); imaging_ids: Path to BIDS participants.tsv or file with imaging subject IDs (file). Registered outputs: results/output.csv.",
       "method_ref": "reviewed.aomic-skill.extract-aomic-phenotype"
     },
     {
@@ -41,44 +41,27 @@
         "data-reorganization"
       ],
       "execution_resolution": {},
-      "role": "调用现有实现：skills/aomic-skill/scripts/reorganize_aomic.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Validate and reorganize AOMIC data into BIDS-style directory structure. AOMIC (Amsterdam Open MRI Collection) data is typically already in BIDS format. This script validates structure, handles edge cases, and normalizes across sub-datasets (ID1000, PIOP1, PIOP2)。 Inputs: input: Path to AOMIC data directory (directory); participants_file: Optional: path to phenotype file for participant metadata (file). Registered outputs: results/. Fixed invocation options: --copy.",
       "method_ref": "reviewed.aomic-skill.reorganize-aomic"
     }
   ],
   "pipeline_refs": [],
   "planning_capabilities": [],
   "selection_rules": [
-    "先确认目标产物和已有输入；只选择必要步骤，已有数据或历史结果优先复用。",
+    "先确认目标产物、允许使用的已有输入与禁止复用的结果；仅在用户允许时复用已有数据，不默认追加上游步骤。",
     "输入缺少时先查询目录并请求用户绑定；不要自动追加生成该输入的步骤。",
     "独立操作选择 Method；确需固定组合时选择 Pipeline，并检查每一步输入输出。",
     "软件工具 Skill 用于选择实现，任务 Skill 用于组织需求，不因为同时匹配两类 Skill 重复添加方法。"
   ],
-  "functions": [
-    {
-      "method_ref": "reviewed.aomic-skill.aomic-qc-summary",
-      "label": "aomic 质控汇总",
-      "description": "调用现有实现：skills/aomic-skill/scripts/aomic_qc_summary.py。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "reviewed.aomic-skill.extract-aomic-phenotype",
-      "label": "aomic 表型/刺激提取",
-      "description": "调用现有实现：skills/aomic-skill/scripts/extract_aomic_phenotype.py。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "reviewed.aomic-skill.reorganize-aomic",
-      "label": "aomic 复制整理为 BIDS 目录",
-      "description": "调用现有实现：skills/aomic-skill/scripts/reorganize_aomic.py。输入保持只读，输出写入独立任务目录。"
-    }
-  ],
   "name": "aomic-skill",
   "category": [
-    "任务能力",
-    "aomic"
+    "数据集专属",
+    "数据集适配与质控"
   ],
-  "scope": "task",
+  "scope": "dataset",
   "applicability": [
-    "需要 aomic-skill 相关处理，且目标涉及：通用生成目录、通用生成文件。",
-    "查询具体方法并检查对应输入：分析输入；不是要求一次提供目录中所有方法的输入。"
+    "输入必须符合 AOMIC 对应脚本的数据发布格式和字段约定；通用影像处理请选软件或任务 Skill。",
+    "根据目标选择对应 Method 或 Pipeline；每个入口的输入格式、必要参数和产物以其独立契约为准。"
   ],
   "limitations": [
     "格式和样本数量满足仅是必要条件；空间、单位、样本标识与方法假设仍须按所选方法检查。",
@@ -86,5 +69,14 @@
     "环境探测与运行证据分别显示；合成数据测试不代表真实数据的科学有效性。",
     "尚无 Method 的规划能力只能提供说明，不能当作可执行步骤。"
   ],
-  "examples": []
+  "examples": [
+    {
+      "request": "查看 aomic 质控汇总 所需的输入和参数",
+      "decision": "查询 reviewed.aomic-skill.aomic-qc-summary 的契约，绑定文件后再规划执行。"
+    }
+  ],
+  "keywords": [
+    "aomic-skill",
+    "BIDS"
+  ]
 }

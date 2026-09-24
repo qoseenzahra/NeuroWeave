@@ -1,6 +1,6 @@
 {
   "label": "原脚本 F3/F4 滤波后均值比值（非对数功率差）",
-  "description": "调用现有实现：skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py。输入保持只读，输出写入独立任务目录。",
+  "description": "Filter continuous EEG at 8–13 Hz, split into 2-second epochs and compute (F3 mean - F4 mean) / (F3 mean + F4 mean), as implemented by the original function. Both F3 and F4 channels are required. This is a ratio of mean signals, not logarithmic alpha-power asymmetry. Inputs: input: 原始 EEG 文件 (file). Registered outputs: results/alpha_asymmetry.npy. Fixed invocation options: --operation alpha-ratio.",
   "runner_id": "reviewed.mne-eeg-tool.original-alpha-ratio",
   "input_types": [
     "analysis_input"
@@ -15,7 +15,7 @@
       "id": "input",
       "type": "analysis_input",
       "label": "原始 EEG 文件",
-      "description": "原始 EEG 文件：模型、统计或连接组分析使用的表格、数组、图结构或特征文件。。作为此方法的 input 输入，通过文件选择或上游输出绑定。",
+      "description": "原始 EEG 文件. Required file input for 原脚本 F3/F4 滤波后均值比值（非对数功率差）; bind to port input.",
       "required": true,
       "required_when": {},
       "cardinality": "one",
@@ -35,7 +35,7 @@
       "id": "results",
       "type": "generated_folder",
       "label": "分析结果",
-      "description": "分析结果：受信任 Runner 在隔离输出目录中生成并登记的目录型结果。。由此方法生成，端口 results。 运行目录内的路径：results/。",
+      "description": "Result directory for 原脚本 F3/F4 滤波后均值比值（非对数功率差）. Contains this operation's generated files, including results/alpha_asymmetry.npy; ancillary files remain available here. Relative run path: results/.",
       "format": "",
       "primary": true,
       "path_template": "results/",
@@ -45,7 +45,7 @@
       "id": "file_alpha_asymmetry_npy",
       "type": "generated_file",
       "label": "alpha_asymmetry.npy",
-      "description": "alpha_asymmetry.npy：受信任 Runner 在隔离输出目录中生成、校验并登记的文件。。由此方法生成，端口 file_alpha_asymmetry_npy。 运行目录内的路径：results/alpha_asymmetry.npy。",
+      "description": "alpha_asymmetry.npy: output of 原脚本 F3/F4 滤波后均值比值（非对数功率差）. Relative run path: results/alpha_asymmetry.npy.",
       "format": "",
       "primary": false,
       "path_template": "results/alpha_asymmetry.npy",

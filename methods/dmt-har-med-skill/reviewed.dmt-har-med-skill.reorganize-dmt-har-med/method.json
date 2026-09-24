@@ -1,6 +1,6 @@
 {
   "label": "dmt-har-med 复制整理为 BIDS 目录",
-  "description": "调用现有实现：skills/dmt-har-med-skill/scripts/reorganize_dmt_har_med.py。输入保持只读，输出写入独立任务目录。",
+  "description": "Validate and optionally reorganize DMT-HAR-MED OpenNeuro BIDS data。 Inputs: input: Path to DMT-HAR-MED BIDS directory (directory). Registered outputs: results/.",
   "runner_id": "reviewed.dmt-har-med-skill.reorganize-dmt-har-med",
   "input_types": [
     "analysis_input"
@@ -15,7 +15,7 @@
       "id": "input",
       "type": "analysis_input",
       "label": "Path to DMT-HAR-MED BIDS directory",
-      "description": "Path to DMT-HAR-MED BIDS directory：模型、统计或连接组分析使用的表格、数组、图结构或特征文件。。作为此方法的 input 输入，通过文件选择或上游输出绑定。",
+      "description": "Path to DMT-HAR-MED BIDS directory. Required directory input for dmt-har-med 复制整理为 BIDS 目录; bind to port input.",
       "required": true,
       "required_when": {},
       "cardinality": "one",
@@ -35,7 +35,7 @@
       "id": "results",
       "type": "generated_folder",
       "label": "分析结果",
-      "description": "分析结果：受信任 Runner 在隔离输出目录中生成并登记的目录型结果。。由此方法生成，端口 results。 运行目录内的路径：results/。",
+      "description": "Result directory for dmt-har-med 复制整理为 BIDS 目录. Contains this operation's generated files, including results/; ancillary files remain available here. Relative run path: results/.",
       "format": "",
       "primary": true,
       "path_template": "results/",

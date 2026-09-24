@@ -1,37 +1,9 @@
-# NeuroClaw reuse inventory
+# Imported implementation provenance
 
-NeuroWeave currently uses a local snapshot from:
+Original snapshot: `D:\reference_projects\NeuroClaw-main`, imported 2026-09-01 from a directory without Git metadata. The MIT attribution and original implementation/reference files remain in this repository.
 
-```text
-D:\reference_projects\NeuroClaw-main
-```
+The active Skill catalog is now native NeuroWeave JSON: `skills/*/skill.json` orchestrates independent `methods/*/*/method.json` and reusable `pipelines/*/pipeline.json`. Markdown references do not authorize execution. Registered Runners and validated contracts are the execution boundary.
 
-The source directory was not a Git checkout when the snapshot was imported, so no upstream commit hash was available. Snapshot date: 2026-09-01.
+Obsolete imported planning/execution manifests, duplicated overview files, offline summaries and their generators were removed. Do not rerun an upstream directory synchronization over this catalog. Review individual implementation updates, preserve provenance, update affected contracts and run the release checks.
 
-## Reused directly
-
-- All 99 upstream `skills/*/SKILL.md` directories
-- Skill-owned `scripts/`, `agents/`, handlers, reference files and requirements files
-- `core/skill_loader/loader.py`
-- `core/skill_loader/validate_dag.py`
-- `core/web/static/skill_summaries.json`
-- NeuroClaw's MIT license text
-
-The two Python compatibility modules are kept under `bakend/app/neuroclaw_compat/`. NeuroWeave's `app/skill_loader.py` is an adapter that adds caching, provenance, script counts and API-safe serialization while delegating discovery and front-matter parsing to the reused loader.
-
-## Local additions
-
-NeuroWeave adds four platform-level examples: `dataset-inspector`, `table-cleaning`, `image-batch-processing`, and `report-builder`. The active catalog therefore contains 103 skills in total.
-
-## Execution boundary
-
-Imported Skill documents, scripts, and command examples are discovery and planning evidence; they are never executed directly from model output. A method becomes executable only after NeuroWeave maps it to an explicitly registered trusted Runner, validates the server runtime and inputs, and passes Dry-run review. Skills without that reviewed mapping remain planning-only. Environment-oriented skills such as `claw-shell`, `conda-env-manager`, `dependency-planner`, and `docker-env-manager` are reference-only and cannot mutate server environments.
-
-## Refreshing the snapshot
-
-```powershell
-cd D:\reference_projects\LocalFlow
-.\scripts\sync-neuroclaw.ps1
-```
-
-The sync is additive/update-only: it copies current upstream content but does not delete NeuroWeave-owned skills.
+Original scripts and required model sources are retained where referenced by Methods. Compatibility DAG validation remains for historical reference inspection; it does not discover or execute the native catalog.

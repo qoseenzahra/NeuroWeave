@@ -1,6 +1,6 @@
 {
   "label": "MNE LOF 坏导联检测与插值",
-  "description": "调用现有实现：mne.preprocessing.find_bad_channels_lof, mne.io.BaseRaw.interpolate_bads。输入保持只读，输出写入独立任务目录。",
+  "description": "Detect EEG bad channels using MNE local-outlier-factor detection and interpolate them using channel positions; retain the detected-channel list in the summary。 Inputs: input: EEG/MEG 原始文件（FIF/EDF/BDF/SET） (file). Registered outputs: results/processed-raw.fif. Fixed invocation options: --operation bad-channels.",
   "runner_id": "reviewed.mne-eeg-tool.bad-channels",
   "input_types": [
     "analysis_input"
@@ -15,7 +15,7 @@
       "id": "input",
       "type": "analysis_input",
       "label": "EEG/MEG 原始文件（FIF/EDF/BDF/SET）",
-      "description": "EEG/MEG 原始文件（FIF/EDF/BDF/SET）：模型、统计或连接组分析使用的表格、数组、图结构或特征文件。。作为此方法的 input 输入，通过文件选择或上游输出绑定。",
+      "description": "EEG/MEG 原始文件（FIF/EDF/BDF/SET）. Required file input for MNE LOF 坏导联检测与插值; bind to port input.",
       "required": true,
       "required_when": {},
       "cardinality": "one",
@@ -35,7 +35,7 @@
       "id": "results",
       "type": "generated_folder",
       "label": "分析结果",
-      "description": "分析结果：受信任 Runner 在隔离输出目录中生成并登记的目录型结果。。由此方法生成，端口 results。 运行目录内的路径：results/。",
+      "description": "Result directory for MNE LOF 坏导联检测与插值. Contains this operation's generated files, including results/processed-raw.fif; ancillary files remain available here. Relative run path: results/.",
       "format": "",
       "primary": true,
       "path_template": "results/",
@@ -45,7 +45,7 @@
       "id": "file_processed_raw_fif",
       "type": "generated_file",
       "label": "processed-raw.fif",
-      "description": "processed-raw.fif：受信任 Runner 在隔离输出目录中生成、校验并登记的文件。。由此方法生成，端口 file_processed_raw_fif。 运行目录内的路径：results/processed-raw.fif。",
+      "description": "processed-raw.fif: output of MNE LOF 坏导联检测与插值. Relative run path: results/processed-raw.fif.",
       "format": "",
       "primary": false,
       "path_template": "results/processed-raw.fif",

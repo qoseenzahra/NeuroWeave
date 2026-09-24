@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import { useLanguageStore } from '../../stores/languageStore';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { QueryClient } from '@tanstack/react-query';
 import { ApiError } from '../../api/http';
@@ -37,6 +39,11 @@ export function adoptConflict(queryClient: QueryClient, error: unknown): boolean
 }
 
 export function useWorkflowQuery(workflowId: string | null, initial?: Workflow | null) {
+  const language = useLanguageStore(s => s.language);
+  const localeClient = useQueryClient();
+  useEffect(() => {
+    if (workflowId) void localeClient.invalidateQueries({queryKey: workflowQueryKey(workflowId)});
+  }, [language, workflowId, localeClient]);
   return useQuery({
     queryKey: workflowQueryKey(workflowId ?? ''),
     enabled: workflowId !== null && workflowId !== '',

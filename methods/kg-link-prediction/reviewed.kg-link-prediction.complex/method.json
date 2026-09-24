@@ -1,6 +1,6 @@
 {
   "label": "ComplEx 知识图谱链路预测",
-  "description": "调用现有实现：skills/kg-link-prediction/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+  "description": "Run the original knowledge-graph link-prediction trainer on the supplied graph data using the registered model selection and training parameters; retain its validation metrics and checkpoint outputs. Only model values exposed in this Method are supported. Inputs: kg: 知识图谱 JSON（concepts、edges） (file). Registered outputs: results/metrics.json, results/checkpoint.pt. Fixed invocation options: --model complex.",
   "runner_id": "reviewed.kg-link-prediction.complex",
   "input_types": [
     "analysis_input"
@@ -162,7 +162,7 @@
       "id": "kg",
       "type": "analysis_input",
       "label": "知识图谱 JSON（concepts、edges）",
-      "description": "知识图谱 JSON（concepts、edges）：模型、统计或连接组分析使用的表格、数组、图结构或特征文件。。作为此方法的 kg 输入，通过文件选择或上游输出绑定。",
+      "description": "知识图谱 JSON（concepts、edges）. Required file input for ComplEx 知识图谱链路预测; bind to port kg.",
       "required": true,
       "required_when": {},
       "cardinality": "one",
@@ -182,7 +182,7 @@
       "id": "results",
       "type": "generated_folder",
       "label": "分析结果",
-      "description": "分析结果：受信任 Runner 在隔离输出目录中生成并登记的目录型结果。。由此方法生成，端口 results。 运行目录内的路径：results/。",
+      "description": "Result directory for ComplEx 知识图谱链路预测. Contains this operation's generated files, including results/metrics.json, results/checkpoint.pt; ancillary files remain available here. Relative run path: results/.",
       "format": "",
       "primary": true,
       "path_template": "results/",
@@ -192,7 +192,7 @@
       "id": "file_metrics_json",
       "type": "generated_file",
       "label": "metrics.json",
-      "description": "metrics.json：受信任 Runner 在隔离输出目录中生成、校验并登记的文件。。由此方法生成，端口 file_metrics_json。 运行目录内的路径：results/metrics.json。",
+      "description": "metrics.json: output of ComplEx 知识图谱链路预测. Relative run path: results/metrics.json.",
       "format": "",
       "primary": false,
       "path_template": "results/metrics.json",
@@ -202,7 +202,7 @@
       "id": "file_checkpoint_pt",
       "type": "generated_file",
       "label": "checkpoint.pt",
-      "description": "checkpoint.pt：受信任 Runner 在隔离输出目录中生成、校验并登记的文件。。由此方法生成，端口 file_checkpoint_pt。 运行目录内的路径：results/checkpoint.pt。",
+      "description": "checkpoint.pt: output of ComplEx 知识图谱链路预测. Relative run path: results/checkpoint.pt.",
       "format": "",
       "primary": false,
       "path_template": "results/checkpoint.pt",

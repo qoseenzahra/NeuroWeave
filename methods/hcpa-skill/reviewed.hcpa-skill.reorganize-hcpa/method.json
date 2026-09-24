@@ -1,6 +1,6 @@
 {
   "label": "hcpa 复制整理为 BIDS 目录",
-  "description": "调用现有实现：skills/hcpa-skill/scripts/reorganize_hcpa.py。输入保持只读，输出写入独立任务目录。",
+  "description": "Reorganize HCP Aging native layout to BIDS structure. Converts HCP-A directory layout to BIDS-style structure。 Inputs: input: Path to HCP-A raw directory (directory). Registered outputs: results/.",
   "runner_id": "reviewed.hcpa-skill.reorganize-hcpa",
   "input_types": [
     "analysis_input"
@@ -15,7 +15,7 @@
       "id": "input",
       "type": "analysis_input",
       "label": "Path to HCP-A raw directory",
-      "description": "Path to HCP-A raw directory：模型、统计或连接组分析使用的表格、数组、图结构或特征文件。。作为此方法的 input 输入，通过文件选择或上游输出绑定。",
+      "description": "Path to HCP-A raw directory. Required directory input for hcpa 复制整理为 BIDS 目录; bind to port input.",
       "required": true,
       "required_when": {},
       "cardinality": "one",
@@ -35,7 +35,7 @@
       "id": "results",
       "type": "generated_folder",
       "label": "分析结果",
-      "description": "分析结果：受信任 Runner 在隔离输出目录中生成并登记的目录型结果。。由此方法生成，端口 results。 运行目录内的路径：results/。",
+      "description": "Result directory for hcpa 复制整理为 BIDS 目录. Contains this operation's generated files, including results/; ancillary files remain available here. Relative run path: results/.",
       "format": "",
       "primary": true,
       "path_template": "results/",

@@ -6,6 +6,8 @@
  * `{ detail: string }` or `{ detail: { code, message, current } }`.
  */
 
+import { useLanguageStore } from '../stores/languageStore';
+
 export type ApiErrorDetail = {
   code?: string;
   message?: string;
@@ -72,6 +74,7 @@ export async function request<T>(path: string, init: RequestInit = {}): Promise<
   const response = await fetch(`${apiBase()}${path}`, {
     ...init,
     headers: {
+      'Accept-Language': useLanguageStore.getState().language,
       ...(init.body ? { 'Content-Type': 'application/json' } : {}),
       ...init.headers
     }

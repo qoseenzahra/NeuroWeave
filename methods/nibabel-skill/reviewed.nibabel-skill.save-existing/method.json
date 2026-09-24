@@ -1,6 +1,6 @@
 {
   "label": "NiBabel NIfTI 保存／格式转换",
-  "description": "调用现有实现：nibabel.load, nibabel.save。输入保持只读，输出写入独立任务目录。",
+  "description": "Load an existing image with NiBabel and save it as image.nii.gz, retaining its voxel data and geometry. This is format conversion, not registration。 Inputs: image: 已有影像 (file). Registered outputs: results/image.nii.gz. Fixed invocation options: --operation save.",
   "runner_id": "reviewed.nibabel-skill.save-existing",
   "input_types": [
     "analysis_input"
@@ -15,7 +15,7 @@
       "id": "image",
       "type": "analysis_input",
       "label": "已有影像",
-      "description": "已有影像：模型、统计或连接组分析使用的表格、数组、图结构或特征文件。。作为此方法的 image 输入，通过文件选择或上游输出绑定。",
+      "description": "已有影像. Required file input for NiBabel NIfTI 保存／格式转换; bind to port image.",
       "required": true,
       "required_when": {},
       "cardinality": "one",
@@ -35,7 +35,7 @@
       "id": "results",
       "type": "generated_folder",
       "label": "分析结果",
-      "description": "分析结果：受信任 Runner 在隔离输出目录中生成并登记的目录型结果。。由此方法生成，端口 results。 运行目录内的路径：results/。",
+      "description": "Result directory for NiBabel NIfTI 保存／格式转换. Contains this operation's generated files, including results/image.nii.gz; ancillary files remain available here. Relative run path: results/.",
       "format": "",
       "primary": true,
       "path_template": "results/",
@@ -45,7 +45,7 @@
       "id": "file_image_nii_gz",
       "type": "generated_file",
       "label": "image.nii.gz",
-      "description": "image.nii.gz：受信任 Runner 在隔离输出目录中生成、校验并登记的文件。。由此方法生成，端口 file_image_nii_gz。 运行目录内的路径：results/image.nii.gz。",
+      "description": "image.nii.gz: output of NiBabel NIfTI 保存／格式转换. Relative run path: results/image.nii.gz.",
       "format": "",
       "primary": false,
       "path_template": "results/image.nii.gz",

@@ -1,6 +1,6 @@
 {
   "label": "nifd 表型/刺激提取",
-  "description": "调用现有实现：skills/nifd-skill/scripts/extract_nifd_phenotype.py。输入保持只读，输出写入独立任务目录。",
+  "description": "Extract and merge NIFD phenotype data. Reads NIFD phenotype files (diagnosis, cognitive scores) and produces a merged phenotype table aligned with imaging subject list。 Inputs: phenotype_files: 文件路径清单（每行一项） (file); imaging_ids: imaging-ids (file). Registered outputs: results/output.csv.",
   "runner_id": "reviewed.nifd-skill.extract-nifd-phenotype",
   "input_types": [
     "analysis_input"
@@ -42,7 +42,7 @@
       "id": "phenotype_files",
       "type": "analysis_input",
       "label": "文件路径清单（每行一项）",
-      "description": "文件路径清单（每行一项）：模型、统计或连接组分析使用的表格、数组、图结构或特征文件。。作为此方法的 phenotype_files 输入，通过文件选择或上游输出绑定。",
+      "description": "文件路径清单（每行一项）. Required file input for nifd 表型/刺激提取; bind to port phenotype_files.",
       "required": true,
       "required_when": {},
       "cardinality": "one",
@@ -60,7 +60,7 @@
       "id": "imaging_ids",
       "type": "analysis_input",
       "label": "imaging-ids",
-      "description": "imaging-ids：模型、统计或连接组分析使用的表格、数组、图结构或特征文件。。作为此方法的 imaging_ids 输入，通过文件选择或上游输出绑定。",
+      "description": "imaging-ids. Optional file input for nifd 表型/刺激提取; bind to port imaging_ids.",
       "required": false,
       "required_when": {},
       "cardinality": "one",
@@ -80,7 +80,7 @@
       "id": "results",
       "type": "generated_folder",
       "label": "分析结果",
-      "description": "分析结果：受信任 Runner 在隔离输出目录中生成并登记的目录型结果。。由此方法生成，端口 results。 运行目录内的路径：results/。",
+      "description": "Result directory for nifd 表型/刺激提取. Contains this operation's generated files, including results/output.csv; ancillary files remain available here. Relative run path: results/.",
       "format": "",
       "primary": true,
       "path_template": "results/",
@@ -90,7 +90,7 @@
       "id": "file_output_csv",
       "type": "generated_file",
       "label": "output.csv",
-      "description": "output.csv：受信任 Runner 在隔离输出目录中生成、校验并登记的文件。。由此方法生成，端口 file_output_csv。 运行目录内的路径：results/output.csv。",
+      "description": "output.csv: output of nifd 表型/刺激提取. Relative run path: results/output.csv.",
       "format": "",
       "primary": false,
       "path_template": "results/output.csv",

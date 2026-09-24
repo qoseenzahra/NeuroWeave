@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "id": "dipy-tool",
-  "description": "统筹 dipy-tool 的 软件方法选择，包括DIPY TensorModel、DWI 载入与脑掩膜、分区影像统计。",
+  "description": "dipy-tool 统筹已登记的独立方法和可复用流程。支持：DIPY TensorModel；DWI 载入与脑掩膜；分区影像统计。",
   "method_refs": [
     {
       "capability": "dwi.tensor_metrics",
@@ -25,7 +25,7 @@
         "brain-mask"
       ],
       "execution_resolution": {},
-      "role": "调用现有实现：skills/dipy-tool/scripts/load_and_mask_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Reference DIPY snippet for DWI loading and brain mask generation。 Inputs: dwi: DWI (file); bval: bval (file); bvec: bvec (file). Registered outputs: results/brain_mask.nii.gz.",
       "method_ref": "reviewed.dipy-tool.mask"
     },
     {
@@ -40,7 +40,7 @@
         "roi-wise-feature-extraction"
       ],
       "execution_resolution": {},
-      "role": "调用现有实现：skills/dipy-tool/scripts/roi_stats_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Reference DIPY snippet for atlas-based ROI statistics on tensor metrics。 Inputs: metric: 标量影像 (file); roi: 分区图谱 (file); labels: 标签表 (file). Registered outputs: results/roi_stats.csv.",
       "method_ref": "reviewed.dipy-tool.roi-stats"
     },
     {
@@ -90,27 +90,10 @@
   "pipeline_refs": [],
   "planning_capabilities": [],
   "selection_rules": [
-    "先确认目标产物和已有输入；只选择必要步骤，已有数据或历史结果优先复用。",
+    "先确认目标产物、允许使用的已有输入与禁止复用的结果；仅在用户允许时复用已有数据，不默认追加上游步骤。",
     "输入缺少时先查询目录并请求用户绑定；不要自动追加生成该输入的步骤。",
     "独立操作选择 Method；确需固定组合时选择 Pipeline，并检查每一步输入输出。",
     "软件工具 Skill 用于选择实现，任务 Skill 用于组织需求，不因为同时匹配两类 Skill 重复添加方法。"
-  ],
-  "functions": [
-    {
-      "method_ref": "dipy.tensor_fit",
-      "label": "DIPY TensorModel",
-      "description": "Python 路线，便于扩展、自定义和生成结构化扩散指标。"
-    },
-    {
-      "method_ref": "reviewed.dipy-tool.mask",
-      "label": "DWI 载入与脑掩膜",
-      "description": "调用现有实现：skills/dipy-tool/scripts/load_and_mask_reference.py。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "reviewed.dipy-tool.roi-stats",
-      "label": "分区影像统计",
-      "description": "调用现有实现：skills/dipy-tool/scripts/roi_stats_reference.py。输入保持只读，输出写入独立任务目录。"
-    }
   ],
   "name": "dipy-tool",
   "category": [
@@ -119,8 +102,7 @@
   ],
   "scope": "software",
   "applicability": [
-    "需要 dipy-tool 相关处理，且目标涉及：扩散张量指标、执行日志、通用生成目录、脑或 DWI Mask、通用生成文件。",
-    "查询具体方法并检查对应输入：预处理后的 DWI、扩散梯度表、脑或 DWI Mask、扩散 b 值、扩散梯度方向、分析输入；不是要求一次提供目录中所有方法的输入。"
+    "根据目标选择对应 Method 或 Pipeline；每个入口的输入格式、必要参数和产物以其独立契约为准。"
   ],
   "limitations": [
     "格式和样本数量满足仅是必要条件；空间、单位、样本标识与方法假设仍须按所选方法检查。",
@@ -128,5 +110,15 @@
     "环境探测与运行证据分别显示；合成数据测试不代表真实数据的科学有效性。",
     "尚无 Method 的规划能力只能提供说明，不能当作可执行步骤。"
   ],
-  "examples": []
+  "examples": [
+    {
+      "request": "查看 DIPY TensorModel 所需的输入和参数",
+      "decision": "查询 dipy.tensor_fit 的契约，绑定文件后再规划执行。"
+    }
+  ],
+  "keywords": [
+    "dipy-tool",
+    "TensorModel",
+    "DWI"
+  ]
 }

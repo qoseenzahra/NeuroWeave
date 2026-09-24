@@ -1,3 +1,4 @@
+import { ui } from '../../lib/libraryText';
 import type { Draft, InputPort, Method, Node } from './libraryApi';
 import { activeOutputSlots } from '../workflows/workflowConditions';
 import type { ParameterValue } from '../workflows/workflowTypes';
@@ -16,26 +17,26 @@ export const nodePosition=(node:Node,index:number):Point=>node.position??{x:40+(
 /** Spatial position never determines execution order: dependency edges do. */
 export function orderedSteps(steps:Node[]):Node[] {
   const byId=new Map(steps.map(s=>[s.id,s]));
-  if(byId.size!==steps.length) throw new Error('步骤 ID 重复');
+  if(byId.size!==steps.length) throw new Error(ui("步骤 ID 重复"));
   const pending=new Set(steps.map(s=>s.id));const ordered:Node[]=[];
   while(pending.size){
     const ready=steps.filter(s=>pending.has(s.id)&&Object.values(s.inputs).every(link=>{
-      if(!byId.has(link.step_id))throw new Error('连接的上游步骤不存在，请重新连接');
+      if(!byId.has(link.step_id))throw new Error(ui("连接的上游步骤不存在，请重新连接"));
       return !pending.has(link.step_id);
     }));
-    if(!ready.length)throw new Error('连接会形成循环；Pipeline 必须有明确的先后依赖');
+    if(!ready.length)throw new Error(ui("连接会形成循环；Pipeline 必须有明确的先后依赖"));
     for(const node of ready){pending.delete(node.id);ordered.push(node);}
   }
   return ordered;
 }
 export function connectNodes(steps:Node[],definitions:Record<string,Method>,from:string,output:string,to:string,input:string):Node[]{
-  if(from===to)throw new Error('不能把步骤连接到自身');
+  if(from===to)throw new Error(ui("不能把步骤连接到自身"));
   const source=steps.find(s=>s.id===from),target=steps.find(s=>s.id===to);
   const out=source&&definitions[source.method_id]?.output_slots.find(s=>s.id===output);
   const slot=target&&definitions[target.method_id]?.input_slots.find(s=>s.id===input);
-  if(!out||!slot)throw new Error('端口定义尚未加载，请稍后重试');
-  if(out.type!==slot.type)throw new Error(`端口类型不匹配：${out.type} → ${slot.type}`);
-  if(slot.cardinality&&slot.cardinality!=='one')throw new Error('此多文件端口需要作为整体输入提供');
+  if(!out||!slot)throw new Error(ui("端口定义尚未加载，请稍后重试"));
+  if(out.type!==slot.type)throw new Error(ui("端口类型不匹配：{0} → {1}",out.type,slot.type));
+  if(slot.cardinality&&slot.cardinality!=='one')throw new Error(ui("此多文件端口需要作为整体输入提供"));
   const next=steps.map(s=>s.id===to?{...s,inputs:{...s.inputs,[input]:{step_id:from,output_slot_id:output}}}:s);
   orderedSteps(next);return next;
 }
@@ -73,7 +74,7 @@ export function conditionalConnectionIssues(steps:Node[],definitions:Record<stri
     if(!source||!method||!output)continue;
     if(!activeOutputSlots(method,source.parameters).some(slot=>slot.id===output.id)){
       const consumer=definitions[target.method_id];const slot=consumer?.input_slots.find(s=>s.id===input);
-      issues.push(`${method.label}（${source.id.slice(-4)}）→ ${consumer?.label??target.method_id} / ${slot?.label??input}：${output.label}当前不会生成，需要${conditionDescription(method,output.generated_when??{})}。`);
+      issues.push(ui("{0}（{1}）→ {2} / {3}：{4}当前不会生成，需要{5}。",method.label,source.id.slice(-4),consumer?.label??target.method_id,slot?.label??input,output.label,conditionDescription(method,output.generated_when??{})));
     }
   }
   return issues;
@@ -96,20 +97,20 @@ export function displayBindings(node:Node,groups:InputPort[][]):Record<string,un
   return {...node.inputs,...Object.fromEntries(groups.flat().filter(p=>p.step_id===node.id).map(p=>[p.input_slot_id,true]))};
 }
 export function shareInputs(draft:Draft,definitions:Record<string,Method>,from:InputPort,to:InputPort):Draft{
-  if(inputPortKey(from)===inputPortKey(to))throw new Error('请选择两个不同的输入端口');
+  if(inputPortKey(from)===inputPortKey(to))throw new Error(ui("请选择两个不同的输入端口"));
   const groups=draft.shared_inputs??[];
   const combined=[...(sharedGroup(groups,from)??[from]),...(sharedGroup(groups,to)??[to])];
   const members=[...new Map(combined.map(p=>[inputPortKey(p),p])).values()];
   const slots=members.map(p=>{
     const node=draft.steps.find(n=>n.id===p.step_id);
     const slot=node&&definitions[node.method_id]?.input_slots.find(s=>s.id===p.input_slot_id);
-    if(!node||!slot)throw new Error('输入端口定义尚未加载或不存在');
-    if(node.inputs[p.input_slot_id])throw new Error('已连接上游输出的输入不能同时共享外部文件，请先解除上游连接');
+    if(!node||!slot)throw new Error(ui("输入端口定义尚未加载或不存在"));
+    if(node.inputs[p.input_slot_id])throw new Error(ui("已连接上游输出的输入不能同时共享外部文件，请先解除上游连接"));
     return slot;
   });
-  if(slots.some(s=>s.type!==slots[0].type||s.cardinality!==slots[0].cardinality||s.binding!==slots[0].binding))throw new Error('共享输入的类型、文件数量和文件/目录形式必须一致');
+  if(slots.some(s=>s.type!==slots[0].type||s.cardinality!==slots[0].cardinality||s.binding!==slots[0].binding))throw new Error(ui("共享输入的类型、文件数量和文件/目录形式必须一致"));
   const formats=slots.filter(s=>s.formats.length).map(s=>s.formats);
-  if(formats.length&&!formats[0].some(f=>formats.every(choices=>choices.includes(f))))throw new Error('共享输入没有共同支持的文件格式');
-  if(!slots[0].source_options.some(f=>slots.every(s=>s.source_options.includes(f))))throw new Error('共享输入没有共同支持的文件来源');
+  if(formats.length&&!formats[0].some(f=>formats.every(choices=>choices.includes(f))))throw new Error(ui("共享输入没有共同支持的文件格式"));
+  if(!slots[0].source_options.some(f=>slots.every(s=>s.source_options.includes(f))))throw new Error(ui("共享输入没有共同支持的文件来源"));
   return {...draft,shared_inputs:[...groups.filter(g=>!g.some(p=>members.some(m=>inputPortKey(m)===inputPortKey(p)))),members]};
 }

@@ -1,6 +1,6 @@
 {
   "label": "SEED 频带特征提取",
-  "description": "调用现有实现：skills/seed-iv-skill/scripts/extract_seed_iv_features.py。输入保持只读，输出写入独立任务目录。",
+  "description": "Extract features from SEED-IV EEG data. Supports Differential Entropy (DE), Power Spectral Density (PSD), and band power features for emotion recognition。 Inputs: input: EEG 数据目录 (directory). Registered outputs: results/seed_iv_features_both.csv. Fixed invocation options: --feature-type both.",
   "runner_id": "reviewed.seed-iv-skill.features",
   "input_types": [
     "analysis_input"
@@ -42,7 +42,7 @@
       "id": "input",
       "type": "analysis_input",
       "label": "EEG 数据目录",
-      "description": "EEG 数据目录：模型、统计或连接组分析使用的表格、数组、图结构或特征文件。。作为此方法的 input 输入，通过文件选择或上游输出绑定。",
+      "description": "Path to SEED-IV BIDS directory. Required directory input for SEED 频带特征提取; bind to port input.",
       "required": true,
       "required_when": {},
       "cardinality": "one",
@@ -62,7 +62,7 @@
       "id": "results",
       "type": "generated_folder",
       "label": "分析结果",
-      "description": "分析结果：受信任 Runner 在隔离输出目录中生成并登记的目录型结果。。由此方法生成，端口 results。 运行目录内的路径：results/。",
+      "description": "Result directory for SEED 频带特征提取. Contains this operation's generated files, including results/seed_iv_features_both.csv; ancillary files remain available here. Relative run path: results/.",
       "format": "",
       "primary": true,
       "path_template": "results/",
@@ -72,7 +72,7 @@
       "id": "file_seed_iv_features_both_csv",
       "type": "generated_file",
       "label": "seed_iv_features_both.csv",
-      "description": "seed_iv_features_both.csv：受信任 Runner 在隔离输出目录中生成、校验并登记的文件。。由此方法生成，端口 file_seed_iv_features_both_csv。 运行目录内的路径：results/seed_iv_features_both.csv。",
+      "description": "seed_iv_features_both.csv: output of SEED 频带特征提取. Relative run path: results/seed_iv_features_both.csv.",
       "format": "",
       "primary": false,
       "path_template": "results/seed_iv_features_both.csv",

@@ -50,6 +50,7 @@ from .workflow_models import (
     WorkflowDatasetRequest,
     WorkflowMutationRequest,
 )
+from .task_contract import PlanNotMatched
 from .workflow_service import RevisionConflict, WorkflowService
 from .workspace_service import WorkspaceService
 from .workspace_routes import workspace_router
@@ -61,7 +62,6 @@ from .dataset_files import DatasetFiles, protect_datasets
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
 SKILLS_DIR = PROJECT_ROOT / "skills"
-SKILL_SUMMARIES_FILE = BACKEND_ROOT / "resources" / "neuroclaw_skill_summaries.json"
 configured_database = Path(os.getenv("LOCALFLOW_DATABASE_PATH", "data/localflow.db"))
 DATABASE_PATH = (
     configured_database
@@ -69,7 +69,7 @@ DATABASE_PATH = (
     else (BACKEND_ROOT / configured_database).resolve()
 )
 
-skill_loader = SkillLoader(SKILLS_DIR, SKILL_SUMMARIES_FILE)
+skill_loader = SkillLoader(SKILLS_DIR)
 chat_service = ChatService()
 capability_registry = CapabilityRegistry(SKILLS_DIR)
 capability_tree = CapabilityTree(SKILLS_DIR / "capability.tree.json")
@@ -213,6 +213,9 @@ origins = [
     ).split(",")
     if origin.strip()
 ]
+from .catalog_locale import CatalogLocaleMiddleware
+app.add_middleware(CatalogLocaleMiddleware)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -718,7 +721,7 @@ async def chat(request: ChatRequest) -> ChatResponse:
                     interaction_mode="task",
                     workflow_recommended=True,
                     workflow_decision_source=decision["decision_source"],
-                    recommended_capabilities=decision["capability_ids"],
+                    recommended_capabilities=workflow.requested_capabilities,
                     capability_routing=decision.get("routing_trace"),
                     workflow=workflow,
                 ))
@@ -780,6 +783,14 @@ async def chat(request: ChatRequest) -> ChatResponse:
         return await finalize(
             await chat_service.reply(request, selected, auto_selected=auto_selected)
         )
+    except PlanNotMatched as exc:
+        return await finalize(ChatResponse(type="done", content=str(exc),
+            provider_used=chat_service.provider_name, model_used=chat_service.model or "workflow-demo",
+            mode=chat_service.mode, selected_skills=[skill.name for skill in selected],
+            interaction_mode=request.interaction_mode, workflow_recommended=False,
+            workflow_decision_source="candidate_mismatch", capability_routing={
+                **(decision.get("routing_trace", {}) if decision else {}),
+                "retrieval": exc.diagnostics}))
     except httpx.HTTPStatusError as exc:
         raise HTTPException(
             status_code=502,
@@ -796,6 +807,9 @@ async def draft_workflow(request: WorkflowDraftRequest) -> Workflow:
             _workspace_request(ChatRequest(**request.model_dump()))
         )
         return workflow
+    except PlanNotMatched as exc:
+        raise HTTPException(status_code=422, detail={"status": "candidate_mismatch", "message": str(exc),
+            "diagnostics": exc.diagnostics}) from exc
     except httpx.HTTPStatusError as exc:
         raise HTTPException(
             status_code=502,

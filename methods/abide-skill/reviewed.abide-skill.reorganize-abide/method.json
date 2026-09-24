@@ -1,6 +1,6 @@
 {
   "label": "abide 复制整理为 BIDS 目录",
-  "description": "调用现有实现：skills/abide-skill/scripts/reorganize_abide.py。输入保持只读，输出写入独立任务目录。",
+  "description": "Reorganize ABIDE raw data into BIDS-style directory structure. Handles FCP/INDI-style subject directories, site extraction, and modality routing for T1w and rs-fMRI。 Inputs: input: Path to ABIDE raw data directory (directory); phenotype: Path to ABIDE phenotype CSV file (file). Registered outputs: results/.",
   "runner_id": "reviewed.abide-skill.reorganize-abide",
   "input_types": [
     "analysis_input"
@@ -42,7 +42,7 @@
       "id": "input",
       "type": "analysis_input",
       "label": "Path to ABIDE raw data directory",
-      "description": "Path to ABIDE raw data directory：模型、统计或连接组分析使用的表格、数组、图结构或特征文件。。作为此方法的 input 输入，通过文件选择或上游输出绑定。",
+      "description": "Path to ABIDE raw data directory. Required directory input for abide 复制整理为 BIDS 目录; bind to port input.",
       "required": true,
       "required_when": {},
       "cardinality": "one",
@@ -60,7 +60,7 @@
       "id": "phenotype",
       "type": "analysis_input",
       "label": "Path to ABIDE phenotype CSV file",
-      "description": "Path to ABIDE phenotype CSV file：模型、统计或连接组分析使用的表格、数组、图结构或特征文件。。作为此方法的 phenotype 输入，通过文件选择或上游输出绑定。",
+      "description": "Path to ABIDE phenotype CSV file. Optional file input for abide 复制整理为 BIDS 目录; bind to port phenotype.",
       "required": false,
       "required_when": {},
       "cardinality": "one",
@@ -80,7 +80,7 @@
       "id": "results",
       "type": "generated_folder",
       "label": "分析结果",
-      "description": "分析结果：受信任 Runner 在隔离输出目录中生成并登记的目录型结果。。由此方法生成，端口 results。 运行目录内的路径：results/。",
+      "description": "Result directory for abide 复制整理为 BIDS 目录. Contains this operation's generated files, including results/; ancillary files remain available here. Relative run path: results/.",
       "format": "",
       "primary": true,
       "path_template": "results/",

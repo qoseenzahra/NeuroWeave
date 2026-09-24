@@ -13,6 +13,10 @@ class CapabilityNode(BaseModel):
     description: str = ""
     keywords: list[str] = Field(default_factory=list)
     skill_ids: list[str] = Field(default_factory=list)
+    method_ids: list[str] = Field(default_factory=list)
+    pipeline_ids: list[str] = Field(default_factory=list)
+    entity_kind: str = 'capability'
+    category_ids: list[str] = Field(default_factory=list)
     execution_level: Literal["category", "advisory", "planning", "structured"] = "category"
     children: list["CapabilityNode"] = Field(default_factory=list)
 
@@ -22,7 +26,7 @@ class CapabilityNode(BaseModel):
 
 
 class CapabilityTree:
-    """Compact reviewed taxonomy used before any SKILL.md content is retrieved."""
+    """Functional navigation with explicit native Skill, Method and Pipeline links."""
 
     def __init__(self, path: Path) -> None:
         self.path = path
@@ -170,6 +174,8 @@ class CapabilityTree:
         leaves = [node for node in self._nodes.values() if node.is_leaf]
         return {
             "nodes": len(self._nodes),
+            "methods_covered": len({m for node in leaves for m in node.method_ids}),
+            "pipelines_covered": len({p for node in leaves for p in node.pipeline_ids}),
             "capabilities": len(leaves),
             "structured": sum(node.execution_level == "structured" for node in leaves),
             "planning": sum(node.execution_level == "planning" for node in leaves),
@@ -215,6 +221,10 @@ class CapabilityTree:
             result["keywords"] = node.keywords
         if node.is_leaf:
             result["execution_level"] = node.execution_level
+            result['skill_ids'] = node.skill_ids
+            result['method_ids'] = node.method_ids
+            result['pipeline_ids'] = node.pipeline_ids
+        result['entity_kind'] = node.entity_kind
         if node.children:
             result["children"] = [CapabilityTree._compact_node(child) for child in node.children]
         return result

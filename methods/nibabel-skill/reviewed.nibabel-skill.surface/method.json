@@ -1,6 +1,6 @@
 {
   "label": "FreeSurfer 表面与分区读取",
-  "description": "调用现有实现：nibabel.freesurfer.read_geometry, nibabel.freesurfer.read_annot。输入保持只读，输出写入独立任务目录。",
+  "description": "Read FreeSurfer surface vertices/faces and annotation labels/colours with NiBabel; verify matching vertex counts and export the arrays in surface.npz。 Inputs: surf: 表面 (file); annot: 标注 (file). Registered outputs: results/surface.npz. Fixed invocation options: --operation surface.",
   "runner_id": "reviewed.nibabel-skill.surface",
   "input_types": [
     "analysis_input"
@@ -15,7 +15,7 @@
       "id": "surf",
       "type": "analysis_input",
       "label": "表面",
-      "description": "表面：模型、统计或连接组分析使用的表格、数组、图结构或特征文件。。作为此方法的 surf 输入，通过文件选择或上游输出绑定。",
+      "description": "表面. Required file input for FreeSurfer 表面与分区读取; bind to port surf.",
       "required": true,
       "required_when": {},
       "cardinality": "one",
@@ -33,7 +33,7 @@
       "id": "annot",
       "type": "analysis_input",
       "label": "标注",
-      "description": "标注：模型、统计或连接组分析使用的表格、数组、图结构或特征文件。。作为此方法的 annot 输入，通过文件选择或上游输出绑定。",
+      "description": "标注. Required file input for FreeSurfer 表面与分区读取; bind to port annot.",
       "required": true,
       "required_when": {},
       "cardinality": "one",
@@ -53,7 +53,7 @@
       "id": "results",
       "type": "generated_folder",
       "label": "分析结果",
-      "description": "分析结果：受信任 Runner 在隔离输出目录中生成并登记的目录型结果。。由此方法生成，端口 results。 运行目录内的路径：results/。",
+      "description": "Result directory for FreeSurfer 表面与分区读取. Contains this operation's generated files, including results/surface.npz; ancillary files remain available here. Relative run path: results/.",
       "format": "",
       "primary": true,
       "path_template": "results/",
@@ -63,7 +63,7 @@
       "id": "file_surface_npz",
       "type": "generated_file",
       "label": "surface.npz",
-      "description": "surface.npz：受信任 Runner 在隔离输出目录中生成、校验并登记的文件。。由此方法生成，端口 file_surface_npz。 运行目录内的路径：results/surface.npz。",
+      "description": "surface.npz: output of FreeSurfer 表面与分区读取. Relative run path: results/surface.npz.",
       "format": "",
       "primary": false,
       "path_template": "results/surface.npz",

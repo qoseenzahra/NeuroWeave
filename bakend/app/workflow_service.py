@@ -31,6 +31,8 @@ from .models import (
 )
 from .skill_loader import SkillLoader
 from .task_scope import existing_input_capabilities
+from .task_contract import TaskContract, PlanNotMatched
+from .method_planning import MethodContractIndex, validate_plan, validate_workflow_scope
 from .workflow_ordering import order_capabilities
 from .workflow_models import (
     DryRunCommand,
@@ -83,6 +85,7 @@ class WorkflowService:
             if capability_tree is not None and skill_loader is not None
             else None
         )
+        self.method_index = MethodContractIndex(registry)
         self._lock = RLock()
 
     @staticmethod
@@ -122,20 +125,42 @@ class WorkflowService:
             request,
             intent_catalog,
             heuristic_ids,
+            artifact_catalog=[{"id": a.id, "label": a.label, "description": a.description}
+                              for a in self.registry.artifact_types()],
         )
+        request.task_contract = TaskContract.model_validate(intent.get("task_contract", {}))
+        if intent.get("source") == "heuristic_after_model_error":
+            # A failed semantic call cannot certify whether a mentioned artifact
+            # is an input or an operation. Do not build a workflow from that guess.
+            return {
+                "decision": "task", "capability_ids": [], "recommend_skills": False,
+                "recommend_workflow": False, "decision_source": "intent_unavailable",
+                "clarification_required": True,
+                "clarification_question": "本次任务理解服务未返回有效结果，尚未生成流程。请重试；这不表示平台没有可执行方法。",
+                "task_intent": intent,
+                "routing_trace": {"strategy": "semantic", "intent_source": intent["source"],
+                    "confidence": intent.get("confidence", 0), "diagnostics": intent.get("diagnostics", [])},
+            }
         routing = await self._route_capabilities_hierarchically(
             request,
             allowed,
             dataset.inspection.model_dump(mode="json") if dataset else None,
             intent,
         )
+        # A recognized output goal can be planned even if the capability tree
+        # supplied no leaf. Method contracts, not tree reachability, decide this.
+        if request.task_contract.goal_artifact_types and intent.get("decision") == "task":
+            routing["decision"] = "task"
+            routing["clarification_required"] = False
         routing_trace = routing.setdefault("routing_trace", {})
+        routing_trace["task_contract"] = request.task_contract.model_dump()
+        routing_trace["diagnostics"] = intent.get("diagnostics", [])
         routing_trace["retrieval"] = {
             "strategy": "local_sparse_skill_shortlist",
             "candidate_count": len(retrieved),
             "candidates": [item.public_dict() for item in retrieved],
             "intent_catalog_count": len(intent_catalog),
-            "forced_capability_ids": heuristic_ids,
+            "hint_capability_ids": heuristic_ids,
         }
 
         capability_ids = [item for item in routing["capability_ids"] if item in allowed]
@@ -149,7 +174,10 @@ class WorkflowService:
             for capability_id in capability_ids
             if capability_id not in structured_ids
         ]
-        is_task = routing["decision"] == "task" and bool(capability_ids)
+        contract_task = bool(request.task_contract.goal_artifact_types) and intent.get("decision") == "task"
+        is_task = routing["decision"] == "task" and (bool(capability_ids) or contract_task)
+        if contract_task:
+            advisory_ids = []
         return {
             **routing,
             "capability_ids": capability_ids,
@@ -246,6 +274,7 @@ class WorkflowService:
             intent.get("decision") == "task"
             and anchor_leaves
             and intent.get("coverage") == "complete"
+            and str(intent.get("source", "")).startswith("model")
             and confidence >= 0.7
         ):
             return {
@@ -912,6 +941,9 @@ class WorkflowService:
             self._resolve_workflow_inputs(workflow)
             if any(step.selected_method_id is None for step in workflow.steps):
                 raise ValueError("仍有步骤尚未选择可兼容的方法，不能锁定流程链")
+            errors = validate_workflow_scope(workflow, self.registry)
+            if errors:
+                raise ValueError("输入输出约束：" + "；".join(errors))
             workflow.locked_at = self._now()
             self._clear_review(workflow)
             self._advance(workflow)
@@ -933,7 +965,8 @@ class WorkflowService:
             workflow.dataset_id = dataset.dataset_id
             workflow.dataset = dataset
             for step in workflow.steps:
-                step.input_bindings = {}
+                step.input_bindings = {key: binding for key, binding in step.input_bindings.items()
+                    if workflow.planner_source.startswith("method-contract:") and binding.source == "upstream_output"}
                 step.command_preview = None
             self._clear_review(workflow)
             self._revalidate_chain(workflow)
@@ -1031,6 +1064,9 @@ class WorkflowService:
             self._check_revision(workflow, expected_revision)
         if workflow.parameters_reviewed_at is None:
             raise ValueError("请先审阅并确认参数")
+        errors = validate_workflow_scope(workflow, self.registry)
+        if errors:
+            raise ValueError("流程输入/输出约束未满足：" + "；".join(errors))
         self._validate_all_parameters(workflow)
         declared_runners = self.registry.runner_ids()
         selected_methods = [self._selected_method(step) for step in workflow.steps]
@@ -1189,6 +1225,108 @@ class WorkflowService:
             self._save(workflow, "workflow_confirmed")
             return workflow.model_copy(deep=True)
 
+    async def _build_contract_plan(self, request, routing, existing=None):
+        contract = request.task_contract
+        capabilities = routing.get("capability_ids", [])
+        diagnostics = {"searches": [], "model_errors": [], "validation_errors": [], "proposed_graphs": []}
+        plan = None
+        last_error = "当前候选尚未形成符合需求的流程"
+        # Start small; widen once on mismatch/invalid graph. Budgets are explicit
+        # and diagnostics distinguish partial search from a proven absence.
+        from .library_retrieval import retrieve as hybrid_retrieve, compact_catalog
+        semantic_ids = []
+        for attempt, (limit, depth) in enumerate(((32, 3), (80, 5))):
+            if attempt and hasattr(self.chat_service, 'search_library_semantically'):
+                # Bounded full-metadata fallback catches valid methods outside the
+                # first route/word match. It never loads all parameter schemas.
+                rows = compact_catalog(self.method_index)
+                scanned = 0
+                incomplete_pages = []
+                for start in range(0, min(len(rows), 800), 100):
+                    found, errors = await self.chat_service.search_library_semantically(request, rows[start:start+100])
+                    semantic_ids.extend(found)
+                    diagnostics['model_errors'].extend(errors)
+                    if errors and not found:
+                        incomplete_pages.append(start // 100)
+                    scanned += len(rows[start:start+100])
+                diagnostics['semantic_scan'] = {'scanned': scanned, 'total': len(rows),
+                    'truncated': scanned < len(rows) or bool(incomplete_pages), 'incomplete_pages': incomplete_pages, 'candidate_ids': list(dict.fromkeys(semantic_ids))}
+            identities, search = hybrid_retrieve(self.method_index, contract, capabilities,
+                message=request.message, limit=limit, max_depth=depth,
+                semantic_ids=semantic_ids)
+            diagnostics["searches"].append(search)
+            if not identities:
+                continue
+            candidate, errors = await self.chat_service.plan_registered_methods(request,
+                self.method_index.context(identities, self.runner_registry), diagnostics)
+            diagnostics["model_errors"].extend(errors)
+            diagnostics["proposed_graphs"].append(candidate.model_dump())
+            try:
+                validate_plan(candidate, contract, self.registry, allowed_ids=set(identities),
+                              requested_capabilities=capabilities)
+                plan = candidate
+                break
+            except (ValueError, KeyError) as exc:
+                last_error = str(exc)
+                diagnostics["validation_errors"].append(last_error)
+        if plan is None:
+            raise PlanNotMatched("未生成符合输入限制和目标输出的流程。" + last_error +
+                "；这不表示平台没有可执行方法，检索或规划仍需重试/调整。", diagnostics)
+        dataset = self.dataset_service.get(request.dataset_id) if request.dataset_id else None
+        initial_types = {a.artifact_type for a in contract.allowed_existing_inputs} if contract.input_policy == "only_listed" else set(
+            dataset.inspection.input_types if dataset else [])
+        steps = []
+        for item in plan.steps:
+            definition = self.registry.method_for("method", item.method_id)
+            option = self._option(definition, initial_types,
+                dataset.inspection.features if dataset else {}, dataset is not None)
+            if not option.compatible:
+                raise PlanNotMatched("找到方法，但当前执行条件不满足：" + option.label + "；" +
+                                     "；".join(option.blocked_reasons), diagnostics)
+            option.recommended = True
+            option.recommendation_reason = "已校验真实输入输出连接与本次输入范围；执行前仍需选择文件和确认参数。"
+            parameters = self._default_parameters(option)
+            parameters.update(item.parameters)
+            slots = {s.id: s for s in option.input_slots}
+            steps.append(WorkflowStep(id=item.id, order=len(steps)+1, title=option.label,
+                description=option.description, capability=self.method_index.capability(item.method_id),
+                selection="auto", status="method_selected", selected_method_id=item.method_id,
+                selected_parameters=parameters, method_options=[option],
+                depends_on=list(dict.fromkeys(link.step_id for link in item.inputs.values())),
+                input_bindings={slot_id: InputBinding(slot_id=slot_id, artifact_type=slots[slot_id].type,
+                    source="upstream_output", upstream_step_id=link.step_id,
+                    output_slot_id=link.output_slot_id, status="planned") for slot_id, link in item.inputs.items()}))
+            initial_types.update(s.type for s in option.output_slots if self._output_generated(s, parameters))
+        now = self._now()
+        actual_capabilities = {s.capability for s in steps}
+        final_requested = [cap for cap in capabilities if cap in actual_capabilities]
+        for step in steps:
+            if any(output.type in contract.goal_artifact_types and self._output_generated(output, step.selected_parameters)
+                   for output in step.method_options[0].output_slots) and step.capability not in final_requested:
+                final_requested.append(step.capability)
+        for step in steps:
+            step.origin = "requested" if step.capability in final_requested else "dependency"
+        workflow = Workflow(workflow_id=existing.workflow_id if existing else f"wf_{uuid4().hex[:12]}",
+            template_id="method-contract", revision=existing.revision+1 if existing else 1,
+            title=" → ".join(s.title for s in steps), summary="", original_request=request.message,
+            task_contract=contract, planning_diagnostics=diagnostics,
+            workspace_id=request.workspace_id, workspace_root_path=request.workspace_root_path,
+            output_relative_path="." if request.workspace_id else "outputs",
+            status="chain_ready", dataset_id=request.dataset_id, dataset=dataset,
+            planner_source="method-contract:validated", execution_mode="runner",
+            plan_kind="composite" if len(steps)>1 else "atomic", requested_capabilities=final_requested,
+            steps=steps, created_at=existing.created_at if existing else now, updated_at=now,
+            warnings=["流程连接已通过校验；尚未执行。请选择实际输入，并按采集信息审阅算法参数。"])
+        self._refresh(workflow)
+        if workflow.contract_errors:
+            raise PlanNotMatched("流程校验失败：" + "；".join(workflow.contract_errors), diagnostics)
+        labels = {a.id: a.label for a in self.registry.artifact_types()}
+        if contract.input_policy == "only_listed":
+            workflow.warnings.append("本次仅允许复用这些已有输入：" + "、".join(
+                labels.get(a.artifact_type, a.artifact_type) + ("（" + "、".join(a.paths) + "）" if a.paths else "")
+                for a in contract.allowed_existing_inputs) + "。所需中间结果由本流程重新生成。")
+        return workflow, "已生成并校验流程：" + workflow.summary + "。请在卡片中选择输入文件并审阅参数；尚未执行。"
+
     async def _build_dynamic(
         self,
         request: ChatRequest,
@@ -1198,6 +1336,15 @@ class WorkflowService:
     ) -> tuple[Workflow, str]:
         if self.capability_tree is None:
             raise RuntimeError("CapabilityTree 尚未配置")
+        request.task_contract = TaskContract.model_validate(
+            routing.get("task_intent", {}).get("task_contract", request.task_contract.model_dump()))
+        if existing:
+            request.workspace_id = existing.workspace_id
+            request.workspace_root_path = existing.workspace_root_path
+            if not request.task_contract.goal:
+                request.task_contract = existing.task_contract.model_copy(deep=True)
+        if request.task_contract.goal_artifact_types and not (existing and existing.excluded_capabilities):
+            return await self._build_contract_plan(request, routing, existing)
         dataset = self.dataset_service.get(request.dataset_id) if request.dataset_id else None
         initial_types = set(dataset.inspection.input_types if dataset else ["dataset_folder"])
         excluded = set(existing.excluded_capabilities if existing else [])
@@ -1235,6 +1382,8 @@ class WorkflowService:
             candidate_context,
             dataset.inspection.model_dump(mode="json") if dataset else None,
         )
+        if planning.get("status") == "candidate_mismatch":
+            raise PlanNotMatched("当前候选与需求不匹配，未生成流程。候选检索失败不代表平台没有可执行方法。")
         recommendations = planning["recommendations"]
         reasons = planning["reasons"]
 
@@ -1276,16 +1425,7 @@ class WorkflowService:
             preferred = next(
                 (option for option in recommendable if option.id == requested_method),
                 None,
-            ) or next(
-                (
-                    option
-                    for option in recommendable
-                    if self._definition_default(definitions, option.id)
-                ),
-                None,
             )
-            if preferred is None and recommendable:
-                preferred = recommendable[0]
             for option in options:
                 option.recommended = bool(preferred and option.id == preferred.id)
                 option.recommendation_reason = (
@@ -1362,8 +1502,9 @@ class WorkflowService:
             workflow_id=existing.workflow_id if existing else f"wf_{uuid4().hex[:12]}",
             template_id="dynamic:" + "+".join(capability_ids),
             revision=existing.revision + 1 if existing else 1,
-            title=planning["workflow_title"],
-            summary=planning["workflow_summary"],
+            title=" → ".join(step.title for step in steps),
+            summary=" → ".join(step.title for step in steps),
+            task_contract=request.task_contract,
             original_request=request.message,
             status="awaiting_method_choice",
             dataset_id=dataset.dataset_id if dataset else None,
@@ -1387,7 +1528,7 @@ class WorkflowService:
         self._revalidate_chain(workflow)
         self._resolve_workflow_inputs(workflow)
         self._refresh(workflow)
-        return workflow, planning["assistant_message"]
+        return workflow, "流程卡已生成：" + workflow.summary + "。请确认方法、选择输入并审阅参数；尚未执行。"
 
     def _specific_intent_catalog(
         self,
@@ -1981,7 +2122,8 @@ class WorkflowService:
                 + "。手动选择后将按该方法原有定义执行；如需复用已有结果，请选择对应的已有输入方法。")
 
     def _revalidate_chain(self, workflow: Workflow, *, check_runtime: bool = True) -> None:
-        if workflow.locked_at is None and workflow.status != "confirmed":
+        native_plan = workflow.planner_source.startswith("method-contract:")
+        if not native_plan and workflow.locked_at is None and workflow.status != "confirmed":
             ordered = order_capabilities(self.registry, [step.capability for step in workflow.steps],
                                          self._declared_order)
             changed_order = ordered != [step.capability for step in workflow.steps]
@@ -2005,6 +2147,10 @@ class WorkflowService:
                 or definition.execution_resolution.get("source_method_id") in previous_options
                 or self._scope_conflicts(definition, excluded)
             }
+            if native_plan:
+                definitions = {option.id: self.registry.method_for("method", option.definition_id or option.id)
+                               for option in previous_options.values()}
+                definitions = {key: value for key, value in definitions.items() if value is not None}
             if workflow.locked_at is not None or workflow.status == "confirmed":
                 # A catalog release must not silently change the approved inputs,
                 # algorithm parameters or nested steps of an existing workflow.
@@ -2059,7 +2205,8 @@ class WorkflowService:
 
     def _dataset_binding(self, workflow: Workflow, slot: Any) -> InputBinding | None:
         dataset = workflow.dataset
-        if dataset is None or "dataset" not in slot.source_options:
+        if (dataset is None or "dataset" not in slot.source_options
+                or not workflow.task_contract.allows_external(slot.type, dataset.absolute_path)):
             return None
         # An inspection can prove that a file type exists somewhere in a dataset,
         # but it cannot identify the intended file. Only folder slots may bind the
@@ -2118,6 +2265,19 @@ class WorkflowService:
                     resolved[slot.id] = existing
                     continue
 
+                if workflow.planner_source.startswith("method-contract:"):
+                    # Keep exact graph edges. Matching by artifact type alone can
+                    # accidentally substitute CSF/GM response for a WM response.
+                    if existing and existing.source == "upstream_output" and any(
+                            sid == existing.upstream_step_id and out.id == existing.output_slot_id
+                            and out.type == slot.type for sid, out in upstream_outputs):
+                        resolved[slot.id] = existing
+                    else:
+                        dataset_binding = self._dataset_binding(workflow, slot)
+                        if dataset_binding:
+                            resolved[slot.id] = dataset_binding
+                    continue
+
                 if slot.type in step.manual_input_types:
                     # A removed producer must not be silently replaced by a
                     # different upstream output or an inferred dataset binding.
@@ -2169,12 +2329,17 @@ class WorkflowService:
         if workflow.status == "confirmed":
             return
         self._resolve_workflow_inputs(workflow)
+        workflow.contract_errors = validate_workflow_scope(workflow, self.registry)
+        workflow.warnings = [w for w in workflow.warnings if not w.startswith("输入输出约束：")]
+        workflow.warnings.extend("输入输出约束：" + error for error in workflow.contract_errors)
+        # Derive visible prose from the actual graph, never independent model text.
+        workflow.summary = " → ".join(step.title for step in workflow.steps)
         self._refresh_execution_summary(workflow)
         workflow.sample_scope = partial_sample_scope(workflow)
         unresolved = [step for step in workflow.steps if step.selected_method_id is None]
         if workflow.locked_at is None:
             workflow.status = "awaiting_method_choice" if unresolved else "chain_ready"
-            workflow.can_lock = not unresolved
+            workflow.can_lock = not unresolved and not workflow.contract_errors
             workflow.can_unlock = False
             workflow.can_review_parameters = False
             workflow.can_dry_run = False
@@ -2184,7 +2349,7 @@ class WorkflowService:
                 step.command_preview = None
             return
 
-        parameters_valid = True
+        parameters_valid = not workflow.contract_errors
         missing_inputs = any(step.missing_required_inputs for step in workflow.steps) or (
             workflow.sample_scope is not None and not workflow.sample_scope.eligible_sample_ids)
         for step in workflow.steps:
@@ -2470,6 +2635,9 @@ class WorkflowService:
                 raise ValueError(f"参数 {spec.label} 与 {', '.join(collisions)} 不能同时设置")
 
     def _validate_all_parameters(self, workflow: Workflow) -> None:
+        errors = validate_workflow_scope(workflow, self.registry)
+        if errors:
+            raise ValueError("输入输出约束：" + "；".join(errors))
         for step in workflow.steps:
             self._validate_method_parameters(self._selected_method(step), step.selected_parameters)
 

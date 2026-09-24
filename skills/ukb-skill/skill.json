@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "id": "ukb-skill",
-  "description": "统筹 ukb-skill 的 任务处理，包括UKB 生存分析数据表、ukb 表型/刺激提取、ukb 质控汇总、xgb_cox等已接入方法。",
+  "description": "UKB 数据集专属适配，按该数据集的命名、目录或表字段约定选择处理方法。支持：UKB 生存分析数据表；ukb 表型/刺激提取；ukb 质控汇总；生存模型（scientific）；生存模型（torch）；其他方法可在详情中分页查询。",
   "method_refs": [
     {
       "capability": "skill.ukb-skill",
@@ -13,7 +13,7 @@
         "survival-dataset"
       ],
       "execution_resolution": {},
-      "role": "调用现有实现：skills/ukb-skill/scripts/build_ukb_survival.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Build survival analysis datasets from UK Biobank data。 Inputs: input: UKB 原始表 (file). Registered outputs: results/survival.csv.",
       "method_ref": "reviewed.ukb-skill.survival-dataset"
     },
     {
@@ -27,7 +27,7 @@
         "stimulus-extraction"
       ],
       "execution_resolution": {},
-      "role": "调用现有实现：skills/ukb-skill/scripts/extract_ukb_cases.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Extract disease cases from UK Biobank data using ICD-10/ICD-9 codes。 Inputs: input: Path to UKB raw CSV (file). Registered outputs: results/output.csv.",
       "method_ref": "reviewed.ukb-skill.extract-ukb-cases"
     },
     {
@@ -41,7 +41,7 @@
         "stimulus-extraction"
       ],
       "execution_resolution": {},
-      "role": "调用现有实现：skills/ukb-skill/scripts/extract_ukb_phenotype.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Extract and preprocess UK Biobank phenotype data for brain-related analysis。 Inputs: input: Path to UKB raw CSV (file); custom_mapping: JSON file with custom variable mappings (file). Registered outputs: results/output.csv.",
       "method_ref": "reviewed.ukb-skill.extract-ukb-phenotype"
     },
     {
@@ -54,7 +54,7 @@
         "qc-summary"
       ],
       "execution_resolution": {},
-      "role": "调用现有实现：skills/ukb-skill/scripts/ukb_qc_summary.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Generate QC summaries for UK Biobank brain-related data. Tracks data completeness, imaging availability, and exclusion criteria。 Inputs: input: Path to UKB raw CSV (file). Registered outputs: results/output.csv.",
       "method_ref": "reviewed.ukb-skill.ukb-qc-summary"
     },
     {
@@ -70,7 +70,7 @@
         "source_method_id": "ukb-skill-guided--neurological-survival-analysis",
         "target_method_id": "reviewed-survival-scientific-survival-models--cox"
       },
-      "role": "调用现有实现：skills/survival-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Cross-validated CLI for censored outcomes。 Inputs: features: 特征 CSV (file). Registered outputs: results/metrics.json, results/predictions.csv.",
       "method_ref": "reviewed.survival-models.survival-scientific"
     },
     {
@@ -86,7 +86,7 @@
         "source_method_id": "ukb-skill-guided--neurological-survival-analysis",
         "target_method_id": "reviewed-survival-scientific-survival-models--rsf"
       },
-      "role": "调用现有实现：skills/survival-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Cross-validated CLI for censored outcomes。 Inputs: features: 特征 CSV (file). Registered outputs: results/metrics.json, results/predictions.csv.",
       "method_ref": "reviewed.survival-models.survival-scientific"
     },
     {
@@ -102,7 +102,7 @@
         "source_method_id": "ukb-skill-guided--neurological-survival-analysis",
         "target_method_id": "reviewed-survival-scientific-survival-models--xgb-cox"
       },
-      "role": "调用现有实现：skills/survival-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Cross-validated CLI for censored outcomes。 Inputs: features: 特征 CSV (file). Registered outputs: results/metrics.json, results/predictions.csv.",
       "method_ref": "reviewed.survival-models.survival-scientific"
     },
     {
@@ -118,7 +118,7 @@
         "source_method_id": "ukb-skill-guided--neurological-survival-analysis",
         "target_method_id": "reviewed-survival-torch-survival-models"
       },
-      "role": "调用现有实现：skills/survival-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Cross-validated CLI for censored outcomes。 Inputs: features: 特征 CSV (file). Registered outputs: results/metrics.json, results/predictions.csv.",
       "method_ref": "reviewed.survival-models.survival-torch"
     },
     {
@@ -134,7 +134,7 @@
         "source_method_id": "ukb-skill-guided--cognitive-phenotype-association",
         "target_method_id": "reviewed-roi-glm-neuroimaging-decoding"
       },
-      "role": "调用现有实现：skills/neuroimaging-decoding/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Join ROI features and the design table by subject ID, fit the original ROI-wise GLM with the selected contrast column, and export ROI test results and FDR summary counts. Inputs: features: 特征 CSV (file); design: 设计矩阵 CSV (file). Registered outputs: results/roi_glm_results.csv. Fixed invocation options: --mode roi-glm.",
       "method_ref": "reviewed.neuroimaging-decoding.roi-glm"
     },
     {
@@ -150,7 +150,7 @@
         "source_method_id": "ukb-skill-guided--brain-mri-phenotype-association",
         "target_method_id": "reviewed-roi-glm-neuroimaging-decoding"
       },
-      "role": "调用现有实现：skills/neuroimaging-decoding/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Join ROI features and the design table by subject ID, fit the original ROI-wise GLM with the selected contrast column, and export ROI test results and FDR summary counts. Inputs: features: 特征 CSV (file); design: 设计矩阵 CSV (file). Registered outputs: results/roi_glm_results.csv. Fixed invocation options: --mode roi-glm.",
       "method_ref": "reviewed.neuroimaging-decoding.roi-glm"
     },
     {
@@ -166,7 +166,7 @@
         "source_method_id": "ukb-skill-guided--predictive-modeling-on-ukb-brain-features",
         "target_method_id": "reviewed-classification-statistical-ml--logistic"
       },
-      "role": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Run the registered classical classifier on a feature CSV and explicit target column, using the original cross-validation trainer and optional subject groups; export metrics and held-out predictions. Inputs: features: 特征 CSV (file). Registered outputs: results/metrics.json, results/predictions.csv. Fixed invocation options: --task classification.",
       "method_ref": "reviewed.statistical-ml.classification"
     },
     {
@@ -182,7 +182,7 @@
         "source_method_id": "ukb-skill-guided--predictive-modeling-on-ukb-brain-features",
         "target_method_id": "reviewed-classification-statistical-ml--ridge"
       },
-      "role": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Run the registered classical classifier on a feature CSV and explicit target column, using the original cross-validation trainer and optional subject groups; export metrics and held-out predictions. Inputs: features: 特征 CSV (file). Registered outputs: results/metrics.json, results/predictions.csv. Fixed invocation options: --task classification.",
       "method_ref": "reviewed.statistical-ml.classification"
     },
     {
@@ -198,7 +198,7 @@
         "source_method_id": "ukb-skill-guided--predictive-modeling-on-ukb-brain-features",
         "target_method_id": "reviewed-classification-statistical-ml--elastic-net"
       },
-      "role": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Run the registered classical classifier on a feature CSV and explicit target column, using the original cross-validation trainer and optional subject groups; export metrics and held-out predictions. Inputs: features: 特征 CSV (file). Registered outputs: results/metrics.json, results/predictions.csv. Fixed invocation options: --task classification.",
       "method_ref": "reviewed.statistical-ml.classification"
     },
     {
@@ -214,7 +214,7 @@
         "source_method_id": "ukb-skill-guided--predictive-modeling-on-ukb-brain-features",
         "target_method_id": "reviewed-classification-statistical-ml--svm"
       },
-      "role": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Run the registered classical classifier on a feature CSV and explicit target column, using the original cross-validation trainer and optional subject groups; export metrics and held-out predictions. Inputs: features: 特征 CSV (file). Registered outputs: results/metrics.json, results/predictions.csv. Fixed invocation options: --task classification.",
       "method_ref": "reviewed.statistical-ml.classification"
     },
     {
@@ -230,7 +230,7 @@
         "source_method_id": "ukb-skill-guided--predictive-modeling-on-ukb-brain-features",
         "target_method_id": "reviewed-classification-statistical-ml--random-forest"
       },
-      "role": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Run the registered classical classifier on a feature CSV and explicit target column, using the original cross-validation trainer and optional subject groups; export metrics and held-out predictions. Inputs: features: 特征 CSV (file). Registered outputs: results/metrics.json, results/predictions.csv. Fixed invocation options: --task classification.",
       "method_ref": "reviewed.statistical-ml.classification"
     },
     {
@@ -246,7 +246,7 @@
         "source_method_id": "ukb-skill-guided--predictive-modeling-on-ukb-brain-features",
         "target_method_id": "reviewed-classification-statistical-ml--extra-trees"
       },
-      "role": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Run the registered classical classifier on a feature CSV and explicit target column, using the original cross-validation trainer and optional subject groups; export metrics and held-out predictions. Inputs: features: 特征 CSV (file). Registered outputs: results/metrics.json, results/predictions.csv. Fixed invocation options: --task classification.",
       "method_ref": "reviewed.statistical-ml.classification"
     },
     {
@@ -262,7 +262,7 @@
         "source_method_id": "ukb-skill-guided--predictive-modeling-on-ukb-brain-features",
         "target_method_id": "reviewed-classification-statistical-ml--hist-gradient-boosting"
       },
-      "role": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Run the registered classical classifier on a feature CSV and explicit target column, using the original cross-validation trainer and optional subject groups; export metrics and held-out predictions. Inputs: features: 特征 CSV (file). Registered outputs: results/metrics.json, results/predictions.csv. Fixed invocation options: --task classification.",
       "method_ref": "reviewed.statistical-ml.classification"
     },
     {
@@ -278,7 +278,7 @@
         "source_method_id": "ukb-skill-guided--predictive-modeling-on-ukb-brain-features",
         "target_method_id": "reviewed-classification-statistical-ml--xgboost"
       },
-      "role": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Run the registered classical classifier on a feature CSV and explicit target column, using the original cross-validation trainer and optional subject groups; export metrics and held-out predictions. Inputs: features: 特征 CSV (file). Registered outputs: results/metrics.json, results/predictions.csv. Fixed invocation options: --task classification.",
       "method_ref": "reviewed.statistical-ml.classification"
     },
     {
@@ -294,7 +294,7 @@
         "source_method_id": "ukb-skill-guided--predictive-modeling-on-ukb-brain-features",
         "target_method_id": "reviewed-regression-statistical-ml--ols"
       },
-      "role": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Run the registered classical regressor on a feature CSV and explicit continuous target column, using the original cross-validation trainer and optional subject groups; export metrics and held-out predictions. Inputs: features: 特征 CSV (file). Registered outputs: results/metrics.json, results/predictions.csv. Fixed invocation options: --task regression.",
       "method_ref": "reviewed.statistical-ml.regression"
     },
     {
@@ -310,7 +310,7 @@
         "source_method_id": "ukb-skill-guided--predictive-modeling-on-ukb-brain-features",
         "target_method_id": "reviewed-regression-statistical-ml--ridge"
       },
-      "role": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Run the registered classical regressor on a feature CSV and explicit continuous target column, using the original cross-validation trainer and optional subject groups; export metrics and held-out predictions. Inputs: features: 特征 CSV (file). Registered outputs: results/metrics.json, results/predictions.csv. Fixed invocation options: --task regression.",
       "method_ref": "reviewed.statistical-ml.regression"
     },
     {
@@ -326,7 +326,7 @@
         "source_method_id": "ukb-skill-guided--predictive-modeling-on-ukb-brain-features",
         "target_method_id": "reviewed-regression-statistical-ml--elastic-net"
       },
-      "role": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Run the registered classical regressor on a feature CSV and explicit continuous target column, using the original cross-validation trainer and optional subject groups; export metrics and held-out predictions. Inputs: features: 特征 CSV (file). Registered outputs: results/metrics.json, results/predictions.csv. Fixed invocation options: --task regression.",
       "method_ref": "reviewed.statistical-ml.regression"
     },
     {
@@ -342,7 +342,7 @@
         "source_method_id": "ukb-skill-guided--predictive-modeling-on-ukb-brain-features",
         "target_method_id": "reviewed-regression-statistical-ml--svm"
       },
-      "role": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Run the registered classical regressor on a feature CSV and explicit continuous target column, using the original cross-validation trainer and optional subject groups; export metrics and held-out predictions. Inputs: features: 特征 CSV (file). Registered outputs: results/metrics.json, results/predictions.csv. Fixed invocation options: --task regression.",
       "method_ref": "reviewed.statistical-ml.regression"
     },
     {
@@ -358,7 +358,7 @@
         "source_method_id": "ukb-skill-guided--predictive-modeling-on-ukb-brain-features",
         "target_method_id": "reviewed-regression-statistical-ml--random-forest"
       },
-      "role": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Run the registered classical regressor on a feature CSV and explicit continuous target column, using the original cross-validation trainer and optional subject groups; export metrics and held-out predictions. Inputs: features: 特征 CSV (file). Registered outputs: results/metrics.json, results/predictions.csv. Fixed invocation options: --task regression.",
       "method_ref": "reviewed.statistical-ml.regression"
     },
     {
@@ -374,7 +374,7 @@
         "source_method_id": "ukb-skill-guided--predictive-modeling-on-ukb-brain-features",
         "target_method_id": "reviewed-regression-statistical-ml--extra-trees"
       },
-      "role": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Run the registered classical regressor on a feature CSV and explicit continuous target column, using the original cross-validation trainer and optional subject groups; export metrics and held-out predictions. Inputs: features: 特征 CSV (file). Registered outputs: results/metrics.json, results/predictions.csv. Fixed invocation options: --task regression.",
       "method_ref": "reviewed.statistical-ml.regression"
     },
     {
@@ -390,7 +390,7 @@
         "source_method_id": "ukb-skill-guided--predictive-modeling-on-ukb-brain-features",
         "target_method_id": "reviewed-regression-statistical-ml--hist-gradient-boosting"
       },
-      "role": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Run the registered classical regressor on a feature CSV and explicit continuous target column, using the original cross-validation trainer and optional subject groups; export metrics and held-out predictions. Inputs: features: 特征 CSV (file). Registered outputs: results/metrics.json, results/predictions.csv. Fixed invocation options: --task regression.",
       "method_ref": "reviewed.statistical-ml.regression"
     },
     {
@@ -406,7 +406,7 @@
         "source_method_id": "ukb-skill-guided--predictive-modeling-on-ukb-brain-features",
         "target_method_id": "reviewed-regression-statistical-ml--xgboost"
       },
-      "role": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Run the registered classical regressor on a feature CSV and explicit continuous target column, using the original cross-validation trainer and optional subject groups; export metrics and held-out predictions. Inputs: features: 特征 CSV (file). Registered outputs: results/metrics.json, results/predictions.csv. Fixed invocation options: --task regression.",
       "method_ref": "reviewed.statistical-ml.regression"
     },
     {
@@ -422,7 +422,7 @@
         "source_method_id": "ukb-skill-guided--propensity-score-analysis",
         "target_method_id": "reviewed-cate-causal-treatment-models--ipw"
       },
-      "role": "调用现有实现：skills/causal-treatment-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。",
+      "role": "Cross-fitted treatment-effect and policy evaluation CLI。 Inputs: features: 特征 CSV (file). Registered outputs: results/metrics.json, results/predictions.csv.",
       "method_ref": "reviewed.causal-treatment-models.cate"
     }
   ],
@@ -1525,72 +1525,20 @@
     }
   ],
   "selection_rules": [
-    "先确认目标产物和已有输入；只选择必要步骤，已有数据或历史结果优先复用。",
+    "先确认目标产物、允许使用的已有输入与禁止复用的结果；仅在用户允许时复用已有数据，不默认追加上游步骤。",
     "输入缺少时先查询目录并请求用户绑定；不要自动追加生成该输入的步骤。",
     "独立操作选择 Method；确需固定组合时选择 Pipeline，并检查每一步输入输出。",
     "软件工具 Skill 用于选择实现，任务 Skill 用于组织需求，不因为同时匹配两类 Skill 重复添加方法。"
   ],
-  "functions": [
-    {
-      "method_ref": "reviewed.ukb-skill.survival-dataset",
-      "label": "UKB 生存分析数据表",
-      "description": "调用现有实现：skills/ukb-skill/scripts/build_ukb_survival.py。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "reviewed.ukb-skill.extract-ukb-cases",
-      "label": "ukb 表型/刺激提取",
-      "description": "调用现有实现：skills/ukb-skill/scripts/extract_ukb_cases.py。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "reviewed.ukb-skill.extract-ukb-phenotype",
-      "label": "ukb 表型/刺激提取",
-      "description": "调用现有实现：skills/ukb-skill/scripts/extract_ukb_phenotype.py。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "reviewed.ukb-skill.ukb-qc-summary",
-      "label": "ukb 质控汇总",
-      "description": "调用现有实现：skills/ukb-skill/scripts/ukb_qc_summary.py。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "reviewed.survival-models.survival-scientific",
-      "label": "xgb_cox",
-      "description": "调用现有实现：skills/survival-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "reviewed.survival-models.survival-torch",
-      "label": "生存模型（torch）",
-      "description": "调用现有实现：skills/survival-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "reviewed.neuroimaging-decoding.roi-glm",
-      "label": "ROI GLM 与 FDR",
-      "description": "调用现有实现：skills/neuroimaging-decoding/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "reviewed.statistical-ml.classification",
-      "label": "xgboost",
-      "description": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "reviewed.statistical-ml.regression",
-      "label": "xgboost",
-      "description": "调用现有实现：skills/statistical-ml/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。"
-    },
-    {
-      "method_ref": "reviewed.causal-treatment-models.cate",
-      "label": "ipw",
-      "description": "调用现有实现：skills/causal-treatment-models/scripts/train_reference.py。输入保持只读，输出写入独立任务目录。"
-    }
-  ],
   "name": "ukb-skill",
   "category": [
-    "任务能力",
-    "ukb"
+    "数据集专属",
+    "数据集适配与质控"
   ],
-  "scope": "task",
+  "scope": "dataset",
   "applicability": [
-    "需要 ukb-skill 相关处理，且目标涉及：通用生成目录、通用生成文件。",
-    "查询具体方法并检查对应输入：分析输入；不是要求一次提供目录中所有方法的输入。"
+    "输入必须符合 UKB 对应脚本的数据发布格式和字段约定；通用影像处理请选软件或任务 Skill。",
+    "根据目标选择对应 Method 或 Pipeline；每个入口的输入格式、必要参数和产物以其独立契约为准。"
   ],
   "limitations": [
     "格式和样本数量满足仅是必要条件；空间、单位、样本标识与方法假设仍须按所选方法检查。",
@@ -1598,5 +1546,13 @@
     "环境探测与运行证据分别显示；合成数据测试不代表真实数据的科学有效性。",
     "尚无 Method 的规划能力只能提供说明，不能当作可执行步骤。"
   ],
-  "examples": []
+  "examples": [
+    {
+      "request": "查看 UKB 生存分析数据表 所需的输入和参数",
+      "decision": "查询 reviewed.ukb-skill.survival-dataset 的契约，绑定文件后再规划执行。"
+    }
+  ],
+  "keywords": [
+    "ukb-skill"
+  ]
 }

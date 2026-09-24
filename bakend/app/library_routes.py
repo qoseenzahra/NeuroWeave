@@ -13,14 +13,17 @@ def library_router(library, workflows, workspaces, runners):
 
     @router.get('/api/library')
     def listing(kind: str=Query('method',pattern='^(skill|method|pipeline)$'),q: str=Query('',max_length=500),
-                cursor: int=Query(0,ge=0),limit: int=Query(50,ge=1,le=200)):
-        return library.catalog(kind,q,cursor,limit)
+                cursor: int=Query(0,ge=0),limit: int=Query(50,ge=1,le=200),
+                category: str=Query('',max_length=150),software: str=Query('',max_length=100),
+                language: str=Query('zh',pattern='^(zh|en)$')):
+        return library.catalog(kind,q,cursor,limit,category,software,language)
 
     @router.get('/api/library/methods/{identity}')
     def method(identity: str):
         try:
             value=library.registry.definitions.method(identity).model_dump(mode='json')
             runner=runners.get(identity)
+            value['option_coverage']=[{'flag':flag,'description':reason} for flag,reason in value.get('execution',{}).get('contract',{}).get('omitted_options',{}).items()]
             value['verification']=library.registry.definitions.verification(identity)
             value['runtime_status']=runner.runtime_status() if runner else {'available':False,'reason':'Runner 未注册'}
             return value

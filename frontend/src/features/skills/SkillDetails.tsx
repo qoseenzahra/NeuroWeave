@@ -19,10 +19,10 @@ export function SkillDetails({ skill, selected, disabled, onAdd, onRemove, onClo
   const zh = language === 'zh';
   const [tab, setTab] = useState<'instructions' | 'methods' | 'reference' | 'files'>('instructions');
   // Fetch the full document only when its dialog is opened, never with the catalog.
-  const query = useQuery({ queryKey: ['skill-detail', skill.name],
+  const query = useQuery({ queryKey: ['skill-detail', skill.name, language],
     queryFn: ({ signal }) => fetchSkill(skill.name, signal), staleTime: 60_000, retry: 1 });
   const details = query.data;
-  return <Dialog title={skill.display_name || skill.name} description={t.skillDetailsTitle}
+  return <Dialog title={details?.display_name || skill.display_name || skill.name} description={t.skillDetailsTitle}
     closeLabel={t.workspaceClose} onClose={onClose} size="xl"
     footer={<>
       <span className="mr-auto text-meta text-muted">{selected ? t.skillAdded : t.skillSelectionHint}</span>
@@ -31,9 +31,9 @@ export function SkillDetails({ skill, selected, disabled, onAdd, onRemove, onClo
         {selected ? t.skillRemove : t.skillAdd}
       </Button>
     </>}>
-    <p className="whitespace-pre-wrap break-words leading-6">{skill.description}</p>
+    <p className="whitespace-pre-wrap break-words leading-6">{details?.description ?? skill.description}</p>
     <dl className="my-4 grid grid-cols-1 gap-3 text-meta sm:grid-cols-2">
-      {[[t.skillIdentifier, skill.name], [t.skillSource, skill.source], [t.skillType, skill.skill_type],
+      {[[t.skillIdentifier, skill.name], [t.skillSource, skill.source], [t.skillType, ({dataset:zh?'数据集专属':'Dataset-specific',task:zh?'任务统筹':'Task orchestration',software:zh?'软件方法':'Software methods'} as Record<string,string>)[skill.skill_type] ?? skill.skill_type],
         [t.skillRuntime, skill.runtime], [t.skillDependencies, skill.dependencies?.join(', ') || t.skillNone],
         [t.skillComplementary, details?.complementary_skills?.join(', ') || t.skillNone]].map(([label, value]) =>
         <div key={label} className="min-w-0"><dt className="text-subtle">{label}</dt><dd className="mt-1 break-words">{value || '—'}</dd></div>)}

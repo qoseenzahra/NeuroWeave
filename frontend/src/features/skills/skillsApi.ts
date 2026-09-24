@@ -79,7 +79,7 @@ export type SkillMethodDetail = SkillMethodSummary & {
   input_slots:import('../workflows/workflowTypes').InputSlotSpec[];
   output_slots:import('../workflows/workflowTypes').OutputSlotSpec[];
   source_references:import('../workflows/workflowTypes').MethodSourceReference[];
-  command_coverage?:{total:number;exposed:number;omitted:string[]};
+  command_coverage?:{total:number|null;exposed:number;omitted:string[]};
 };
 export function fetchSkillMethods(skill:string,q:string,cursor:string,signal?:AbortSignal,kind='method') {
   return request<SkillMethodPage>(`/api/skills/${encodeURIComponent(skill)}/methods?${new URLSearchParams({q,cursor,kind,limit:'20'})}`,{signal});

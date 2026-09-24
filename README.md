@@ -218,34 +218,24 @@ Runner 的受审核输入，产物仍限定写入项目 `outputs` 目录。网�
 任务规划分为两个受约束阶段：
 
 ```text
-用户需求 + 工作摘要 + 最近 4 条消息
-  → 本地稀疏检索：在 103 个 Skill 的短元数据中匹配名称、能力、模态、方法与参数选项
-  → 只把最多 8 个 Skill 候选和已审核具体操作交给语义理解层
-  → 语义理解：标准化操作、目标和输入/输出概念，只允许返回候选目录中的 ID
-  → 完整且高置信度：把具体能力作为语义锚点，直接进入 Skill 规划
-  → 部分覆盖：从根节点逐层发送当前节点的直接子项，并始终保留语义锚点
-  → 操作确实存在歧义：先向用户提出一个简短澄清问题
-  → 到达一个或多个 capability 叶子（不向模型发送整棵树）
-  → 后端只读取命中的 SKILL.md 摘要
-  → 方法目录：读取命中 Skill 的方法引用与显式 Pipeline 候选
-  → 本地方法过滤：先排除与当前操作无关的病种、模态、阶段和运行选项
-  → 方法排序：模型只看到过滤后的同类候选，返回一个推荐方法和相关备选，后端再次校验 ID
-  → structured：解析 skill.json 引用的 methods / pipelines，生成任务卡
-  → planning：读取 skill.json 的 planning_capabilities，保持不可执行状态
-  → Dry-run：校验 Manifest 契约、路径、Runner 运行时与方法级输入内容检查
-  → 显式运行：仅确认后且 execution_enabled=true 的不可变流程快照可进入 Worker
-  → 后端不从 SKILL.md 或模型文本直接拼接命令
+用户需求 + 允许复用的输入 + 禁止复用的结果
+  → 语义解析为明确目标、输入策略和检索改写
+  → 精确命令/ID + 全库稀疏检索 + 真实输入输出依赖检索
+  → 原生 Skill / Method / Pipeline 能力树提供导航提示，不作为硬过滤
+  → 候选不足时扩大检索并分页语义扫描；允许“没有匹配方法”
+  → 以真实 Method/Pipeline 契约构建和校验流程，再生成说明
+  → 用户选择文件和参数，Dry-run 检查路径、环境与条件输入输出
+  → 确认后将不可变快照提交给 Runner / Slurm
 ```
 
 当前能力树文件为 `skills/capability.tree.json`，结构化规划文件由以下命令生成：
 
 ```powershell
-python scripts/build_skill_layers.py
+python scripts/check_release.py
 python scripts/build_capability_tree.py
 ```
 
-生成器要求 103 个 Skill 全部且仅被分类一次；
-新增或删除 Skill 后若分类表没有同步，生成会直接失败。例如：
+分类直接由原生资源引用生成；数据集专属 Skill 单列，其 Method 仍按实际处理功能检索。例如：
 
 ```text
 只整理并校验为 BIDS
@@ -262,7 +252,7 @@ python scripts/build_capability_tree.py
   → 组合任务：dwi.preprocess → dwi.tractography
 ```
 
-模型只能返回能力树中的叶子 ID 和 Skill 目录中的候选 ID。独立方法契约存放于 `methods/`，Skill 仅引用与描述方法；多个方法的执行顺序、参数映射和端口连接存放于 `pipelines/`。同一方法可以由多个 Skill 统筹，不能在 Skill 内重复或覆盖执行契约。
+模型只能引用已登记的能力、Method 和 Pipeline ID；检索不限于能力树当前分支。独立方法契约存放于 `methods/`，Skill 仅引用与描述方法；多个方法的执行顺序、参数映射和端口连接存放于 `pipelines/`。同一方法可以由多个 Skill 统筹，不能在 Skill 内重复或覆盖执行契约。
 
 组合流程在 Dry-run/执行前编译为明确的独立方法，每一步的真实制品交给后续步骤。`mrtrix.tckgen` 只生成流线，SIFT2 是独立步骤；已有 FOD/5TT 可以直接复用。缺少受审核实现的规划能力保持不可执行，模型不能从参考命令自动提升执行权限。当前分支不兼容旧 manifest 或工作流快照；完整结构、维护与隔离测试方式见 [结构化方法说明](deploy/structured-skill-methods.md)。
 
@@ -479,3 +469,5 @@ Skill 目录、SkillLoader、依赖图校验、离线摘要、103 个 Skill 及�
 环境管理类 Skill 和上游命令 handler 虽已保留，但只作为说明文件展示；后端不会执行其中的任意命令。独立的 `method.json` 声明 capability、输入输出类型、参数和 `runner_id`，实际执行还必须由 `bakend/app/execution/runner_registry.py` 显式注册经过代码审查的 Runner。模型文本、SKILL.md 命令块和前端命令预览都不能越过这个白名单。NeuroClaw 使用 MIT License，许可证副本位于 `THIRD_PARTY_NOTICES/NeuroClaw-LICENSE.txt`。
 
 方法契约检查、Skill 去重与运行证据规则见 [catalog-quality.md](deploy/catalog-quality.md)。
+
+目录分类、清理范围与离线批量翻译维护方式见 [数据集分类与双语说明](deploy/catalog-polish.md)。

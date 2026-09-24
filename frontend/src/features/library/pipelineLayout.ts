@@ -1,3 +1,4 @@
+import { ui } from '../../lib/libraryText';
 import type {Draft,Pipeline} from './libraryApi';
 type StorageAccess=Pick<Storage,'getItem'|'setItem'>;
 const key=(p:Pipeline)=>`neuroweave:pipeline-layout:${p.id}:${p.version}`;
@@ -20,5 +21,5 @@ export function rememberLayout(pipeline:Pipeline,draft:Draft,storage?:StorageAcc
     if(!target)throw new Error('Browser storage unavailable');
     target.setItem(key(pipeline),JSON.stringify(Object.fromEntries(draft.steps.filter(n=>n.position).map(n=>[n.id,n.position]))));
     return restoreLayout(pipeline,target);
-  }catch{return {...pipeline,layout_warning:'流程已保存到服务器，但当前浏览器无法保存节点位置；再次打开时将使用默认布局。'};}
+  }catch{return {...pipeline,layout_warning:ui("流程已保存到服务器，但当前浏览器无法保存节点位置；再次打开时将使用默认布局。")};}
 }

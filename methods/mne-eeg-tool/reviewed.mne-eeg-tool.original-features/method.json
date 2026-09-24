@@ -1,6 +1,6 @@
 {
   "label": "原脚本 CSP、频带、Hjorth 与熵特征",
-  "description": "调用现有实现：skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py。输入保持只读，输出写入独立任务目录。",
+  "description": "From existing labelled MNE epochs, call the original feature extractor for alpha-band multitaper power, four supervised CSP components, Hjorth mobility and sample entropy. Save the feature arrays in NPZ; the original CSP fit is not a cross-validated prediction test. Inputs: input: Epochs FIF (file). Registered outputs: results/features.npz. Fixed invocation options: --operation features.",
   "runner_id": "reviewed.mne-eeg-tool.original-features",
   "input_types": [
     "analysis_input"
@@ -15,7 +15,7 @@
       "id": "input",
       "type": "analysis_input",
       "label": "Epochs FIF",
-      "description": "Epochs FIF：模型、统计或连接组分析使用的表格、数组、图结构或特征文件。。作为此方法的 input 输入，通过文件选择或上游输出绑定。",
+      "description": "Epochs FIF. Required file input for 原脚本 CSP、频带、Hjorth 与熵特征; bind to port input.",
       "required": true,
       "required_when": {},
       "cardinality": "one",
@@ -35,7 +35,7 @@
       "id": "results",
       "type": "generated_folder",
       "label": "分析结果",
-      "description": "分析结果：受信任 Runner 在隔离输出目录中生成并登记的目录型结果。。由此方法生成，端口 results。 运行目录内的路径：results/。",
+      "description": "Result directory for 原脚本 CSP、频带、Hjorth 与熵特征. Contains this operation's generated files, including results/features.npz; ancillary files remain available here. Relative run path: results/.",
       "format": "",
       "primary": true,
       "path_template": "results/",
@@ -45,7 +45,7 @@
       "id": "file_features_npz",
       "type": "generated_file",
       "label": "features.npz",
-      "description": "features.npz：受信任 Runner 在隔离输出目录中生成、校验并登记的文件。。由此方法生成，端口 file_features_npz。 运行目录内的路径：results/features.npz。",
+      "description": "features.npz: output of 原脚本 CSP、频带、Hjorth 与熵特征. Relative run path: results/features.npz.",
       "format": "",
       "primary": false,
       "path_template": "results/features.npz",

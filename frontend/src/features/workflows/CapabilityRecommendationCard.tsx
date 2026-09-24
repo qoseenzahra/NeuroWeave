@@ -1,3 +1,4 @@
+import { useLanguageStore } from '../../stores/languageStore';
 import { ArrowDown, BookOpenText, Network, ShieldCheck } from 'lucide-react';
 export type CapabilityRecommendationItem = {
   capability_id: string;
@@ -17,6 +18,7 @@ export type CapabilityRecommendation = {
 };
 type Props = { recommendation: CapabilityRecommendation };
 export function CapabilityRecommendationCard({ recommendation }: Props) {
+  const zh = useLanguageStore(s => s.language) === 'zh';
   return (
     <div className="mt-3 min-w-0 rounded-card border border-warning-line bg-warning-quiet">
       {' '}
@@ -32,7 +34,7 @@ export function CapabilityRecommendationCard({ recommendation }: Props) {
         </div>{' '}
         <span className="rounded-chip bg-warning-quiet px-1.5 py-0.5 text-micro font-medium text-warning">
           {' '}
-          SKILL.md 指南{' '}
+          {zh ? '领域指导' : 'Domain guidance'}{' '}
         </span>{' '}
       </div>{' '}
       <div className="space-y-2 px-3 py-3">
@@ -56,10 +58,10 @@ export function CapabilityRecommendationCard({ recommendation }: Props) {
                   >
                     {' '}
                     {item.execution_level === 'structured'
-                      ? 'Runner 结构化'
+                      ? (zh ? '已登记执行方法' : 'Registered method')
                       : item.execution_level === 'planning'
-                        ? '规划型结构化'
-                        : '待补 Manifest'}{' '}
+                        ? (zh ? '规划指导' : 'Planning guidance')
+                        : (zh ? '尚无执行方法' : 'No executable method')}{' '}
                   </span>{' '}
                 </div>{' '}
                 <p className="mt-1 text-xs leading-5 text-muted dark:text-subtle">

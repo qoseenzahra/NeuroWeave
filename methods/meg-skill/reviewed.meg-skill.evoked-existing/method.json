@@ -1,6 +1,6 @@
 {
   "label": "MNE 已有 Epochs 平均诱发响应",
-  "description": "调用现有实现：mne.read_epochs, mne.Epochs.average, mne.Evoked.save。输入保持只读，输出写入独立任务目录。",
+  "description": "Read existing MNE epochs and call the library's existing evoked average API。 Inputs: input: 已分段 Epochs FIF (file). Registered outputs: results/average-ave.fif.",
   "runner_id": "reviewed.meg-skill.evoked-existing",
   "input_types": [
     "analysis_input"
@@ -15,7 +15,7 @@
       "id": "input",
       "type": "analysis_input",
       "label": "已分段 Epochs FIF",
-      "description": "已分段 Epochs FIF：模型、统计或连接组分析使用的表格、数组、图结构或特征文件。。作为此方法的 input 输入，通过文件选择或上游输出绑定。",
+      "description": "已分段 Epochs FIF. Required file input for MNE 已有 Epochs 平均诱发响应; bind to port input.",
       "required": true,
       "required_when": {},
       "cardinality": "one",
@@ -35,7 +35,7 @@
       "id": "results",
       "type": "generated_folder",
       "label": "分析结果",
-      "description": "分析结果：受信任 Runner 在隔离输出目录中生成并登记的目录型结果。。由此方法生成，端口 results。 运行目录内的路径：results/。",
+      "description": "Result directory for MNE 已有 Epochs 平均诱发响应. Contains this operation's generated files, including results/average-ave.fif; ancillary files remain available here. Relative run path: results/.",
       "format": "",
       "primary": true,
       "path_template": "results/",
@@ -45,7 +45,7 @@
       "id": "file_average_ave_fif",
       "type": "generated_file",
       "label": "average-ave.fif",
-      "description": "average-ave.fif：受信任 Runner 在隔离输出目录中生成、校验并登记的文件。。由此方法生成，端口 file_average_ave_fif。 运行目录内的路径：results/average-ave.fif。",
+      "description": "average-ave.fif: output of MNE 已有 Epochs 平均诱发响应. Relative run path: results/average-ave.fif.",
       "format": "",
       "primary": false,
       "path_template": "results/average-ave.fif",
