@@ -354,7 +354,7 @@ def mrtrix_specs():
         if name=='mrmetric':
             for parameter in s.parameters:
                 if parameter['id']=='metric':parameter['options']=[{'value':'diff','label':'diff'}]
-            s.omitted['metric_cc']='Cross-correlation is only partially implemented upstream; this contract exposes the documented fully implemented squared difference metric.' 
+            s.omitted['metric_cc']='Cross-correlation is only partially implemented upstream; this contract exposes the documented fully implemented squared difference metric.'
 
 
 def extra_specs():
