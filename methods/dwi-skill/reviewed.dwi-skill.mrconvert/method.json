@@ -3,10 +3,13 @@
   "description": "Convert an image through MRtrix mrconvert to a NIfTI output. Optional FSL bval and bvec inputs must be provided together; this entry does not perform motion or distortion correction。 Inputs: input: 输入影像 (file); bval: bval (file); bvec: bvec (file). Registered outputs: results/image.nii.gz. Fixed invocation options: --operation mrconvert.",
   "runner_id": "reviewed.dwi-skill.mrconvert",
   "input_types": [
-    "analysis_input"
+    "analysis_input",
+    "b_values",
+    "b_vectors"
   ],
   "output_types": [
-    "generated_folder"
+    "generated_folder",
+    "generated_file"
   ],
   "requires_features": [],
   "parameters": [],
@@ -81,8 +84,8 @@
       "id": "file_image_nii_gz",
       "type": "generated_file",
       "label": "image.nii.gz",
-      "description": "image.nii.gz: output of MRtrix 格式转换. Relative run path: results/image.nii.gz.",
-      "format": "",
+      "description": "image.nii.gz: output of MRtrix format conversion. Relative run path: results/image.nii.gz. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
+      "format": ".nii.gz",
       "primary": false,
       "path_template": "results/image.nii.gz",
       "generated_when": {}

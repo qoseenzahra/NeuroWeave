@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "id": "mrtrix.command.mrtransform",
-  "version": "1",
+  "version": "3",
   "kind": "method",
   "label": "MRtrix3 mrtransform",
   "description": "Apply spatial transformations to an image\nIf a linear transform is applied without a template image the command will modify the image header transform matrix\nFOD reorientation (with apodised point spread functions) can be performed if the number of volumes in the 4th dimension equals the number of coefficients in an antipodally symmetric spherical harmonic series (e.g. 6, 15, 28 etc). For such data, the -reorient_fod yes/no option must be used to specify if reorientation is required.\nThe output image intensity can be modulated using the (local or global) volume change if a linear or nonlinear transformation is applied. 'FOD' modulation preserves the apparent fibre density across the fibre bundle width and can only be applied if FOD reorientation is used. Alternatively, non-directional scaling by the Jacobian determinant can be applied to any image type. \nIf a DW scheme is contained in the header (or specified separately), and the number of directions matches the number of volumes in the images, any transformation applied using the -linear option will also be applied to the directions.\nWhen the -template option is used to specify the target image grid, the image provided via this option will not influence the axis data strides of the output image; these are determined based on the input image, or the input to the -strides option.",
@@ -120,10 +120,23 @@
       "id": "modulate",
       "argument": "-modulate",
       "label": "modulate",
-      "description": "Valid choices are: fod and jac. \nfod: modulate FODs during reorientation to preserve the apparent fibre density across fibre bundle widths before and after the transformation. \njac: modulate the image intensity with the determinant of the Jacobian of the warp of linear transformation to preserve the total intensity before and after the transformation.\nARGUMENT intensity modulation method 0 0 CHOICE fod jac",
-      "type": "boolean",
+      "description": "Intensity modulation mode: fod for FOD reorientation, or jac for Jacobian scaling. Omit to preserve intensity values; modulation must not be used for categorical labels.",
+      "type": "string",
       "required": false,
-      "default": false
+      "default": null,
+      "control": "select",
+      "options": [
+        {
+          "value": "fod",
+          "label": "fod",
+          "description": "Preserve apparent fibre density during FOD reorientation."
+        },
+        {
+          "value": "jac",
+          "label": "jac",
+          "description": "Scale image intensities by the Jacobian determinant."
+        }
+      ]
     },
     {
       "id": "reorient_fod",
@@ -135,7 +148,12 @@
       "default": null,
       "usage": "使用原始命令参数；未指定的可选参数不传给软件。",
       "software_default": "参见本机安装版本原始帮助。",
-      "documentation_url": "https://mrtrix.readthedocs.io/en/3.0.8/reference/commands/mrtransform.html"
+      "documentation_url": "https://mrtrix.readthedocs.io/en/3.0.8/reference/commands/mrtransform.html",
+      "required_when": {
+        "modulate": [
+          "fod"
+        ]
+      }
     },
     {
       "id": "save_export_grad_mrtrix",
@@ -483,13 +501,13 @@
       "id": "output",
       "type": "imaging_input",
       "label": "output",
-      "description": "the output image.",
+      "description": "the output image. The output meaning depends on the input and selected operation. This generic image port does not certify anatomical labels, diffusion orientation, tissue fractions or spatial alignment.",
       "format": ".mif",
       "path_template": "output.mif"
     },
     {
       "id": "export_grad_mrtrix",
-      "type": "generated_file",
+      "type": "gradient_table",
       "label": "export_grad_mrtrix",
       "description": "export the diffusion-weighted gradient table to file in MRtrix format",
       "format": ".txt",
@@ -502,7 +520,7 @@
     },
     {
       "id": "export_grad_fsl_bvecs_path",
-      "type": "generated_file",
+      "type": "b_vectors",
       "label": "export_grad_fsl_bvecs_path",
       "description": "export the diffusion-weighted gradient table to files in FSL (bvecs / bvals) format",
       "format": ".txt",
@@ -515,7 +533,7 @@
     },
     {
       "id": "export_grad_fsl_bvals_path",
-      "type": "generated_file",
+      "type": "b_values",
       "label": "export_grad_fsl_bvals_path",
       "description": "export the diffusion-weighted gradient table to files in FSL (bvecs / bvals) format",
       "format": ".txt",
@@ -533,7 +551,9 @@
   ],
   "output_types": [
     "imaging_input",
-    "generated_file"
+    "gradient_table",
+    "b_vectors",
+    "b_values"
   ],
   "source_references": [
     {
@@ -683,12 +703,13 @@
         },
         {
           "flag": "-modulate",
-          "values": [],
-          "when": {
-            "modulate": [
-              true
-            ]
-          }
+          "values": [
+            {
+              "source": "parameter",
+              "id": "modulate",
+              "kind": "CHOICE"
+            }
+          ]
         },
         {
           "flag": "-directions",

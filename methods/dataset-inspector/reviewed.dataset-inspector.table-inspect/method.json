@@ -6,7 +6,8 @@
     "analysis_input"
   ],
   "output_types": [
-    "generated_folder"
+    "generated_folder",
+    "generated_file"
   ],
   "requires_features": [],
   "parameters": [],
@@ -45,8 +46,8 @@
       "id": "file_table_report_json",
       "type": "generated_file",
       "label": "table_report.json",
-      "description": "table_report.json: output of 表字段、缺失和主键候选检查. Relative run path: results/table_report.json.",
-      "format": "",
+      "description": "table_report.json: output of table field, missingness, and primary key candidate checks. Relative run path: results/table_report.json. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
+      "format": ".json",
       "primary": false,
       "path_template": "results/table_report.json",
       "generated_when": {}

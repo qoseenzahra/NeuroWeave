@@ -1,3 +1,4 @@
+import { ui } from '../../lib/libraryText';
 import { useMemo, useState } from 'react';
 import {
   CheckCircle2,
@@ -354,7 +355,7 @@ function RunPanelContent({
           ) : (
             <CircleAlert className="size-4 text-warning" />
           )}
-          <h3 className="text-sm font-semibold text-ink">{t[RUN_STATUS_KEYS[run.status]]}</h3>
+          <h3 className="text-sm font-semibold text-ink">{t[RUN_STATUS_KEYS[run.status]]}{run.status==='succeeded'&&<span className="ml-2 text-xs text-subtle">{ui('程序执行成功；结果仍需科研质量审阅')}</span>}</h3>
           <span className="rounded border border-line bg-raised px-1.5 py-0.5 font-mono text-xs ">
             {run.run_id.slice(0, 12)}
           </span>

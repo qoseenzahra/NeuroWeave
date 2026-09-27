@@ -95,6 +95,7 @@ class RunnerRegistry:
         workflow: Workflow,
         step: WorkflowStep,
         method: MethodOption,
+        quality_checks: list[dict] | None = None,
     ) -> list[str]:
         groups = [binding for binding in step.input_bindings.values()
                   if binding.source != "upstream_output" and binding.binding_mode == "per_sample"]
@@ -108,8 +109,7 @@ class RunnerRegistry:
                    or any(match.status != "matched" or not match.absolute_path for match in binding.sample_matches)
                    for binding in groups):
                 return ["多样本输入覆盖不一致，或仍有缺失文件"]
-            problems = []
-            for sample_id in identifiers:
+            def check_sample(sample_id):
                 checkpoint(f"检查样本：{sample_id}")
                 sample_step = step.model_copy(deep=True)
                 for binding in sample_step.input_bindings.values():
@@ -121,8 +121,21 @@ class RunnerRegistry:
                     select_history_sample(binding, sample_id)
                     binding.binding_mode = "single"
                     binding.sample_matches = []
-                problems.extend(f"样本 {sample_id}：{problem}"
-                                for problem in self.preflight_snapshot(workflow, sample_step, method))
+                sample_checks=[]
+                result=self.preflight_snapshot(workflow,sample_step,method,sample_checks)
+                if quality_checks is not None:quality_checks.extend({**row,'sample_id':sample_id} for row in sample_checks)
+                return [f"样本 {sample_id}：{problem}" for problem in result]
+            from concurrent.futures import ThreadPoolExecutor
+            from contextvars import copy_context
+            import os
+            workers=max(1,min(int(os.getenv('WORKFLOW_PREFLIGHT_WORKERS','2')),4))
+            problems=[]
+            with ThreadPoolExecutor(max_workers=workers,thread_name_prefix='preflight') as pool:
+                # At most one small batch is pending; never enqueue every sample.
+                for start in range(0,len(identifiers),workers):
+                    checkpoint(f'检查样本 {start+1}–{min(start+workers,len(identifiers))} / {len(identifiers)}')
+                    futures=[pool.submit(copy_context().run,check_sample,identity) for identity in identifiers[start:start+workers]]
+                    for future in futures:problems.extend(future.result())
             return problems
         runner = self.get(method.runner_id)
         if runner is None:
@@ -148,6 +161,8 @@ class RunnerRegistry:
                 from ..historical_inputs import historical_binding_problems
                 history_problems = [problem for binding in context.step.input_bindings.values()
                                     for problem in historical_binding_problems(binding)]
-                return history_problems + runner.preflight(context)
+                problems=history_problems + runner.preflight(context)
+                if quality_checks is not None:quality_checks.extend(context.quality_checks)
+                return problems
             except (RuntimeError, ValueError, OSError) as exc:
                 return [f"输入或运行环境检查失败：{exc}"]

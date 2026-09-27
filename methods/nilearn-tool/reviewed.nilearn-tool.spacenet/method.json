@@ -3,10 +3,12 @@
   "description": "Reference Nilearn snippet for SpaceNet disease classification。 Inputs: input_list: 影像路径清单 (file); labels: 标签表 (file); mask: 脑掩膜 (file). Registered outputs: results/coef_map.nii.gz.",
   "runner_id": "reviewed.nilearn-tool.spacenet",
   "input_types": [
-    "analysis_input"
+    "analysis_input",
+    "brain_mask"
   ],
   "output_types": [
-    "generated_folder"
+    "generated_folder",
+    "scalar_image"
   ],
   "requires_features": [],
   "parameters": [
@@ -106,10 +108,10 @@
     },
     {
       "id": "file_coef_map_nii_gz",
-      "type": "generated_file",
+      "type": "scalar_image",
       "label": "coef_map.nii.gz",
       "description": "coef_map.nii.gz: output of SpaceNet 空间正则分类. Relative run path: results/coef_map.nii.gz.",
-      "format": "",
+      "format": ".nii.gz",
       "primary": false,
       "path_template": "results/coef_map.nii.gz",
       "generated_when": {}
@@ -135,7 +137,7 @@
   "included_capabilities": [],
   "schema_version": 1,
   "id": "reviewed.nilearn-tool.spacenet",
-  "version": "1",
+  "version": "2",
   "kind": "method",
   "execution": {
     "kind": "reviewed",
@@ -209,7 +211,7 @@
         }
       ],
       "artifact_types": {
-        "coef_map.nii.gz": "generated_file"
+        "coef_map.nii.gz": "scalar_image"
       }
     }
   }

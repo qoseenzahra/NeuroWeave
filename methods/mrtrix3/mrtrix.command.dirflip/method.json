@@ -87,7 +87,7 @@
       "id": "out",
       "type": "generated_file",
       "label": "out",
-      "description": "the output files for the directions.",
+      "description": "the output files for the directions. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
       "format": ".txt",
       "path_template": "out.txt"
     }

@@ -6,7 +6,8 @@
     "analysis_input"
   ],
   "output_types": [
-    "generated_folder"
+    "generated_folder",
+    "generated_file"
   ],
   "requires_features": [],
   "parameters": [
@@ -124,8 +125,8 @@
       "id": "file_survival_csv",
       "type": "generated_file",
       "label": "survival.csv",
-      "description": "Output path for survival CSV: output of UKB 生存分析数据表. Relative run path: results/survival.csv.",
-      "format": "",
+      "description": "Output path for survival CSV: output of UKB survival analysis data table. Relative run path: results/survival.csv. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
+      "format": ".csv",
       "primary": false,
       "path_template": "results/survival.csv",
       "generated_when": {}

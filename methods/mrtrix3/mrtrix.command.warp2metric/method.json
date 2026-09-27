@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "id": "mrtrix.command.warp2metric",
-  "version": "1",
+  "version": "2",
   "kind": "method",
   "label": "MRtrix3 warp2metric",
   "description": "Compute fixel-wise or voxel-wise metrics from a 4D deformation field",
@@ -83,7 +83,7 @@
       "id": "jmat",
       "type": "imaging_input",
       "label": "jmat",
-      "description": "output a Jacobian matrix image stored in column-major order along the 4th dimension.Note the output jacobian describes the warp gradient w.r.t the scanner space coordinate system",
+      "description": "output a Jacobian matrix image stored in column-major order along the 4th dimension.Note the output jacobian describes the warp gradient w.r.t the scanner space coordinate system The output meaning depends on the input and selected operation. This generic image port does not certify anatomical labels, diffusion orientation, tissue fractions or spatial alignment.",
       "format": ".mif",
       "path_template": "jmat.mif",
       "generated_when": {
@@ -94,7 +94,7 @@
     },
     {
       "id": "jdet",
-      "type": "imaging_input",
+      "type": "scalar_image",
       "label": "jdet",
       "description": "output the Jacobian determinant instead of the full matrix",
       "format": ".mif",
@@ -110,7 +110,8 @@
     "imaging_input"
   ],
   "output_types": [
-    "imaging_input"
+    "imaging_input",
+    "scalar_image"
   ],
   "source_references": [
     {

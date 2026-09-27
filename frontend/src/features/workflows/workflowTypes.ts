@@ -199,6 +199,10 @@ export type WorkflowStep = {
 };
 
 export type DryRunReport = {
+  quality_checks?: Array<{status:string;code:string;slot_id:string;step_id:string;sample_id?:string;details:Record<string,unknown>}>;
+  quality_summary?:Record<string,number>;
+  quality_review_required?:boolean;
+  quality_acknowledged?:boolean;
   valid: boolean;
   execution_enabled: boolean;
   dataset_path_validated: boolean;

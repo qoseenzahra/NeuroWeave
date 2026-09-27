@@ -3,7 +3,6 @@
   "description": "把一个 3D NIfTI 转换为研究用途的单帧 DICOM 序列；可从参考 DICOM 复制元数据。",
   "runner_id": "nii2dcm.convert",
   "input_types": [
-    "dataset_folder",
     "imaging_input"
   ],
   "output_types": [
@@ -155,7 +154,7 @@
   ],
   "source_references": [
     {
-      "path": "skills/nii2dcm/SKILL.md",
+      "path": "skills/nii2dcm/skill.json",
       "label": "nii2dcm Skill",
       "kind": "skill",
       "line_start": 1,

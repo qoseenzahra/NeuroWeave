@@ -6,7 +6,8 @@
     "analysis_input"
   ],
   "output_types": [
-    "generated_folder"
+    "generated_folder",
+    "label_image"
   ],
   "requires_features": [],
   "parameters": [
@@ -70,10 +71,10 @@
     },
     {
       "id": "file_tissue_seg_nii_gz",
-      "type": "generated_file",
+      "type": "label_image",
       "label": "tissue_seg.nii.gz",
-      "description": "tissue_seg.nii.gz: output of FSL 组织分割. Relative run path: results/tissue_seg.nii.gz.",
-      "format": "",
+      "description": "Integer tissue-class segmentation produced by FAST (for example CSF, grey and white matter depending on image type and class count). These are tissue classes, not cortical/subcortical atlas parcels or connectome node IDs.",
+      "format": ".nii.gz",
       "primary": false,
       "path_template": "results/tissue_seg.nii.gz",
       "generated_when": {}
@@ -99,7 +100,7 @@
   "included_capabilities": [],
   "schema_version": 1,
   "id": "reviewed.fsl-tool.fast",
-  "version": "1",
+  "version": "2",
   "kind": "method",
   "execution": {
     "kind": "reviewed",
@@ -155,7 +156,7 @@
         }
       ],
       "artifact_types": {
-        "tissue_seg.nii.gz": "generated_file"
+        "tissue_seg.nii.gz": "label_image"
       }
     }
   }

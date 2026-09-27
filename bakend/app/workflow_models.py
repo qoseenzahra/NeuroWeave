@@ -121,7 +121,14 @@ class SampleScope(BaseModel):
     skipped_samples: list[SkippedSample] = Field(default_factory=list)
 
 
+class UpstreamSource(BaseModel):
+    step_id: str
+    output_slot_id: str
+
+
 class InputBinding(BaseModel):
+    upstream_sources: list[UpstreamSource] = Field(default_factory=list,max_length=63)
+    absolute_paths: list[str] = Field(default_factory=list,max_length=64)
     slot_id: str
     artifact_type: str
     source: Literal["dataset", "existing_path", "upstream_output"]
@@ -160,6 +167,7 @@ class CommandReference(BaseModel):
 
 
 class RecipeInputBindingSpec(BaseModel):
+    additional_sources: list[UpstreamSource] = Field(default_factory=list,max_length=63)
     source: Literal["workflow_input", "step_output"]
     slot_id: str | None = None
     step_id: str | None = None
@@ -268,6 +276,10 @@ class DryRunCommand(BaseModel):
 
 
 class DryRunReport(BaseModel):
+    quality_checks: list[dict[str, Any]] = Field(default_factory=list)
+    quality_summary: dict[str, int] = Field(default_factory=dict)
+    quality_review_required: bool = False
+    quality_acknowledged: bool = False
     valid: bool
     execution_enabled: bool = False
     dataset_path_validated: bool = False
@@ -325,6 +337,10 @@ class WorkflowDraftRequest(BaseModel):
 
 class WorkflowMutationRequest(BaseModel):
     expected_revision: int = Field(ge=1)
+
+
+class WorkflowConfirmRequest(WorkflowMutationRequest):
+    acknowledge_quality: bool = False
 
 
 class MethodSelectionRequest(WorkflowMutationRequest):

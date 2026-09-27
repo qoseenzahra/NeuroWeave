@@ -3,8 +3,7 @@
   "description": "由 T1w 结构像生成 ACT 纤维追踪使用的五组织类型影像。",
   "runner_id": "mrtrix.5ttgen",
   "input_types": [
-    "t1w_image",
-    "dataset_folder"
+    "t1w_image"
   ],
   "output_types": [
     "five_tt_image",
@@ -128,7 +127,7 @@
       "type": "five_tt_image",
       "label": "5TT 影像",
       "description": "ACT 追踪所需五组织类型影像。",
-      "format": "",
+      "format": ".mif",
       "primary": true,
       "path_template": "5tt.mif",
       "generated_when": {}
@@ -146,7 +145,7 @@
   ],
   "source_references": [
     {
-      "path": "skills/dwi-skill/SKILL.md",
+      "path": "skills/dwi-skill/skill.json",
       "label": "DWI Skill",
       "kind": "skill",
       "line_start": 1,

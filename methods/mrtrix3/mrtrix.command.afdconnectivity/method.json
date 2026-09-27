@@ -99,7 +99,7 @@
       "id": "afd_map",
       "type": "imaging_input",
       "label": "afd_map",
-      "description": "output a 3D image containing the AFD estimated for each voxel.",
+      "description": "output a 3D image containing the AFD estimated for each voxel. The output meaning depends on the input and selected operation. This generic image port does not certify anatomical labels, diffusion orientation, tissue fractions or spatial alignment.",
       "format": ".mif",
       "path_template": "afd_map.mif",
       "generated_when": {

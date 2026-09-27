@@ -66,7 +66,7 @@
       "id": "surface",
       "type": "generated_file",
       "label": "surface",
-      "description": "Native command output, saved in this run’s output directory. Tessellate a labelled volume at an explicitly selected label.",
+      "description": "Native command output, saved in this run’s output directory. Tessellate a labelled volume at an explicitly selected label. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
       "format": "",
       "primary": true,
       "path_template": "surface",

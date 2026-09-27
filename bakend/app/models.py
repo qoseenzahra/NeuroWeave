@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 from .conversation_models import ConversationMemoryStatus
 from .workflow_models import Workflow
 from .task_contract import TaskContract
+from .response_policy import ResponsePolicy
 
 
 class Message(BaseModel):
@@ -15,9 +16,13 @@ class Message(BaseModel):
 
 
 class ChatRequest(BaseModel):
+    # Internal turn state is always replaced from server-side records in begin_turn.
+    current_workflow_context: dict[str, Any] = Field(default_factory=dict, exclude=True)
+    planning_handoff: bool = Field(default=False, exclude=True)
+    response_policy: ResponsePolicy | None = Field(default=None, exclude=True)
     task_contract: TaskContract = Field(default_factory=TaskContract, exclude=True)
     workspace_id: str | None = None
-    client_turn_id: str | None = Field(default=None, min_length=16, max_length=100)
+    client_turn_id: str | None = Field(default=None, min_length=16, max_length=100, pattern=r"^[A-Za-z0-9_-]+$")
     workspace_context: str = Field(default="", exclude=True, repr=False)
     workspace_root_path: str | None = Field(default=None, exclude=True)
     message: str = Field(min_length=1, max_length=20_000)
@@ -70,6 +75,7 @@ class CapabilityRoutingTrace(BaseModel):
     selected_paths: list[list[str]] = Field(default_factory=list)
     intent_source: str = ""
     normalized_task: str = ""
+    response_policy: ResponsePolicy | None = None
     semantic_hints: list[str] = Field(default_factory=list)
     reused_input_capabilities: list[str] = Field(default_factory=list)
     confidence: float = 0.0
@@ -79,6 +85,7 @@ class CapabilityRoutingTrace(BaseModel):
 
 
 class ChatResponse(BaseModel):
+    planning_offer: str | None = None
     workspace_id: str | None = None
     workspace_tool_events: list[dict[str, Any]] = Field(default_factory=list)
     type: Literal["done", "recommendation", "workflow"] = "done"

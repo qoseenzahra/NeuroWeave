@@ -3,7 +3,9 @@
   "description": "Python 路线，便于扩展、自定义和生成结构化扩散指标。",
   "runner_id": "dipy.tensor_fit",
   "input_types": [
-    "preprocessed_dwi"
+    "preprocessed_dwi",
+    "gradient_table",
+    "brain_mask"
   ],
   "output_types": [
     "diffusion_metrics",
@@ -381,7 +383,7 @@
       "line_end": null
     },
     {
-      "path": "skills/dipy-tool/SKILL.md",
+      "path": "skills/dipy-tool/skill.json",
       "label": "Skill 使用说明",
       "kind": "skill",
       "line_start": 1,

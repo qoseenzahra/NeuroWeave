@@ -6,7 +6,8 @@
     "analysis_input"
   ],
   "output_types": [
-    "generated_folder"
+    "generated_folder",
+    "generated_file"
   ],
   "requires_features": [],
   "parameters": [
@@ -88,8 +89,8 @@
       "id": "file_metrics_json",
       "type": "generated_file",
       "label": "metrics.json",
-      "description": "Output path for results: output of SEED 按受试者留一交叉验证. Relative run path: results/metrics.json.",
-      "format": "",
+      "description": "Output path for results: output of SEED leave-one-subject-out cross-validation. Relative run path: results/metrics.json. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
+      "format": ".json",
       "primary": false,
       "path_template": "results/metrics.json",
       "generated_when": {}

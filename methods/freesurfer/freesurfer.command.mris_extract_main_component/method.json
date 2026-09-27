@@ -33,7 +33,7 @@
       "id": "surface",
       "type": "generated_file",
       "label": "surface",
-      "description": "Native command output, saved in this run’s output directory. Keep the largest connected surface component.",
+      "description": "Native command output, saved in this run’s output directory. Keep the largest connected surface component. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
       "format": ".main",
       "primary": true,
       "path_template": "surface.main",

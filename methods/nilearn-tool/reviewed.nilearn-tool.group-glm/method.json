@@ -3,10 +3,12 @@
   "description": "Reference Nilearn snippet for second-level GLM。 Inputs: contrast_maps: 对比影像路径清单 (file); design_matrix: 组设计矩阵 (file); mask: 脑掩膜 (file). Registered outputs: results/second_level_z_map.nii.gz.",
   "runner_id": "reviewed.nilearn-tool.group-glm",
   "input_types": [
-    "analysis_input"
+    "analysis_input",
+    "brain_mask"
   ],
   "output_types": [
-    "generated_folder"
+    "generated_folder",
+    "z_stat_map"
   ],
   "requires_features": [],
   "parameters": [
@@ -106,10 +108,10 @@
     },
     {
       "id": "file_second_level_z_map_nii_gz",
-      "type": "generated_file",
+      "type": "z_stat_map",
       "label": "second_level_z_map.nii.gz",
       "description": "second_level_z_map.nii.gz: output of 组水平 GLM. Relative run path: results/second_level_z_map.nii.gz.",
-      "format": "",
+      "format": ".nii.gz",
       "primary": false,
       "path_template": "results/second_level_z_map.nii.gz",
       "generated_when": {}
@@ -135,7 +137,7 @@
   "included_capabilities": [],
   "schema_version": 1,
   "id": "reviewed.nilearn-tool.group-glm",
-  "version": "1",
+  "version": "2",
   "kind": "method",
   "execution": {
     "kind": "reviewed",
@@ -209,7 +211,7 @@
         }
       ],
       "artifact_types": {
-        "second_level_z_map.nii.gz": "generated_file"
+        "second_level_z_map.nii.gz": "z_stat_map"
       }
     }
   }

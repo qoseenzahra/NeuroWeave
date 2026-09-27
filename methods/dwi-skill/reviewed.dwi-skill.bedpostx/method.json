@@ -3,10 +3,14 @@
   "description": "Run FSL BEDPOSTX on a staged copy of preprocessed DWI, a matching brain mask and FSL gradients; estimate fibre-orientation posterior samples. FSL subprocesses stay inside the allocated job。 Inputs: input: 预处理 DWI NIfTI (file); mask: 脑掩膜 (file); bval: bval (file); bvec: bvec (file). Registered outputs: results/data.bedpostX/merged_th1samples.nii.gz, results/data.bedpostX/merged_ph1samples.nii.gz, results/data.bedpostX/merged_f1samples.nii.gz. Fixed invocation options: --operation bedpostx.",
   "runner_id": "reviewed.dwi-skill.bedpostx",
   "input_types": [
-    "analysis_input"
+    "preprocessed_dwi",
+    "brain_mask",
+    "b_values",
+    "b_vectors"
   ],
   "output_types": [
-    "generated_folder"
+    "generated_folder",
+    "generated_file"
   ],
   "requires_features": [],
   "parameters": [
@@ -204,8 +208,8 @@
       "id": "file_data_bedpostX_merged_th1samples_nii_gz",
       "type": "generated_file",
       "label": "data.bedpostX/merged_th1samples.nii.gz",
-      "description": "data.bedpostX/merged_th1samples.nii.gz: output of FSL BEDPOSTX 纤维方向采样. Relative run path: results/data.bedpostX/merged_th1samples.nii.gz.",
-      "format": "",
+      "description": "data.bedpostX/merged_th1samples.nii.gz: output of FSL BEDPOSTX fiber orientation sampling. Relative run path: results/data.bedpostX/merged_th1samples.nii.gz. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
+      "format": ".nii.gz",
       "primary": false,
       "path_template": "results/data.bedpostX/merged_th1samples.nii.gz",
       "generated_when": {}
@@ -214,8 +218,8 @@
       "id": "file_data_bedpostX_merged_ph1samples_nii_gz",
       "type": "generated_file",
       "label": "data.bedpostX/merged_ph1samples.nii.gz",
-      "description": "data.bedpostX/merged_ph1samples.nii.gz: output of FSL BEDPOSTX 纤维方向采样. Relative run path: results/data.bedpostX/merged_ph1samples.nii.gz.",
-      "format": "",
+      "description": "data.bedpostX/merged_ph1samples.nii.gz: output of FSL BEDPOSTX fiber orientation sampling. Relative run path: results/data.bedpostX/merged_ph1samples.nii.gz. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
+      "format": ".nii.gz",
       "primary": false,
       "path_template": "results/data.bedpostX/merged_ph1samples.nii.gz",
       "generated_when": {}
@@ -224,8 +228,8 @@
       "id": "file_data_bedpostX_merged_f1samples_nii_gz",
       "type": "generated_file",
       "label": "data.bedpostX/merged_f1samples.nii.gz",
-      "description": "data.bedpostX/merged_f1samples.nii.gz: output of FSL BEDPOSTX 纤维方向采样. Relative run path: results/data.bedpostX/merged_f1samples.nii.gz.",
-      "format": "",
+      "description": "data.bedpostX/merged_f1samples.nii.gz: output of FSL BEDPOSTX fiber orientation sampling. Relative run path: results/data.bedpostX/merged_f1samples.nii.gz. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
+      "format": ".nii.gz",
       "primary": false,
       "path_template": "results/data.bedpostX/merged_f1samples.nii.gz",
       "generated_when": {}

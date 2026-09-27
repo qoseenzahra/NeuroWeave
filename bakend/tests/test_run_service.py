@@ -377,7 +377,7 @@ class RunServiceTests(unittest.TestCase):
             self.assertIn("-autorecon3", argv)
             self.assertNotIn("-i", argv)
             self.assertEqual(argv[argv.index("-sd") + 1], str(subject.parent))
-            for name in ["mri/aseg.mgz", "stats/aseg.stats", "surf/lh.white",
+            for name in ["mri/aseg.mgz", "mri/aparc+aseg.mgz", "stats/aseg.stats", "surf/lh.white",
                          "surf/rh.white", "surf/lh.pial", "surf/rh.pial",
                          "stats/lh.aparc.stats", "stats/rh.aparc.stats"]:
                 path = subject / name
@@ -400,7 +400,8 @@ class RunServiceTests(unittest.TestCase):
         self.assertEqual(len(calls), 1)
         self.assertEqual(current.steps[0].model_dump(), original_first)
         self.assertEqual(current.started_at, original_start)
-        self.assertEqual(len(current.artifacts), 3)
+        self.assertEqual(len(current.artifacts), 6)
+        self.assertTrue(any(a.artifact_type == "parcellation_image" for a in current.artifacts))
         self.assertEqual(current.progress, 100)
         self.assertEqual(current.error_message, "")
         self.assertIn("freesurfer_stage_recovered", {e["event_type"] for e in self.service.events(run.run_id)})

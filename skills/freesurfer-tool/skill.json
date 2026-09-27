@@ -1,17 +1,17 @@
 {
   "schema_version": 1,
   "id": "freesurfer-tool",
-  "description": "freesurfer-tool 统筹已登记的独立方法和可复用流程。支持：FreeSurfer recon-all（可执行）；FreeSurfer mri_convert；FreeSurfer mri_mask；FreeSurfer mri_binarize；FreeSurfer mri_concat；FreeSurfer mri_info；FreeSurfer mri_segstats；FreeSurfer mri_normalize；其他方法可在详情中分页查询。",
+  "description": "Coordinate FreeSurfer anatomical atlas parcellation, cortical surface reconstruction, subcortical segmentation and associated volume/surface operations. recon-all exposes both the subject directory and stage-specific files, including aparc+aseg.mgz for cortical/subcortical brain regions. Select individual Methods or matching Pipelines; check structural-to-diffusion alignment separately before connectome construction.",
   "method_refs": [
     {
       "capability": "skill.freesurfer-tool",
       "method_id": "freesurfer-recon-all",
       "label": "FreeSurfer recon-all（可执行）",
       "default_recommended": true,
-      "default_reason": "当用户明确要求 FreeSurfer 分割/皮层重建且已提供 T1w 时，选择服务器已验证的 recon-all Runner。",
+      "default_reason": "Choose for anatomical atlas parcellation or cortical/subcortical reconstruction when T1w or a suitable existing FreeSurfer subject is available. Verify stage, space and runtime status; availability is not a completed run.",
       "replaces_operations": [],
       "execution_resolution": {},
-      "role": "使用服务器现有 FreeSurfer 7.4.1 执行完整 recon-all，或在同一 SUBJECTS_DIR 中连续执行 autorecon1/2/3，并登记受试者目录制品。",
+      "role": "Run FreeSurfer recon-all for T1w cortical surface reconstruction, subcortical segmentation and anatomical atlas parcellation. all runs the full reconstruction; autorecon1/2/3 are consecutive stages, and stats recomputes statistics in an existing subject directory. all/autorecon3 expose mri/aparc+aseg.mgz as a Desikan-Killiany cortical plus subcortical node image, not just a result folder. Labels are in the subject structural space, not automatically aligned to DWI or streamlines. Connectome use requires checking alignment and the atlas lookup table; labelconvert remaps IDs but does not register images. Tissue segmentation, 5TT and data-driven clusters are different products.",
       "method_ref": "freesurfer.recon_all"
     },
     {
@@ -172,10 +172,11 @@
   "planning_capabilities": [],
   "selection_rules": [
     "先确认目标产物、允许使用的已有输入与禁止复用的结果；仅在用户允许时复用已有数据，不默认追加上游步骤。",
-    "输入缺少时先查询目录并请求用户绑定；不要自动追加生成该输入的步骤。",
     "独立操作选择 Method；确需固定组合时选择 Pipeline，并检查每一步输入输出。",
     "软件工具 Skill 用于选择实现，任务 Skill 用于组织需求，不因为同时匹配两类 Skill 重复添加方法。",
-    "方法详情中的环境探测、契约校验与实际运行证据分别判断；未验证的命令不得宣称已经成功执行。"
+    "方法详情中的环境探测、契约校验与实际运行证据分别判断；未验证的命令不得宣称已经成功执行。",
+    "Treat missing inputs according to the current goal: for explicitly requested steps, ask for binding or discuss alternatives; when asked to produce a target from stated inputs, add only necessary available producers allowed by the user. Never regenerate an explicitly reused result or silently broaden the scientific goal.",
+    "Select by scientific output meaning, stage conditions and spatial/data requirements. A directory, generic image or report does not certify a typed derivative. Do not equate tissue classes, anatomical atlas regions and learned clusters. Query the Method contract for exact ports and conditional parameters; use Pipelines only when their actual steps match the request."
   ],
   "name": "freesurfer-tool",
   "category": [
@@ -202,6 +203,11 @@
     "freesurfer-tool",
     "FreeSurfer",
     "皮层重建",
-    "分割"
+    "分割",
+    "anatomical parcellation",
+    "脑区分区",
+    "Desikan-Killiany",
+    "aparc+aseg",
+    "connectome nodes"
   ]
 }

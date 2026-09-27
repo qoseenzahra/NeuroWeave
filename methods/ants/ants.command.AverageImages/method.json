@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "id": "ants.command.AverageImages",
-  "version": "1",
+  "version": "2",
   "kind": "method",
   "label": "ANTs AverageImages",
-  "description": "Average two to eight images, optionally normalizing their intensities.\n\nThe interface exposes the typed options listed below; the original installed-version help is retained in source references.",
+  "description": "Average two or more images, optionally normalizing their intensities.\n\nThe interface exposes the typed options listed below; the original installed-version help is retained in source references.\nThe first image port accepts an ordered list of up to 64 files; filenames are never expanded as shell patterns.",
   "runner_id": "ants.command.AverageImages",
   "parameters": [
     {
@@ -97,11 +97,11 @@
       "id": "input_1",
       "type": "imaging_input",
       "label": "input_1",
-      "description": "Input 1, in the desired argument order. Up to 8 separately authorized files are supported.",
+      "description": "Ordered image list: 1–64 separately authorized files. This port is expanded into individual argv arguments, without shell patterns.",
       "required": true,
       "required_when": {},
       "required_when_any": [],
-      "cardinality": "one",
+      "cardinality": "many",
       "binding": "file",
       "formats": [
         ".nii",
@@ -122,8 +122,8 @@
       "id": "input_2",
       "type": "imaging_input",
       "label": "input_2",
-      "description": "Input 2, in the desired argument order. Up to 8 separately authorized files are supported.",
-      "required": true,
+      "description": "Additional image appended after the ordered list, in port order. Each file is separately authorized.",
+      "required": false,
       "required_when": {},
       "required_when_any": [],
       "cardinality": "one",
@@ -147,7 +147,7 @@
       "id": "input_3",
       "type": "imaging_input",
       "label": "input_3",
-      "description": "Input 3, in the desired argument order. Up to 8 separately authorized files are supported.",
+      "description": "Additional image appended after the ordered list, in port order. Each file is separately authorized.",
       "required": false,
       "required_when": {},
       "required_when_any": [],
@@ -172,7 +172,7 @@
       "id": "input_4",
       "type": "imaging_input",
       "label": "input_4",
-      "description": "Input 4, in the desired argument order. Up to 8 separately authorized files are supported.",
+      "description": "Additional image appended after the ordered list, in port order. Each file is separately authorized.",
       "required": false,
       "required_when": {},
       "required_when_any": [],
@@ -197,7 +197,7 @@
       "id": "input_5",
       "type": "imaging_input",
       "label": "input_5",
-      "description": "Input 5, in the desired argument order. Up to 8 separately authorized files are supported.",
+      "description": "Additional image appended after the ordered list, in port order. Each file is separately authorized.",
       "required": false,
       "required_when": {},
       "required_when_any": [],
@@ -222,7 +222,7 @@
       "id": "input_6",
       "type": "imaging_input",
       "label": "input_6",
-      "description": "Input 6, in the desired argument order. Up to 8 separately authorized files are supported.",
+      "description": "Additional image appended after the ordered list, in port order. Each file is separately authorized.",
       "required": false,
       "required_when": {},
       "required_when_any": [],
@@ -247,7 +247,7 @@
       "id": "input_7",
       "type": "imaging_input",
       "label": "input_7",
-      "description": "Input 7, in the desired argument order. Up to 8 separately authorized files are supported.",
+      "description": "Additional image appended after the ordered list, in port order. Each file is separately authorized.",
       "required": false,
       "required_when": {},
       "required_when_any": [],
@@ -272,7 +272,7 @@
       "id": "input_8",
       "type": "imaging_input",
       "label": "input_8",
-      "description": "Input 8, in the desired argument order. Up to 8 separately authorized files are supported.",
+      "description": "Additional image appended after the ordered list, in port order. Each file is separately authorized.",
       "required": false,
       "required_when": {},
       "required_when_any": [],
@@ -299,7 +299,7 @@
       "id": "output",
       "type": "imaging_input",
       "label": "output",
-      "description": "Native command output, saved in this run’s output directory. Average two to eight images, optionally normalizing their intensities.",
+      "description": "Native command output, saved in this run’s output directory. Average two to eight images, optionally normalizing their intensities. The output meaning depends on the input and selected operation. This generic image port does not certify anatomical labels, diffusion orientation, tissue fractions or spatial alignment.",
       "format": ".nii.gz",
       "primary": true,
       "path_template": "output.nii.gz",
@@ -364,7 +364,8 @@
         {
           "tokens": [
             {
-              "input": "input_2"
+              "input": "input_2",
+              "optional": true
             }
           ],
           "when": {},
@@ -373,7 +374,8 @@
         {
           "tokens": [
             {
-              "input": "input_3"
+              "input": "input_3",
+              "optional": true
             }
           ],
           "when": {},
@@ -382,7 +384,8 @@
         {
           "tokens": [
             {
-              "input": "input_4"
+              "input": "input_4",
+              "optional": true
             }
           ],
           "when": {},
@@ -391,7 +394,8 @@
         {
           "tokens": [
             {
-              "input": "input_5"
+              "input": "input_5",
+              "optional": true
             }
           ],
           "when": {},
@@ -400,7 +404,8 @@
         {
           "tokens": [
             {
-              "input": "input_6"
+              "input": "input_6",
+              "optional": true
             }
           ],
           "when": {},
@@ -409,7 +414,8 @@
         {
           "tokens": [
             {
-              "input": "input_7"
+              "input": "input_7",
+              "optional": true
             }
           ],
           "when": {},
@@ -418,7 +424,8 @@
         {
           "tokens": [
             {
-              "input": "input_8"
+              "input": "input_8",
+              "optional": true
             }
           ],
           "when": {},
@@ -428,8 +435,7 @@
       "patterns": {},
       "complete_groups": [],
       "omitted_options": {
-        "other_options": "Only the documented options below are exposed. Consult the installed-version help for other syntax; arbitrary arguments are not accepted.",
-        "unbounded_inputs": "The interface accepts at most 8 explicitly bound inputs, without wildcards."
+        "other_options": "Only the documented options below are exposed. Consult the installed-version help for other syntax; arbitrary arguments are not accepted."
       }
     }
   }

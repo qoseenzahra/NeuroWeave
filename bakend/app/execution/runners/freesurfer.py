@@ -292,5 +292,24 @@ class FreeSurferReconAllRunner(ExternalCommandRunner):
                 "validated_files": checked,
             },
         )
+        artifacts = [artifact]
+        # Collect only ports declared in this run's immutable method snapshot.
+        # Older runs may expose just the directory; never retrofit requirements
+        # into them. Stage conditions also prevent advertising stale derivatives
+        # left in a resumed subject directory as outputs of the current stage.
+        for slot in context.method.output_slots:
+            if slot.id == "subject":
+                continue
+            if slot.generated_when and stage not in slot.generated_when.get("processing_stage", []):
+                continue
+            relative = slot.path_template.removeprefix("{subject}/")
+            if relative == slot.path_template or Path(relative).is_absolute():
+                raise RuntimeError("Invalid FreeSurfer output path contract")
+            path = subject_dir / relative
+            path.resolve().relative_to(subject_dir.resolve())
+            artifacts.append(self.artifact(context, path, slot.type, slot.label,
+                metadata={"output_slot_id": slot.id, "subject_id": subject_id,
+                          "processing_stage": stage, "space": "freesurfer_subject",
+                          "spatial_alignment_verified": False}))
         context.log("FreeSurfer 输出目录已通过关键文件检查", 100.0, "info")
-        return RunnerResult(artifacts=[artifact], message=f"FreeSurfer {stage} 完成：{subject_id}")
+        return RunnerResult(artifacts=artifacts, message=f"FreeSurfer {stage} 完成：{subject_id}")

@@ -87,7 +87,7 @@
       "id": "tsf",
       "type": "generated_file",
       "label": "tsf",
-      "description": "the output track scalar file",
+      "description": "the output track scalar file This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
       "format": ".tsf",
       "path_template": "tsf.tsf"
     }

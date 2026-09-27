@@ -50,43 +50,33 @@ class FilesystemReader:
             raise ValueError("不支持的排序")
         stamp = fingerprint(directory)
         context = [str(directory), sort, filter, show_hidden, stamp]
-        after = None
-        if cursor:
-            try:
-                payload = json.loads(base64.urlsafe_b64decode(cursor))
-                if payload["context"] != context:
-                    raise ValueError("目录或筛选条件已变化，请刷新")
-                after = tuple(payload["after"])
-            except (ValueError, KeyError, TypeError) as exc:
-                raise ValueError("分页游标已失效，请刷新") from exc
-
+        from .directory_snapshots import snapshots
         def entries():
-            # Only this layer is enumerated. nsmallest bounds retained entries to
-            # one page instead of materializing/sorting an enormous directory.
             with os.scandir(directory) as items:
                 for item in items:
-                    if (not show_hidden and item.name.startswith(".")) or filter.casefold() not in item.name.casefold():
-                        continue
+                    if (not show_hidden and item.name.startswith(".")) or filter.casefold() not in item.name.casefold():continue
                     try:
-                        target = self.paths.resolve(root, item.path)
-                        info = target.stat()
-                        folder = stat.S_ISDIR(info.st_mode)
-                        primary = -info.st_mtime_ns if sort == "modified" else -info.st_size if sort == "size" else item.name.casefold()
-                        key = (0 if folder else 1, primary, item.name)
-                        if after is None or key > after:
-                            yield key, item.name
-                    except (OSError, ValueError):
-                        continue
-        page = heapq.nsmallest(limit + 1, entries())
-        more = len(page) > limit
-        page = page[:limit]
-        rows = []
-        for _, name in page:
+                        target=self.paths.resolve(root,item.path);info=target.stat()
+                        primary=-info.st_mtime_ns if sort=='modified' else -info.st_size if sort=='size' else item.name.casefold()
+                        yield (0 if stat.S_ISDIR(info.st_mode) else 1,primary,item.name),item.name
+                    except (OSError,ValueError):continue
+        offset=0
+        if cursor:
             try:
-                rows.append(self.inspect(str(directory / name), workspace_id, root_path))
-            except OSError:
-                continue
-        token = base64.urlsafe_b64encode(json.dumps({"context": context, "after": page[-1][0]}).encode()).decode() if more else None
+                payload=json.loads(base64.urlsafe_b64decode(cursor))
+                identity=payload['snapshot'];offset=payload['offset']
+                if type(offset) is not int or offset<0:raise ValueError('Invalid cursor')
+                indexed=snapshots.get(identity,context)
+            except (ValueError,KeyError,TypeError) as exc:raise ValueError('分页快照已失效，请刷新') from exc
+        else:
+            identity,indexed=snapshots.create(context,entries())
+        page=indexed[offset:offset+limit];more=offset+limit<len(indexed)
+        rows=[]
+        for _,name in page:
+            # Re-resolve links and permissions for every returned item, even on cache hits.
+            try:rows.append(self.inspect(str(directory/name),workspace_id,root_path))
+            except (OSError,ValueError):continue
+        token=base64.urlsafe_b64encode(json.dumps({'snapshot':identity,'offset':offset+limit}).encode()).decode() if more else None
         return {"root_path": str(root), "path": str(directory), "relative_path": str(directory.relative_to(root)),
                 "items": rows, "has_more": more, "next_cursor": token, "limit": limit}
 

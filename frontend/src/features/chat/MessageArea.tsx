@@ -1,3 +1,4 @@
+import { ui } from '../../lib/libraryText';
 import { useRef } from 'react';
 import { MessageSquare, ListTree } from 'lucide-react';
 import type { ChatMessage } from './chatMessages';
@@ -26,10 +27,10 @@ type MessageAreaProps = {
   selectedLabel: string | null;
   selectedCount: number;
   liveWorkspaceEvents?: WorkspaceEvent[];
+  onPlanningOffer?: (text:string)=>void;
   onLoadOlder: () => void;
   onNearBottomChange?: (near: boolean) => void;
   scrollRef: React.RefObject<HTMLDivElement | null>;
-  bottomRef: React.RefObject<HTMLDivElement | null>;
 };
 
 export function MessageArea({
@@ -47,10 +48,10 @@ export function MessageArea({
   selectedLabel,
   selectedCount,
   liveWorkspaceEvents,
+  onPlanningOffer,
   onLoadOlder,
   onNearBottomChange,
   scrollRef,
-  bottomRef
 }: MessageAreaProps) {
   const previousScrollTop = useRef(0);
   return (
@@ -65,7 +66,7 @@ export function MessageArea({
           onLoadOlder();
         }
       }}
-      className="min-h-0 flex-1 overflow-y-auto"
+      className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
     >
       <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
         {sendError && <p role="alert" className="text-meta text-danger">{sendError}</p>}
@@ -136,7 +137,8 @@ export function MessageArea({
                   )}
 
                   {/* Capability routing trace */}
-                  {message.capabilityRouting && (
+                  {message.planningOffer&&<button type="button" disabled={controlsDisabled||sending} className="my-2 rounded border border-line px-3 py-2 text-xs hover:bg-hover" onClick={()=>onPlanningOffer?.(message.planningOffer!)}>{ui('按此建议准备规划请求')}</button>}
+                      {message.capabilityRouting && (
                     <div className="mt-3 inline-flex flex-wrap items-center gap-x-1.5 gap-y-1 rounded-chip border border-upstream-line bg-upstream-quiet px-2 py-1 text-micro text-upstream">
                       <ListTree className="size-3 shrink-0" aria-hidden="true" />
                       {message.capabilityRouting.strategy === 'hierarchical' ? (
@@ -214,8 +216,7 @@ export function MessageArea({
                   />
                 </div>
               )}
-            <div ref={bottomRef} />
-          </div>
+              </div>
         )}
       </div>
     </div>

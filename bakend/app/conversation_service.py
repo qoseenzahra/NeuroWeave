@@ -145,16 +145,15 @@ class ConversationService:
             conversation.conversation_id,
             after_sequence=conversation.summarized_through_sequence,
         )
-        history = [
-            Message(role=message.role, content=message.content)
-            for message in history_records
-        ]
-        self.store.append_conversation_message(
+        prior=self.store.conversation_turn_sequence(conversation.conversation_id,request.client_turn_id) if request.client_turn_id else None
+        history = [Message(role=m.role,content=m.content) for m in history_records if prior is None or m.sequence<prior]
+        if prior is None:self.store.append_conversation_message(
             conversation.conversation_id,
             role="user",
             content=request.message,
             estimated_tokens=self.estimate_tokens(request.message),
             metadata={
+                "client_turn_id": request.client_turn_id,
                 "interaction_mode": request.interaction_mode,
                 "dataset_id": request.dataset_id,
                 "selected_skills": request.selected_skills,
@@ -166,22 +165,63 @@ class ConversationService:
                 "conversation_id": conversation.conversation_id,
                 "conversation_summary": conversation.summary,
                 "history": history,
+                "current_workflow_context": self._workflow_context(conversation.conversation_id, request.dataset_id),
+                "planning_handoff": False,
+                "response_policy": None,
             }
         )
         return prepared, conversation.conversation_id
+
+    def _workflow_context(self, conversation_id: str, dataset_id: str | None) -> dict:
+        """Load the actual selected steps, including edits absent from chat text.
+
+        A compact snapshot is context for follow-up intent, never authorization to
+        run or silently modify a locked plan. Do not carry it into another dataset.
+        """
+        from .parameter_rules import effective_parameters, input_required
+
+        identity = self.store.conversation_context(conversation_id).get("workflow_id")
+        workflow = self.store.get_workflow(identity) if identity else None
+        if workflow is None or workflow.dataset_id != dataset_id:
+            return {}
+        steps = []
+        for step in workflow.steps[:20]:
+            method = next((m for m in step.method_options if m.id == step.selected_method_id), None)
+            if method is None:
+                continue
+            values = effective_parameters(method, step.selected_parameters)
+            steps.append({"id": step.id, "method_id": method.definition_id or method.id,
+                "label": method.label,
+                "selected_parameters": values,
+                "upstream_inputs": {key: {"step_id": binding.upstream_step_id, "output_slot_id": binding.output_slot_id}
+                                    for key, binding in step.input_bindings.items() if binding.source == "upstream_output"},
+                "inputs": [
+                    {"id": slot.id, "type": slot.type, "label": slot.label,
+                     "required": input_required(slot, values),
+                     "binding_source": step.input_bindings[slot.id].source if slot.id in step.input_bindings else None}
+                    for slot in method.input_slots[:40]],
+                "missing_required_inputs": step.missing_required_inputs[:40]})
+        return {"workflow_id": workflow.workflow_id, "revision": workflow.revision,
+                "status": workflow.status, "original_request": workflow.original_request[:2000],
+                "task_contract": workflow.task_contract.model_dump(),
+                "excluded_capabilities": workflow.excluded_capabilities,
+                "steps": steps, "steps_truncated": len(workflow.steps) > 20}
 
     async def finish_turn(
         self,
         conversation_id: str,
         response: ChatResponse,
+        client_turn_id: str | None = None,
     ) -> ConversationMemoryStatus:
         self.store.append_conversation_message(
             conversation_id,
             role="assistant",
+            completed_turn=(client_turn_id,response.model_copy(update={"conversation_id":conversation_id}).model_dump_json()) if client_turn_id else None,
             content=response.content,
             estimated_tokens=self.estimate_tokens(response.content),
             metadata={
                 "response_type": response.type,
+                "planning_offer": response.planning_offer,
                 "workspace_id": response.workspace_id,
                 "workspace_tool_events": response.workspace_tool_events,
                 "selected_skills": response.selected_skills,
@@ -189,6 +229,7 @@ class ConversationService:
                 "workflow_id": response.workflow.workflow_id if response.workflow else None,
                 "interaction_mode": response.interaction_mode,
                 "workflow_recommended": response.workflow_recommended,
+                "workflow_decision_source": response.workflow_decision_source,
                 "clarification_required": response.clarification_required,
                 "capability_routing": (
                     response.capability_routing.model_dump(mode="json")

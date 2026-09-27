@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "id": "mrtrix.command.transformconvert",
-  "version": "1",
+  "version": "2",
   "kind": "method",
   "label": "MRtrix3 transformconvert",
   "description": "Convert linear transformation matrices\nThis command allows to convert transformation matrices provided by other registration softwares to a format usable in MRtrix3. Example usages are provided below.\nConvert a transformation matrix produced by FSL's flirt command into a format usable by MRtrix3: $ transformconvert transform_flirt.mat flirt_in.nii flirt_ref.nii flirt_import transform_mrtrix.txt  The two images provided as inputs for this operation must be in the correct order: first the image that was provided to flirt via the -in option, second the image that was provided to flirt via the -ref option.\nConvert a plain text transformation matrix file produced by ITK's affine registration (e.g. ANTS, Slicer) into a format usable by MRtrix3: $ transformconvert transform_itk.txt itk_import transform_mrtrix.txt  \nARGUMENT input 0 1 \nthe input(s) for the specified operation",
@@ -79,7 +79,7 @@
   "output_slots": [
     {
       "id": "output",
-      "type": "generated_file",
+      "type": "transform_matrix",
       "label": "output",
       "description": "the output transformation matrix.",
       "format": ".txt",
@@ -88,7 +88,7 @@
   ],
   "input_types": [],
   "output_types": [
-    "generated_file"
+    "transform_matrix"
   ],
   "source_references": [
     {

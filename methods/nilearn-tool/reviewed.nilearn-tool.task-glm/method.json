@@ -3,10 +3,14 @@
   "description": "Reference Nilearn snippet for first-level task GLM。 Inputs: bold: 预处理 BOLD 影像 (file); events: 事件表 (file); confounds: 混杂变量 (file); mask: 脑掩膜 (file). Registered outputs: results/z_map.nii.gz, results/effect_map.nii.gz.",
   "runner_id": "reviewed.nilearn-tool.task-glm",
   "input_types": [
-    "analysis_input"
+    "bold_image",
+    "analysis_input",
+    "brain_mask"
   ],
   "output_types": [
-    "generated_folder"
+    "generated_folder",
+    "z_stat_map",
+    "contrast_image"
   ],
   "requires_features": [],
   "parameters": [
@@ -153,7 +157,7 @@
       "type": "z_stat_map",
       "label": "z_map.nii.gz",
       "description": "z_map.nii.gz: output of 任务态一级 GLM. Relative run path: results/z_map.nii.gz.",
-      "format": "",
+      "format": ".nii.gz",
       "primary": false,
       "path_template": "results/z_map.nii.gz",
       "generated_when": {}
@@ -163,7 +167,7 @@
       "type": "contrast_image",
       "label": "effect_map.nii.gz",
       "description": "effect_map.nii.gz: output of 任务态一级 GLM. Relative run path: results/effect_map.nii.gz.",
-      "format": "",
+      "format": ".nii.gz",
       "primary": false,
       "path_template": "results/effect_map.nii.gz",
       "generated_when": {}

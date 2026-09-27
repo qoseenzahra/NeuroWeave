@@ -3,10 +3,13 @@
   "description": "Reference Nilearn snippet for confound regression and detrending。 Inputs: bold: 预处理 BOLD 影像 (file); confounds: 混杂变量表 (file); mask: 脑掩膜 (file). Registered outputs: results/cleaned_bold.nii.gz.",
   "runner_id": "reviewed.nilearn-tool.denoise",
   "input_types": [
-    "analysis_input"
+    "bold_image",
+    "analysis_input",
+    "brain_mask"
   ],
   "output_types": [
-    "generated_folder"
+    "generated_folder",
+    "bold_image"
   ],
   "requires_features": [],
   "parameters": [
@@ -161,7 +164,7 @@
       "type": "bold_image",
       "label": "cleaned_bold.nii.gz",
       "description": "cleaned_bold.nii.gz: output of 混杂回归与去趋势. Relative run path: results/cleaned_bold.nii.gz.",
-      "format": "",
+      "format": ".nii.gz",
       "primary": false,
       "path_template": "results/cleaned_bold.nii.gz",
       "generated_when": {}

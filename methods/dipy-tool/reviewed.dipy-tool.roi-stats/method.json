@@ -3,10 +3,12 @@
   "description": "Reference DIPY snippet for atlas-based ROI statistics on tensor metrics。 Inputs: metric: 标量影像 (file); roi: 分区图谱 (file); labels: 标签表 (file). Registered outputs: results/roi_stats.csv.",
   "runner_id": "reviewed.dipy-tool.roi-stats",
   "input_types": [
-    "analysis_input"
+    "analysis_input",
+    "label_image"
   ],
   "output_types": [
-    "generated_folder"
+    "generated_folder",
+    "generated_file"
   ],
   "requires_features": [],
   "parameters": [
@@ -108,8 +110,8 @@
       "id": "file_roi_stats_csv",
       "type": "generated_file",
       "label": "roi_stats.csv",
-      "description": "Output CSV path.: output of 分区影像统计. Relative run path: results/roi_stats.csv.",
-      "format": "",
+      "description": "Output CSV path.: output of parcellated image statistics. Relative run path: results/roi_stats.csv. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
+      "format": ".csv",
       "primary": false,
       "path_template": "results/roi_stats.csv",
       "generated_when": {}

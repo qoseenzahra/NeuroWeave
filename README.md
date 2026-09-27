@@ -6,7 +6,7 @@ NeuroWeave 是以 NeuroClaw 为上游能力库的本地神经影像智能工作�
 
 当前功能：
 
-分支中的 Skill 已增加分层概览、按需读取的方法目录、条件参数表单，以及 6 个独立 MRtrix3 命令入口。详细范围、维护方式和未覆盖内容见 [Skill 分层与命令契约](deploy/structured-skill-methods.md)。本次变更尚未激活到生产 3000；下文的服务器就绪数量为上一版部署的验证记录。
+当前分支采用 Skill、Method、Pipeline 三类分层目录，支持按真实输入输出编排、条件参数与端口、持久草稿、版本管理，以及根据实际图结构生成双语 Pipeline 描述。见 [可靠性与 Pipeline 编排](deploy/reliability-and-pipeline-authoring.md)。下文带数量的早期部署说明属于历史验证记录，不代表当前分支的完整就绪状态；请以方法详情和服务器运行时探测为准。
 
 支持数据集只读访问与输出目录管理：选好数据集后模型即可查询目录、检索文件和读取文本；独立选择可管理输出目录，文件修改需确认并支持回收站。权限边界、API、配置和部署方式见 [数据集与输出目录管理](deploy/workspaces.md)。
 
@@ -20,8 +20,8 @@ Slurm 执行已启用：主节点提交，三个 RTX 5060 计算节点执行 GPU
 
 - Web 对话工作台
 - 普通对话与任务两种交互模式
-- 从 `skills/*/SKILL.md` 自动发现、搜索并选择 Skill
-- 完整导入 NeuroClaw 的 103 个 Skill、配套脚本和离线中英文摘要
+- 通过 Skill 元数据与指南发现、检索和选择能力，按需读取 Method 契约
+- 保留 NeuroClaw 上游来源与许可证，使用本分支的 Skill / Method / Pipeline 结构组织能力
 - 复用 NeuroClaw SkillLoader 与依赖图校验模块
 - FastAPI 健康检查、Skill 列表/详情和对话接口
 - 受限数据根目录浏览、数据集登记与只读元数据扫描
@@ -29,15 +29,15 @@ Slurm 执行已启用：主节点提交，三个 RTX 5060 计算节点执行 GPU
 - 可切换的对话历史列表：自动标题、最近消息预览、消息数、新建与历史恢复
 - Codex 风格会话记忆：较早消息压缩为工作摘要，同时保留近期原始消息
 - 独立方法契约（`methods/*/*/method.json`）、统一制品类型目录和输入/输出兼容性过滤
-- 覆盖全部 103 个 Skill 的分层能力树、planning Manifest、方法依据追踪、按需检索和动态单步/组合任务规划
+- 分层能力检索、方法依据追踪、真实输入输出约束及动态单步/组合任务规划
 - 无模型配置时可用的本地对话演示模式
 - 可选的 OpenAI-compatible 模型接口
-- 未手动选择时，按 NeuroClaw 的名称匹配规则识别消息中明确提到的 Skill
+- 基于需求契约、分层检索与候选校验查找方法；不把第一个候选强制当成推荐
 - DWI 样例垂直流程：模型规划、兼容方法选择、流程锁定、参数审核、Dry-run 和最终确认
 - 可信 Runner 注册表、后台执行队列、取消、进度/日志、制品校验与 SQLite 运行审计
 - 本地或 Slurm 执行选择、CPU/内存/GPU/时限申请、Job ID 展示与持久恢复监控
 
-当前目录共有 103 个 Skill（99 个 NeuroClaw 上游 Skill 和 4 个 NeuroWeave Skill）、191 个独立可执行方法契约和 28 个组合流程。Skill 的 `skill.json` 描述功能、方法角色与选择规则，通过 ID 引用 `methods/` 和 `pipelines/`；方法参数和输入输出只有一份定义。尚无可审核实现的 169 个规划条目单独保留，不成为执行入口。模型按需检索方法摘要与参数，任务卡展示独立方法或组合流程，原始 SKILL.md 作为背景参考。详见 [结构与维护指南](deploy/structured-skill-methods.md)。
+Skill 的 `skill.json` 描述功能、方法角色与选择规则，通过 ID 引用 `methods/` 和 `pipelines/`；方法参数和输入输出只有一份定义。目录中已加入更多软件与数据集指南，数量以分层库列表为准；文档条目、环境可用与实际执行验证分别展示。尚无受审阅实现的内容不成为执行入口。模型按需检索契约，任务卡展示独立方法或已校验组合。详见 [结构与维护指南](deploy/structured-skill-methods.md)。
 
 平台只调用或管理原有项目实现、现有库 API 和已有软件命令；不根据方法名称、文档公式或基础库可用性补写算法。缺少原始可用入口的内容保留规划。Manifest 的 `runner_id` 只是执行契约，不等于已经有执行代码。只有同时出现在后端可信 Runner 注册表、并通过服务器运行时探测的方法才会在 Dry-run 后标记为可执行。从文档提取的命令始终是只读参考，不会被模型或后端直接运行。当前显式注册 187 个经过审核的 Runner；三个计算节点的公共环境中 180 个已就绪。103 个 Skill 中，75 个至少有一项可运行方法，共 566 个就绪的候选方法入口；另有 37 个入口缺少运行条件、167 个入口仍有明确的规划缺项。原 358 个规划入口中，191 个已映射到现有调用或具体组合。fMRIPrep、QSIPrep、nii2dcm 等已有契约仍缺软件，HCP Pipelines 仍缺完整环境。详细范围、输入要求及测试证据见 [Skill 执行配置](deploy/skill-runtime/README.md) 和 [逐方法清单](deploy/skill-runtime/readiness.json)。输入只读，本地结果写入 `LOCALFLOW_OUTPUT_ROOT/run_*/step/`，Slurm 结果写入共享的 `/home/data/neuroweave/runs/hipeson/run_*/step/`，并记录命令日志、进度、校验和与运行事件。
 
@@ -45,7 +45,7 @@ Slurm 执行已启用：主节点提交，三个 RTX 5060 计算节点执行 GPU
 
 ```text
 LocalFlow/
-├─ frontend/              # React + Vinext + shadcn/ui
+├─ frontend/              # React + TypeScript + Vite + Tailwind CSS
 ├─ models/                # 复用的模型代码、训练与评估实现
 ├─ bakend/                # FastAPI（保留了现有目录名）
 │  ├─ app/
@@ -58,12 +58,16 @@ LocalFlow/
 
 ## 代码维护
 
-- `bakend/app/workflow_service.py` 管理流程状态、输入绑定和审核；方法契约以 `methods/*/*/method.json` 为准，组合连线在 `pipelines/*/pipeline.json` 中定义。
-- `bakend/app/execution/sample_plan.py` 分配样本并生成稳定步骤标识；`sample_execution.py` 限制每节点并行数量，恢复运行时沿用原步骤和 Slurm Job ID。
-- `bakend/app/execution/base.py` 定义 Runner 上下文和共用的可取消文件校验；各 Runner 只负责调用现有实现及整理结果。
-- `frontend/src/features/conversations/useConversations.ts` 管理列表缓存、翻页与过时请求；完整消息仍在打开对话时读取。
-- `frontend/components/workflow/workflow-card.tsx` 按流程 ID 隔离界面状态；参数编辑保留滚动和运行设置，切换流程才重新初始化。
-- `frontend/components/workflow/run-panel.tsx` 按样本汇总监控，每页最多 8 项，详情和输出默认折叠；筛选与翻页保留到本次运行结束，新的运行重置视图。
+完整模块图、依赖方向、扩展入口与回归检查见 [模块边界与维护指南](deploy/code-architecture.md)。
+
+- `bakend/app/main.py` 仅保留 ASGI 入口；应用装配和各类 HTTP 路由分别位于 `bootstrap.py`、`application.py`、`api/`。
+- `chat_service.py` 负责模型传输，`llm/` 分离需求解析、路由、规划、摘要与重试；`chat_coordinator.py` 协调对话。
+- `workflow_service.py` 管理修订与生命周期，`workflows/` 分离方法投影、状态计算、输入绑定、规划和 Dry-run。
+- Pipeline 的请求模型、编译、版本存储、草稿管理与目录集成分别位于 `pipeline_models.py`、`pipeline_compiler.py`、`pipeline_repository.py`、`pipeline_management.py`、`pipeline_library.py`。
+- `execution/` 保留受信任 Runner、样本队列和 Slurm 生命周期；方法真实契约仍以 `methods/`、`pipelines/` 为准。
+- `frontend/src/features/conversations/` 管理历史列表和缓存；`features/chat/useMessageViewport.ts` 管理滚动。
+- `frontend/src/features/library/` 分离 Pipeline 画布、方法列表、节点参数、描述生成与草稿恢复。
+- `frontend/src/features/workflows/WorkflowCard.tsx` 和 `features/runs/` 管理流程及运行展示。
 
 清理时保留 `skills/`、`models/`、`neuroclaw_compat/`、环境锁定文件、许可证和部署验证记录。
 这些内容分别用于方法发现、原始算法调用、兼容、环境复现和审计。数据库、研究输入、运行输出、

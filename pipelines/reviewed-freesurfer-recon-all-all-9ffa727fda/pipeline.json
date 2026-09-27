@@ -192,10 +192,60 @@
       "id": "subject",
       "type": "freesurfer_subject",
       "label": "FreeSurfer 受试者目录",
-      "description": "包含 mri、surf、label、stats 等输出。",
+      "description": "FreeSurfer subject directory containing mri, surf, label and stats. Its existence alone does not certify completion of later stages; use the stage-specific file ports for downstream binding.",
       "format": "",
       "primary": true,
       "path_template": "{subject}/",
+      "generated_when": {}
+    },
+    {
+      "id": "t1w",
+      "type": "t1w_image",
+      "label": "T1 volume",
+      "description": "Conformed T1 volume in the FreeSurfer subject grid. This grid may differ from the original acquisition and from DWI.",
+      "format": ".mgz",
+      "primary": false,
+      "path_template": "{subject}/mri/T1.mgz",
+      "generated_when": {}
+    },
+    {
+      "id": "brain_t1w",
+      "type": "t1w_image",
+      "label": "Brain-extracted T1",
+      "description": "Skull-stripped T1 intensities, despite the filename brainmask.mgz. This is not a binary brain mask.",
+      "format": ".mgz",
+      "primary": false,
+      "path_template": "{subject}/mri/brainmask.mgz",
+      "generated_when": {}
+    },
+    {
+      "id": "parcellation",
+      "type": "parcellation_image",
+      "label": "Anatomical cortical and subcortical parcellation",
+      "description": "Integer Desikan-Killiany cortical and aseg subcortical labels in subject structural space. FreeSurferColorLUT defines label meaning; labels are not contiguous connectome indices. Confirm alignment to streamlines, and remap with the appropriate LUT if needed. Do not use linear interpolation for labels.",
+      "format": ".mgz",
+      "primary": false,
+      "path_template": "{subject}/mri/aparc+aseg.mgz",
+      "generated_when": {}
+    },
+    {
+      "id": "aseg",
+      "type": "label_image",
+      "label": "Subcortical segmentation",
+      "description": "FreeSurfer anatomical segmentation labels in subject space. This alone does not provide the cortical atlas regions contained in aparc+aseg.mgz.",
+      "format": ".mgz",
+      "primary": false,
+      "path_template": "{subject}/mri/aseg.mgz",
+      "generated_when": {}
+    },
+    {
+      "id": "aseg_stats",
+      "type": "generated_file",
+      "label": "Segmentation statistics",
+      "description": "Region statistics table with label IDs, voxel counts and volumes. It is a text report, not a spatial node image. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
+      "format": ".stats",
+      "primary": false,
+      "path_template": "{subject}/stats/aseg.stats",
       "generated_when": {}
     }
   ],
@@ -234,7 +284,7 @@
       },
       "workspace": "execute",
       "method_ref": "freesurfer.recon_all",
-      "method_version": "1",
+      "method_version": "2",
       "capability": "skill.freesurfer-tool"
     }
   ],
@@ -242,6 +292,26 @@
     "subject": {
       "step_id": "execute",
       "output_slot_id": "subject"
+    },
+    "t1w": {
+      "step_id": "execute",
+      "output_slot_id": "t1w"
+    },
+    "brain_t1w": {
+      "step_id": "execute",
+      "output_slot_id": "brain_t1w"
+    },
+    "parcellation": {
+      "step_id": "execute",
+      "output_slot_id": "parcellation"
+    },
+    "aseg": {
+      "step_id": "execute",
+      "output_slot_id": "aseg"
+    },
+    "aseg_stats": {
+      "step_id": "execute",
+      "output_slot_id": "aseg_stats"
     }
   },
   "included_capabilities": [

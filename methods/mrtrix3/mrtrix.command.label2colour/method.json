@@ -73,7 +73,7 @@
       "id": "colour_out",
       "type": "imaging_input",
       "label": "colour_out",
-      "description": "the output colour image",
+      "description": "the output colour image The output meaning depends on the input and selected operation. This generic image port does not certify anatomical labels, diffusion orientation, tissue fractions or spatial alignment.",
       "format": ".mif",
       "path_template": "colour_out.mif"
     }

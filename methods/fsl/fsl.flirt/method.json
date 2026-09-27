@@ -3,9 +3,8 @@
   "description": "复用现有 FSL Skill 完成刚体或仿射线性配准，并输出变换矩阵。",
   "runner_id": "fsl.flirt",
   "input_types": [
-    "dataset_folder",
-    "nifti_image",
-    "bids_anat"
+    "imaging_input",
+    "brain_mask"
   ],
   "output_types": [
     "registered_image",
@@ -384,7 +383,7 @@
       "type": "registered_image",
       "label": "配准后影像",
       "description": "按照参考影像网格重采样的结果。",
-      "format": "",
+      "format": ".nii.gz",
       "primary": true,
       "path_template": "registered.nii.gz",
       "generated_when": {}
@@ -394,7 +393,7 @@
       "type": "transform_matrix",
       "label": "FLIRT 变换矩阵",
       "description": "从移动影像到参考影像的 4×4 线性变换。",
-      "format": "",
+      "format": ".mat",
       "primary": false,
       "path_template": "transform.mat",
       "generated_when": {}
@@ -409,7 +408,7 @@
       "line_end": null
     },
     {
-      "path": "skills/fsl-tool/SKILL.md",
+      "path": "skills/fsl-tool/skill.json",
       "label": "Skill 使用说明",
       "kind": "skill",
       "line_start": 1,

@@ -1000,3 +1000,6 @@ html {
   .dataset-picker-layout { grid-template-columns: minmax(0, 1fr) 280px; grid-template-rows: minmax(0, 1fr); }
   .dataset-picker-registered { border-top-width: 0; border-left-width: 1px; }
 }
+
+/* The graph editor owns the viewport; docks scroll inside their allocated rows. */
+.dialog-root[data-placement='fullscreen'][open] { padding: 0; }

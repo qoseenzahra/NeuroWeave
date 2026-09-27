@@ -13,19 +13,26 @@ from app.capability_registry import CapabilityRegistry
 def main():
     from app.method_registry import MethodRegistry
     from app.execution.runner_registry import RunnerRegistry
-    from build_mrtrix_commands import build as build_command, COMMANDS
     store=MethodRegistry(root);store.load(force=True)
     if set(store.methods) != RunnerRegistry().ids():
         raise RuntimeError('Atomic method catalog and Runner allowlist differ')
-    from app.method_registry import MethodDefinition
-    for command in COMMANDS:
-        definition=MethodDefinition.model_validate(build_command(command))
-        if definition != store.methods['mrtrix.command.'+command]:
-            raise RuntimeError('Command definition is stale: '+command)
-    from build_scientific_commands import build as build_scientific
-    for definition in build_scientific()[0]:
-        if definition != store.methods[definition.id]:
-            raise RuntimeError('Scientific command definition is stale: '+definition.id)
+    # Native method.json is the authoritative reviewed contract. Bootstrap
+    # generators predate curated semantics and must not erase those improvements.
+    # Validate all registered execution token references, not generated prose.
+    for method in store.methods.values():
+        contract=method.execution.get('contract',{})
+        slots={'input':{v.id for v in method.input_slots},'output':{v.id for v in method.output_slots},'parameter':{v.id for v in method.parameters}}
+        def check_tokens(value):
+            if isinstance(value,list):
+                for child in value:check_tokens(child)
+            elif isinstance(value,dict):
+                source=value.get('source')
+                if isinstance(source,str) and source in slots and value.get('id') not in slots[source]:raise RuntimeError('Unbound argv token: '+method.id+'/'+str(value))
+                for key in slots:
+                    if key in value and isinstance(value[key],str) and value[key] not in slots[key]:raise RuntimeError('Unbound argv token: '+method.id+'/'+str(value))
+                for key,child in value.items():
+                    if key not in {'patterns','omitted_options'}:check_tokens(child)
+        check_tokens(contract)
     from catalog_translation import check as check_translations
     locale = check_translations(root)
     if locale['missing'] or locale['invalid_placeholders']:

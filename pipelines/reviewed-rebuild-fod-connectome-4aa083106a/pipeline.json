@@ -784,7 +784,7 @@
       "id": "weights",
       "type": "streamline_weights",
       "label": "SIFT2 权重",
-      "description": "仅在后处理选择 SIFT2 时生成。",
+      "description": "output text file containing the weighting factor for each streamline 文件名由平台固定在本次输出目录内。",
       "format": ".txt",
       "primary": false,
       "path_template": "sift2_weights.txt",
@@ -795,7 +795,7 @@
       "type": "fod_image",
       "label": "白质 FOD",
       "description": "可直接传给 tckgen。",
-      "format": "",
+      "format": ".mif",
       "primary": false,
       "path_template": "wm_fod.mif",
       "generated_when": {}
@@ -805,7 +805,7 @@
       "type": "connectome",
       "label": "结构连接矩阵",
       "description": "ROI×ROI CSV 矩阵。",
-      "format": "",
+      "format": ".csv",
       "primary": true,
       "path_template": "connectome.csv",
       "generated_when": {}

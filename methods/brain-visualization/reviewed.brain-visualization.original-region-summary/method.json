@@ -3,10 +3,14 @@
   "description": "Resample BOLD to the mask grid, detrend and filter at 0.01–0.1 Hz, compute temporal standard deviation and normalize that map within the mask. Summarize values and ROI centres by atlas. The source names this zALFF, but this adapter computes filtered-signal STD, not Fourier-amplitude ALFF. Inputs: bold: 原脚本所需 4D BOLD (file); atlas: 同空间分区图谱 (file); labels: 图谱标签 (file); mask: 分析掩膜 (file). Registered outputs: results/TOP_active_regions.csv, results/top_coordinates.csv, results/all_brain_regions_activity.csv.",
   "runner_id": "reviewed.brain-visualization.original-region-summary",
   "input_types": [
-    "analysis_input"
+    "bold_image",
+    "label_image",
+    "analysis_input",
+    "brain_mask"
   ],
   "output_types": [
-    "generated_folder"
+    "generated_folder",
+    "generated_file"
   ],
   "requires_features": [],
   "parameters": [
@@ -152,8 +156,8 @@
       "id": "file_TOP_active_regions_csv",
       "type": "generated_file",
       "label": "TOP_active_regions.csv",
-      "description": "TOP_active_regions.csv: output of 原脚本 BOLD 频带波动区域摘要（STD 指标）. Relative run path: results/TOP_active_regions.csv.",
-      "format": "",
+      "description": "TOP_active_regions.csv: output of the original script BOLD band fluctuation region summary (STD metric). Relative run path: results/TOP_active_regions.csv. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
+      "format": ".csv",
       "primary": false,
       "path_template": "results/TOP_active_regions.csv",
       "generated_when": {}
@@ -162,8 +166,8 @@
       "id": "file_top_coordinates_csv",
       "type": "generated_file",
       "label": "top_coordinates.csv",
-      "description": "top_coordinates.csv: output of 原脚本 BOLD 频带波动区域摘要（STD 指标）. Relative run path: results/top_coordinates.csv.",
-      "format": "",
+      "description": "top_coordinates.csv: output of the original script BOLD band fluctuation region summary (STD metric). Relative run path: results/top_coordinates.csv. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
+      "format": ".csv",
       "primary": false,
       "path_template": "results/top_coordinates.csv",
       "generated_when": {}
@@ -172,8 +176,8 @@
       "id": "file_all_brain_regions_activity_csv",
       "type": "generated_file",
       "label": "all_brain_regions_activity.csv",
-      "description": "all_brain_regions_activity.csv: output of 原脚本 BOLD 频带波动区域摘要（STD 指标）. Relative run path: results/all_brain_regions_activity.csv.",
-      "format": "",
+      "description": "all_brain_regions_activity.csv: output of the original script's BOLD band fluctuation region summary (STD metric). Relative run path: results/all_brain_regions_activity.csv. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
+      "format": ".csv",
       "primary": false,
       "path_template": "results/all_brain_regions_activity.csv",
       "generated_when": {}

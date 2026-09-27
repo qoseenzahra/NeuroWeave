@@ -192,10 +192,30 @@
       "id": "subject",
       "type": "freesurfer_subject",
       "label": "FreeSurfer 受试者目录",
-      "description": "包含 mri、surf、label、stats 等输出。",
+      "description": "FreeSurfer subject directory containing mri, surf, label and stats. Its existence alone does not certify completion of later stages; use the stage-specific file ports for downstream binding.",
       "format": "",
       "primary": true,
       "path_template": "{subject}/",
+      "generated_when": {}
+    },
+    {
+      "id": "t1w",
+      "type": "t1w_image",
+      "label": "T1 volume",
+      "description": "Conformed T1 volume in the FreeSurfer subject grid. This grid may differ from the original acquisition and from DWI.",
+      "format": ".mgz",
+      "primary": false,
+      "path_template": "{subject}/mri/T1.mgz",
+      "generated_when": {}
+    },
+    {
+      "id": "brain_t1w",
+      "type": "t1w_image",
+      "label": "Brain-extracted T1",
+      "description": "Skull-stripped T1 intensities, despite the filename brainmask.mgz. This is not a binary brain mask.",
+      "format": ".mgz",
+      "primary": false,
+      "path_template": "{subject}/mri/brainmask.mgz",
       "generated_when": {}
     }
   ],
@@ -234,7 +254,7 @@
       },
       "workspace": "execute",
       "method_ref": "freesurfer.recon_all",
-      "method_version": "1",
+      "method_version": "2",
       "capability": "skill.freesurfer-tool"
     }
   ],
@@ -242,6 +262,14 @@
     "subject": {
       "step_id": "execute",
       "output_slot_id": "subject"
+    },
+    "t1w": {
+      "step_id": "execute",
+      "output_slot_id": "t1w"
+    },
+    "brain_t1w": {
+      "step_id": "execute",
+      "output_slot_id": "brain_t1w"
     }
   },
   "included_capabilities": [

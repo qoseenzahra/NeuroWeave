@@ -83,6 +83,12 @@ class ScientificCommandRunner(MrtrixCommandRunner):
                 if key not in context.step.input_bindings:
                     return [token['missing']] if 'missing' in token else []
                 if allow_deferred and context.input_is_deferred(key):return ['<upstream:'+key+'>']
+                if slot.cardinality=='many':
+                    paths=self.binding_paths(context.step.input_bindings[key])
+                    if not 1<=len(paths)<=64:raise ValueError('List input requires 1–64 files: '+key)
+                    for item in paths:
+                        if not item.is_file() or not self._allowed_binding_input(context.step.input_bindings[key],item.resolve(),context.output_directory.parent):raise ValueError('Unauthorized list input: '+key)
+                    return [str(p.resolve()) for p in paths]
                 path=self.required_binding(context,key)
                 if (not path.is_dir() if slot.binding=='folder' else not path.is_file()) or not self._allowed_binding_input(context.step.input_bindings[key],path,context.output_directory.parent):
                     raise ValueError('Input must be an authorized '+slot.binding+': '+key)
@@ -137,7 +143,7 @@ class ScientificCommandRunner(MrtrixCommandRunner):
 
     def run(self,context):
         values=self.values(context)
-        outputs=[s for s in self.method.output_slots if matches(s.generated_when,values)]
+        outputs=[s for s in context.method.output_slots if matches(s.generated_when,values)]
         for output in outputs:
             path=context.output_directory/output.path_template
             if path.exists():raise ValueError('Output already exists: '+output.id)

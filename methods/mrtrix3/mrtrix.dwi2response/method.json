@@ -3,7 +3,9 @@
   "description": "使用 dwi2response 的 dhollander 或 tournier 算法生成 CSD 所需组织响应函数。",
   "runner_id": "mrtrix.dwi2response",
   "input_types": [
-    "preprocessed_dwi"
+    "preprocessed_dwi",
+    "brain_mask",
+    "gradient_table"
   ],
   "output_types": [
     "response_functions",
@@ -177,7 +179,7 @@
       "type": "response_functions",
       "label": "白质响应函数",
       "description": "CSD 白质响应函数。",
-      "format": "",
+      "format": ".txt",
       "primary": true,
       "path_template": "wm_response.txt",
       "generated_when": {}
@@ -187,7 +189,7 @@
       "type": "response_functions",
       "label": "灰质响应函数",
       "description": "Dhollander 多组织灰质响应函数。",
-      "format": "",
+      "format": ".txt",
       "primary": false,
       "path_template": "gm_response.txt",
       "generated_when": {
@@ -201,7 +203,7 @@
       "type": "response_functions",
       "label": "脑脊液响应函数",
       "description": "Dhollander 多组织脑脊液响应函数。",
-      "format": "",
+      "format": ".txt",
       "primary": false,
       "path_template": "csf_response.txt",
       "generated_when": {
@@ -223,7 +225,7 @@
   ],
   "source_references": [
     {
-      "path": "skills/dwi-skill/SKILL.md",
+      "path": "skills/dwi-skill/skill.json",
       "label": "DWI Skill",
       "kind": "skill",
       "line_start": 1,

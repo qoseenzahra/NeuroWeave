@@ -78,11 +78,11 @@ class RunStoreMixin:
             row = connection.execute("SELECT * FROM runs WHERE run_id=?", (run_id,)).fetchone()
             return self._hydrate_run(connection, row) if row else None
 
-    def list_runs(self, *, workflow_id=None, limit=50, summary=False):
+    def list_runs(self, *, workflow_id=None, limit=50, summary=False, offset=0):
         with self._connect() as connection:
             condition = "WHERE workflow_id=?" if workflow_id else ""
-            args = ([workflow_id] if workflow_id else []) + [max(1, min(limit, 200))]
-            rows = connection.execute(f"SELECT * FROM runs {condition} ORDER BY updated_at DESC LIMIT ?", args).fetchall()
+            args = ([workflow_id] if workflow_id else []) + [max(1, min(limit, 200)),max(0,offset)]
+            rows = connection.execute(f"SELECT * FROM runs {condition} ORDER BY created_at DESC,run_id DESC LIMIT ? OFFSET ?", args).fetchall()
             if summary:
                 return [dict(json.loads(row["payload_json"]), plan_snapshot={}, steps=[], artifacts=[],
                              state_revision=row["state_revision"]) for row in rows]

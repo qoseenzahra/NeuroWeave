@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "id": "mrtrix.command.tckglobal",
-  "version": "1",
+  "version": "2",
   "kind": "method",
   "label": "MRtrix3 tckglobal",
   "description": "Multi-Shell Multi-Tissue Global Tractography\nThis command will reconstruct the global white matter fibre tractogram that best explains the input DWI data, using a multi-tissue spherical convolution model.\nExample use: \n $ tckglobal dwi.mif wmr.txt -riso csfr.txt -riso gmr.txt -mask mask.mif \n   -niter 1e9 -fod fod.mif -fiso fiso.mif tracks.tck \nin which dwi.mif is the input image, wmr.txt is an anisotropic, multi-shell response function for WM, and csfr.txt and gmr.txt are isotropic response functions for CSF and GM. The output tractogram is saved to tracks.tck. Optional output images fod.mif and fiso.mif contain the predicted WM fODF and isotropic tissue fractions of CSF and GM respectively, estimated as part of the global optimization and thus affected by spatial regularization.",
@@ -315,7 +315,7 @@
     },
     {
       "id": "fod",
-      "type": "imaging_input",
+      "type": "fod_image",
       "label": "fod",
       "description": "Predicted fibre orientation distribution function (fODF).\nThis fODF is estimated as part of the global track optimization, and therefore incorporates the spatial regularization that it imposes. Internally, the fODF is represented as a discrete sum of apodized point spread functions (aPSF) oriented along the directions of all particles in the voxel, used to predict the DWI signal from the particle configuration.",
       "format": ".mif",
@@ -328,7 +328,7 @@
     },
     {
       "id": "fiso",
-      "type": "imaging_input",
+      "type": "scalar_image",
       "label": "fiso",
       "description": "Predicted isotropic fractions of the tissues for which response functions were provided with -riso. Typically, these are CSF and GM.",
       "format": ".mif",
@@ -341,7 +341,7 @@
     },
     {
       "id": "eext",
-      "type": "imaging_input",
+      "type": "scalar_image",
       "label": "eext",
       "description": "Residual external energy in every voxel.",
       "format": ".mif",
@@ -356,7 +356,7 @@
       "id": "etrend",
       "type": "generated_file",
       "label": "etrend",
-      "description": "internal and external energy trend and cooling statistics.",
+      "description": "internal and external energy trend and cooling statistics. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
       "format": ".txt",
       "path_template": "etrend.txt",
       "generated_when": {
@@ -372,7 +372,8 @@
   ],
   "output_types": [
     "tractogram",
-    "imaging_input",
+    "fod_image",
+    "scalar_image",
     "generated_file"
   ],
   "source_references": [

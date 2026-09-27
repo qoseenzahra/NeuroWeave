@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "id": "mrtrix.command.5ttedit",
-  "version": "1",
+  "version": "2",
   "kind": "method",
   "label": "MRtrix3 5ttedit",
   "description": "Manually set the partial volume fractions in an ACT five-tissue-type (5TT) image using mask images",
@@ -111,7 +111,7 @@
   "output_slots": [
     {
       "id": "output",
-      "type": "imaging_input",
+      "type": "five_tt_image",
       "label": "output",
       "description": "the output modified 5TT image",
       "format": ".mif",
@@ -122,7 +122,7 @@
     "imaging_input"
   ],
   "output_types": [
-    "imaging_input"
+    "five_tt_image"
   ],
   "source_references": [
     {

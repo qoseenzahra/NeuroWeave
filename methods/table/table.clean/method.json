@@ -3,7 +3,6 @@
   "description": "在只读输入和隔离输出目录下清理缺失值、重复行、空白字符与列名，并生成审计报告。",
   "runner_id": "table.clean",
   "input_types": [
-    "dataset_folder",
     "analysis_input"
   ],
   "output_types": [
@@ -241,8 +240,8 @@
       "id": "cleaned",
       "type": "generated_file",
       "label": "清洗后表格",
-      "description": "统一输出为 UTF-8 CSV，不覆盖原表格。",
-      "format": "",
+      "description": "Unified output as UTF-8 CSV, without overwriting the original table. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
+      "format": ".csv",
       "primary": true,
       "path_template": "cleaned.csv",
       "generated_when": {}
@@ -251,8 +250,8 @@
       "id": "report",
       "type": "generated_file",
       "label": "清洗报告",
-      "description": "行列数、缺失值、重复值、数据类型与参数快照。",
-      "format": "",
+      "description": "Row and column counts, missing values, duplicate values, data types, and parameter snapshot. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
+      "format": ".json",
       "primary": false,
       "path_template": "cleaning-report.json",
       "generated_when": {}
@@ -270,7 +269,7 @@
   ],
   "source_references": [
     {
-      "path": "skills/table-cleaning/SKILL.md",
+      "path": "skills/table-cleaning/skill.json",
       "label": "Table Cleaning Skill",
       "kind": "skill",
       "line_start": 1,

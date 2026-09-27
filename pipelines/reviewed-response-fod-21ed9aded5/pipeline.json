@@ -182,7 +182,7 @@
       "type": "fod_image",
       "label": "白质 FOD",
       "description": "可直接传给 tckgen。",
-      "format": "",
+      "format": ".mif",
       "primary": true,
       "path_template": "wm_fod.mif",
       "generated_when": {}

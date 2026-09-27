@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "id": "mrtrix.command.tensor2metric",
-  "version": "1",
+  "version": "2",
   "kind": "method",
   "label": "MRtrix3 tensor2metric",
   "description": "Generate maps of tensor-derived parameters",
@@ -194,7 +194,7 @@
   "output_slots": [
     {
       "id": "adc",
-      "type": "imaging_input",
+      "type": "scalar_image",
       "label": "adc",
       "description": "compute the mean apparent diffusion coefficient (ADC) of the diffusion tensor. (sometimes also referred to as the mean diffusivity (MD))",
       "format": ".mif",
@@ -207,7 +207,7 @@
     },
     {
       "id": "fa",
-      "type": "imaging_input",
+      "type": "scalar_image",
       "label": "fa",
       "description": "compute the fractional anisotropy (FA) of the diffusion tensor.",
       "format": ".mif",
@@ -220,7 +220,7 @@
     },
     {
       "id": "ad",
-      "type": "imaging_input",
+      "type": "scalar_image",
       "label": "ad",
       "description": "compute the axial diffusivity (AD) of the diffusion tensor. (equivalent to the principal eigenvalue)",
       "format": ".mif",
@@ -233,7 +233,7 @@
     },
     {
       "id": "rd",
-      "type": "imaging_input",
+      "type": "scalar_image",
       "label": "rd",
       "description": "compute the radial diffusivity (RD) of the diffusion tensor. (equivalent to the mean of the two non-principal eigenvalues)",
       "format": ".mif",
@@ -246,7 +246,7 @@
     },
     {
       "id": "cl",
-      "type": "imaging_input",
+      "type": "scalar_image",
       "label": "cl",
       "description": "compute the linearity metric of the diffusion tensor. (one of the three Westin shape metrics)",
       "format": ".mif",
@@ -259,7 +259,7 @@
     },
     {
       "id": "cp",
-      "type": "imaging_input",
+      "type": "scalar_image",
       "label": "cp",
       "description": "compute the planarity metric of the diffusion tensor. (one of the three Westin shape metrics)",
       "format": ".mif",
@@ -272,7 +272,7 @@
     },
     {
       "id": "cs",
-      "type": "imaging_input",
+      "type": "scalar_image",
       "label": "cs",
       "description": "compute the sphericity metric of the diffusion tensor. (one of the three Westin shape metrics)",
       "format": ".mif",
@@ -287,7 +287,7 @@
       "id": "value",
       "type": "imaging_input",
       "label": "value",
-      "description": "compute the selected eigenvalue(s) of the diffusion tensor.",
+      "description": "compute the selected eigenvalue(s) of the diffusion tensor. The output meaning depends on the input and selected operation. This generic image port does not certify anatomical labels, diffusion orientation, tissue fractions or spatial alignment.",
       "format": ".mif",
       "path_template": "value.mif",
       "generated_when": {
@@ -300,7 +300,7 @@
       "id": "vector",
       "type": "imaging_input",
       "label": "vector",
-      "description": "compute the selected eigenvector(s) of the diffusion tensor.",
+      "description": "compute the selected eigenvector(s) of the diffusion tensor. The output meaning depends on the input and selected operation. This generic image port does not certify anatomical labels, diffusion orientation, tissue fractions or spatial alignment.",
       "format": ".mif",
       "path_template": "vector.mif",
       "generated_when": {
@@ -314,6 +314,7 @@
     "imaging_input"
   ],
   "output_types": [
+    "scalar_image",
     "imaging_input"
   ],
   "source_references": [

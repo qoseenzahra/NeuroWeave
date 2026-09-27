@@ -6,7 +6,8 @@
     "analysis_input"
   ],
   "output_types": [
-    "generated_folder"
+    "generated_folder",
+    "generated_file"
   ],
   "requires_features": [],
   "parameters": [],
@@ -45,7 +46,7 @@
       "id": "file_processed_raw_fif",
       "type": "generated_file",
       "label": "processed-raw.fif",
-      "description": "processed-raw.fif: output of MEG Maxwell 滤波. Relative run path: results/processed-raw.fif.",
+      "description": "processed-raw.fif: output of MEG Maxwell filtering. Relative run path: results/processed-raw.fif. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
       "format": "",
       "primary": false,
       "path_template": "results/processed-raw.fif",

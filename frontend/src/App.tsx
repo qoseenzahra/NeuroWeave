@@ -1,6 +1,7 @@
+import {ConversationHistoryPanel} from './features/conversations/ConversationHistoryPanel';
+import {useMessageViewport} from './features/chat/useMessageViewport';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useIsMutating, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus } from 'lucide-react';
 import { patchConversation } from './features/conversations/conversationsApi';
 import type { ConversationDetailState } from './features/conversations/useConversations';
 import { currentConversationRead, mergeConversationMessages } from './features/conversations/conversationContext';
@@ -14,6 +15,9 @@ import type { RailDomain } from './components/AppRail';
 import { ContextPanelHeader } from './components/ContextPanelHeader';
 import { useThemeStore } from './stores/themeStore';
 import { setMouseWaveEnabled } from './lib/mouseWave';
+import { ChatTurnPanel } from './features/chat/ChatTurnPanel';
+import { WorkflowHistory } from './features/workflows/WorkflowHistory';
+import { ui as libraryText } from './lib/libraryText';
 import { ChatHeader } from './features/chat/ChatHeader';
 import { MessageArea } from './features/chat/MessageArea';
 import { MessageComposer } from './features/chat/MessageComposer';
@@ -24,8 +28,6 @@ import { StoragePanel } from './features/storage/StoragePanel';
 import { WorkspacePanel } from './features/workspace/WorkspacePanel';
 import { getTranslations } from './lib/i18n';
 import { useLanguageStore } from './stores/languageStore';
-import { ConversationRow } from './features/conversations/ConversationRow';
-import { ConversationSearch } from './features/conversations/ConversationSearch';
 import type { ConversationListItem } from './features/conversations/conversationTypes';
 import type { InteractionMode } from './features/conversations/conversationTypes';
 import {
@@ -51,8 +53,6 @@ import { StorageContextPanel } from './features/storage/StorageContextPanel';
 import { WorkspaceContextPanel } from './features/workspace/WorkspaceContextPanel';
 import { ApiError } from './api/http';
 import { Button } from './ui/Button';
-import { Tabs } from './ui/Tabs';
-import type { TabItem } from './ui/Tabs';
 
 function App() {
   const ui = useConversationUiStore();
@@ -62,8 +62,9 @@ function App() {
   const [viewedSkill, setViewedSkill] = useState<Skill | null>(null);
   // Keep unsent skill choices scoped to their conversation when browsing history.
   const skillDrafts = useRef<Record<string, string[]>>({});
-  const skills = useSkills().data?.skills ?? [];
-  const skillsStats = useSkills().data?.stats;
+  const skillQuery = useSkills();
+  const skills = skillQuery.data?.skills ?? [];
+  const skillsStats = skillQuery.data?.stats;
   const selectedDatasetId = useDatasetStore((s) => s.selectedDatasetId);
   const { data: chosenDataset } = useSelectedDataset(selectedDatasetId);
   const [datasetFilesOpen, setDatasetFilesOpen] = useState(false);
@@ -312,17 +313,9 @@ function App() {
     );
     return () => animation?.cancel();
   }, [activeConversationId, sidebarOpen]);
-  const followTail = useRef(true);
-  const scrollRef = useRef<HTMLDivElement | null>(null);
-  const messageEndRef = useRef<HTMLDivElement | null>(null);
-  const listSentinelRef = useRef<HTMLDivElement | null>(null);
+  const {setFollowTail,scrollRef,scrollScope,restorePrepend}=useMessageViewport(activeConversationId,contextLoading,mergedMessages.at(-1)?.id);
   const olderMutation = useLoadOlderMessages(activeConversationId, {
-    onSettledScroll: (anchor: { top: number; height: number } | null) => {
-      const viewport = scrollRef.current;
-      if (viewport && anchor) {
-        viewport.scrollTop = anchor.top + viewport.scrollHeight - anchor.height;
-      }
-    }
+    onSettledScroll: restorePrepend
   });
   const handleLoadOlder = () => {
     if (!activeConversationId || !detail?.hasMoreOlder || detail.beforeSequence == null) return;
@@ -339,6 +332,9 @@ function App() {
   };
 
   const appendLocal = (message: ChatMessage) => {
+    // Sending intentionally returns to the latest message. The layout effect
+    // scrolls only the message viewport, never the document or an ancestor.
+    setFollowTail(true);
     if (activeConversationId) {
       setLocalMessagesByConversation((prev) => ({
         ...prev,
@@ -347,7 +343,6 @@ function App() {
     } else {
       setLocalNewMessages((prev) => [...prev, message]);
     }
-    requestAnimationFrame(() => messageEndRef.current?.scrollIntoView({ behavior: 'smooth' }));
   };
 
   const handleSend = () => {
@@ -403,6 +398,7 @@ function App() {
             id: `local-assistant-${Date.now()}`,
             persistedAfterRead,
             role: 'assistant',
+            planningOffer:response.planning_offer??undefined,
             content: response.content,
             createdAt: new Date().toISOString(),
             interactionMode: response.interaction_mode ?? interactionMode,
@@ -462,35 +458,6 @@ function App() {
       handleSend();
     }
   };
-  useEffect(() => {
-    const sentinel = listSentinelRef.current;
-    if (!sentinel || typeof IntersectionObserver === 'undefined') return;
-    if (!listQuery.hasNextPage || listQuery.isFetchingNextPage) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) void listQuery.fetchNextPage();
-      },
-      { rootMargin: '0px 0px 80px 0px' }
-    );
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [listQuery.hasNextPage, listQuery.isFetchingNextPage, listItems.length]);
-  const latestMessageId = mergedMessages.at(-1)?.id;
-  const scrollScope = activeConversationId ?? 'new-conversation';
-  const initializedScrollScope = useRef<string | null>(null);
-  useLayoutEffect(() => {
-    if (contextLoading) return;
-    const viewport = scrollRef.current;
-    if (initializedScrollScope.current !== scrollScope) {
-      initializedScrollScope.current = scrollScope;
-      followTail.current = true;
-    }
-    // Opening history must jump directly to the latest page: smooth scrolling
-    // from the top can otherwise trigger eager loading of every older page.
-    // Prepending history and editing parameters leave latestMessageId unchanged.
-    if (followTail.current && viewport) viewport.scrollTop = viewport.scrollHeight;
-  }, [scrollScope, contextLoading, latestMessageId]);
   const todayCount = listItems.length;
   const activeTitle = detail?.title ?? t.newConversation;
   const contextPanelMeta: Record<RailDomain, { title: string; subtitle?: string }> = {
@@ -498,6 +465,7 @@ function App() {
       title: t.chatHistory,
       subtitle: t.chatsToday.replace('{{count}}', String(todayCount))
     },
+    workflows: {title:libraryText('流程与运行')},
     skills: { title: t.skills, subtitle: String(skills.length) },
     datasets: { title: t.datasetPickerTitle, subtitle: t.datasetPickerSubtitle },
     workspace: { title: t.workspaceTitle, subtitle: t.workspaceHint },
@@ -510,10 +478,6 @@ function App() {
     setSidebarView(domain);
     setSidebarOpen(true);
   };
-  const sectionTabs: TabItem<'history' | 'archived'>[] = [
-    { value: 'history', label: t.chatHistory },
-    { value: 'archived', label: t.archivedChats }
-  ];
   return (
     <>
       <NeuroSplash />
@@ -537,102 +501,14 @@ function App() {
               onClose={() => setSidebarOpen(false)}
             />
             {sidebarView === 'conversations' ? (
-              <>
-                <div className="shrink-0 space-y-2 px-3 pt-3">
-                  <div className="flex items-center justify-end gap-2">
-                    <Button variant="primary" size="sm" disabled={navigationBusy || olderMutation.isPending} onClick={handleNew}>
-                      <Plus aria-hidden="true" />
-                      {t.newChat}
-                    </Button>
-                  </div>
-                  <ConversationSearch value={conversationSearch} onChange={setConversationSearch} />
-                  <Tabs
-                    items={sectionTabs}
-                    value={chatSection}
-                    onChange={setChatSection}
-                    label={t.chatHistory}
-                  />
-                </div>
-                <div
-                  key={chatSection}
-                  className="view-enter min-h-0 flex-1 overflow-y-auto px-3 pb-3"
-                >
-                  {ui.actionError && (
-                    <p role="alert" className="px-2 pt-2 text-meta text-danger">
-                      {ui.actionError}
-                    </p>
-                  )}
-                  {listQuery.isPending ? (
-                    <p className="px-2 py-6 text-center text-meta text-muted">
-                      {t.loadingConversations}
-                    </p>
-                  ) : listQuery.isError ? (
-                    <div className="px-2 py-6 text-center">
-                      <p role="alert" className="text-meta text-danger">
-                        {t.conversationsLoadError}
-                      </p>
-                      <Button
-                        size="sm"
-                        className="mt-2"
-                        loading={listQuery.isFetching}
-                        onClick={() => void listQuery.refetch()}
-                      >
-                        {t.retry}
-                      </Button>
-                    </div>
-                  ) : listItems.length === 0 ? (
-                    <p className="px-2 py-6 text-center text-meta text-muted">
-                      {debouncedSearch.trim()
-                        ? t.noMatchingConversations
-                        : chatSection === 'archived'
-                          ? t.noArchivedConversations
-                          : t.noConversations}
-                    </p>
-                  ) : (
-                    <div className="space-y-1 pt-3">
-                      {listItems.map((item) => (
-                        <ConversationRow
-                          key={item.conversation_id}
-                          conversation={item}
-                          isActive={item.conversation_id === activeConversationId}
-                          isMenuOpen={ui.openMenuId === item.conversation_id}
-                          isRenaming={ui.renamingId === item.conversation_id}
-                          renameValue={ui.renameValue}
-                          isArchivedView={chatSection === 'archived'}
-                          disabled={navigationBusy || olderMutation.isPending}
-                          pendingDelete={ui.pendingDeleteId === item.conversation_id}
-                          t={t}
-                          onSelect={() => handleSelect(item.conversation_id)}
-                          onToggleMenu={() =>
-                            ui.setOpenMenuId(
-                              ui.openMenuId === item.conversation_id ? null : item.conversation_id
-                            )
-                          }
-                          onCloseMenu={() => ui.setOpenMenuId(null)}
-                          onStartRename={() => ui.startRename(item.conversation_id, item.title)}
-                          onRenameChange={ui.setRenameValue}
-                          onCommitRename={() => handleCommitRename(item.conversation_id)}
-                          onCancelRename={() => ui.cancelRename()}
-                          onArchive={() => handleArchive(item.conversation_id, true)}
-                          onUnarchive={() => handleArchive(item.conversation_id, false)}
-                          onDelete={() => ui.requestDelete(item.conversation_id)}
-                          onCancelDelete={() => ui.cancelDelete()}
-                          onConfirmDelete={() => handleConfirmDelete(item.conversation_id)}
-                        />
-                      ))}
-                      <div ref={listSentinelRef} />
-                      {listQuery.isFetchingNextPage && (
-                        <p className="px-2 py-3 text-center text-meta text-muted">
-                          {t.loadingConversations}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </>
+              <ConversationHistoryPanel t={t} ui={ui} chatSection={chatSection} setChatSection={setChatSection}
+                conversationSearch={conversationSearch} onSearch={setConversationSearch} debouncedSearch={debouncedSearch}
+                listQuery={listQuery} listItems={listItems} activeConversationId={activeConversationId} disabled={navigationBusy||olderMutation.isPending}
+                handleNew={handleNew} handleSelect={handleSelect} handleCommitRename={handleCommitRename}
+                handleArchive={handleArchive} handleConfirmDelete={handleConfirmDelete}/>
             ) : sidebarView === 'skills' ? (
               <div className="view-enter min-h-0 flex-1 overflow-y-auto px-3 py-3">
-                <SkillList workspaceId={workspaceId} selectedSkillIds={selectedSkillIds} disabled={contextBusy || olderMutation.isPending}
+                <SkillList conversationId={activeConversationId} workspaceId={workspaceId} selectedSkillIds={selectedSkillIds} disabled={contextBusy || olderMutation.isPending}
                   onAdd={addSkill} onRemove={removeSkill} onDetails={setViewedSkill} onClear={clearSkills}/>
                 {skillsStats && (
                   <div className="mt-3 border-t border-line pt-2">
@@ -645,7 +521,7 @@ function App() {
                   </div>
                 )}
               </div>
-            ) : sidebarView === 'datasets' ? (
+            ) : sidebarView === 'workflows' ? (<WorkflowHistory/>) : sidebarView === 'datasets' ? (
               <DatasetContextPanel onOpenFull={openDatasetPicker} onChoose={handleDatasetSelect}
                 disabled={datasetDisabled} notice={datasetNotice}
                 onBrowse={selectedDataset ? () => setDatasetFilesOpen(true) : undefined} />
@@ -656,13 +532,13 @@ function App() {
             )}
           </aside>
         )}
-        <main ref={mainRef} className="flex min-w-0 flex-1 flex-col">
+        <main ref={mainRef} className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           <ChatHeader
             workspaceId={workspaceId}
             onOpenWorkspace={() => setWorkspaceOpen(true)}
             t={t}
             title={activeTitle}
-            domainLabel={sidebarView === 'skills' ? t.skills : sidebarView === 'datasets' ? t.datasetPickerTitle : sidebarView === 'workspace' ? t.workspaceTitle : sidebarView === 'storage' ? t.storageTitle : t.conversations}
+            domainLabel={sidebarView==='workflows'?libraryText('流程与运行'):sidebarView === 'skills' ? t.skills : sidebarView === 'datasets' ? t.datasetPickerTitle : sidebarView === 'workspace' ? t.workspaceTitle : sidebarView === 'storage' ? t.storageTitle : t.conversations}
             sidebarOpen={sidebarOpen}
             darkMode={darkMode}
             datasetLabel={selectedDataset ? selectedDataset.display_name : null}
@@ -680,7 +556,8 @@ function App() {
             <div role="alert" className="px-4 py-2 text-meta text-danger">{t.conversationsLoadError}
               <Button size="sm" onClick={() => { void detailQuery.refetch(); if (activeWorkflowId) void workflowQuery.refetch(); }}>{t.retry}</Button>
             </div>}
-          <MessageArea
+          <ChatTurnPanel onOpen={id=>ui.selectConversation(id)}/>
+          <MessageArea onPlanningOffer={text=>{setInteractionMode('task');setInput(text);}}
             key={scrollScope}
             activeWorkflowId={activeWorkflowId}
             activeWorkflow={activeWorkflow}
@@ -697,9 +574,8 @@ function App() {
             selectedCount={selectedSkills.length}
             liveWorkspaceEvents={liveWorkspaceEvents}
             onLoadOlder={handleLoadOlder}
-            onNearBottomChange={near => { followTail.current = near; }}
+            onNearBottomChange={near => { setFollowTail(near); }}
             scrollRef={scrollRef}
-            bottomRef={messageEndRef}
           />
           <MessageComposer
             t={t}

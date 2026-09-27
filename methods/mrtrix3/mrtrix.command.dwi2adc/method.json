@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "id": "mrtrix.command.dwi2adc",
-  "version": "1",
+  "version": "2",
   "kind": "method",
   "label": "MRtrix3 dwi2adc",
   "description": "Convert mean dwi (trace-weighted) images to mean ADC maps",
@@ -87,7 +87,7 @@
   "output_slots": [
     {
       "id": "output",
-      "type": "imaging_input",
+      "type": "scalar_image",
       "label": "output",
       "description": "the output image.",
       "format": ".mif",
@@ -99,7 +99,7 @@
     "generated_file"
   ],
   "output_types": [
-    "imaging_input"
+    "scalar_image"
   ],
   "source_references": [
     {

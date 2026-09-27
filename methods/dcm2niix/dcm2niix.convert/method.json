@@ -178,7 +178,7 @@
   ],
   "source_references": [
     {
-      "path": "skills/dcm2nii/SKILL.md",
+      "path": "skills/dcm2nii/skill.json",
       "label": "dcm2nii Skill",
       "kind": "skill",
       "line_start": 1,

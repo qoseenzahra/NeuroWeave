@@ -3,10 +3,15 @@
   "description": "Correct a DWI intensity bias field with MRtrix dwibiascorrect using its ANTs backend. Export the corrected image as NIfTI and the supplied unchanged diffusion gradient scheme。 Inputs: input: 输入影像 (file); bval: bval (file); bvec: bvec (file). Registered outputs: results/image.nii.gz, results/dwi.bval, results/dwi.bvec. Fixed invocation options: --operation dwibiascorrect.",
   "runner_id": "reviewed.dwi-skill.dwibiascorrect",
   "input_types": [
-    "analysis_input"
+    "analysis_input",
+    "b_values",
+    "b_vectors"
   ],
   "output_types": [
-    "generated_folder"
+    "generated_folder",
+    "preprocessed_dwi",
+    "b_values",
+    "b_vectors"
   ],
   "requires_features": [],
   "parameters": [],
@@ -79,30 +84,30 @@
     },
     {
       "id": "file_image_nii_gz",
-      "type": "generated_file",
+      "type": "preprocessed_dwi",
       "label": "image.nii.gz",
       "description": "image.nii.gz: output of MRtrix/ANTs 偏置场校正. Relative run path: results/image.nii.gz.",
-      "format": "",
+      "format": ".nii.gz",
       "primary": false,
       "path_template": "results/image.nii.gz",
       "generated_when": {}
     },
     {
       "id": "file_dwi_bval",
-      "type": "generated_file",
+      "type": "b_values",
       "label": "dwi.bval",
       "description": "dwi.bval: output of MRtrix/ANTs 偏置场校正. Relative run path: results/dwi.bval.",
-      "format": "",
+      "format": ".bval",
       "primary": false,
       "path_template": "results/dwi.bval",
       "generated_when": {}
     },
     {
       "id": "file_dwi_bvec",
-      "type": "generated_file",
+      "type": "b_vectors",
       "label": "dwi.bvec",
       "description": "dwi.bvec: output of MRtrix/ANTs 偏置场校正. Relative run path: results/dwi.bvec.",
-      "format": "",
+      "format": ".bvec",
       "primary": false,
       "path_template": "results/dwi.bvec",
       "generated_when": {}
@@ -128,7 +133,7 @@
   "included_capabilities": [],
   "schema_version": 1,
   "id": "reviewed.dwi-skill.dwibiascorrect",
-  "version": "1",
+  "version": "2",
   "kind": "method",
   "execution": {
     "kind": "reviewed",
@@ -195,9 +200,9 @@
         }
       ],
       "artifact_types": {
-        "image.nii.gz": "generated_file",
-        "dwi.bval": "generated_file",
-        "dwi.bvec": "generated_file"
+        "image.nii.gz": "preprocessed_dwi",
+        "dwi.bval": "b_values",
+        "dwi.bvec": "b_vectors"
       }
     }
   }

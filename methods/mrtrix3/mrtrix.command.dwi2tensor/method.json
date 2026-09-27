@@ -147,7 +147,7 @@
       "id": "dt",
       "type": "imaging_input",
       "label": "dt",
-      "description": "the output dt image.",
+      "description": "the output dt image. The output meaning depends on the input and selected operation. This generic image port does not certify anatomical labels, diffusion orientation, tissue fractions or spatial alignment.",
       "format": ".mif",
       "path_template": "dt.mif"
     },
@@ -155,7 +155,7 @@
       "id": "b0",
       "type": "imaging_input",
       "label": "b0",
-      "description": "the output b0 image.",
+      "description": "the output b0 image. The output meaning depends on the input and selected operation. This generic image port does not certify anatomical labels, diffusion orientation, tissue fractions or spatial alignment.",
       "format": ".mif",
       "path_template": "b0.mif",
       "generated_when": {
@@ -168,7 +168,7 @@
       "id": "dkt",
       "type": "imaging_input",
       "label": "dkt",
-      "description": "the output dkt image.",
+      "description": "the output dkt image. The output meaning depends on the input and selected operation. This generic image port does not certify anatomical labels, diffusion orientation, tissue fractions or spatial alignment.",
       "format": ".mif",
       "path_template": "dkt.mif",
       "generated_when": {
@@ -181,7 +181,7 @@
       "id": "predicted_signal",
       "type": "imaging_input",
       "label": "predicted_signal",
-      "description": "the predicted dwi image.",
+      "description": "the predicted dwi image. The output meaning depends on the input and selected operation. This generic image port does not certify anatomical labels, diffusion orientation, tissue fractions or spatial alignment.",
       "format": ".mif",
       "path_template": "predicted_signal.mif",
       "generated_when": {

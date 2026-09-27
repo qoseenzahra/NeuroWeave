@@ -6,7 +6,8 @@
     "analysis_input"
   ],
   "output_types": [
-    "generated_folder"
+    "generated_folder",
+    "generated_file"
   ],
   "requires_features": [],
   "parameters": [],
@@ -45,8 +46,8 @@
       "id": "file_output_csv",
       "type": "generated_file",
       "label": "output.csv",
-      "description": "output.csv: output of ppmi 数据校验. Relative run path: results/output.csv.",
-      "format": "",
+      "description": "output.csv: output of ppmi data validation. Relative run path: results/output.csv. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
+      "format": ".csv",
       "primary": false,
       "path_template": "results/output.csv",
       "generated_when": {}

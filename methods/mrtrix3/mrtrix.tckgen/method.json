@@ -3,7 +3,9 @@
   "description": "使用已有 FOD 调用 tckgen 生成流线。ACT 按参数绑定已有 5TT；本方法不生成 5TT、不运行 SIFT2。",
   "runner_id": "mrtrix.tckgen",
   "input_types": [
-    "fod_image"
+    "fod_image",
+    "five_tt_image",
+    "seed_mask"
   ],
   "output_types": [
     "tractogram"
@@ -512,7 +514,7 @@
       "line_end": null
     },
     {
-      "path": "skills/dwi-skill/SKILL.md",
+      "path": "skills/dwi-skill/skill.json",
       "label": "Skill 使用说明",
       "kind": "skill",
       "line_start": 1,

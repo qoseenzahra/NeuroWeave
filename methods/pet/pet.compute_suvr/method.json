@@ -3,8 +3,9 @@
   "description": "使用 Skill 自带且已审核的脚本，从 PET、参考区 Mask 和目标 Mask 计算 SUVR 表格与影像。",
   "runner_id": "pet.compute_suvr",
   "input_types": [
-    "dataset_folder",
-    "imaging_input"
+    "imaging_input",
+    "brain_mask",
+    "target_mask"
   ],
   "output_types": [
     "generated_file",
@@ -117,8 +118,8 @@
       "id": "summary",
       "type": "generated_file",
       "label": "SUVR 汇总",
-      "description": "目标区信号、参考区信号与 SUVR。",
-      "format": "",
+      "description": "Target region signal, reference region signal, and SUVR. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
+      "format": ".csv",
       "primary": true,
       "path_template": "suvr.csv",
       "generated_when": {}
@@ -127,8 +128,8 @@
       "id": "map",
       "type": "generated_file",
       "label": "SUVR 影像",
-      "description": "目标区体素 SUVR NIfTI。",
-      "format": "",
+      "description": "Target region voxel SUVR NIfTI. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
+      "format": ".nii.gz",
       "primary": false,
       "path_template": "suvr-map.nii.gz",
       "generated_when": {}
@@ -153,7 +154,7 @@
       "line_end": null
     },
     {
-      "path": "skills/pet-skill/SKILL.md",
+      "path": "skills/pet-skill/skill.json",
       "label": "PET Skill",
       "kind": "skill",
       "line_start": 1,

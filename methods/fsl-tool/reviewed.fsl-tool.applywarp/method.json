@@ -6,7 +6,8 @@
     "analysis_input"
   ],
   "output_types": [
-    "generated_folder"
+    "generated_folder",
+    "registered_image"
   ],
   "requires_features": [],
   "parameters": [
@@ -117,10 +118,10 @@
     },
     {
       "id": "file_image_nii_gz",
-      "type": "generated_file",
+      "type": "registered_image",
       "label": "image.nii.gz",
       "description": "image.nii.gz: output of FSL 应用形变. Relative run path: results/image.nii.gz.",
-      "format": "",
+      "format": ".nii.gz",
       "primary": false,
       "path_template": "results/image.nii.gz",
       "generated_when": {}
@@ -146,7 +147,7 @@
   "included_capabilities": [],
   "schema_version": 1,
   "id": "reviewed.fsl-tool.applywarp",
-  "version": "1",
+  "version": "2",
   "kind": "method",
   "execution": {
     "kind": "reviewed",
@@ -214,7 +215,7 @@
         }
       ],
       "artifact_types": {
-        "image.nii.gz": "generated_file"
+        "image.nii.gz": "registered_image"
       }
     }
   }

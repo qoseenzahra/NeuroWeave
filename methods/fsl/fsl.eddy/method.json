@@ -4,7 +4,9 @@
   "runner_id": "fsl.eddy",
   "input_types": [
     "raw_dwi",
-    "bids_dwi"
+    "brain_mask",
+    "analysis_input",
+    "gradient_table"
   ],
   "output_types": [
     "preprocessed_dwi",
@@ -462,7 +464,7 @@
       "type": "preprocessed_dwi",
       "label": "FSL 预处理 DWI",
       "description": "完成 topup/eddy 校正后的 DWI 数据。",
-      "format": "",
+      "format": ".nii.gz",
       "primary": true,
       "path_template": "eddy_corrected.nii.gz",
       "generated_when": {}
@@ -507,7 +509,7 @@
       "line_end": null
     },
     {
-      "path": "skills/fsl-tool/SKILL.md",
+      "path": "skills/fsl-tool/skill.json",
       "label": "Skill 使用说明",
       "kind": "skill",
       "line_start": 1,

@@ -6,7 +6,8 @@
     "analysis_input"
   ],
   "output_types": [
-    "generated_folder"
+    "generated_folder",
+    "generated_file"
   ],
   "requires_features": [],
   "parameters": [
@@ -194,8 +195,8 @@
       "id": "file_time_frequency_npz",
       "type": "generated_file",
       "label": "time_frequency.npz",
-      "description": "time_frequency.npz: output of Morlet 时频功率与 ITC. Relative run path: results/time_frequency.npz.",
-      "format": "",
+      "description": "time_frequency.npz: output of Morlet time-frequency power and ITC. Relative run path: results/time_frequency.npz. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
+      "format": ".npz",
       "primary": false,
       "path_template": "results/time_frequency.npz",
       "generated_when": {}

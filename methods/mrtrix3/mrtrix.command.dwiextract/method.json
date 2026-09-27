@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "id": "mrtrix.command.dwiextract",
-  "version": "1",
+  "version": "2",
   "kind": "method",
   "label": "MRtrix3 dwiextract",
   "description": "Extract diffusion-weighted volumes, b=0 volumes, or certain shells from a DWI dataset\nCalculate the mean b=0 image from a 4D DWI series: $ dwiextract dwi.mif - -bzero | mrmath - mean mean_bzero.mif -axis 3  The dwiextract command extracts all volumes for which the b-value is (approximately) zero; the resulting 4D image can then be provided to the mrmath command to calculate the mean intensity across volumes for each voxel.",
@@ -190,13 +190,13 @@
       "id": "output",
       "type": "imaging_input",
       "label": "output",
-      "description": "the output image (diffusion-weighted volumes by default).",
+      "description": "the output image (diffusion-weighted volumes by default). The output meaning depends on the input and selected operation. This generic image port does not certify anatomical labels, diffusion orientation, tissue fractions or spatial alignment.",
       "format": ".mif",
       "path_template": "output.mif"
     },
     {
       "id": "export_grad_mrtrix",
-      "type": "generated_file",
+      "type": "gradient_table",
       "label": "export_grad_mrtrix",
       "description": "export the diffusion-weighted gradient table to file in MRtrix format",
       "format": ".txt",
@@ -209,7 +209,7 @@
     },
     {
       "id": "export_grad_fsl_bvecs_path",
-      "type": "generated_file",
+      "type": "b_vectors",
       "label": "export_grad_fsl_bvecs_path",
       "description": "export the diffusion-weighted gradient table to files in FSL (bvecs / bvals) format",
       "format": ".txt",
@@ -222,7 +222,7 @@
     },
     {
       "id": "export_grad_fsl_bvals_path",
-      "type": "generated_file",
+      "type": "b_values",
       "label": "export_grad_fsl_bvals_path",
       "description": "export the diffusion-weighted gradient table to files in FSL (bvecs / bvals) format",
       "format": ".txt",
@@ -240,7 +240,9 @@
   ],
   "output_types": [
     "imaging_input",
-    "generated_file"
+    "gradient_table",
+    "b_vectors",
+    "b_values"
   ],
   "source_references": [
     {

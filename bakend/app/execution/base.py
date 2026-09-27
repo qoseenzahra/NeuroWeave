@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import hashlib
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from threading import Event
 from typing import Any, Callable, Protocol
@@ -33,6 +33,7 @@ class RunnerContext:
     detach_event: Event | None = None
     remote_gpu_available: bool = False
     is_dry_run: bool = False
+    quality_checks: list[dict] = field(default_factory=list)
 
     def input_is_deferred(self, slot_id: str) -> bool:
         """Only a dry-run may inspect a graph before its upstream files exist."""

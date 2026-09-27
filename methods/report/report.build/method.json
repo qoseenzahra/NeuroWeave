@@ -2,11 +2,9 @@
   "label": "结果报告",
   "description": "生成可审阅的处理摘要、参数快照与结果清单。",
   "runner_id": "report.build",
-  "input_types": [
-    "*"
-  ],
+  "input_types": [],
   "output_types": [
-    "processing_report"
+    "generated_file"
   ],
   "requires_features": [],
   "parameters": [
@@ -249,7 +247,7 @@
       "id": "report",
       "type": "generated_file",
       "label": "处理报告",
-      "description": "包含流程、参数、输入绑定、Dry-run 与环境快照的 HTML、Markdown 或 JSON 文件。",
+      "description": "HTML, Markdown, or JSON files containing the pipeline, parameters, input bindings, dry-run, and environment snapshot. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
       "format": "",
       "primary": true,
       "path_template": "localflow-report.{format}",
@@ -265,7 +263,7 @@
       "line_end": null
     },
     {
-      "path": "skills/report-builder/SKILL.md",
+      "path": "skills/report-builder/skill.json",
       "label": "Skill 使用说明",
       "kind": "skill",
       "line_start": 1,

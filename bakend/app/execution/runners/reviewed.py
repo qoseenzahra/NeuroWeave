@@ -230,7 +230,11 @@ class ReviewedRunner(ExternalCommandRunner):
             raise RuntimeError('约定的分析产物为空或不是文件')
         self.execute(context,[str(self.executable),'-B','-s',str(ROOT/'bakend/app/execution/validate_products.py'),str(output)],
                      environment=env,cwd=context.output_directory,log_path=context.output_directory/'validation.log')
-        artifacts = [self.artifact(context, p, self.spec.get('artifact_types',{}).get(p.relative_to(output).as_posix(),'generated_file'), p.name,
+        # Type collected files from the run's immutable Method snapshot, not
+        # from a possibly newer live adapter catalog.
+        output_types = {s.path_template.removeprefix('results/'): s.type
+                        for s in context.method.output_slots if s.path_template.startswith('results/')}
+        artifacts = [self.artifact(context, p, output_types.get(p.relative_to(output).as_posix(),'generated_file'), p.name,
             metadata={'output_slot_id':'file_'+re.sub('[^a-zA-Z0-9_]+','_',p.relative_to(output).as_posix())} if p.relative_to(output).as_posix() in required else None)
                      for p in paths if p.stat().st_size]
         if not artifacts:

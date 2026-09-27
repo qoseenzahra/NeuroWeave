@@ -107,7 +107,7 @@
       "id": "table",
       "type": "generated_file",
       "label": "table",
-      "description": "Native command output, saved in this run’s output directory. Measure shape and intensity statistics of labelled regions.",
+      "description": "Native command output, saved in this run’s output directory. Measure shape and intensity statistics of labelled regions. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
       "format": ".csv",
       "primary": true,
       "path_template": "geometry.csv",

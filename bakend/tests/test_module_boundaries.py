@@ -1,0 +1,210 @@
+"""Refactor contracts: preserve external behavior while enforcing one-way dependencies."""
+
+import ast
+import hashlib
+import json
+from pathlib import Path
+
+import pytest
+from app.application import create_app
+from app.bootstrap import build_services
+from app.settings import Settings
+from app.workflow_models import Workflow
+from app.workspace_models import WorkspaceCreate
+from fastapi.routing import APIRoute
+from fastapi.testclient import TestClient
+
+ROOT = Path(__file__).resolve().parents[2]
+APP = ROOT / "bakend/app"
+FIXTURES = Path(__file__).parent / "fixtures"
+
+
+def imported_modules(path):
+    return {
+        n.module or ""
+        for n in ast.walk(ast.parse(path.read_text(encoding="utf-8")))
+        if isinstance(n, ast.ImportFrom)
+    } | {
+        alias.name
+        for n in ast.walk(ast.parse(path.read_text(encoding="utf-8")))
+        if isinstance(n, ast.Import)
+        for alias in n.names
+    }
+
+
+@pytest.mark.parametrize(
+    "relative, forbidden",
+    [
+        (
+            "llm",
+            {
+                "chat_service",
+                "local_store",
+                "workflow_service",
+                "pipeline_library",
+                "main",
+                "fastapi",
+            },
+        ),
+        (
+            "workflows",
+            {"workflow_service", "main", "application", "bootstrap", "fastapi"},
+        ),
+        (
+            "pipeline_compiler.py",
+            {
+                "local_store",
+                "pipeline_library",
+                "pipeline_repository",
+                "chat_service",
+                "main",
+                "fastapi",
+            },
+        ),
+        (
+            "pipeline_models.py",
+            {"local_store", "pipeline_library", "pipeline_compiler", "main", "fastapi"},
+        ),
+    ],
+)
+def test_inner_components_do_not_import_their_controllers(relative, forbidden):
+    path = APP / relative
+    files = path.glob("*.py") if path.is_dir() else [path]
+    for file in files:
+        imports = {module.split(".")[-1] for module in imported_modules(file)}
+        assert not imports & forbidden, (file.name, imports & forbidden)
+
+
+def test_pipeline_composition_and_pure_compiler_have_no_fake_initialization():
+    tree = ast.parse((APP / "pipeline_library.py").read_text(encoding="utf-8"))
+    library = next(
+        n
+        for n in tree.body
+        if isinstance(n, ast.ClassDef) and n.name == "PipelineLibrary"
+    )
+    assert not library.bases, (
+        "Authoring and persistence are composed, not mixins with implicit attributes"
+    )
+    source = (APP / "method_planning.py").read_text(encoding="utf-8")
+    assert "object.__new__" not in source
+    assert "PipelineCompiler(registry)" in source
+
+
+def test_model_policy_prompts_preserve_the_pre_refactor_contract():
+    expected = json.loads((FIXTURES / "refactor_prompt_contract.json").read_text())
+    seen = {}
+    for path in (APP / "llm").glob("*.py"):
+        for node in ast.parse(path.read_text(encoding="utf-8")).body:
+            if (
+                isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+                and node.name in expected
+            ):
+                docstring = (
+                    node.body[0].value if isinstance(node.body[0], ast.Expr) else None
+                )
+                strings = [
+                    value.value
+                    for value in ast.walk(node)
+                    if isinstance(value, ast.Constant)
+                    and isinstance(value.value, str)
+                    and len(value.value) > 80
+                    and value is not docstring
+                ]
+                seen[node.name] = hashlib.sha256(
+                    json.dumps(strings, ensure_ascii=False).encode()
+                ).hexdigest()
+    assert seen == expected, "Review prompt changes separately from module moves"
+
+
+@pytest.fixture
+def application(tmp_path, monkeypatch):
+    (tmp_path / "datasets").mkdir()
+    monkeypatch.setenv("WORKSPACE_ALLOWED_ROOTS", str(tmp_path))
+    monkeypatch.setenv("WORKSPACE_DEFAULT_ROOT", str(tmp_path))
+    monkeypatch.setenv("LOCALFLOW_DATA_ROOTS", str(tmp_path / "datasets"))
+    monkeypatch.setenv("LOCALFLOW_EXECUTION_ENABLED", "false")
+    monkeypatch.setenv("LOCALFLOW_LLM_BASE_URL", "")
+    settings = Settings(
+        ROOT,
+        ROOT / "bakend",
+        ROOT / "skills",
+        tmp_path / "runtime/api.db",
+        tmp_path / "outputs",
+        (),
+    )
+    services = build_services(settings)
+    app = create_app(services)
+    with TestClient(app) as client:
+        yield app, client, services
+
+
+def test_split_routes_preserve_paths_status_codes_and_response_models(application):
+    app, _, _ = application
+    routes = {
+        (method, route.path): route
+        for route in app.routes
+        if isinstance(route, APIRoute)
+        for method in route.methods
+    }
+    expected = json.loads((FIXTURES / "refactor_api_contract.json").read_text())
+    for item in expected:
+        route = routes[item["method"], item["path"]]
+        assert (route.status_code or 200) == item["status"], item
+        if item["response"]:
+            assert route.response_model.__name__ == item["response"], item
+    keys = [
+        (method, route.path)
+        for route in app.routes
+        if isinstance(route, APIRoute)
+        for method in route.methods
+    ]
+    assert len(keys) == len(set(keys)), "An endpoint must not be registered twice"
+
+
+def test_output_adapter_keeps_revision_and_conversation_binding_consistent(
+    application, tmp_path
+):
+    _, client, services = application
+    target = tmp_path / "managed"
+    target.mkdir()
+    workspace = services.workspace_service.create(
+        WorkspaceCreate(name="Managed", root_path=str(target))
+    )
+    conversation = services.conversation_service.create("Output change")
+    workflow = Workflow(
+        workflow_id="wf_refactor",
+        template_id="refactor",
+        title="Refactor",
+        summary="",
+        original_request="test",
+        status="awaiting_method_choice",
+        steps=[],
+        created_at="2026-09-27",
+        updated_at="2026-09-27",
+    )
+    services.local_store.save_workflow(workflow, event_type="workflow_created")
+    response = client.patch(
+        "/api/workflows/wf_refactor/output",
+        json={
+            "workspace_id": workspace.id,
+            "conversation_id": conversation.conversation_id,
+            "expected_revision": 1,
+            "relative_path": ".",
+        },
+    )
+    assert response.status_code == 200, response.text
+    assert response.json()["revision"] == 2
+    assert response.json()["workspace_id"] == workspace.id
+    assert (
+        services.local_store.get_conversation(conversation.conversation_id).workspace_id
+        == workspace.id
+    )
+    assert services.local_store.get_workflow("wf_refactor").workspace_root_path == str(
+        target
+    )
+    conflict = client.patch(
+        "/api/workflows/wf_refactor/output",
+        json={"expected_revision": 1, "relative_path": "."},
+    )
+    assert conflict.status_code == 409
+    assert services.local_store.get_workflow("wf_refactor").revision == 2

@@ -1,4 +1,4 @@
-import { request } from '../../api/http';
+import { submitTurn } from './chatTurns';
 import type { CapabilityRecommendation, CapabilityRoutingTrace } from './chatMessages';
 import type { InteractionMode } from '../conversations/conversationTypes';
 import type { Workflow } from '../workflows/workflowTypes';
@@ -16,6 +16,7 @@ export type ChatRequest = {
 };
 
 export type ChatResponse = {
+  planning_offer?:string|null;
   type?: 'done' | 'recommendation' | 'workflow';
   content?: string;
   detail?: string;
@@ -35,8 +36,5 @@ export type ChatResponse = {
 };
 
 export function sendChat(payload: ChatRequest): Promise<ChatResponse> {
-  return request<ChatResponse>('/api/chat', {
-    method: 'POST',
-    body: JSON.stringify(payload)
-  });
+  return submitTurn(payload);
 }

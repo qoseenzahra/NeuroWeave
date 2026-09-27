@@ -6,7 +6,8 @@
     "analysis_input"
   ],
   "output_types": [
-    "generated_folder"
+    "generated_folder",
+    "generated_file"
   ],
   "requires_features": [],
   "parameters": [],
@@ -63,8 +64,8 @@
       "id": "file_surface_npz",
       "type": "generated_file",
       "label": "surface.npz",
-      "description": "surface.npz: output of FreeSurfer 表面与分区读取. Relative run path: results/surface.npz.",
-      "format": "",
+      "description": "surface.npz: output of FreeSurfer surface and parcellation reading. Relative run path: results/surface.npz. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
+      "format": ".npz",
       "primary": false,
       "path_template": "results/surface.npz",
       "generated_when": {}

@@ -6,7 +6,8 @@
     "analysis_input"
   ],
   "output_types": [
-    "generated_folder"
+    "generated_folder",
+    "generated_file"
   ],
   "requires_features": [],
   "parameters": [
@@ -202,8 +203,8 @@
       "id": "file_metrics_json",
       "type": "generated_file",
       "label": "metrics.json",
-      "description": "metrics.json: output of 脑龄预测与偏差校正. Relative run path: results/metrics.json.",
-      "format": "",
+      "description": "metrics.json: output of brain age prediction and bias correction. Relative run path: results/metrics.json. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
+      "format": ".json",
       "primary": false,
       "path_template": "results/metrics.json",
       "generated_when": {}
@@ -212,8 +213,8 @@
       "id": "file_predictions_csv",
       "type": "generated_file",
       "label": "predictions.csv",
-      "description": "predictions.csv: output of 脑龄预测与偏差校正. Relative run path: results/predictions.csv.",
-      "format": "",
+      "description": "predictions.csv: output of brain age prediction and bias correction. Relative run path: results/predictions.csv. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
+      "format": ".csv",
       "primary": false,
       "path_template": "results/predictions.csv",
       "generated_when": {}

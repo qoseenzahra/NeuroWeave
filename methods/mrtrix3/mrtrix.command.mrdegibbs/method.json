@@ -440,7 +440,7 @@
       "id": "out",
       "type": "imaging_input",
       "label": "输出：Gibbs 振铃校正",
-      "description": "the output image. 文件名由平台固定在本次输出目录内。",
+      "description": "the output image. The filename is fixed by the platform within this output directory. The output meaning depends on the input and selected operation. This generic image port does not certify anatomical labels, diffusion orientation, tissue fractions or spatial alignment.",
       "format": ".mif",
       "primary": true,
       "path_template": "degibbs.mif",

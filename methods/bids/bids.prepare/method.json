@@ -3,9 +3,7 @@
   "description": "把已有 NIfTI/BIDS 数据复制到隔离输出目录，补齐 dataset_description.json、清理敏感 sidecar 字段并执行基础结构校验。DICOM 应先使用 dcm2niix 转换。",
   "runner_id": "bids.prepare",
   "input_types": [
-    "dataset_folder",
-    "raw_dwi",
-    "bids_dwi"
+    "dataset_folder"
   ],
   "output_types": [
     "bids_dwi",
@@ -114,8 +112,8 @@
       "id": "validation_report",
       "type": "generated_file",
       "label": "BIDS 校验报告",
-      "description": "受试者数、影像数、匿名化字段数和结构问题。",
-      "format": "",
+      "description": "Number of subjects, number of images, number of anonymized fields, and structural issues. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
+      "format": ".json",
       "primary": false,
       "path_template": "bids-validation.json",
       "generated_when": {}
@@ -130,7 +128,7 @@
       "line_end": null
     },
     {
-      "path": "skills/bids-organizer/SKILL.md",
+      "path": "skills/bids-organizer/skill.json",
       "label": "Skill 使用说明",
       "kind": "skill",
       "line_start": 1,

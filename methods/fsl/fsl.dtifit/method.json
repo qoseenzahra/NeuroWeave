@@ -3,7 +3,9 @@
   "description": "复用 FSL 环境完成经典 DTI 张量拟合。",
   "runner_id": "fsl.dtifit",
   "input_types": [
-    "preprocessed_dwi"
+    "preprocessed_dwi",
+    "brain_mask",
+    "gradient_table"
   ],
   "output_types": [
     "diffusion_metrics"
@@ -274,7 +276,7 @@
       "line_end": null
     },
     {
-      "path": "skills/fsl-tool/SKILL.md",
+      "path": "skills/fsl-tool/skill.json",
       "label": "Skill 使用说明",
       "kind": "skill",
       "line_start": 1,

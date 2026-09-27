@@ -75,6 +75,7 @@ export async function request<T>(path: string, init: RequestInit = {}): Promise<
     ...init,
     headers: {
       'Accept-Language': useLanguageStore.getState().language,
+      'X-NeuroWeave-Contract': '2',
       ...(init.body ? { 'Content-Type': 'application/json' } : {}),
       ...init.headers
     }

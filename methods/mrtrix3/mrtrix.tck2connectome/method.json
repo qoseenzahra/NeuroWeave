@@ -3,7 +3,10 @@
   "description": "把流线与脑区分区映射为结构连接矩阵，可选使用 SIFT2 权重或标量边权。",
   "runner_id": "mrtrix.tck2connectome",
   "input_types": [
-    "tractogram"
+    "tractogram",
+    "parcellation_image",
+    "streamline_weights",
+    "scalar_image"
   ],
   "output_types": [
     "connectome",
@@ -254,7 +257,7 @@
       "id": "parcellation",
       "type": "parcellation_image",
       "label": "脑区分区图",
-      "description": "与流线空间兼容的整数标签影像。",
+      "description": "Integer-valued node parcellation in the same physical coordinate space as the tractogram. Verify subject, atlas, alignment and label-to-node mapping. Native anatomical labels may need LUT remapping and registration with nearest-neighbour resampling; tissue classes, 5TT and statistical maps are not substitutes.",
       "required": true,
       "required_when": {},
       "cardinality": "one",
@@ -262,7 +265,9 @@
       "formats": [
         ".nii",
         ".nii.gz",
-        ".mif"
+        ".mif",
+        ".mgz",
+        ".mgh"
       ],
       "companions": [],
       "source_options": [
@@ -336,7 +341,7 @@
       "type": "connectome",
       "label": "结构连接矩阵",
       "description": "ROI×ROI CSV 矩阵。",
-      "format": "",
+      "format": ".csv",
       "primary": true,
       "path_template": "connectome.csv",
       "generated_when": {}
@@ -345,8 +350,8 @@
       "id": "assignments",
       "type": "generated_file",
       "label": "流线节点分配",
-      "description": "每条流线分配到的节点对。",
-      "format": "",
+      "description": "The node pair assigned to each streamline. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
+      "format": ".txt",
       "primary": false,
       "path_template": "assignments.txt",
       "generated_when": {}
@@ -364,7 +369,7 @@
   ],
   "source_references": [
     {
-      "path": "skills/dwi-skill/SKILL.md",
+      "path": "skills/dwi-skill/skill.json",
       "label": "DWI Skill",
       "kind": "skill",
       "line_start": 1,

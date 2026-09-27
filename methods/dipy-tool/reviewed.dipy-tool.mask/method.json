@@ -3,10 +3,13 @@
   "description": "Reference DIPY snippet for DWI loading and brain mask generation。 Inputs: dwi: DWI (file); bval: bval (file); bvec: bvec (file). Registered outputs: results/brain_mask.nii.gz.",
   "runner_id": "reviewed.dipy-tool.mask",
   "input_types": [
-    "analysis_input"
+    "preprocessed_dwi",
+    "b_values",
+    "b_vectors"
   ],
   "output_types": [
-    "generated_folder"
+    "generated_folder",
+    "brain_mask"
   ],
   "requires_features": [],
   "parameters": [
@@ -109,7 +112,7 @@
       "type": "brain_mask",
       "label": "brain_mask.nii.gz",
       "description": "brain_mask.nii.gz: output of DWI 载入与脑掩膜. Relative run path: results/brain_mask.nii.gz.",
-      "format": "",
+      "format": ".nii.gz",
       "primary": false,
       "path_template": "results/brain_mask.nii.gz",
       "generated_when": {}

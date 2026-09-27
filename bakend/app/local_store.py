@@ -14,8 +14,8 @@ from .conversation_models import (
     ConversationRecord,
 )
 from .dataset_models import DatasetRecord
-from .run_models import WorkflowRun
 from .run_store import RunStoreMixin
+from .store_schema import initialize_store
 from .workflow_models import Workflow
 
 
@@ -26,7 +26,7 @@ class LocalStore(RunStoreMixin):
         self.database_path = database_path
         self.database_path.parent.mkdir(parents=True, exist_ok=True)
         self._lock = RLock()
-        self._initialize()
+        initialize_store(self._connect)
 
     @contextmanager
     def _connect(self):
@@ -43,163 +43,15 @@ class LocalStore(RunStoreMixin):
         finally:
             connection.close()
 
-    def _initialize(self) -> None:
-        statements = [
-            """
-            CREATE TABLE IF NOT EXISTS conversations (
-                conversation_id TEXT PRIMARY KEY,
-                title TEXT NOT NULL,
-                archived INTEGER NOT NULL DEFAULT 0,
-                summary TEXT NOT NULL DEFAULT '',
-                summary_version INTEGER NOT NULL DEFAULT 0,
-                summarized_through_sequence INTEGER NOT NULL DEFAULT 0,
-                created_at TEXT NOT NULL,
-                updated_at TEXT NOT NULL
-            )
-            """,
-            """
-            CREATE TABLE IF NOT EXISTS conversation_messages (
-                message_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                conversation_id TEXT NOT NULL,
-                sequence INTEGER NOT NULL,
-                role TEXT NOT NULL CHECK(role IN ('user', 'assistant')),
-                content TEXT NOT NULL,
-                estimated_tokens INTEGER NOT NULL,
-                metadata_json TEXT NOT NULL,
-                created_at TEXT NOT NULL,
-                UNIQUE(conversation_id, sequence),
-                FOREIGN KEY(conversation_id) REFERENCES conversations(conversation_id)
-                    ON DELETE CASCADE
-            )
-            """,
-            """
-            CREATE INDEX IF NOT EXISTS idx_conversations_updated_at
-            ON conversations(updated_at DESC)
-            """,
-            """
-            CREATE TABLE IF NOT EXISTS datasets (
-                dataset_id TEXT PRIMARY KEY,
-                root_id TEXT NOT NULL,
-                relative_path TEXT NOT NULL,
-                display_name TEXT NOT NULL,
-                payload_json TEXT NOT NULL,
-                created_at TEXT NOT NULL,
-                updated_at TEXT NOT NULL
-            )
-            """,
-            """
-            CREATE UNIQUE INDEX IF NOT EXISTS idx_datasets_root_path
-            ON datasets(root_id, relative_path)
-            """,
-            """
-            CREATE TABLE IF NOT EXISTS workflows (
-                workflow_id TEXT PRIMARY KEY,
-                dataset_id TEXT,
-                status TEXT NOT NULL,
-                revision INTEGER NOT NULL,
-                payload_json TEXT NOT NULL,
-                created_at TEXT NOT NULL,
-                updated_at TEXT NOT NULL,
-                FOREIGN KEY(dataset_id) REFERENCES datasets(dataset_id)
-            )
-            """,
-            """
-            CREATE INDEX IF NOT EXISTS idx_workflows_dataset_updated
-            ON workflows(dataset_id, updated_at DESC)
-            """,
-            """
-            CREATE TABLE IF NOT EXISTS workflow_events (
-                event_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                workflow_id TEXT NOT NULL,
-                revision INTEGER NOT NULL,
-                event_type TEXT NOT NULL,
-                payload_json TEXT NOT NULL,
-                created_at TEXT NOT NULL,
-                FOREIGN KEY(workflow_id) REFERENCES workflows(workflow_id) ON DELETE CASCADE
-            )
-            """,
-            """
-            CREATE INDEX IF NOT EXISTS idx_workflow_events_workflow_revision
-            ON workflow_events(workflow_id, revision)
-            """,
-            """
-            CREATE TABLE IF NOT EXISTS runs (
-                run_id TEXT PRIMARY KEY,
-                workflow_id TEXT NOT NULL,
-                workflow_revision INTEGER NOT NULL,
-                status TEXT NOT NULL,
-                payload_json TEXT NOT NULL,
-                created_at TEXT NOT NULL,
-                updated_at TEXT NOT NULL,
-                FOREIGN KEY(workflow_id) REFERENCES workflows(workflow_id)
-            )
-            """,
-            """
-            CREATE INDEX IF NOT EXISTS idx_runs_workflow_updated
-            ON runs(workflow_id, updated_at DESC)
-            """,
-            """
-            CREATE INDEX IF NOT EXISTS idx_runs_active_status
-            ON runs(status, updated_at DESC)
-            WHERE status IN ('queued', 'running', 'cancel_requested')
-            """,
-            """
-            CREATE TABLE IF NOT EXISTS run_events (
-                event_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                run_id TEXT NOT NULL,
-                event_type TEXT NOT NULL,
-                level TEXT NOT NULL,
-                message TEXT NOT NULL,
-                progress REAL,
-                step_id TEXT,
-                payload_json TEXT NOT NULL,
-                created_at TEXT NOT NULL,
-                FOREIGN KEY(run_id) REFERENCES runs(run_id) ON DELETE CASCADE
-            )
-            """,
-            """
-            CREATE INDEX IF NOT EXISTS idx_run_events_run_event
-            ON run_events(run_id, event_id)
-            """,
-        ]
-        with self._connect() as connection:
-            connection.execute("PRAGMA journal_mode = WAL")
-            for statement in statements:
-                connection.execute(statement)
-            conversation_columns = {
-                row["name"]
-                for row in connection.execute("PRAGMA table_info(conversations)").fetchall()
-            }
-            if "archived" not in conversation_columns:
-                connection.execute(
-                    "ALTER TABLE conversations ADD COLUMN archived INTEGER NOT NULL DEFAULT 0"
-                )
-            if "workspace_id" not in conversation_columns:
-                connection.execute("ALTER TABLE conversations ADD COLUMN workspace_id TEXT")
-            connection.execute(
-                "CREATE INDEX IF NOT EXISTS idx_conversations_archived_updated_id "
-                "ON conversations(archived, updated_at DESC, conversation_id DESC)"
-            )
-            run_columns = {row["name"] for row in connection.execute("PRAGMA table_info(runs)")}
-            for name in ("storage_version", "state_revision"):
-                if name not in run_columns:
-                    connection.execute(f"ALTER TABLE runs ADD COLUMN {name} INTEGER NOT NULL DEFAULT 0")
-            connection.execute("""CREATE TABLE IF NOT EXISTS run_plans (
-                run_id TEXT PRIMARY KEY REFERENCES runs(run_id) ON DELETE CASCADE, payload_json TEXT NOT NULL)""")
-            connection.execute("""CREATE TABLE IF NOT EXISTS run_steps (
-                run_id TEXT NOT NULL REFERENCES runs(run_id) ON DELETE CASCADE, step_id TEXT NOT NULL,
-                position INTEGER NOT NULL, payload_json TEXT NOT NULL, state_revision INTEGER NOT NULL,
-                PRIMARY KEY(run_id,step_id))""")
-            connection.execute("CREATE INDEX IF NOT EXISTS idx_run_steps_revision ON run_steps(run_id,state_revision)")
-            connection.execute("""CREATE TABLE IF NOT EXISTS run_artifact_order (
-                run_id TEXT NOT NULL REFERENCES runs(run_id) ON DELETE CASCADE,
-                artifact_id TEXT NOT NULL, position INTEGER NOT NULL,
-                PRIMARY KEY(run_id,artifact_id))""")
-            connection.execute("""CREATE TABLE IF NOT EXISTS execution_drafts (
-                workflow_id TEXT PRIMARY KEY REFERENCES workflows(workflow_id) ON DELETE CASCADE,
-                workflow_revision INTEGER NOT NULL, draft_revision INTEGER NOT NULL,
-                payload_json TEXT NOT NULL, updated_at TEXT NOT NULL)""")
-            connection.execute("PRAGMA optimize")
+    def connection(self):
+        """Repository read session; caller may not retain the connection after exit."""
+        return self._connect()
+
+    @contextmanager
+    def transaction(self):
+        """Serialize a repository read-check-write operation and commit it atomically."""
+        with self._lock, self._connect() as connection:
+            yield connection
 
     def create_conversation(self, conversation: ConversationRecord) -> None:
         with self._lock, self._connect() as connection:
@@ -224,31 +76,60 @@ class LocalStore(RunStoreMixin):
 
     def execution_draft(self, workflow_id: str) -> dict[str, Any]:
         with self._connect() as connection:
-            row = connection.execute("SELECT * FROM execution_drafts WHERE workflow_id=?", (workflow_id,)).fetchone()
+            row = connection.execute(
+                "SELECT * FROM execution_drafts WHERE workflow_id=?", (workflow_id,)
+            ).fetchone()
             if row:
-                return dict(execution=json.loads(row["payload_json"]), draft_revision=row["draft_revision"],
-                            workflow_revision=row["workflow_revision"])
+                return dict(
+                    execution=json.loads(row["payload_json"]),
+                    draft_revision=row["draft_revision"],
+                    workflow_revision=row["workflow_revision"],
+                )
         latest = self.list_runs(workflow_id=workflow_id, limit=1, summary=True)
-        return dict(execution=latest[0].get("execution") if latest else None, draft_revision=0,
-                    workflow_revision=latest[0]["workflow_revision"] if latest else None)
+        return dict(
+            execution=latest[0].get("execution") if latest else None,
+            draft_revision=0,
+            workflow_revision=latest[0]["workflow_revision"] if latest else None,
+        )
 
-    def save_execution_draft(self, workflow_id, workflow_revision, draft_revision, execution):
+    def save_execution_draft(
+        self, workflow_id, workflow_revision, draft_revision, execution
+    ):
         with self._lock, self._connect() as connection:
-            workflow = connection.execute("SELECT revision FROM workflows WHERE workflow_id=?", (workflow_id,)).fetchone()
+            workflow = connection.execute(
+                "SELECT revision FROM workflows WHERE workflow_id=?", (workflow_id,)
+            ).fetchone()
             if workflow is None:
                 raise KeyError(workflow_id)
             if workflow["revision"] != workflow_revision:
                 raise ValueError("流程已更新，请重新载入后保存运行设置")
-            current = connection.execute("SELECT draft_revision FROM execution_drafts WHERE workflow_id=?", (workflow_id,)).fetchone()
+            current = connection.execute(
+                "SELECT draft_revision FROM execution_drafts WHERE workflow_id=?",
+                (workflow_id,),
+            ).fetchone()
             if (current["draft_revision"] if current else 0) != draft_revision:
                 raise ValueError("运行设置已在其他页面更新，请重新载入后修改")
-            connection.execute("""INSERT INTO execution_drafts VALUES(?,?,?,?,?)
+            connection.execute(
+                """INSERT INTO execution_drafts VALUES(?,?,?,?,?)
                 ON CONFLICT(workflow_id) DO UPDATE SET workflow_revision=excluded.workflow_revision,
                 draft_revision=excluded.draft_revision,payload_json=excluded.payload_json,updated_at=excluded.updated_at""",
-                (workflow_id,workflow_revision,draft_revision+1,execution.model_dump_json(),datetime.now(timezone.utc).isoformat()))
-        return dict(execution=execution.model_dump(mode="json"),draft_revision=draft_revision+1,workflow_revision=workflow_revision)
+                (
+                    workflow_id,
+                    workflow_revision,
+                    draft_revision + 1,
+                    execution.model_dump_json(),
+                    datetime.now(timezone.utc).isoformat(),
+                ),
+            )
+        return dict(
+            execution=execution.model_dump(mode="json"),
+            draft_revision=draft_revision + 1,
+            workflow_revision=workflow_revision,
+        )
 
-    def get_conversation(self, conversation_id: str | None) -> ConversationRecord | None:
+    def get_conversation(
+        self, conversation_id: str | None
+    ) -> ConversationRecord | None:
         if not conversation_id:
             return None
         with self._connect() as connection:
@@ -280,7 +161,9 @@ class LocalStore(RunStoreMixin):
         if before_updated_at is not None and before_conversation_id is not None:
             cursor_filter = "AND (c.updated_at, c.conversation_id) < (?, ?)"
             parameters.extend((before_updated_at, before_conversation_id))
-        parameters.extend((normalized_query, search_pattern, search_pattern, safe_limit))
+        parameters.extend(
+            (normalized_query, search_pattern, search_pattern, safe_limit)
+        )
         with self._connect() as connection:
             rows = connection.execute(
                 f"""
@@ -391,6 +274,7 @@ class LocalStore(RunStoreMixin):
         estimated_tokens: int,
         metadata: dict[str, Any],
         created_at: str,
+        completed_turn: tuple[str, str] | None = None,
     ) -> ConversationMessageRecord:
         with self._lock, self._connect() as connection:
             sequence = int(
@@ -425,6 +309,13 @@ class LocalStore(RunStoreMixin):
                 (created_at, conversation_id),
             )
             message_id = int(cursor.lastrowid)
+            if completed_turn:
+                # Commit the assistant message and retry result together. A server
+                # restart during optional history compaction must not repeat work.
+                connection.execute(
+                    "UPDATE chat_turns SET status='succeeded',message='处理完成',result_json=?,error_json=NULL,updated_at=? WHERE id=?",
+                    (completed_turn[1], created_at, completed_turn[0]),
+                )
         return ConversationMessageRecord(
             message_id=message_id,
             conversation_id=conversation_id,
@@ -435,6 +326,14 @@ class LocalStore(RunStoreMixin):
             metadata=metadata,
             created_at=created_at,
         )
+
+    def conversation_turn_sequence(self, conversation_id, turn_id):
+        with self._connect() as connection:
+            row = connection.execute(
+                "SELECT sequence FROM conversation_messages WHERE conversation_id=? AND role='user' AND json_extract(metadata_json,'$.client_turn_id')=? LIMIT 1",
+                (conversation_id, turn_id),
+            ).fetchone()
+        return row[0] if row else None
 
     def conversation_messages(
         self,
@@ -478,13 +377,21 @@ class LocalStore(RunStoreMixin):
     def conversation_context(self, conversation_id):
         result = {}
         with self._connect() as connection:
-            for key in ("workflow_id", "dataset_id", "interaction_mode", "selected_skills"):
+            for key in (
+                "workflow_id",
+                "dataset_id",
+                "interaction_mode",
+                "selected_skills",
+            ):
                 # Ordinary assistant replies store workflow_id=null; they do not
                 # unlock or clear an earlier workflow. Dataset null is explicit.
                 condition = "= 'text'" if key == "workflow_id" else "IS NOT NULL"
-                row = connection.execute(f"""SELECT metadata_json FROM conversation_messages
+                row = connection.execute(
+                    f"""SELECT metadata_json FROM conversation_messages
                     WHERE conversation_id=? AND json_type(metadata_json, ?) {condition}
-                    ORDER BY sequence DESC LIMIT 1""", (conversation_id, "$."+key)).fetchone()
+                    ORDER BY sequence DESC LIMIT 1""",
+                    (conversation_id, "$." + key),
+                ).fetchone()
                 if row:
                     result[key] = json.loads(row["metadata_json"])[key]
         return result
@@ -541,7 +448,9 @@ class LocalStore(RunStoreMixin):
                 ),
             )
 
-    def find_dataset_by_path(self, root_id: str, relative_path: str) -> DatasetRecord | None:
+    def find_dataset_by_path(
+        self, root_id: str, relative_path: str
+    ) -> DatasetRecord | None:
         with self._connect() as connection:
             row = connection.execute(
                 "SELECT payload_json FROM datasets WHERE root_id = ? AND relative_path = ?",
@@ -713,3 +622,17 @@ class LocalStore(RunStoreMixin):
                 level="error",
             )
         return len(runs)
+
+    def workflow_index(
+        self, *, offset: int = 0, limit: int = 30, query: str = ""
+    ) -> dict:
+        with self._connect() as db:
+            rows = db.execute(
+                """SELECT w.workflow_id,w.status,w.updated_at,json_extract(w.payload_json,'$.title') AS title,
+                (SELECT COUNT(*) FROM runs r WHERE r.workflow_id=w.workflow_id) AS run_count,
+                (SELECT status FROM runs r WHERE r.workflow_id=w.workflow_id ORDER BY created_at DESC LIMIT 1) AS latest_run_status
+                FROM workflows w WHERE instr(lower(json_extract(w.payload_json,'$.title')),lower(?))>0
+                ORDER BY w.updated_at DESC,w.workflow_id LIMIT ? OFFSET ?""",
+                (query, limit + 1, offset),
+            ).fetchall()
+        return {"items": [dict(r) for r in rows[:limit]], "has_more": len(rows) > limit}

@@ -57,7 +57,7 @@ def historical_binding_problems(binding: InputBinding, *, verify_hash=False) -> 
     if binding.binding_mode == "per_sample" and not history.allow_partial and len(selected_matches) != len(binding.sample_matches):
         return ["历史输出尚未覆盖全部样本，需明确选择仅使用匹配样本"]
     paths = ([match.absolute_path for match in selected_matches]
-             if binding.binding_mode == "per_sample" else [binding.absolute_path])
+             if binding.binding_mode == "per_sample" else binding.absolute_paths or [binding.absolute_path])
     refs = history.artifacts
     if (binding.source != "existing_path" or history.dataset_id != binding.dataset_id
             or not refs or len(refs) != len(paths)

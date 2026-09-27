@@ -6,7 +6,8 @@
     "analysis_input"
   ],
   "output_types": [
-    "generated_folder"
+    "generated_folder",
+    "generated_file"
   ],
   "requires_features": [],
   "parameters": [],
@@ -45,8 +46,8 @@
       "id": "file_features_npz",
       "type": "generated_file",
       "label": "features.npz",
-      "description": "features.npz: output of 原脚本 CSP、频带、Hjorth 与熵特征. Relative run path: results/features.npz.",
-      "format": "",
+      "description": "features.npz: output of the original script CSP, frequency band, Hjorth, and entropy features. Relative run path: results/features.npz. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
+      "format": ".npz",
       "primary": false,
       "path_template": "results/features.npz",
       "generated_when": {}

@@ -85,7 +85,7 @@ def binding_scope_errors(contract: TaskContract, workflow) -> list[str]:
         for binding in step.input_bindings.values():
             if binding.source == "upstream_output":
                 continue
-            paths = [binding.absolute_path or binding.relative_path]
+            paths = binding.absolute_paths or [binding.absolute_path or binding.relative_path]
             if binding.sample_matches:
                 paths = [m.absolute_path for m in binding.sample_matches]
             if binding.history:

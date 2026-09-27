@@ -67,7 +67,7 @@
       "id": "results",
       "type": "generated_folder",
       "label": "分析结果",
-      "description": "",
+      "description": "Result directory for FSL 应用形变. Contains this operation's generated files, including results/image.nii.gz; ancillary files remain available here. Relative run path: results/.",
       "format": "",
       "primary": true,
       "path_template": "results/",
@@ -75,10 +75,10 @@
     },
     {
       "id": "file_image_nii_gz",
-      "type": "generated_file",
+      "type": "registered_image",
       "label": "image.nii.gz",
-      "description": "",
-      "format": "",
+      "description": "image.nii.gz: output of FSL 应用形变. Relative run path: results/image.nii.gz.",
+      "format": ".nii.gz",
       "primary": false,
       "path_template": "results/image.nii.gz",
       "generated_when": {}
@@ -115,7 +115,7 @@
       },
       "workspace": "execute",
       "method_ref": "reviewed.fsl-tool.applywarp",
-      "method_version": "1",
+      "method_version": "2",
       "capability": "skill.fsl-tool"
     }
   ],

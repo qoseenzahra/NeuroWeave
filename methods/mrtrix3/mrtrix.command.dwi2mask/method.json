@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "id": "mrtrix.command.dwi2mask",
-  "version": "1",
+  "version": "2",
   "kind": "method",
   "label": "MRtrix3 dwi2mask",
   "description": "Generates a whole brain mask from a DWI image\nAll diffusion weighted and b=0 volumes are used to obtain a mask that includes both brain tissue and CSF.\nIn a second step peninsula-like extensions, where the peninsula itself is wider than the bridge connecting it to the mask, are removed. This may help removing artefacts and non-brain parts, e.g. eyes, from the mask.",
@@ -101,7 +101,7 @@
   "output_slots": [
     {
       "id": "output",
-      "type": "imaging_input",
+      "type": "brain_mask",
       "label": "output",
       "description": "the output whole-brain mask image",
       "format": ".mif",
@@ -113,7 +113,7 @@
     "generated_file"
   ],
   "output_types": [
-    "imaging_input"
+    "brain_mask"
   ],
   "source_references": [
     {

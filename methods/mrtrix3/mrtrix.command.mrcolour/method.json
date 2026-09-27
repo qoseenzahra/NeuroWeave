@@ -161,7 +161,7 @@
       "id": "output",
       "type": "imaging_input",
       "label": "output",
-      "description": "the output image",
+      "description": "the output image The output meaning depends on the input and selected operation. This generic image port does not certify anatomical labels, diffusion orientation, tissue fractions or spatial alignment.",
       "format": ".mif",
       "path_template": "output.mif"
     }

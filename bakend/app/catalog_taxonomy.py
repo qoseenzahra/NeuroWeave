@@ -114,7 +114,8 @@ def catalog_entries(definitions, user_pipelines=()):
         method_entries[method.id] = dict(id=method.id, kind='method', label=method.label,
             description=method.description, version=method.version, category_ids=list(category),
             category=category_labels(category), software=[software_for(method, method_paths.get(method.id, ''))],
-            input_types=method.input_types, output_types=method.output_types)
+            input_types=method.input_types, output_types=method.output_types,
+            omitted_option_count=len(method.execution.get('contract',{}).get('omitted_options',{})),parameter_count=len(method.parameters))
     latest = {p['id']: p for p in user_pipelines}
     pipeline_entries = {}
     for pipeline in [*definitions.pipelines.values(), *latest.values()]:
@@ -124,7 +125,7 @@ def catalog_entries(definitions, user_pipelines=()):
         # conversion step. Additional categories remain searchable facets.
         category = members[-1]['category_ids'] if members else ['utilities', 'guidance']
         pipeline_entries[pipeline['id']] = dict(id=pipeline['id'], kind='pipeline', label=pipeline['label'],
-            description=pipeline.get('description', ''), version=pipeline['version'],
+            description=pipeline.get('description', ''), version=pipeline['version'],status=pipeline.get('status','published'),
             category_ids=category, category=category_labels(category),
             categories=[list(c) for c in dict.fromkeys(tuple(m['category_ids']) for m in members)] or [category],
             software=sorted({s for m in members for s in m['software']}), step_count=len(pipeline['steps']),

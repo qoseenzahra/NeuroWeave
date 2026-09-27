@@ -240,7 +240,7 @@
   ],
   "source_references": [
     {
-      "path": "skills/fmriprep-tool/SKILL.md",
+      "path": "skills/fmriprep-tool/skill.json",
       "label": "fMRIPrep Skill",
       "kind": "skill",
       "line_start": 1,

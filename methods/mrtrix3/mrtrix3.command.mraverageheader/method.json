@@ -422,7 +422,7 @@
       "id": "output",
       "type": "imaging_input",
       "label": "output",
-      "description": "Native command output, saved in this run’s output directory. Calculate the average (unbiased) coordinate space of all input images",
+      "description": "Native command output, saved in this run’s output directory. Calculate the average (unbiased) coordinate space of all input images The output meaning depends on the input and selected operation. This generic image port does not certify anatomical labels, diffusion orientation, tissue fractions or spatial alignment.",
       "format": ".mif",
       "primary": true,
       "path_template": "output.mif",

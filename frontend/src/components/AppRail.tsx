@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
-import { Database, FolderOpen, HardDrive, MessageSquare, Settings, Sparkles } from 'lucide-react';
+import { useLanguageStore } from '../stores/languageStore';
+import { Database, ListChecks, FolderOpen, HardDrive, MessageSquare, Settings, Sparkles } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { SettingsDialog } from './SettingsDialog';
 import { Tooltip } from '../ui/Tooltip';
 import { cx } from '../ui/cx';
 import type { TranslationKeys } from '../types/i18n';
 
-export type RailDomain = 'conversations' | 'skills' | 'datasets' | 'workspace' | 'storage';
+export type RailDomain = 'conversations' | 'skills' | 'datasets' | 'workspace' | 'storage' | 'workflows';
 
 type RailItem = { value: RailDomain; label: string; icon: ReactNode; openFull?: () => void };
 
@@ -33,7 +34,9 @@ export function AppRail({ t, domain, datasetCount, onDomainChange, onOpenDataset
     return () => document.removeEventListener('keydown', onKey);
   }, [settingsOpen]);
 
+  const language=useLanguageStore(s=>s.language);
   const primary: RailItem[] = [
+    {value:'workflows',label:language==='zh'?'流程与运行':'Workflows & runs',icon:<ListChecks/>},
     { value: 'conversations', label: t.conversations, icon: <MessageSquare /> },
     { value: 'skills', label: t.skills, icon: <Sparkles /> }
   ];

@@ -61,6 +61,11 @@ class ExternalCommandRunner:
             probe.unlink()
         except OSError as exc:
             problems.append(f"输出目录不可写：{exc}")
+        if not problems:
+            from .scientific_checks import scientific_checks
+            checks=scientific_checks(context)
+            context.quality_checks.extend(checks)
+            problems.extend('Scientific preflight: '+row['code']+' ('+row['slot_id']+')' for row in checks if row['status']=='error')
         return problems
 
     @staticmethod
@@ -71,7 +76,7 @@ class ExternalCommandRunner:
                 for match in binding.sample_matches
                 if match.status == "matched" and match.absolute_path
             ]
-        return [Path(binding.absolute_path)] if binding.absolute_path else []
+        return [Path(p) for p in binding.absolute_paths] if binding.absolute_paths else [Path(binding.absolute_path)] if binding.absolute_path else []
 
     @classmethod
     def required_binding(cls, context: RunnerContext, slot_id: str) -> Path:
@@ -241,7 +246,7 @@ class ExternalCommandRunner:
             media_type=media_type,
             size_bytes=path.stat().st_size,
             sha256=context.file_sha256(path),
-            metadata=metadata or {},
+            metadata={**(metadata or {}),'quality':{'status':'not_reviewed','scope':'execution artifact; scientific validity requires review'}},
         )
 
     @staticmethod
@@ -265,7 +270,7 @@ class ExternalCommandRunner:
             relative_path=path.relative_to(context.output_directory).as_posix(),
             media_type="inode/directory",
             size_bytes=sum(item.stat().st_size for item in path.rglob("*") if item.is_file()),
-            metadata=metadata or {},
+            metadata={**(metadata or {}),'quality':{'status':'not_reviewed','scope':'execution artifact; scientific validity requires review'}},
         )
 
     @staticmethod

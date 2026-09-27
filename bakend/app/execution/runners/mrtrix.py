@@ -51,7 +51,8 @@ class MrtrixTckgenRunner(ExternalCommandRunner):
                     fod = path.resolve(strict=True)
                     if not self._allowed_binding_input(context.step.input_bindings["fod"], fod, context.output_directory.parent):
                         continue  # common_preflight already reports the invalid root.
-                    checked = subprocess.run(  # noqa: S603 - fixed reviewed executable and argv
+                    from ..check_cache import checked_file
+                    checked = checked_file(fod,('mrstats_max',str(self.mrstats_executable),self.mrstats_executable.stat().st_mtime_ns if self.mrstats_executable.exists() else 0),lambda: subprocess.run(  # noqa: S603 - fixed reviewed executable and argv
                         [str(self.mrstats_executable), str(fod), "-output", "max"],
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE,
@@ -60,7 +61,7 @@ class MrtrixTckgenRunner(ExternalCommandRunner):
                         timeout=90,
                         check=False,
                         env={**os.environ, **self._environment()},
-                    )
+                    ))
                     maxima = [float(token) for token in checked.stdout.split()]
                     if checked.returncode != 0 or not maxima:
                         problems.append("无法读取 FOD 数值统计，请检查文件格式")

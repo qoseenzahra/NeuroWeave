@@ -39,7 +39,7 @@
       "id": "output",
       "type": "imaging_input",
       "label": "output",
-      "description": "Native command output, saved in this run’s output directory. Reorient an image to standard label orientation; this is not registration.",
+      "description": "Native command output, saved in this run’s output directory. Reorient an image to standard label orientation; this is not registration. The output meaning depends on the input and selected operation. This generic image port does not certify anatomical labels, diffusion orientation, tissue fractions or spatial alignment.",
       "format": ".nii.gz",
       "primary": true,
       "path_template": "output.nii.gz",

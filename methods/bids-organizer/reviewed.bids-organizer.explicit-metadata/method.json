@@ -6,7 +6,8 @@
     "analysis_input"
   ],
   "output_types": [
-    "generated_folder"
+    "generated_folder",
+    "generated_file"
   ],
   "requires_features": [],
   "parameters": [
@@ -72,8 +73,8 @@
       "id": "file_dataset_description_json",
       "type": "generated_file",
       "label": "dataset_description.json",
-      "description": "dataset_description.json: output of BIDS 元数据生成. Relative run path: results/dataset_description.json.",
-      "format": "",
+      "description": "dataset_description.json: output of BIDS metadata generation. Relative run path: results/dataset_description.json. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
+      "format": ".json",
       "primary": false,
       "path_template": "results/dataset_description.json",
       "generated_when": {}
@@ -82,8 +83,8 @@
       "id": "file_staging_report_json",
       "type": "generated_file",
       "label": "staging_report.json",
-      "description": "staging_report.json: output of BIDS 元数据生成. Relative run path: results/staging_report.json.",
-      "format": "",
+      "description": "staging_report.json: output of BIDS metadata generation. Relative run path: results/staging_report.json. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
+      "format": ".json",
       "primary": false,
       "path_template": "results/staging_report.json",
       "generated_when": {}

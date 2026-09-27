@@ -3,10 +3,11 @@
   "description": "Drop the requested initial BOLD volumes, apply the original spatial smoothing and temporal band-pass filtering, and save the processed series. Geometry stays in the input space; this entry does not estimate registration or motion correction. Inputs: bold: 预处理 BOLD 影像 (file). Registered outputs: results/preprocessed_bold.nii.gz.",
   "runner_id": "reviewed.nilearn-tool.preprocess",
   "input_types": [
-    "analysis_input"
+    "bold_image"
   ],
   "output_types": [
-    "generated_folder"
+    "generated_folder",
+    "bold_image"
   ],
   "requires_features": [],
   "parameters": [
@@ -177,7 +178,7 @@
       "type": "bold_image",
       "label": "preprocessed_bold.nii.gz",
       "description": "Output preprocessed BOLD NIfTI.: output of BOLD 平滑与时间滤波（保持原空间）. Relative run path: results/preprocessed_bold.nii.gz.",
-      "format": "",
+      "format": ".nii.gz",
       "primary": false,
       "path_template": "results/preprocessed_bold.nii.gz",
       "generated_when": {}

@@ -6,7 +6,8 @@
     "analysis_input"
   ],
   "output_types": [
-    "generated_folder"
+    "generated_folder",
+    "generated_file"
   ],
   "requires_features": [],
   "parameters": [],
@@ -63,7 +64,7 @@
       "id": "file_surface_ply",
       "type": "generated_file",
       "label": "surface.ply",
-      "description": "Output PLY path.: output of FreeSurfer 表面导出 PLY. Relative run path: results/surface.ply.",
+      "description": "Output PLY path.: output of FreeSurfer surface export PLY. Relative run path: results/surface.ply. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
       "format": "",
       "primary": false,
       "path_template": "results/surface.ply",

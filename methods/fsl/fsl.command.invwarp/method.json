@@ -121,7 +121,7 @@
       "id": "inverse_warp",
       "type": "imaging_input",
       "label": "inverse_warp",
-      "description": "Native command output, saved in this run’s output directory. Invert a nonlinear warp with an explicit reference image.",
+      "description": "Native command output, saved in this run’s output directory. Invert a nonlinear warp with an explicit reference image. The output meaning depends on the input and selected operation. This generic image port does not certify anatomical labels, diffusion orientation, tissue fractions or spatial alignment.",
       "format": ".nii.gz",
       "primary": true,
       "path_template": "output.nii.gz",

@@ -122,7 +122,7 @@
       "id": "output",
       "type": "generated_file",
       "label": "output",
-      "description": "the output mesh file",
+      "description": "the output mesh file This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
       "format": ".vtk",
       "path_template": "output.vtk"
     }

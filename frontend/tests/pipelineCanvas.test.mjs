@@ -27,7 +27,7 @@ await test('HTTP crypto without randomUUID can create stable unique step IDs',()
 await test('canvas ordering follows dependencies even when target was added first',()=>{
   const steps=graph.connectNodes([node('b'),node('a')],definitions,'a','output','b','input');
   assert.deepEqual(graph.executionDraft({name:'test',steps}).steps.map(s=>s.id),['a','b']);
-  assert.ok(graph.executionDraft({name:'test',steps}).steps.every(s=>!('position' in s)),'layout never enters backend execution contracts');
+  assert.ok(graph.executionDraft({name:'test',steps}).steps.every(s=>s.position),'source editor positions are saved; the backend compiler strips them from executable stages');
   assert.deepEqual(steps[0].position,{x:50,y:60});
   assert.deepEqual(steps[0].parameters,{nthreads:1});
   assert.throws(()=>graph.connectNodes(steps,definitions,'b','output','a','input'),/循环/);
@@ -53,9 +53,9 @@ await test('layout is restored per saved version and storage failure does not lo
   const draft={name:'test',steps:[node('a')]};const saved={id:'p',version:'1',editor:graph.executionDraft(draft)};
   assert.deepEqual(rememberLayout(saved,draft,storage).editor.steps[0].position,{x:50,y:60});
   assert.deepEqual(restoreLayout(saved,storage).editor.steps[0].position,{x:50,y:60});
-  assert.equal(restoreLayout({...saved,version:'2'},storage).editor.steps[0].position,undefined);
+  assert.deepEqual(restoreLayout({...saved,version:'2'},storage).editor.steps[0].position,{x:50,y:60},'server source positions survive a new browser or version');
   const failed=rememberLayout(saved,draft,{setItem:()=>{throw new Error('quota');},getItem:()=>null});
-  assert.equal(failed.id,'p');assert.match(failed.layout_warning,/流程已保存/);
+  assert.equal(failed.id,'p');assert.match(failed.layout_warning,/已保存到服务器/);
 });
 await test('real canvas and editor render nodes, ports, links and parameters with cached definitions',async()=>{
   const {PipelineCanvas}=await server.ssrLoadModule('/src/features/library/PipelineCanvas.tsx');
@@ -74,7 +74,7 @@ await test('real canvas and editor render nodes, ports, links and parameters wit
   assert.doesNotMatch(html,/Pipeline 编辑器遇到错误/);
   client.clear();
 });
-await test('save sends dependency-ordered execution data without browser coordinates',async()=>{
+await test('save sends dependency-ordered editable source with durable coordinates',async()=>{
   const api=await server.ssrLoadModule('/src/features/library/libraryApi.ts');
   const prior=globalThis.fetch;let body;
   globalThis.fetch=async(_url,options)=>{body=JSON.parse(options.body);return new Response(JSON.stringify({id:'p',version:'1',editor:body}),{status:200,headers:{'Content-Type':'application/json'}});};
@@ -82,7 +82,7 @@ await test('save sends dependency-ordered execution data without browser coordin
     const steps=graph.connectNodes([node('b'),node('a')],definitions,'a','output','b','input');
     const saved=await api.save({name:'test',description:'',steps});
     assert.equal(saved.id,'p');assert.deepEqual(body.steps.map(s=>s.id),['a','b']);
-    assert.ok(body.steps.every(s=>!Object.hasOwn(s,'position')));
+    assert.ok(body.steps.every(s=>s.position));
     assert.deepEqual(body.steps[1].inputs.input,{step_id:'a',output_slot_id:'output'});
   }finally{globalThis.fetch=prior;}
 });
@@ -203,5 +203,31 @@ await test('method verification keeps runtime availability separate from executi
   assert.doesNotMatch(html,/运行测试通过|Execution test passed/);
   value.execution={status:'stale'};
   assert.match(renderToStaticMarkup(createElement(MethodVerification,{value})),/历史证据已过期|Stale evidence/);
+});
+
+await test('list ports preserve connection order and deleting one wire retains the other sources',async()=>{
+  const concat=JSON.parse(await readFile(resolve(root,'../methods/mrtrix3/mrtrix3.command.mrcat/method.json'),'utf8'));
+  const defs={...definitions,[concat.id]:concat},port=concat.input_slots[0].id;
+  let steps=[node('a'),node('b'),node('c'),{id:'merge',method_id:concat.id,parameters:{},inputs:{}}];
+  for(const id of ['b','a','c'])steps=graph.connectNodes(steps,defs,id,'output','merge',port);
+  assert.deepEqual(graph.linkSources(steps[3].inputs[port]).map(s=>s.step_id),['b','a','c']);
+  steps=graph.disconnectInput(steps,'merge',port,{step_id:'a',output_slot_id:'output'});
+  assert.deepEqual(graph.linkSources(steps[3].inputs[port]).map(s=>s.step_id),['b','c']);
+  steps=graph.removeNode(steps,'b');
+  assert.deepEqual(graph.linkSources(steps.find(s=>s.id==='merge').inputs[port]).map(s=>s.step_id),['c']);
+  assert.equal(graph.orderedSteps(steps).at(-1).id,'merge');
+});
+await test('changing label-transform interpolation invalidates a previously legal typed wire',async()=>{
+  const transform=JSON.parse(await readFile(resolve(root,'../methods/mrtrix3/mrtrix.command.mrtransform/method.json'),'utf8'));
+  const labels={...method,id:'labels',output_slots:method.output_slots.map(o=>({...o,type:'parcellation_image'}))};
+  const consumer={...method,id:'consumer',input_slots:method.input_slots.map(i=>({...i,type:'parcellation_image'}))};
+  const defs={labels,consumer,[transform.id]:transform};
+  let steps=[{...node('labels'),method_id:'labels'},{...node('transform'),method_id:transform.id,parameters:{interp:'nearest'}},{...node('consumer'),method_id:'consumer'}];
+  steps=graph.connectNodes(steps,defs,'labels','output','transform','input');
+  steps=graph.connectNodes(steps,defs,'transform','output','consumer','input');
+  assert.deepEqual(graph.conditionalConnectionIssues(steps,defs),[]);
+  steps=steps.map(n=>n.id==='transform'?{...n,parameters:{interp:'linear'}}:n);
+  assert.equal(graph.conditionalConnectionIssues(steps,defs).length,1);
+  assert.ok(steps[2].inputs.input,'retain the invalid wire so it can be reviewed');
 });
 }finally{await server.close();}

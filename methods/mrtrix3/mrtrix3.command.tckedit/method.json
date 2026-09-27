@@ -380,7 +380,7 @@
       "id": "tck_weights_out",
       "type": "generated_file",
       "label": "tck_weights_out",
-      "description": "Native command output, saved in this run’s output directory. Perform various editing operations on track files",
+      "description": "Native command output, saved in this run’s output directory. Perform various editing operations on track files This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
       "format": ".txt",
       "primary": false,
       "path_template": "tck_weights_out.txt",

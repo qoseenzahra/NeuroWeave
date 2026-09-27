@@ -33,7 +33,7 @@
       "id": "surface",
       "type": "generated_file",
       "label": "surface",
-      "description": "Native command output, saved in this run’s output directory. Convert a surface to GIFTI without modifying the source.",
+      "description": "Native command output, saved in this run’s output directory. Convert a surface to GIFTI without modifying the source. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
       "format": ".gii",
       "primary": true,
       "path_template": "surface.gii",

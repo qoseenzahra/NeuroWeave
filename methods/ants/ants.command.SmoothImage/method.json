@@ -160,7 +160,7 @@
       "id": "output",
       "type": "imaging_input",
       "label": "output",
-      "description": "Native command output, saved in this run’s output directory. Gaussian smoothing or median filtering with a scalar/per-axis width.",
+      "description": "Native command output, saved in this run’s output directory. Gaussian smoothing or median filtering with a scalar/per-axis width. The output meaning depends on the input and selected operation. This generic image port does not certify anatomical labels, diffusion orientation, tissue fractions or spatial alignment.",
       "format": ".nii.gz",
       "primary": true,
       "path_template": "output.nii.gz",

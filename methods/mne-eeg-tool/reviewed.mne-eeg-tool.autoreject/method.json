@@ -6,7 +6,8 @@
     "analysis_input"
   ],
   "output_types": [
-    "generated_folder"
+    "generated_folder",
+    "generated_file"
   ],
   "requires_features": [],
   "parameters": [
@@ -142,7 +143,7 @@
       "id": "file_processed_epo_fif",
       "type": "generated_file",
       "label": "processed-epo.fif",
-      "description": "processed-epo.fif: output of Epoch AutoReject 自动质控. Relative run path: results/processed-epo.fif.",
+      "description": "processed-epo.fif: output of Epoch AutoReject automatic quality control. Relative run path: results/processed-epo.fif. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
       "format": "",
       "primary": false,
       "path_template": "results/processed-epo.fif",

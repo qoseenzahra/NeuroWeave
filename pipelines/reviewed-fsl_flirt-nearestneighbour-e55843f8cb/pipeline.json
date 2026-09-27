@@ -335,7 +335,7 @@
       "type": "registered_image",
       "label": "配准后影像",
       "description": "按照参考影像网格重采样的结果。",
-      "format": "",
+      "format": ".nii.gz",
       "primary": true,
       "path_template": "registered.nii.gz",
       "generated_when": {}
@@ -345,7 +345,7 @@
       "type": "transform_matrix",
       "label": "FLIRT 变换矩阵",
       "description": "从移动影像到参考影像的 4×4 线性变换。",
-      "format": "",
+      "format": ".mat",
       "primary": false,
       "path_template": "transform.mat",
       "generated_when": {}

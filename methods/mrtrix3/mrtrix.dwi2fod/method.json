@@ -3,6 +3,9 @@
   "description": "使用 dwi2fod 从预处理 DWI 与组织响应函数估计白质 FOD。",
   "runner_id": "mrtrix.dwi2fod",
   "input_types": [
+    "preprocessed_dwi",
+    "brain_mask",
+    "gradient_table",
     "response_functions"
   ],
   "output_types": [
@@ -298,7 +301,7 @@
       "type": "fod_image",
       "label": "白质 FOD",
       "description": "可直接传给 tckgen。",
-      "format": "",
+      "format": ".mif",
       "primary": true,
       "path_template": "wm_fod.mif",
       "generated_when": {}
@@ -316,7 +319,7 @@
   ],
   "source_references": [
     {
-      "path": "skills/dwi-skill/SKILL.md",
+      "path": "skills/dwi-skill/skill.json",
       "label": "DWI Skill",
       "kind": "skill",
       "line_start": 1,

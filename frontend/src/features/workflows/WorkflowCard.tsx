@@ -16,6 +16,7 @@ import {
   TriangleAlert,
   UnlockKeyhole
 } from 'lucide-react';
+import { QualityReport } from './QualityReport';
 import { ApiError } from '../../api/http';
 import { cancelOperation } from '../../api/operations';
 import type { OperationView } from '../../api/operations';
@@ -228,6 +229,8 @@ function WorkflowCardBody({
     backends.slurm.partitions.length
   );
   const dryRunReport = workflow?.dry_run_report ?? null;
+  const [qualityReview,setQualityReview]=useState<string|null>(null);
+  const qualityAccepted=!dryRunReport?.quality_review_required||qualityReview===dryRunReport.checked_at||dryRunReport.quality_acknowledged;
 
   const fail = (failure: unknown, fallback: keyof TranslationKeys) => {
     if (failure instanceof DOMException && failure.name === 'AbortError') return;
@@ -470,6 +473,7 @@ function WorkflowCardBody({
               ))}
             </div>
           ))}
+          <QualityReport report={dryRunReport} checked={Boolean(qualityAccepted)} disabled={controlsDisabled||workflow.status==='confirmed'} onCheck={value=>setQualityReview(value?dryRunReport.checked_at:null)}/>
           {dryRunReport.warnings.map((warning) => (
             <p key={warning} className="mt-1 break-words text-micro text-warning">
               {warning}
@@ -750,8 +754,8 @@ function WorkflowCardBody({
           {workflow.can_confirm && (
             <button
               type="button"
-              disabled={controlsDisabled}
-              onClick={() => runAction({ kind: 'confirm' })}
+              disabled={controlsDisabled||!qualityAccepted}
+              onClick={() => runAction({ kind: 'confirm',acknowledgeQuality:Boolean(qualityAccepted) })}
               className="inline-flex items-center gap-1.5 rounded-control bg-accent-solid px-2.5 py-1.5 text-xs font-medium text-on-accent hover:bg-accent-solid-hover disabled:opacity-50"
             >
               {busyAction === 'confirm' ? (

@@ -1,61 +1,103 @@
+# Explicit fixture re-exports are registered by pytest, not direct Python calls.
 from types import SimpleNamespace
+
 import pytest
-from app.pipeline_library import ComposeRequest, UsePipeline
-from app.workflow_service import WorkflowService
 from app.chat_service import ChatService
 from app.dataset_service import DatasetService
 from app.execution.recipe_compiler import RecipeCompiler
-from test_pipeline_library import library, draft, ROOT
+from app.pipeline_models import ComposeRequest, UsePipeline
+from app.workflow_service import WorkflowService
+from test_pipeline_library import ROOT, draft
+from test_pipeline_library import library as library
 
 
 def test_saved_pipeline_instantiates_and_exports_without_submitting(library):
-    service=WorkflowService(ROOT/'skills/dwi-skill/workflow.manifest.json',ChatService(),library.registry,
-                            library.store,DatasetService(ROOT,library.store))
-    p=library.save(ComposeRequest.model_validate(draft(library)))
-    workflow=library.workflow(p['id'],UsePipeline(),service,SimpleNamespace())
+    service = WorkflowService(
+        ROOT / "skills/dwi-skill/workflow.manifest.json",
+        ChatService(),
+        library.registry,
+        library.store,
+        DatasetService(ROOT, library.store),
+    )
+    p = library.save(ComposeRequest.model_validate(draft(library)))
+    workflow = library.workflow(p["id"], UsePipeline(), service, SimpleNamespace())
     assert workflow.locked_at
-    assert workflow.steps[0].selected_method_id==p['id']+'@1'
-    units=RecipeCompiler(library.registry).compile(workflow)
-    assert len(units)==2
-    assert any(b.source=='upstream_output' for b in units[1].step.input_bindings.values())
-    exported=library.from_workflow(workflow,'Reusable')
-    assert exported['editor']['steps'][1]['inputs']
-    assert all('absolute_path' not in str(s) for s in exported['editor']['steps'])
-    assert library.store.get_workflow(workflow.workflow_id).workflow_id==workflow.workflow_id
+    assert workflow.steps[0].selected_method_id == p["id"] + "@1"
+    units = RecipeCompiler(library.registry).compile(workflow)
+    assert len(units) == 2
+    assert any(
+        b.source == "upstream_output" for b in units[1].step.input_bindings.values()
+    )
+    exported = library.from_workflow(workflow, "Reusable")
+    assert exported["editor"]["steps"][1]["inputs"]
+    assert all("absolute_path" not in str(s) for s in exported["editor"]["steps"])
+    assert (
+        library.store.get_workflow(workflow.workflow_id).workflow_id
+        == workflow.workflow_id
+    )
 
 
 def test_blank_name_and_nonfinite_parameter_fail(library):
-    value=draft(library);value['name']='   '
-    with pytest.raises(ValueError,match='名称'):library.compile(ComposeRequest.model_validate(value))
-    value=draft(library);value['steps'][0]['parameters']={'abs':float('nan')}
-    with pytest.raises(ValueError,match='有限'):library.compile(ComposeRequest.model_validate(value))
+    value = draft(library)
+    value["name"] = "   "
+    with pytest.raises(ValueError, match="名称"):
+        library.compile(ComposeRequest.model_validate(value))
+    value = draft(library)
+    value["steps"][0]["parameters"] = {"abs": float("nan")}
+    with pytest.raises(ValueError, match="有限"):
+        library.compile(ComposeRequest.model_validate(value))
 
 
 def test_http_save_version_instantiate_and_export(library):
     import asyncio
+
     import httpx
-    from fastapi import FastAPI
     from app.library_routes import library_router
-    service=WorkflowService(ROOT/'skills/dwi-skill/workflow.manifest.json',ChatService(),library.registry,
-                            library.store,DatasetService(ROOT,library.store))
-    app=FastAPI();app.include_router(library_router(library,service,SimpleNamespace(),SimpleNamespace()))
+    from fastapi import FastAPI
+
+    service = WorkflowService(
+        ROOT / "skills/dwi-skill/workflow.manifest.json",
+        ChatService(),
+        library.registry,
+        library.store,
+        DatasetService(ROOT, library.store),
+    )
+    app = FastAPI()
+    app.include_router(
+        library_router(library, service, SimpleNamespace(), SimpleNamespace())
+    )
+
     async def check():
-        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),base_url='http://test') as client:
-            assert (await client.get('/api/library',params={'kind':'unknown'})).status_code==422
-            response=await client.post('/api/library/pipelines',json=draft(library))
-            assert response.status_code==200,response.text
-            p=response.json();url='/api/library/pipelines/'+p['id']
-            updated={**draft(library),'name':'v2','expected_version':1}
-            assert (await client.put(url,json=updated)).json()['version']=='2'
-            assert (await client.put(url,json=updated)).status_code==409
-            assert (await client.get(url,params={'version':1})).json()['label']=='Threshold chain'
-            response=await client.post(url+'/workflows',json={'version':1})
-            assert response.status_code==200,response.text
-            wf=response.json()
-            assert wf['steps'][0]['selected_method_id'].endswith('@1')
-            export='/api/library/from-workflow/'+wf['workflow_id']
-            assert (await client.post(export,json={'expected_revision':wf['revision']+1})).status_code==422
-            response=await client.post(export,json={'expected_revision':wf['revision'],'name':'exported'})
-            assert response.status_code==200,response.text
-            assert response.json()['editor']['steps'][1]['inputs']
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            assert (
+                await client.get("/api/library", params={"kind": "unknown"})
+            ).status_code == 422
+            response = await client.post("/api/library/pipelines", json=draft(library))
+            assert response.status_code == 200, response.text
+            p = response.json()
+            url = "/api/library/pipelines/" + p["id"]
+            updated = {**draft(library), "name": "v2", "expected_version": 1}
+            assert (await client.put(url, json=updated)).json()["version"] == "2"
+            assert (await client.put(url, json=updated)).status_code == 409
+            assert (await client.get(url, params={"version": 1})).json()[
+                "label"
+            ] == "Threshold chain"
+            response = await client.post(url + "/workflows", json={"version": 1})
+            assert response.status_code == 200, response.text
+            wf = response.json()
+            assert wf["steps"][0]["selected_method_id"].endswith("@1")
+            export = "/api/library/from-workflow/" + wf["workflow_id"]
+            assert (
+                await client.post(
+                    export, json={"expected_revision": wf["revision"] + 1}
+                )
+            ).status_code == 422
+            response = await client.post(
+                export, json={"expected_revision": wf["revision"], "name": "exported"}
+            )
+            assert response.status_code == 200, response.text
+            assert response.json()["editor"]["steps"][1]["inputs"]
+
     asyncio.run(check())

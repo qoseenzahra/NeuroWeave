@@ -187,10 +187,20 @@
       "id": "subject",
       "type": "freesurfer_subject",
       "label": "FreeSurfer 受试者目录",
-      "description": "包含 mri、surf、label、stats 等输出。",
+      "description": "FreeSurfer subject directory containing mri, surf, label and stats. Its existence alone does not certify completion of later stages; use the stage-specific file ports for downstream binding.",
       "format": "",
       "primary": true,
       "path_template": "{subject}/",
+      "generated_when": {}
+    },
+    {
+      "id": "aseg_stats",
+      "type": "generated_file",
+      "label": "Segmentation statistics",
+      "description": "Region statistics table with label IDs, voxel counts and volumes. It is a text report, not a spatial node image. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
+      "format": ".stats",
+      "primary": false,
+      "path_template": "{subject}/stats/aseg.stats",
       "generated_when": {}
     }
   ],
@@ -229,7 +239,7 @@
       },
       "workspace": "execute",
       "method_ref": "freesurfer.recon_all",
-      "method_version": "1",
+      "method_version": "2",
       "capability": "skill.freesurfer-tool"
     }
   ],
@@ -237,6 +247,10 @@
     "subject": {
       "step_id": "execute",
       "output_slot_id": "subject"
+    },
+    "aseg_stats": {
+      "step_id": "execute",
+      "output_slot_id": "aseg_stats"
     }
   },
   "included_capabilities": [

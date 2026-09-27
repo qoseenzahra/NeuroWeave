@@ -1,7 +1,9 @@
+import { compatible, nodeMethod } from './artifactSemantics';
 import { ui } from '../../lib/libraryText';
-import type { Draft, InputPort, Method, Node } from './libraryApi';
+import type { Draft, InputPort, Method, Node, Link, SourceLink } from './libraryApi';
 import { activeOutputSlots } from '../workflows/workflowConditions';
 import type { ParameterValue } from '../workflows/workflowTypes';
+export const linkSources=(link:Link):SourceLink[]=>[{step_id:link.step_id,output_slot_id:link.output_slot_id},...(link.additional_sources??[])];
 export type Point = {x:number;y:number};
 let sequence=0;
 
@@ -20,7 +22,7 @@ export function orderedSteps(steps:Node[]):Node[] {
   if(byId.size!==steps.length) throw new Error(ui("步骤 ID 重复"));
   const pending=new Set(steps.map(s=>s.id));const ordered:Node[]=[];
   while(pending.size){
-    const ready=steps.filter(s=>pending.has(s.id)&&Object.values(s.inputs).every(link=>{
+    const ready=steps.filter(s=>pending.has(s.id)&&Object.values(s.inputs).flatMap(linkSources).every(link=>{
       if(!byId.has(link.step_id))throw new Error(ui("连接的上游步骤不存在，请重新连接"));
       return !pending.has(link.step_id);
     }));
@@ -32,28 +34,33 @@ export function orderedSteps(steps:Node[]):Node[] {
 export function connectNodes(steps:Node[],definitions:Record<string,Method>,from:string,output:string,to:string,input:string):Node[]{
   if(from===to)throw new Error(ui("不能把步骤连接到自身"));
   const source=steps.find(s=>s.id===from),target=steps.find(s=>s.id===to);
-  const out=source&&definitions[source.method_id]?.output_slots.find(s=>s.id===output);
+  const out=source&&nodeMethod(source,definitions,steps)?.output_slots.find(s=>s.id===output);
   const slot=target&&definitions[target.method_id]?.input_slots.find(s=>s.id===input);
   if(!out||!slot)throw new Error(ui("端口定义尚未加载，请稍后重试"));
-  if(out.type!==slot.type)throw new Error(ui("端口类型不匹配：{0} → {1}",out.type,slot.type));
-  if(slot.cardinality&&slot.cardinality!=='one')throw new Error(ui("此多文件端口需要作为整体输入提供"));
-  const next=steps.map(s=>s.id===to?{...s,inputs:{...s.inputs,[input]:{step_id:from,output_slot_id:output}}}:s);
+  if(!compatible(out.type,slot.type))throw new Error(ui("端口类型不匹配：{0} → {1}",out.type,slot.type));
+  const existing=target?.inputs[input];
+  const links=slot.cardinality==='many'&&existing?linkSources(existing):[];
+  if(!links.some(l=>l.step_id===from&&l.output_slot_id===output))links.push({step_id:from,output_slot_id:output});
+  if(links.length>64)throw new Error(ui('每个多文件端口最多连接 64 个输出'));
+  const next=steps.map(s=>s.id===to?{...s,inputs:{...s.inputs,[input]:{...links[0],...(links.length>1?{additional_sources:links.slice(1)}:{})}}}:s);
   orderedSteps(next);return next;
 }
-export function disconnectInput(steps:Node[],id:string,input:string):Node[]{
-  return steps.map(s=>{if(s.id!==id)return s;const inputs={...s.inputs};delete inputs[input];return {...s,inputs};});
+export function disconnectInput(steps:Node[],id:string,input:string,source?:SourceLink):Node[]{
+  return steps.map(s=>{if(s.id!==id)return s;const inputs={...s.inputs};
+    const remaining=source&&inputs[input]?linkSources(inputs[input]).filter(v=>v.step_id!==source.step_id||v.output_slot_id!==source.output_slot_id):[];
+    if(remaining.length)inputs[input]={...remaining[0],additional_sources:remaining.slice(1)};else delete inputs[input];return {...s,inputs};});
 }
 export function removeNode(steps:Node[],id:string):Node[]{
-  return steps.filter(s=>s.id!==id).map(s=>({...s,inputs:Object.fromEntries(Object.entries(s.inputs).filter(([,link])=>link.step_id!==id))}));
+  return steps.filter(s=>s.id!==id).map(s=>({...s,inputs:Object.fromEntries(Object.entries(s.inputs).flatMap(([key,link])=>{const left=linkSources(link).filter(l=>l.step_id!==id);return left.length?[[key,{...left[0],additional_sources:left.slice(1)}]]:[];}))}));
 }
-export const executionDraft=(draft:Draft):Draft=>({...draft,steps:orderedSteps(draft.steps).map(node=>{const execution={...node};delete execution.position;return execution;})});
+export const executionDraft=(draft:Draft):Draft=>({...draft,steps:orderedSteps(draft.steps)});
 export function arrangeNodes(steps:Node[],definitions:Record<string,Method>):Node[]{
   const depth=new Map<string,number>(),heights=new Map<number,number>(),positions=new Map<string,Point>();
   for(const node of orderedSteps(steps)){
-    const column=Math.max(0,...Object.values(node.inputs).map(link=>(depth.get(link.step_id)??0)+1));
-    depth.set(node.id,column);const y=heights.get(column)??40;
+    const column=Math.max(0,...Object.values(node.inputs).flatMap(linkSources).map(link=>(depth.get(link.step_id)??0)+1));
+    depth.set(node.id,column);const y=heights.get(column)??80;
     const m=definitions[node.method_id];const height=88+Math.max(m?.input_slots.length??0,m?.output_slots.length??0)*32;
-    positions.set(node.id,{x:40+column*370,y});heights.set(column,y+height+50);
+    positions.set(node.id,{x:80+column*500,y});heights.set(column,y+height+100);
   }
   return steps.map(s=>({...s,position:positions.get(s.id)}));
 }
@@ -68,10 +75,14 @@ export function conditionDescription(method:Method,condition:Record<string,Param
 /** Keep the user's wiring while parameters change; report unavailable outputs. */
 export function conditionalConnectionIssues(steps:Node[],definitions:Record<string,Method>):string[]{
   const issues:string[]=[];
-  for(const target of steps)for(const [input,link] of Object.entries(target.inputs)){
+  for(const target of steps)for(const [input,binding] of Object.entries(target.inputs))for(const link of linkSources(binding)){
     const source=steps.find(n=>n.id===link.step_id);const method=source&&definitions[source.method_id];
-    const output=method?.output_slots.find(o=>o.id===link.output_slot_id);
+    const output=source&&nodeMethod(source,definitions,steps)?.output_slots.find(o=>o.id===link.output_slot_id);
     if(!source||!method||!output)continue;
+    const destination=definitions[target.method_id]?.input_slots.find(s=>s.id===input);
+    if(destination&&!compatible(output.type,destination.type)){
+      issues.push(`${source.id} → ${target.id} / ${input}: ${ui('端口类型不匹配：{0} → {1}',output.type,destination.type)}`);
+    }
     if(!activeOutputSlots(method,source.parameters).some(slot=>slot.id===output.id)){
       const consumer=definitions[target.method_id];const slot=consumer?.input_slots.find(s=>s.id===input);
       issues.push(ui("{0}（{1}）→ {2} / {3}：{4}当前不会生成，需要{5}。",method.label,source.id.slice(-4),consumer?.label??target.method_id,slot?.label??input,output.label,conditionDescription(method,output.generated_when??{})));
@@ -83,7 +94,7 @@ export function conditionalConnectionIssues(steps:Node[],definitions:Record<stri
 /** Retain wired inactive ports so users can inspect and remove their connections. */
 export function canvasOutputSlots(node:Node,method:Method,steps:Node[]){
   const active=new Set(activeOutputSlots(method,node.parameters).map(s=>s.id));
-  const linked=new Set(steps.flatMap(s=>Object.values(s.inputs).filter(l=>l.step_id===node.id).map(l=>l.output_slot_id)));
+  const linked=new Set(steps.flatMap(s=>Object.values(s.inputs).flatMap(linkSources).filter(l=>l.step_id===node.id).map(l=>l.output_slot_id)));
   return method.output_slots.filter(s=>active.has(s.id)||linked.has(s.id)).map(s=>({...s,available:active.has(s.id)}));
 }
 

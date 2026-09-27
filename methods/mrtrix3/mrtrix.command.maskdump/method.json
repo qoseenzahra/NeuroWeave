@@ -65,7 +65,7 @@
       "id": "output",
       "type": "generated_file",
       "label": "output",
-      "description": "the (optional) output text file.",
+      "description": "the (optional) output text file. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
       "format": ".txt",
       "path_template": "output.txt"
     }

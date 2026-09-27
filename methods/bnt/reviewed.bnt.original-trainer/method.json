@@ -6,7 +6,8 @@
     "analysis_input"
   ],
   "output_types": [
-    "generated_folder"
+    "generated_folder",
+    "generated_file"
   ],
   "requires_features": [],
   "parameters": [
@@ -439,7 +440,7 @@
       "id": "file_training_log",
       "type": "generated_file",
       "label": "training.log",
-      "description": "training.log: output of BNT 原项目训练脚本. Relative run path: results/training.log.",
+      "description": "training.log: output of the original BNT project training script. Relative run path: results/training.log. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
       "format": "",
       "primary": false,
       "path_template": "results/training.log",
@@ -449,8 +450,8 @@
       "id": "file_execution_json",
       "type": "generated_file",
       "label": "execution.json",
-      "description": "execution.json: output of BNT 原项目训练脚本. Relative run path: results/execution.json.",
-      "format": "",
+      "description": "execution.json: output of BNT original project training script. Relative run path: results/execution.json. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
+      "format": ".json",
       "primary": false,
       "path_template": "results/execution.json",
       "generated_when": {}

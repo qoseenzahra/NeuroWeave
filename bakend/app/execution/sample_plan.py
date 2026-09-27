@@ -103,6 +103,7 @@ def schedule_units(workflow: Workflow, units: list[ExecutionUnit],
             for name, binding in step.input_bindings.items():
                 if binding.source == "upstream_output":
                     binding.upstream_step_id = prefix + (binding.upstream_step_id or "")
+                    for extra in binding.upstream_sources:extra.step_id=prefix+extra.step_id
                 elif binding.binding_mode == "per_sample":
                     matches = [item for item in binding.sample_matches if item.sample_id == sample.sample_id]
                     if len(matches) != 1 or matches[0].status != "matched" or not matches[0].absolute_path:
@@ -112,9 +113,9 @@ def schedule_units(workflow: Workflow, units: list[ExecutionUnit],
                     select_history_sample(binding, sample.sample_id)
                     binding.binding_mode = "single"
                     binding.sample_matches = []
-                elif len(original_ordinals) > 1 and binding.absolute_path:
-                    path = Path(binding.absolute_path).resolve(strict=True)
-                    if path == root or any(path.is_relative_to(folder) for folder in original_roots):
+                elif len(original_ordinals) > 1 and (binding.absolute_path or binding.absolute_paths):
+                    paths=[Path(p).resolve(strict=True) for p in binding.absolute_paths or [binding.absolute_path]]
+                    if any(path == root or any(path.is_relative_to(folder) for folder in original_roots) for path in paths):
                         raise RecipeCompilationError(
                             f"输入 {name} 指向单一样本或整个数据集，请使用各样本路径模板"
                         )

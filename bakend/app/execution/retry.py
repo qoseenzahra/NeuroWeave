@@ -23,7 +23,8 @@ def implementation_fingerprint(runner, method) -> str:
 
 
 def input_fingerprint(context) -> dict:
-    paths = [Path(binding.absolute_path) for binding in context.step.input_bindings.values() if binding.absolute_path]
+    from .external_command import ExternalCommandRunner
+    paths = [path for binding in context.step.input_bindings.values() for path in ExternalCommandRunner.binding_paths(binding)]
     # Folder inputs and legacy records cannot prove unchanged content cheaply;
     # rerun their upstream steps instead of claiming their outputs are reusable.
     if not paths or any(not path.is_file() for path in paths):

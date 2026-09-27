@@ -86,7 +86,7 @@
       "id": "surface",
       "type": "generated_file",
       "label": "surface",
-      "description": "Native command output, saved in this run’s output directory. Smooth a surface using the native FreeSurfer algorithm.",
+      "description": "Native command output, saved in this run’s output directory. Smooth a surface using the native FreeSurfer algorithm. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
       "format": ".smooth",
       "primary": true,
       "path_template": "surface.smooth",

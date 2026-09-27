@@ -3,10 +3,14 @@
   "description": "Extract standardized, detrended ROI time series with Nilearn NiftiLabelsMasker and calculate a correlation connectivity matrix with ConnectivityMeasure; export ROI time series and NPY/CSV matrices。 Inputs: bold: 预处理 BOLD 影像 (file); atlas: 分区图谱 (file); labels: 图谱标签 (file). Registered outputs: results/connectome.npy, results/roi_timeseries.csv.",
   "runner_id": "reviewed.nilearn-tool.connectome",
   "input_types": [
+    "bold_image",
+    "label_image",
     "analysis_input"
   ],
   "output_types": [
-    "generated_folder"
+    "generated_folder",
+    "connectome_matrix",
+    "roi_timeseries"
   ],
   "requires_features": [],
   "parameters": [
@@ -109,7 +113,7 @@
       "type": "connectome_matrix",
       "label": "connectome.npy",
       "description": "connectome.npy: output of ROI 时间序列与功能连接. Relative run path: results/connectome.npy.",
-      "format": "",
+      "format": ".npy",
       "primary": false,
       "path_template": "results/connectome.npy",
       "generated_when": {}
@@ -119,7 +123,7 @@
       "type": "roi_timeseries",
       "label": "roi_timeseries.csv",
       "description": "roi_timeseries.csv: output of ROI 时间序列与功能连接. Relative run path: results/roi_timeseries.csv.",
-      "format": "",
+      "format": ".csv",
       "primary": false,
       "path_template": "results/roi_timeseries.csv",
       "generated_when": {}

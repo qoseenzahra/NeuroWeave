@@ -3,10 +3,13 @@
   "description": "Filter an existing tractogram with MRtrix tcksift against a white-matter FOD, optionally using an existing 5TT image for ACT. The output is a selected set of streamlines, not SIFT2 weights。 Inputs: input: 已有 tractogram (file); fod: 同空间白质 FOD (file); five_tt: 同空间 5TT (file). Registered outputs: results/tracks.tck. Fixed invocation options: --operation sift.",
   "runner_id": "reviewed.dwi-skill.sift-existing",
   "input_types": [
-    "analysis_input"
+    "tractogram",
+    "fod_image",
+    "five_tt_image"
   ],
   "output_types": [
-    "generated_folder"
+    "generated_folder",
+    "tractogram"
   ],
   "requires_features": [],
   "parameters": [
@@ -109,7 +112,7 @@
       "type": "tractogram",
       "label": "tracks.tck",
       "description": "tracks.tck: output of MRtrix SIFT（筛选已有纤维）. Relative run path: results/tracks.tck.",
-      "format": "",
+      "format": ".tck",
       "primary": false,
       "path_template": "results/tracks.tck",
       "generated_when": {}

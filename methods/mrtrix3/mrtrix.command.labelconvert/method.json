@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "id": "mrtrix.command.labelconvert",
-  "version": "1",
+  "version": "2",
   "kind": "method",
   "label": "MRtrix3 labelconvert",
-  "description": "Convert a connectome node image from one lookup table to another\nTypical usage is to convert a parcellation image provided by some other software, based on the lookup table provided by that software, to conform to a new lookup table, particularly one where the node indices increment from 1, in preparation for connectome construction; examples of such target lookup table files are provided in share//mrtrix3//labelconvert//, but can be created by the user to provide the desired node set // ordering // colours.\nConvert a Desikan-Killiany parcellation image as provided by FreeSurfer to have nodes incrementing from 1: $ labelconvert aparc+aseg.mgz FreeSurferColorLUT.txt mrtrix3//share//mrtrix3//labelconvert//fs_default.txt nodes.mif  Paths to the files in the example above would need to be revised according to their locations on the user's system.",
+  "description": "Remap integer connectome node labels using source and target lookup tables. For a FreeSurfer anatomical atlas, use aparc+aseg.mgz with its matching FreeSurferColorLUT and the intended MRtrix atlas LUT. The output can use contiguous node indices for tck2connectome. This command does not produce anatomical segmentation, estimate registration or change the input coordinate space.",
   "runner_id": "mrtrix.command.labelconvert",
   "parameters": [
     {
@@ -53,11 +53,18 @@
   "input_slots": [
     {
       "id": "path_in",
-      "type": "imaging_input",
+      "type": "parcellation_image",
       "label": "path_in",
-      "description": "the input image",
+      "description": "Existing integer node parcellation whose label IDs match lut_in. The image may be MGZ, NIfTI or MIF; confirm the intended anatomical atlas and coordinate space.",
       "required": true,
-      "binding": "file"
+      "binding": "file",
+      "formats": [
+        ".nii",
+        ".nii.gz",
+        ".mif",
+        ".mgz",
+        ".mgh"
+      ]
     },
     {
       "id": "lut_in",
@@ -87,19 +94,20 @@
   "output_slots": [
     {
       "id": "image_out",
-      "type": "imaging_input",
+      "type": "parcellation_image",
       "label": "image_out",
-      "description": "the output image",
+      "description": "Node image with IDs/order defined by lut_out; spatial coordinates are unchanged. Remapping does not demonstrate alignment to streamlines.",
       "format": ".mif",
       "path_template": "image_out.mif"
     }
   ],
   "input_types": [
-    "imaging_input",
-    "generated_file"
+    "parcellation_image",
+    "generated_file",
+    "imaging_input"
   ],
   "output_types": [
-    "imaging_input"
+    "parcellation_image"
   ],
   "source_references": [
     {

@@ -130,7 +130,7 @@
       "id": "dirs",
       "type": "generated_file",
       "label": "dirs",
-      "description": "the text file to write the directions to, as [ az el ] pairs.",
+      "description": "the text file to write the directions to, as [ az el ] pairs. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
       "format": ".txt",
       "path_template": "dirs.txt"
     }

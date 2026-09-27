@@ -203,7 +203,7 @@
       "id": "warp",
       "type": "imaging_input",
       "label": "warp",
-      "description": "Native command output, saved in this run’s output directory. Compose nonlinear warps and affine matrices in a reference grid.",
+      "description": "Native command output, saved in this run’s output directory. Compose nonlinear warps and affine matrices in a reference grid. The output meaning depends on the input and selected operation. This generic image port does not certify anatomical labels, diffusion orientation, tissue fractions or spatial alignment.",
       "format": ".nii.gz",
       "primary": true,
       "path_template": "output.nii.gz",

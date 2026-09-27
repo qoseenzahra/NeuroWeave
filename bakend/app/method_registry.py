@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from .skill_definitions import canonical_skills
+from .artifact_semantics import compatible
 from .method_validation import validate_contract, verification_status
 from .workflow_models import (
     ParameterSpec,
@@ -171,7 +172,7 @@ class MethodRegistry:
                             b.get("output_slot_id")
                         )
                     )
-                    if key not in slots or actual != slots[key]:
+                    if key not in slots or not compatible(actual,slots[key]):
                         raise ValueError(
                             "Pipeline input type/link mismatch: "
                             + pid
@@ -264,5 +265,10 @@ class MethodRegistry:
                 {**p.model_dump(mode="json"), **routing.get(p.id, {})}
                 for p in m.input_slots
             ]
+            s["artifact_types"] = {
+                port.path_template.removeprefix("results/"): port.type
+                for port in m.output_slots
+                if port.id != "results" and port.path_template.startswith("results/")
+            }
             result[m.runner_id] = s
         return result

@@ -3,10 +3,12 @@
   "description": "Reference script for 3D brain connectome plotting。 Inputs: atlas: 分区图谱 (file); template: 背景模板 (file); matrix: 连接矩阵 (file). Registered outputs: results/connectome.png.",
   "runner_id": "reviewed.brain-visualization.connectome",
   "input_types": [
+    "label_image",
     "analysis_input"
   ],
   "output_types": [
-    "generated_folder"
+    "generated_folder",
+    "generated_file"
   ],
   "requires_features": [],
   "parameters": [
@@ -160,8 +162,8 @@
       "id": "file_connectome_png",
       "type": "generated_file",
       "label": "connectome.png",
-      "description": "Output PNG path.: output of 脑连接图. Relative run path: results/connectome.png.",
-      "format": "",
+      "description": "Output PNG path.: output of brain connectivity graph. Relative run path: results/connectome.png. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
+      "format": ".png",
       "primary": false,
       "path_template": "results/connectome.png",
       "generated_when": {}

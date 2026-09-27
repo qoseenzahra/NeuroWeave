@@ -1,12 +1,14 @@
 {
   "label": "kmeans 空间分区",
-  "description": "Reference snippet for K-means-based neuroimaging parcellation。 Inputs: input_list: 影像路径清单 (file); mask: 脑掩膜 (file). Registered outputs: results/parcel_labels.nii.gz.",
+  "description": "Create data-driven spatial clusters using the existing kmeans reference implementation on a list of aligned images and a common mask. The requested cluster count controls a learned label map. Cluster IDs have no predefined anatomical atlas meaning and are not a drop-in substitute for a FreeSurfer anatomical parcellation. Use only when this data-driven region definition matches the study; validate alignment, reproducibility and region interpretation before connectivity analysis.",
   "runner_id": "reviewed.nilearn-tool.kmeans",
   "input_types": [
-    "analysis_input"
+    "analysis_input",
+    "brain_mask"
   ],
   "output_types": [
-    "generated_folder"
+    "generated_folder",
+    "label_image"
   ],
   "requires_features": [],
   "parameters": [
@@ -88,10 +90,10 @@
     },
     {
       "id": "file_parcel_labels_nii_gz",
-      "type": "generated_file",
+      "type": "label_image",
       "label": "parcel_labels.nii.gz",
-      "description": "parcel_labels.nii.gz: output of kmeans 空间分区. Relative run path: results/parcel_labels.nii.gz.",
-      "format": "",
+      "description": "Data-driven integer cluster labels in the input/mask grid. IDs depend on the fitted data and clustering settings; anatomical correspondence is not established by this output.",
+      "format": ".nii.gz",
       "primary": false,
       "path_template": "results/parcel_labels.nii.gz",
       "generated_when": {}
@@ -117,7 +119,7 @@
   "included_capabilities": [],
   "schema_version": 1,
   "id": "reviewed.nilearn-tool.kmeans",
-  "version": "1",
+  "version": "2",
   "kind": "method",
   "execution": {
     "kind": "reviewed",
@@ -185,7 +187,7 @@
         }
       ],
       "artifact_types": {
-        "parcel_labels.nii.gz": "generated_file"
+        "parcel_labels.nii.gz": "label_image"
       }
     }
   }

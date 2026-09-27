@@ -124,7 +124,7 @@
       "id": "output",
       "type": "imaging_input",
       "label": "output",
-      "description": "the output image. Each volume corresponds to the x, y & z component of each peak direction vector in turn.",
+      "description": "the output image. Each volume corresponds to the x, y & z component of each peak direction vector in turn. The output meaning depends on the input and selected operation. This generic image port does not certify anatomical labels, diffusion orientation, tissue fractions or spatial alignment.",
       "format": ".mif",
       "path_template": "output.mif"
     }

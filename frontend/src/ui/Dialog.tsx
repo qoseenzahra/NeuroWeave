@@ -25,7 +25,7 @@ type DialogProps = {
   header?: ReactNode;
   className?: string;
   children: ReactNode;
-  placement?: 'center' | 'right';
+  placement?: 'center' | 'right' | 'fullscreen';
   resizeLabel?: string;
   contentClassName?: string;
 };
@@ -70,6 +70,8 @@ export function Dialog({
       // Keep React state in sync when the browser closes the dialog itself.
       onCancel={(event) => {
         event.preventDefault();
+        // Escape closes the topmost detail card, not its enclosing editor.
+        event.stopPropagation();
         onClose();
       }}
       // The dialog element only receives clicks on the backdrop/gutter, since

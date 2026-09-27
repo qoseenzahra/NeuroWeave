@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from ..artifact_semantics import compatible, specialize
 from ..parameter_rules import effective_parameters, matches
 
 from ..capability_registry import CapabilityMethod, CapabilityRegistry
@@ -42,7 +43,9 @@ class RecipeCompiler:
             self._rewrite_upstream_bindings(parent, output_aliases)
             recipe = method.execution_recipe
             if recipe is None:
-                unit_method = method.model_copy(deep=True)
+                sources={(u.step.id,o.id):o.type for u in units for o in u.method.output_slots}
+                types={key:sources.get((b.upstream_step_id,b.output_slot_id),b.artifact_type) for key,b in parent.input_bindings.items()}
+                unit_method = specialize(method,types,effective_parameters(method,parent.selected_parameters))
                 units.append(
                     ExecutionUnit(
                         step=parent,
@@ -113,7 +116,7 @@ class RecipeCompiler:
                         source_id = binding_spec.slot_id or target_slot_id
                         source = parent.input_bindings.get(source_id)
                         if source is not None:
-                            if source.artifact_type != target_slot.type:
+                            if not compatible(source.artifact_type,target_slot.type):
                                 raise RecipeCompilationError(
                                     f"执行配方 {recipe.recipe_id}/{stage.id} 的输入类型不匹配："
                                     f"{source.artifact_type} -> {target_slot.type}"
@@ -122,7 +125,7 @@ class RecipeCompiler:
                                 deep=True,
                                 update={
                                     "slot_id": target_slot_id,
-                                    "artifact_type": target_slot.type,
+                                    "artifact_type": source.artifact_type,
                                 },
                             )
                         continue
@@ -136,15 +139,16 @@ class RecipeCompiler:
                             f"{source_step}.{source_output}"
                         )
                     upstream_step_id, upstream_output_id, artifact_type = upstream
-                    if artifact_type != target_slot.type:
+                    if not compatible(artifact_type,target_slot.type):
                         raise RecipeCompilationError(
                             f"执行配方 {recipe.recipe_id}/{stage.id} 的输入类型不匹配："
                             f"{artifact_type} -> {target_slot.type}"
                         )
                     bindings[target_slot_id] = InputBinding(
                         slot_id=target_slot_id,
-                        artifact_type=target_slot.type,
+                        artifact_type=target_slot.type if target_slot.cardinality=="many" else artifact_type,
                         source="upstream_output",
+                        upstream_sources=[v.model_copy(update={"step_id":stage_ids.get(v.step_id,v.step_id)}) for v in binding_spec.additional_sources],
                         label=target_slot.label,
                         upstream_step_id=upstream_step_id,
                         output_slot_id=upstream_output_id,
@@ -152,6 +156,7 @@ class RecipeCompiler:
                         messages=["运行时将绑定到配方上一步产生的受审核制品。"],
                     )
 
+                child_method=specialize(child_method,{k:b.artifact_type for k,b in bindings.items()},parameters)
                 child = WorkflowStep(
                     id=child_id,
                     order=len(units) + 1,
@@ -196,6 +201,8 @@ class RecipeCompiler:
                         f"执行配方 {recipe.recipe_id} 的公开输出无效："
                         f"{source.step_id}.{source.output_slot_id}"
                     )
+                if public_slot and not compatible(resolved[2],public_slot.type):
+                    raise RecipeCompilationError('参数改变了输出语义，请在 Pipeline 编辑器重新校验并发布：'+public_output_id)
                 output_aliases[(parent.id, public_output_id)] = (
                     resolved[0],
                     resolved[1],
@@ -216,6 +223,13 @@ class RecipeCompiler:
             for slot_id, binding in unit.step.input_bindings.items():
                 if binding.source != "upstream_output":
                     continue
+                target=next(s for s in unit.method.input_slots if s.id==slot_id)
+                if binding.upstream_sources and target.cardinality!='many':raise RecipeCompilationError('此输入只接受单个文件：'+slot_id)
+                refs=[(binding.upstream_step_id,binding.output_slot_id),*[(v.step_id,v.output_slot_id) for v in binding.upstream_sources]]
+                if len(refs)!=len(set(refs)):raise RecipeCompilationError('重复的多文件输入：'+slot_id)
+                for extra in binding.upstream_sources:
+                    kind=available.get((extra.step_id,extra.output_slot_id))
+                    if not compatible(kind,target.type):raise RecipeCompilationError('多文件输入引用了不可用或不兼容的上游输出：'+slot_id)
                 source = (binding.upstream_step_id or "", binding.output_slot_id or "")
                 artifact_type = available.get(source)
                 if artifact_type is None:
@@ -223,7 +237,7 @@ class RecipeCompiler:
                         f"步骤 {unit.step.title} 的输入 {slot_id} 引用了不可用的上游输出："
                         f"{source[0]}.{source[1]}"
                     )
-                if artifact_type != input_types.get(slot_id) or artifact_type != binding.artifact_type:
+                if not compatible(artifact_type,input_types.get(slot_id)) or not compatible(artifact_type,binding.artifact_type):
                     raise RecipeCompilationError(
                         f"步骤 {unit.step.title} 的输入 {slot_id} 与上游输出类型不匹配"
                     )
@@ -241,6 +255,9 @@ class RecipeCompiler:
         for slot_id, binding in list(step.input_bindings.items()):
             if binding.source != "upstream_output":
                 continue
+            for extra in binding.upstream_sources:
+                if (extra.step_id,extra.output_slot_id) in aliases:
+                    extra.step_id,extra.output_slot_id=aliases[(extra.step_id,extra.output_slot_id)]
             alias = aliases.get(
                 (binding.upstream_step_id or "", binding.output_slot_id or "")
             )
@@ -286,6 +303,8 @@ class RecipeCompiler:
             command_references=definition.command_references,
             delegate_skill_ids=definition.delegate_skill_ids,
             execution_resolution=definition.execution_resolution,
+            execution_recipe=definition.execution_recipe,
+            included_capabilities=definition.included_capabilities,
         )
 
     @staticmethod

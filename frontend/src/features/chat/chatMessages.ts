@@ -48,6 +48,7 @@ export type CapabilityRecommendation = {
 };
 
 export type ChatMessage = {
+  planningOffer?:string;
   persistedAfterRead?: number;
   id: string;
   role: 'user' | 'assistant';
@@ -80,6 +81,7 @@ export function toChatMessage(record: StoredConversationMessage): ChatMessage {
   const mode = metadata['interaction_mode'];
   const workflowId = metadata['workflow_id'];
   return {
+    planningOffer:typeof metadata['planning_offer']==='string'?metadata['planning_offer']:undefined,
     id: `stored-${record.message_id}`,
     role: record.role,
     content: record.content,

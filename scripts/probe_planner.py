@@ -8,13 +8,11 @@ import json
 import sys
 from pathlib import Path
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "bakend"))
 
-from app.main import workflow_service  # noqa: E402
+from app.main import app  # noqa: E402
 from app.models import ChatRequest  # noqa: E402
-
 
 DEFAULT_MESSAGES = [
     "我只需要做纤维追踪",
@@ -24,7 +22,7 @@ DEFAULT_MESSAGES = [
 
 
 async def probe(message: str) -> dict[str, object]:
-    decision = await workflow_service.assess_task(
+    decision = await app.state.services.workflow_service.assess_task(
         ChatRequest(message=message, interaction_mode="task")
     )
     return {

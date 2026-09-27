@@ -77,7 +77,7 @@ export type WorkflowStepAction =
   | { kind: 'remove-step'; stepId: string }
   | { kind: 'complete-dependencies' };
 
-export type WorkflowAction = WorkflowStepAction | { kind: WorkflowLifecycleAction };
+export type WorkflowAction = WorkflowStepAction | { kind: WorkflowLifecycleAction; acknowledgeQuality?:boolean };
 
 export function workflowActionKey(action: WorkflowAction): string {
   if ('slotId' in action) return `${action.kind}:${action.stepId}:${action.slotId}`;
@@ -117,7 +117,7 @@ function applyAction(
     case 'complete-dependencies':
       return completeDependencies(workflowId, expectedRevision);
     default:
-      return runWorkflowLifecycleAction(workflowId, action.kind, expectedRevision);
+      return runWorkflowLifecycleAction(workflowId, action.kind, expectedRevision, action.acknowledgeQuality);
   }
 }
 

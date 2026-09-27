@@ -100,7 +100,7 @@
       "id": "histogram",
       "type": "generated_file",
       "label": "histogram",
-      "description": "output a histogram of streamline lengths",
+      "description": "output a histogram of streamline lengths This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
       "format": ".txt",
       "path_template": "histogram.txt",
       "generated_when": {
@@ -113,7 +113,7 @@
       "id": "dump",
       "type": "generated_file",
       "label": "dump",
-      "description": "dump the streamlines lengths to a text file",
+      "description": "dump the streamlines lengths to a text file This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
       "format": ".txt",
       "path_template": "dump.txt",
       "generated_when": {

@@ -204,9 +204,11 @@ export type WorkflowLifecycleAction =
 export function runWorkflowLifecycleAction(
   workflowId: string,
   action: WorkflowLifecycleAction,
-  expectedRevision: number
+  expectedRevision: number,
+  acknowledgeQuality = false
 ): Promise<Workflow> {
   return post(`${workflowPath(workflowId)}/${action}`, {
+    acknowledge_quality: acknowledgeQuality,
     expected_revision: expectedRevision
   });
 }

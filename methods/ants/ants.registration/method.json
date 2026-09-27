@@ -3,9 +3,8 @@
   "description": "使用 ANTs 完成刚体、仿射或 SyN 非线性配准，并保存复合变换与完整日志。",
   "runner_id": "ants.registration",
   "input_types": [
-    "dataset_folder",
-    "nifti_image",
-    "bids_anat"
+    "imaging_input",
+    "brain_mask"
   ],
   "output_types": [
     "registered_image",
@@ -363,7 +362,7 @@
       "type": "registered_image",
       "label": "配准后影像",
       "description": "移动影像重采样到参考影像空间的结果。",
-      "format": "",
+      "format": ".nii.gz",
       "primary": true,
       "path_template": "registered.nii.gz",
       "generated_when": {}
@@ -391,7 +390,7 @@
   ],
   "source_references": [
     {
-      "path": "skills/smri-skill/SKILL.md",
+      "path": "skills/smri-skill/skill.json",
       "label": "sMRI Skill",
       "kind": "skill",
       "line_start": 1,

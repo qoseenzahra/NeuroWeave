@@ -6,7 +6,8 @@
     "analysis_input"
   ],
   "output_types": [
-    "generated_folder"
+    "generated_folder",
+    "generated_file"
   ],
   "requires_features": [],
   "parameters": [],
@@ -45,7 +46,7 @@
       "id": "file_microstates_fif",
       "type": "generated_file",
       "label": "microstates.fif",
-      "description": "microstates.fif: output of 原脚本 mne_microstates 分析. Relative run path: results/microstates.fif.",
+      "description": "microstates.fif: output of original script mne_microstates analysis. Relative run path: results/microstates.fif. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
       "format": "",
       "primary": false,
       "path_template": "results/microstates.fif",

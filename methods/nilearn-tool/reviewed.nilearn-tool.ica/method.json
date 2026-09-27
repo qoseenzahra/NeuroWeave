@@ -3,10 +3,12 @@
   "description": "Reference Nilearn snippet for resting-state ICA。 Inputs: input_list: 影像路径清单 (file); mask: 脑掩膜 (file). Registered outputs: results/components.nii.gz.",
   "runner_id": "reviewed.nilearn-tool.ica",
   "input_types": [
-    "analysis_input"
+    "analysis_input",
+    "brain_mask"
   ],
   "output_types": [
-    "generated_folder"
+    "generated_folder",
+    "generated_file"
   ],
   "requires_features": [],
   "parameters": [
@@ -90,8 +92,8 @@
       "id": "file_components_nii_gz",
       "type": "generated_file",
       "label": "components.nii.gz",
-      "description": "components.nii.gz: output of 静息态 ICA. Relative run path: results/components.nii.gz.",
-      "format": "",
+      "description": "components.nii.gz: output of resting-state ICA. Relative run path: results/components.nii.gz. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
+      "format": ".nii.gz",
       "primary": false,
       "path_template": "results/components.nii.gz",
       "generated_when": {}

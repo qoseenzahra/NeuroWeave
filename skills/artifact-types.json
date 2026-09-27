@@ -161,7 +161,7 @@
     {
       "id": "freesurfer_subject",
       "label": "FreeSurfer 受试者目录",
-      "description": "recon-all 产生的 mri、surf、label、stats 等完整受试者输出目录。",
+      "description": "FreeSurfer subject directory. The available derivatives depend on the completed reconstruction stages; bind individual declared files when a downstream method needs a specific image or table.",
       "kind": "folder"
     },
     {
@@ -223,18 +223,20 @@
     {
       "id": "parcellation_image",
       "label": "脑区分区图",
-      "description": "生成连接组矩阵时用于定义节点的标签影像。",
+      "description": "Integer brain-region node image with an explicitly chosen parcellation scheme. Anatomical atlas identity, label lookup table, subject and physical space must be checked before connectivity use. A type declaration alone does not certify alignment.",
       "kind": "file",
       "formats": [
         ".nii",
         ".nii.gz",
-        ".mif"
+        ".mif",
+        ".mgz",
+        ".mgh"
       ]
     },
     {
       "id": "scalar_image",
       "label": "标量影像",
-      "description": "沿流线采样或连接组边权计算使用的标量图。",
+      "description": "Voxel-wise scalar quantities such as diffusion metrics, coefficients or intensities. Units, sign, normalization and physical space are determined by the producing method; these are not discrete node labels.",
       "kind": "file",
       "formats": [
         ".nii",
@@ -338,18 +340,21 @@
     },
     {
       "id": "label_image",
-      "label": "标签图谱",
-      "description": "标签图谱；运行时验证实际产物。",
+      "label": "Discrete label image",
+      "description": "Discrete integer labels, such as tissue classes, anatomical segmentations or learned clusters. Label meaning comes from the producing method and its settings; this general type is not automatically a connectome node parcellation.",
       "kind": "file",
       "formats": [
         ".nii",
-        ".nii.gz"
+        ".nii.gz",
+        ".mgz",
+        ".mgh",
+        ".mif"
       ]
     },
     {
       "id": "b_values",
       "label": "扩散 b 值",
-      "description": "扩散 b 值；运行时验证实际产物。",
+      "description": "Diffusion weighting values, one per DWI volume, in matching volume order. Must be paired with the corresponding gradient directions and image; file existence alone does not verify acquisition consistency.",
       "kind": "file",
       "formats": [
         ".bval",
@@ -359,7 +364,7 @@
     {
       "id": "b_vectors",
       "label": "扩散梯度方向",
-      "description": "扩散梯度方向；运行时验证实际产物。",
+      "description": "Diffusion gradient directions corresponding to the DWI volumes and coordinate convention. Use rotated directions after motion correction when supplied; do not reuse the original vectors blindly.",
       "kind": "file",
       "formats": [
         ".bvec",

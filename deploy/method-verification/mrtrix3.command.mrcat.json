@@ -1,11 +1,11 @@
 {
   "method_id": "mrtrix3.command.mrcat",
-  "method_version": "1",
-  "execution_fingerprint": "3a82a754febb1abce28d0e16f34b121e64692aaf865e064a13aa2cfe8047a125",
-  "report_path": "deploy/method-verification/reports/scientific-synthetic.json",
-  "report_sha256": "77b9848ad9a4be60e4c0c3f79a3e2128a6705cb91fd1a400c0b5878782dfe577",
+  "method_version": "2",
+  "execution_fingerprint": "f207881e4aaf0a5d33ca005664f7b83d5cbcd5ac9b1183c6c629a318c60db537",
   "test_type": "synthetic",
-  "tested_at": "2026-09-23T13:35:29.692029+00:00",
-  "environment": "mgr Linux CPU, 1 thread; isolated synthetic inputs",
-  "result": "passed"
+  "tested_at": "2026-09-27T03:51:26.871280+00:00",
+  "environment": "mgr installed MRtrix3/FSL/ANTs; six-voxel axes",
+  "result": "passed",
+  "report_path": "deploy/method-verification/reports/reliability-synthetic.json",
+  "report_sha256": "8ac98604628405dba7c79bb7a2c027322331cd17afb6c28c866ab0c681e30d75"
 }

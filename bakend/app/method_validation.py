@@ -68,10 +68,9 @@ def validate_contract(method):
 
 
 def execution_fingerprint(method, root: Path):
-    # Conservatively invalidate evidence if any execution adapter changes. A live
-    # environment probe is deliberately excluded: it cannot prove execution.
-    digest = hashlib.sha256(method.revision().encode())
-    for path in sorted((root / 'bakend/app/execution').rglob('*.py')):
+    from .execution_dependencies import execution_sources
+    digest = hashlib.sha256(('dependency-closure-v2:'+method.revision()).encode())
+    for path in execution_sources(method,root):
         digest.update(path.relative_to(root).as_posix().encode())
         digest.update(path.read_text(encoding="utf-8").encode())
     return digest.hexdigest()

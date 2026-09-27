@@ -8,11 +8,59 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
+from typing import Any
 
 
 class SkillCatalog:
     def __init__(self, loader, registry, runners):
         self.loader, self.registry, self.runners = loader, registry, runners
+
+    def execution_status(
+        self,
+        skill: Any,
+        methods: list[Any] | None = None,
+        runtime_statuses: dict[str, dict] | None = None,
+    ) -> dict[str, Any]:
+        methods = (
+            methods
+            if methods is not None
+            else [
+                method
+                for method in self.registry.all_methods()
+                if method.skill_id == skill.name
+            ]
+        )
+        runner_ids = self.execution_runner_ids(methods)
+        ready: list[str] = []
+        reasons: list[str] = []
+        statuses = runtime_statuses if runtime_statuses is not None else {}
+        for runner_id in runner_ids:
+            runner = self.runners.get(runner_id)
+            if runner is None:
+                reasons.append(f"{runner_id}：尚未接入可信 Runner")
+                continue
+            if runner_id not in statuses:
+                statuses[runner_id] = runner.runtime_status()
+            status = statuses[runner_id]
+            if status.get("available"):
+                ready.append(runner_id)
+            else:
+                reasons.append(f"{runner_id}：{status.get('reason') or '环境不可用'}")
+        payload = skill.public_dict()
+        payload.update(
+            executable=bool(ready),
+            runner_count=len(runner_ids),
+            ready_runner_count=len(ready),
+            planning_method_count=sum(
+                method.execution_mode == "planning" for method in methods
+            ),
+            execution_state=(
+                "ready" if ready else "needs_environment" if runner_ids else "planning"
+            ),
+            runtime_reasons=reasons[:6],
+        )
+        return payload
 
     def _skill(self, name):
         skill = self.loader.find(name)
@@ -60,6 +108,8 @@ class SkillCatalog:
         store.load()
         scopes = [store.skills[skill_id]] if skill_id else list(store.skills.values())
         items = []
+        scores = {}
+        terms = set(q.casefold().split())
         seen = set()
         for skill in scopes:
             refs = (
@@ -95,10 +145,38 @@ class SkillCatalog:
                 if identity in seen:
                     continue
                 text = " ".join(
-                    [identity, label, description, ref.get("role", "")]
+                    [
+                        identity,
+                        label,
+                        description,
+                        ref.get("role", ""),
+                        *[
+                            slot["type"]
+                            for slot in ports["input_slots"] + ports["output_slots"]
+                        ],
+                    ]
                 ).lower()
-                if q and not all(t in text for t in q.lower().split()):
+                # Model queries often contain bilingual synonyms. Requiring all
+                # of them drops real methods documented in only one language.
+                # Rank partial matches as candidates; contracts decide relevance.
+                matched = [
+                    term
+                    for term in terms
+                    if (
+                        bool(
+                            re.search(
+                                r"(?<![\w.-])" + re.escape(term) + r"(?![\w.-])", text
+                            )
+                        )
+                        if re.fullmatch(r"[a-z0-9_.-]+", term)
+                        else term in text
+                    )
+                ]
+                if terms and not matched:
                     continue
+                scores[identity] = len(matched) + (
+                    10 if q.casefold() == identity.casefold() else 0
+                )
                 seen.add(identity)
                 items.append(
                     dict(
@@ -117,33 +195,65 @@ class SkillCatalog:
                         output_count=len(ports["output_slots"]),
                     )
                 )
-        items.sort(key=lambda m: (m["label"], m["method_id"]))
-        return self._page(items, cursor, limit)
+        items.sort(key=lambda m: (-scores[m["method_id"]], m["label"], m["method_id"]))
+        page = self._page(items, cursor, limit)
+        if q:
+            page.update(
+                query=q,
+                match_mode="ranked_any_term",
+                scope=skill_id or "all",
+                hint="Candidates require input/output review; an empty scoped result does not prove absence. Omit skill_id to search all registered methods.",
+            )
+        return page
 
     def execution_runner_ids(self, methods):
         """Pipeline identities are not Runner identities; inspect their real members."""
-        return sorted({
-            child.runner_id
-            for method in methods if method.execution_mode == "runner"
-            for child in (self.registry.recipe_methods(method.execution_recipe)
-                          if method.execution_recipe else [method])
-        })
+        return sorted(
+            {
+                child.runner_id
+                for method in methods
+                if method.execution_mode == "runner"
+                for child in (
+                    self.registry.recipe_methods(method.execution_recipe)
+                    if method.execution_recipe
+                    else [method]
+                )
+            }
+        )
 
     def skill_structure(self, skill_id):
         skill_id = self._skill(skill_id).name
         self.registry.definitions.load()
         value = self.registry.definitions.skills[skill_id]
         store = self.registry.definitions
-        result = {key: value.get(key, []) for key in
-                  ("description", "selection_rules", "applicability", "limitations", "examples")}
+        result = {
+            key: value.get(key, [])
+            for key in (
+                "description",
+                "selection_rules",
+                "applicability",
+                "limitations",
+                "examples",
+            )
+        }
         # Descriptions have one owner. Derive the detail view from live contracts
         # rather than storing a second, easily outdated copy in each Skill.
-        result["functions"] = [dict(method_ref=ref["method_ref"],
-            label=store.methods[ref["method_ref"]].label,
-            description=store.methods[ref["method_ref"]].description) for ref in value["method_refs"]]
-        result["functions"] += [dict(pipeline_ref=ref["pipeline_ref"],
-            label=store.pipelines[ref["pipeline_ref"]]["label"],
-            description=store.pipelines[ref["pipeline_ref"]]["description"]) for ref in value["pipeline_refs"]]
+        result["functions"] = [
+            dict(
+                method_ref=ref["method_ref"],
+                label=store.methods[ref["method_ref"]].label,
+                description=store.methods[ref["method_ref"]].description,
+            )
+            for ref in value["method_refs"]
+        ]
+        result["functions"] += [
+            dict(
+                pipeline_ref=ref["pipeline_ref"],
+                label=store.pipelines[ref["pipeline_ref"]]["label"],
+                description=store.pipelines[ref["pipeline_ref"]]["description"],
+            )
+            for ref in value["pipeline_refs"]
+        ]
         return result
 
     def pipeline(self, identity):
@@ -236,12 +346,16 @@ class SkillCatalog:
             output_count=len(method.output_slots),
         )
         if method.entry_kind == "method" and method.definition_id:
-            identity["verification"] = self.registry.definitions.verification(method.definition_id)
+            identity["verification"] = self.registry.definitions.verification(
+                method.definition_id
+            )
         if runner and hasattr(runner, "contract"):
             c = runner.contract
             identity["command_coverage"] = dict(
                 total=c.get("total_options"),
-                exposed=len(c.get("options", {})) if "options" in c else len(method.parameters),
+                exposed=len(c.get("options", {}))
+                if "options" in c
+                else len(method.parameters),
                 omitted=list(c["omitted_options"]),
             )
         if section == "all":
@@ -261,7 +375,11 @@ class SkillCatalog:
         if type(max_chars) is not int or not 1 <= max_chars <= 12000:
             raise ValueError("max_chars must be between 1 and 12000")
         reference = skill.path / "SKILL.md"
-        text = reference.read_text(encoding="utf-8") if reference.is_file() else skill.overview
+        text = (
+            reference.read_text(encoding="utf-8")
+            if reference.is_file()
+            else skill.overview
+        )
         end = offset + max_chars
         return dict(
             skill_id=skill_id,
@@ -299,7 +417,7 @@ SKILL_TOOLS = [
     ),
     function(
         "list_skill_methods",
-        "检索 Skill 的结构化方法索引，不加载完整手册。缺少环境不等于没有方法。",
+        "检索结构化方法索引；q 中的中英文词按任一命中排序，不要求同时出现。省略 skill_id 搜索全库；局部无匹配不代表没有方法。缺少环境不等于没有方法。",
         {
             "skill_id": {"type": "string"},
             "q": {"type": "string"},

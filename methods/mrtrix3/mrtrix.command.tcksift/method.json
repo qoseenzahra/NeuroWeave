@@ -243,7 +243,7 @@
       "id": "csv",
       "type": "generated_file",
       "label": "csv",
-      "description": "output statistics of execution per iteration to a .csv file",
+      "description": "output statistics of execution per iteration to a .csv file This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
       "format": ".txt",
       "path_template": "csv.txt",
       "generated_when": {
@@ -256,7 +256,7 @@
       "id": "out_mu",
       "type": "generated_file",
       "label": "out_mu",
-      "description": "output the final value of SIFT proportionality coefficient mu to a text file",
+      "description": "output the final value of SIFT proportionality coefficient mu to a text file This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
       "format": ".txt",
       "path_template": "out_mu.txt",
       "generated_when": {
@@ -269,7 +269,7 @@
       "id": "out_selection",
       "type": "generated_file",
       "label": "out_selection",
-      "description": "output a text file containing the binary selection of streamlines",
+      "description": "output a text file containing the binary selection of streamlines This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
       "format": ".txt",
       "path_template": "out_selection.txt",
       "generated_when": {

@@ -3,7 +3,6 @@
   "description": "读取 NIfTI 头、维度、数据类型、体素尺寸与仿射矩阵，并可保存规范化副本。",
   "runner_id": "nibabel.inspect",
   "input_types": [
-    "dataset_folder",
     "imaging_input"
   ],
   "output_types": [
@@ -79,8 +78,8 @@
       "id": "copy",
       "type": "generated_file",
       "label": "NIfTI 副本",
-      "description": "可选重新写出的影像。",
-      "format": "",
+      "description": "Optional re-written images. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
+      "format": ".nii.gz",
       "primary": false,
       "path_template": "nifti-copy.nii.gz",
       "generated_when": {
@@ -99,7 +98,7 @@
       "line_end": null
     },
     {
-      "path": "skills/nibabel-skill/SKILL.md",
+      "path": "skills/nibabel-skill/skill.json",
       "label": "Nibabel Skill",
       "kind": "skill",
       "line_start": 1,

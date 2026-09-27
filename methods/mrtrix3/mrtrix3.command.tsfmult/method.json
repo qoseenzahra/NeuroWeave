@@ -79,7 +79,7 @@
       "id": "output",
       "type": "generated_file",
       "label": "output",
-      "description": "Native command output, saved in this run’s output directory. Multiply corresponding values in track scalar files",
+      "description": "Native command output, saved in this run’s output directory. Multiply corresponding values in track scalar files This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
       "format": ".txt",
       "primary": true,
       "path_template": "output.tsf",

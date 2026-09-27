@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "id": "mrtrix.command.sh2response",
-  "version": "1",
+  "version": "2",
   "kind": "method",
   "label": "MRtrix3 sh2response",
   "description": "Generate an appropriate response function from the image data for spherical deconvolution\nThe spherical harmonic coefficients are stored according the conventions described the main documentation, which can be found at the following link: \nhttps://mrtrix.readthedocs.io/en/3.0.8/concepts/spherical_harmonics.html",
@@ -102,7 +102,7 @@
   "output_slots": [
     {
       "id": "response",
-      "type": "generated_file",
+      "type": "response_functions",
       "label": "response",
       "description": "the output axially-symmetric spherical harmonic coefficients",
       "format": ".txt",
@@ -112,7 +112,7 @@
       "id": "dump",
       "type": "generated_file",
       "label": "dump",
-      "description": "dump the m=0 SH coefficients from all voxels in the mask to the output file, rather than their mean",
+      "description": "dump the m=0 SH coefficients from all voxels in the mask to the output file, rather than their mean This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
       "format": ".txt",
       "path_template": "dump.txt",
       "generated_when": {
@@ -126,6 +126,7 @@
     "imaging_input"
   ],
   "output_types": [
+    "response_functions",
     "generated_file"
   ],
   "source_references": [

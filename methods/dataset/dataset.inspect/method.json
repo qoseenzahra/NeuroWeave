@@ -2,12 +2,8 @@
   "label": "数据集巡检",
   "description": "扫描授权目录的结构和轻量元数据，形成处理前检查摘要。",
   "runner_id": "dataset.inspect",
-  "input_types": [
-    "dataset_folder"
-  ],
-  "output_types": [
-    "dataset_profile"
-  ],
+  "input_types": [],
+  "output_types": [],
   "requires_features": [],
   "parameters": [
     {
@@ -231,7 +227,7 @@
       "line_end": null
     },
     {
-      "path": "skills/dataset-inspector/SKILL.md",
+      "path": "skills/dataset-inspector/skill.json",
       "label": "Skill 使用说明",
       "kind": "skill",
       "line_start": 1,

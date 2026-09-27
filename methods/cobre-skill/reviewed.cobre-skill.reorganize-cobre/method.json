@@ -140,9 +140,7 @@
           "sha256": "a4b9fdbb6c4947e1653d20f0578c3b2401f45a4d1a7c193cafc62987db734042"
         }
       ],
-      "artifact_types": {
-        "bids/**/*.nii*": "generated_file"
-      }
+      "artifact_types": {}
     }
   }
 }

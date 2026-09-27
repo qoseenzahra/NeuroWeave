@@ -456,7 +456,7 @@
       "id": "output",
       "type": "imaging_input",
       "label": "output",
-      "description": "Native command output, saved in this run’s output directory. Voxelwise arithmetic with one native operator per Method; use Pipeline steps for longer expressions.",
+      "description": "Native command output, saved in this run’s output directory. Voxelwise arithmetic with one native operator per Method; use Pipeline steps for longer expressions. The output meaning depends on the input and selected operation. This generic image port does not certify anatomical labels, diffusion orientation, tissue fractions or spatial alignment.",
       "format": ".mif",
       "primary": true,
       "path_template": "output.mif",

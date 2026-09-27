@@ -3,8 +3,8 @@
   "description": "使用 Skill 自带且已审核的 Buxton 单室模型脚本计算 pCASL、CASL 或 PASL CBF。",
   "runner_id": "asl.compute_cbf",
   "input_types": [
-    "dataset_folder",
-    "imaging_input"
+    "imaging_input",
+    "parcellation_image"
   ],
   "output_types": [
     "generated_file",
@@ -311,8 +311,8 @@
       "id": "cbf",
       "type": "generated_file",
       "label": "CBF 影像",
-      "description": "CBF NIfTI 结果。",
-      "format": "",
+      "description": "CBF NIfTI result. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
+      "format": ".nii.gz",
       "primary": true,
       "path_template": "cbf.nii.gz",
       "generated_when": {}
@@ -321,8 +321,8 @@
       "id": "roi",
       "type": "generated_file",
       "label": "CBF ROI 汇总",
-      "description": "每个 atlas 标签的平均 CBF。",
-      "format": "",
+      "description": "The mean CBF for each atlas label. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
+      "format": ".csv",
       "primary": false,
       "path_template": "cbf-roi-summary.csv",
       "generated_when": {
@@ -351,7 +351,7 @@
       "line_end": null
     },
     {
-      "path": "skills/asl-skill/SKILL.md",
+      "path": "skills/asl-skill/skill.json",
       "label": "ASL Skill",
       "kind": "skill",
       "line_start": 1,

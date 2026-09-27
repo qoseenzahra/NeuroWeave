@@ -83,7 +83,8 @@ class DryRunUpstreamTests(unittest.TestCase):
     def bind_file(self, step, name):
         slot = next(slot for slot in step.method_options[0].input_slots if slot.id == name)
         path = self.root / (step.id + "_" + name + ".mif")
-        path.write_bytes(b"synthetic fixture; mrstats is mocked")
+        contents={'b_values':'0 1000','b_vectors':'1 0\n0 1\n0 0','gradient_table':'1 0 0 0\n0 1 0 1000'}.get(slot.type,'synthetic fixture; mrstats is mocked')
+        path.write_text(contents,encoding='utf-8')
         step.input_bindings[name] = InputBinding(
             slot_id=name, artifact_type=slot.type, source="existing_path",
             absolute_path=str(path), status="validated",
@@ -123,7 +124,8 @@ class DryRunUpstreamTests(unittest.TestCase):
                            return_value=subprocess.CompletedProcess([], 0, "0 0 0")) as command:
                     problems = runner.preflight(self.context(is_dry_run=dry))
                 self.assertTrue(any("所有系数均为 0" in message for message in problems))
-                self.assertEqual(command.call_args.args[0][1], str(path))
+                if dry:self.assertEqual(command.call_args.args[0][1], str(path))
+                else:command.assert_not_called()  # same unchanged file reuses content result
 
     def test_runtime_never_accepts_unresolved_upstream_binding(self):
         with patch("app.execution.runners.mrtrix.subprocess.run") as command:
@@ -186,9 +188,10 @@ class DryRunUpstreamTests(unittest.TestCase):
         path = self.bind_file(self.tracking, "fod")
         binding = self.tracking.input_bindings["fod"]
         binding.binding_mode = "per_sample"
+        second = path.with_name("second-fod.mif"); second.write_bytes(path.read_bytes())
         binding.sample_matches = [
             SamplePathMatch(sample_id=name, label=name, relative_path=path.name,
-                            absolute_path=str(path), status="matched")
+                            absolute_path=str(path if name=="sample-01" else second), status="matched")
             for name in ("sample-01", "sample-02")
         ]
         with patch("app.execution.runners.mrtrix.subprocess.run", side_effect=[
@@ -217,9 +220,10 @@ class DryRunUpstreamTests(unittest.TestCase):
         path = self.bind_file(self.tracking, "five_tt")
         binding = self.tracking.input_bindings["five_tt"]
         binding.binding_mode = "per_sample"
+        second = path.with_name("second-fod.mif"); second.write_bytes(path.read_bytes())
         binding.sample_matches = [
             SamplePathMatch(sample_id=name, label=name, relative_path=path.name,
-                            absolute_path=str(path), status="matched")
+                            absolute_path=str(path if name=="sample-01" else second), status="matched")
             for name in ("sample-01", "sample-02")
         ]
         seen = []
@@ -231,7 +235,7 @@ class DryRunUpstreamTests(unittest.TestCase):
         with patch.object(self.runners.get("mrtrix.tckgen"), "preflight", side_effect=preflight):
             self.assertEqual(self.runners.preflight_snapshot(
                 self.workflow, self.tracking, self.tracking.method_options[0]), [])
-        self.assertEqual(seen, [str(path), str(path)])
+        self.assertCountEqual(seen, [str(path), str(second)])
         binding.sample_matches[1].status = "missing"
         self.assertTrue(self.runners.preflight_snapshot(self.workflow, self.tracking, self.tracking.method_options[0]))
 

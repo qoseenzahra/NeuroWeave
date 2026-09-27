@@ -135,7 +135,7 @@ class MrtrixCommandRunner(ExternalCommandRunner):
         self.execute(context,self.build_argv(context),environment=MrtrixTckgenRunner._environment(),cwd=context.output_directory)
         values=self.values(context)
         artifacts=[]
-        for output in self.method.output_slots:
+        for output in context.method.output_slots:
             if not matches(output.generated_when,values):continue
             path=context.output_directory/output.path_template
             if not path.is_file() or path.stat().st_size==0:raise RuntimeError('命令未生成有效输出：'+output.id)

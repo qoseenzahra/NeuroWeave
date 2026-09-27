@@ -117,7 +117,7 @@
       "id": "summary",
       "type": "generated_file",
       "label": "summary",
-      "description": "Native command output, saved in this run’s output directory. Summarize segmentation regions with optional image intensity statistics.",
+      "description": "Native command output, saved in this run’s output directory. Summarize segmentation regions with optional image intensity statistics. This generic file port does not establish a specialized scientific artifact type; downstream use must match the documented contents, not merely the filename extension.",
       "format": ".txt",
       "primary": true,
       "path_template": "segstats.txt",
