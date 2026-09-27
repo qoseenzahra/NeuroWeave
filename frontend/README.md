@@ -1,17 +1,29 @@
-# NeuroWeave frontend
+# NeuroWeave 前端
 
-React/Vite 前端，迁入自 `frontend-new` 分支 6ab1c5c，并包含其后在本地和 3001 验证的功能对齐、弹窗、运行控制及流程收起改动。后端、Skill 和 Runner 接口沿用 main。
+本目录是 `codex/structured-skill-methods` 的 React 19 / TypeScript / Vite 前端，使用 React Query 管理服务端查询、Zustand 管理界面状态。它依赖本分支的 Skill / Method / Pipeline、Workflow、文件管理及运行 API，不能假定与任意旧版 main 后端兼容。
+
+## 开发和验证
+
+CI 使用 Node.js 24；从本目录运行：
 
 ```bash
 npm ci
-npm test
 npm run lint
+npm test
 npm run build
 npm run dev -- --host 127.0.0.1 --port 5173
 ```
 
-使用 Node.js 24（CI）或 >=22.13 的 Node 22。开发模式 `/api` 代理到 127.0.0.1:8010；生产由原有 3000 网关转发 API，静态页面由 nginx 提供。`npm run build` 包含 TypeScript 检查。
+`npm run build` 包含 TypeScript 检查。开发模式 `/api` 代理到 `127.0.0.1:8010`；生产默认使用同源 `/api`，也可在构建时设置 `VITE_LOCALFLOW_API_URL`。前端环境变量会进入浏览器，不能放模型密钥或服务器凭据。测试结束后关闭临时服务。
 
-测试写操作使用独立数据库、合成数据和输出目录，结束后关闭本地测试服务。生产构建可设置 `VITE_LOCALFLOW_API_URL`，默认使用同源 `/api`；前端环境变量不能放密钥。
+## 功能与模块
 
-功能验证记录见 [main-parity.md](docs/main-parity.md)；服务器发布和回退见 [frontend-migration.md](../deploy/frontend-migration.md)。历史记录中的“仅测试端口”“未提交”说明当时的测试阶段，本次 PR 将该实现替换到 main 的 frontend 目录。
+- `features/conversations/`：历史列表、搜索、分页与缓存；正文按需分页。
+- `features/chat/`：对话内容、工具进度及消息容器滚动。
+- `features/library/`：Skill / Method / Pipeline 分类、详情、节点画布、草稿和版本。参数与输入输出条件来自后端契约；“生成说明”按钮才触发模型调用。
+- `features/workflows/`、`features/runs/`：流程审核、文件绑定、运行资源及分页监控。
+- 数据集及输出目录浏览使用服务器结构化文件 API；浏览器原生选文件不能替代服务器目录选择。
+
+界面发送 `X-NeuroWeave-Contract: 2`，并按系统语言请求目录显示文本。ID、命令选项、文件路径、用户自定义内容和对话不由显示翻译改写。
+
+本分支测试入口为 3002，主站为 3000。发布时核对 API 契约与前后端版本，不能仅根据页面打开成功判定功能兼容。画布交互及已完成部署的范围见 [画布说明](../deploy/pipeline-canvas-ui.md)；全部文档见 [索引](../deploy/README.md)。[main 对齐记录](docs/main-parity.md) 只保留历史验收事实。

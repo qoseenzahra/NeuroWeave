@@ -1,9 +1,7 @@
 # Imported implementation provenance
 
-Original snapshot: `D:\reference_projects\NeuroClaw-main`, imported 2026-09-01 from a directory without Git metadata. The MIT attribution and original implementation/reference files remain in this repository.
+Some model implementations, scripts and reference documents were imported from a user-provided NeuroClaw source snapshot on 2026-09-01. That snapshot had no Git metadata. Original attribution and the MIT notice remain under [THIRD_PARTY_NOTICES](THIRD_PARTY_NOTICES/); recorded source paths and hashes remain in [the implementation inventory](bakend/resources/existing_implementation_sources.json).
 
-The active Skill catalog is now native NeuroWeave JSON: `skills/*/skill.json` orchestrates independent `methods/*/*/method.json` and reusable `pipelines/*/pipeline.json`. Markdown references do not authorize execution. Registered Runners and validated contracts are the execution boundary.
+These records establish provenance, not NeuroWeave's current architecture or execution permissions. The native catalog uses `skills/*/skill.json`, independent `methods/*/*/method.json` and versioned Pipelines. Original documentation, code identifiers, environment examples and licensing text retain their source context; they must not be relabeled as newly authored implementations.
 
-Obsolete imported planning/execution manifests, duplicated overview files, offline summaries and their generators were removed. Do not rerun an upstream directory synchronization over this catalog. Review individual implementation updates, preserve provenance, update affected contracts and run the release checks.
-
-Original scripts and required model sources are retained where referenced by Methods. Compatibility DAG validation remains for historical reference inspection; it does not discover or execute the native catalog.
+Review individual source updates together with affected Method contracts and execution evidence. Do not synchronize an old source tree over the native catalog, or restore obsolete planning/execution manifests as an execution authority. Current maintenance instructions are in [the branch documentation](deploy/README.md).

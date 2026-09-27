@@ -1,6 +1,6 @@
-# 原生资源目录、检索与命令扩展（2026-09-23）
+# 原生资源目录、检索与命令扩展
 
-当前分支以 Method 为执行单元、Skill 为统筹指导、Pipeline 为可复用的真实方法连接。本次目录包含 105 个规范 Skill、328 个 Method、28 个内置 Pipeline；用户保存的 Pipeline 另从数据库动态加载。
+当前分支以 Method 为执行单元、Skill 为统筹指导、Pipeline 为可复用的真实方法连接。当前静态目录包含 105 个规范 Skill、328 个 Method、28 个内置 Pipeline；用户保存的 Pipeline 另从数据库动态加载。
 
 ## 查找与规划
 
@@ -22,9 +22,9 @@
 
 ## 新增真实命令
 
-新增 79 个定义：FSL 21、ANTs 17、FreeSurfer 14、MRtrix3 27。覆盖影像运算、统计、GLM/置换检验、裁剪/合并/拆分、变换组合、去噪、偏置校正、组织分割、标签统计、表面、Fixel、流线和轨迹标量等。
+2026-09-23 的扩展批次新增 79 个定义：FSL 21、ANTs 17、FreeSurfer 14、MRtrix3 27。覆盖影像运算、统计、GLM/置换检验、裁剪/合并/拆分、变换组合、去噪、偏置校正、组织分割、标签统计、表面、Fixel、流线和轨迹标量等。
 
-定义由 `scripts/build_scientific_commands.py` 中明确审核的参数规格生成；源帮助位于 `deploy/software-contracts/scientific/` 和已有 MRtrix3 帮助目录。生成器与运行时代码 allowlist 同步，新增文档本身不授予执行能力。`--check` 检查生成结果。
+这些命令最初从受审阅规格导入，之后已在 `methods/**/method.json` 中完善语义与条件；该 JSON 是当前唯一契约，不应重新运行 bootstrap 生成器覆盖它。源帮助位于 `deploy/software-contracts/scientific/` 和 MRtrix3 帮助目录。新增入口仍需同步受信任 Runner 登记；用 `scripts/check_release.py` 检查契约与执行登记，新增文档本身不授予执行能力。
 
 Runner 使用 Python subprocess 的 argv，不通过 Shell。输入分别授权，输出绑定到当前运行目录；文本值只允许枚举或登记的数值语法。FSL 长参数遵循 `--flag=value`，Fixel 输出文件遵循原命令的相对目录约定。互斥、必填及可见条件复用现有前端与后端条件引擎。可选多值选项不能只填一部分。目录输入不递归跟随未知目录/越界链接。
 
@@ -32,15 +32,17 @@ Runner 使用 Python subprocess 的 argv，不通过 Shell。输入分别授权�
 
 这不是把 `/opt` 每个可执行文件全部包装成方法。环境管理、交互程序、任意脚本入口、未审核的选项以及需要更复杂数据契约的命令仍不自动开放。详情列出 `option_coverage` 说明未开放项；实际开放参数以 Method 定义为准。一个合成用例也不等于测试了命令的全部可选参数组合。
 
-## 验证和部署
+## 历史验证与部署范围（2026-09-23）
+
+以下数量、发布路径及检查结果限定在该次发布。当前执行证据匹配状态由方法详情重新计算；最新模块及画布说明见 [文档索引](README.md)。
 
 - 本次新增命令：79/79 微型合成执行通过；报告 `deploy/method-verification/reports/scientific-synthetic.json`。
 - 原 MRtrix：13/13 合成验证通过，包括 tckgen → 独立 tcksift2；报告 `deploy/method-verification/reports/mrtrix-synthetic.json`。
-- 证据包含 Method 版本、执行代码指纹和报告校验和。当前 92 个方法有匹配的通过证据，其余 236 个没有当前版本的执行证据，不等于环境不满足或执行失败。
+- 证据包含 Method 版本、执行代码指纹和报告校验和。当时 92 个方法有匹配的通过证据，其余 236 个没有该版本的执行证据，不等于环境不满足或执行失败。
 - 全量后端：341 passed、3 skipped、694 subtests passed；之后新增的语言中间件测试另行执行。
 - 前端构建通过；组件测试覆盖目录、计数、画布、语言和现有功能。内置浏览器无法访问本机预览，未完成真实浏览器交互验证。临时本地服务已关闭。
 - 隔离测试只使用新建的微型合成数据，不访问研究数据，不提交或取消现有 Slurm 作业。
 
-服务器测试部署在 `http://192.10.84.6:3002`，源目录 `/home/hipeson/.cache/neuroweave/methods-webtest-20260922`；3000 正式服务不参与替换。发布前逐文件核对原/新哈希；已逐项审阅 5 个服务器前端差异文件。运行记录、环境文件、数据库、输出和旧 Worker 代码保留。只有 API/Slurm 队列空闲时才重启测试后端。
+服务器测试部署在 `http://192.10.84.6:3002`，源目录 `/home/hipeson/.cache/neuroweave/methods-webtest-20260922`；3000 正式服务不参与替换。该次发布前逐文件核对原/新哈希并审阅服务器差异。后续发布须重新比较，不能沿用旧哈希清单。运行记录、环境文件、数据库、输出和旧 Worker 代码保留。只有 API/Slurm 队列空闲时才重启测试后端。
 
 后台重启命令：`systemctl --user restart neuroweave-methods-test.service`。仅在确认无活跃任务且维护锁阻止新提交时使用；发布脚本负责数据库备份、不可变 Worker 副本和恢复检查，不要直接覆盖运行中的 Worker 目录。

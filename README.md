@@ -1,477 +1,95 @@
 # NeuroWeave
 
-NeuroWeave 是以 NeuroClaw 为上游能力库的本地神经影像智能工作流平台，通过自然语言组织分析需求，编排处理步骤，并由经过审核的可信 Runner 调用服务器现有软件，形成可追溯的分析流程。
+NeuroWeave 是面向服务器文件系统的神经影像工作流平台。用户通过对话或节点画布组织处理步骤，选择输入、输出目录和运行资源，审核后由受信任 Runner 调用已有软件命令、库 API 或已接入的脚本。
 
-项目原名 LocalFlow。当前产品名称统一为 **NeuroWeave**；为兼容现有部署，源码目录 `D:\reference_projects\LocalFlow`、服务器目录 `/home/hipeson/LocalFlow`、SSH 别名 `localflow-server`、`localflow-backend.service`、数据库/Socket 文件名以及 `LOCALFLOW_*` 环境变量继续沿用。API 中的 Skill 来源值 `LocalFlow` 保留为兼容标识，界面显示为 NeuroWeave。
+本文对应 `codex/structured-skill-methods` 分支。当前目录包含 **328 个 Method、105 个规范 Skill、28 个内置 Pipeline**；用户保存的 Pipeline 另存于部署数据库。数量表示已登记的定义，不能证明所有软件已安装、全部选项已接入或每种方法已经过科研验证。
 
-当前功能：
+## 能力组织
 
-当前分支采用 Skill、Method、Pipeline 三类分层目录，支持按真实输入输出编排、条件参数与端口、持久草稿、版本管理，以及根据实际图结构生成双语 Pipeline 描述。见 [可靠性与 Pipeline 编排](deploy/reliability-and-pipeline-authoring.md)。下文带数量的早期部署说明属于历史验证记录，不代表当前分支的完整就绪状态；请以方法详情和服务器运行时探测为准。
+| 对象 | 职责 | 定义位置 |
+| --- | --- | --- |
+| Method | 最小执行单位，拥有版本、参数、条件输入输出和执行适配器 | `methods/<group>/<id>/method.json` |
+| Skill | 描述功能、适用范围和方法选择规则，引用已有 Method/Pipeline | `skills/<id>/skill.json` |
+| Pipeline | 可复用的有向无环流程，引用方法版本、参数映射和端口连接 | `pipelines/<id>/pipeline.json` 或用户数据库 |
 
-支持数据集只读访问与输出目录管理：选好数据集后模型即可查询目录、检索文件和读取文本；独立选择可管理输出目录，文件修改需确认并支持回收站。权限边界、API、配置和部署方式见 [数据集与输出目录管理](deploy/workspaces.md)。
+三类目录支持分层浏览、软件筛选、搜索和详情。Skill 分为任务、软件工具、数据集专属三类；Skill 本身不是执行器。原始参考文档只供按需查阅，不会因其中出现命令而获得执行权限。维护说明见 [原生契约结构](deploy/structured-skill-methods.md) 和 [资源库使用](deploy/native-library.md)。
 
-支持在文件输入处“从历史运行结果选择”，按原数据集和样本标识绑定已有输出，直接复用各样本的 5TT、FOD 等结果，无需复制整理。操作与匹配规则见 [历史结果输入](deploy/historical-run-inputs.md)。
+## 工作方式
 
-2026-09-08 增加失败步骤重试、SlurmDBD 作业记账、日志和运行状态增量读取、后台扫描/Dry-run、每节点共享样本队列、历史正文分页、运行设置自动保存、发布检查和数据库备份。使用说明、回退步骤以及原审查中暂未实施的五项问题，见 [可靠性改进与后续方案](deploy/reliability-upgrade.md)。
+- **对话与规划**：模型结合当前数据集、输出目录和已选流程理解本轮需求，区分解释、文件查询、新建或修改流程。需求契约记录目标、允许复用的输入和禁止复用的结果；能力树、方法语义与真实输入输出共同检索。候选不匹配时给出原因，不强制推荐第一个方法。
+- **流程编辑**：确认步骤后锁定数据集，再绑定文件和调整参数。参数变化同步更新条件输入输出；可以移除步骤并手动提供中间文件。方案和步骤均可折叠。
+- **Pipeline 画布**：自由摆放节点、按端口连线、共享输入、有序多来源输入、参数详情、缩放/平移、自动布局和独立校验面板。支持草稿、撤销/重做、不可变发布版本及迁移审阅。只有点击“生成说明”才调用模型生成描述。
+- **文件管理**：数据集用于受限、只读的数据访问；独立选择的输出目录用于保存和管理结果。浏览的是服务器目录，不是浏览器所在电脑的文件。文件操作使用结构化接口、路径授权、确认和回收站。
+- **历史结果**：按原数据集及样本标识绑定旧输出；覆盖不完整时可以仅运行输入齐全的样本，无需复制整理原结果。
+- **执行与监控**：审核参数、完成 Dry-run 和检查限制确认后提交本地或 Slurm。单样本也能选择计算节点；多样本可分配多节点，并分别设置并行数、CPU、内存、GPU 和时限。时限针对每个样本的每一步作业，不是整个数据集的总时间。
+- **历史与语言**：对话列表加载摘要，正文按页读取；任务分组分页监控。非对话界面随系统语言切换，用户对话、路径、命令标识和自定义内容保留原值。
 
-2026-09-07 已新增 `/opt/neuroweave/envs/` 公共 Python 环境，覆盖科学计算、神经影像、EEG
-和 PyTorch CUDA；环境安装与 Slurm 实测状态见 [公共环境与调度说明](deploy/python-environments/README.md)。
-Slurm 执行已启用：主节点提交，三个 RTX 5060 计算节点执行 GPU 作业，实际 CUDA 运算、取消和重启恢复均已通过验证。使用方式见 [Slurm 执行文档](deploy/slurm-execution.md)，证据见 [验证记录](deploy/slurm-verification.md)。
+浏览器断开不取消已接受的后台计算。Slurm 使用固定版本 Worker；停止本地后端可能影响其直接管理的本地执行进程，因此发布前必须检查任务状态。Dry-run 检查契约、文件和部分影像头信息，不证明空间对齐或科研结论正确。
 
-- Web 对话工作台
-- 普通对话与任务两种交互模式
-- 通过 Skill 元数据与指南发现、检索和选择能力，按需读取 Method 契约
-- 保留 NeuroClaw 上游来源与许可证，使用本分支的 Skill / Method / Pipeline 结构组织能力
-- 复用 NeuroClaw SkillLoader 与依赖图校验模块
-- FastAPI 健康检查、Skill 列表/详情和对话接口
-- 受限数据根目录浏览、数据集登记与只读元数据扫描
-- SQLite 持久化的数据集、Workflow、完整对话消息与审计事件
-- 可切换的对话历史列表：自动标题、最近消息预览、消息数、新建与历史恢复
-- Codex 风格会话记忆：较早消息压缩为工作摘要，同时保留近期原始消息
-- 独立方法契约（`methods/*/*/method.json`）、统一制品类型目录和输入/输出兼容性过滤
-- 分层能力检索、方法依据追踪、真实输入输出约束及动态单步/组合任务规划
-- 无模型配置时可用的本地对话演示模式
-- 可选的 OpenAI-compatible 模型接口
-- 基于需求契约、分层检索与候选校验查找方法；不把第一个候选强制当成推荐
-- DWI 样例垂直流程：模型规划、兼容方法选择、流程锁定、参数审核、Dry-run 和最终确认
-- 可信 Runner 注册表、后台执行队列、取消、进度/日志、制品校验与 SQLite 运行审计
-- 本地或 Slurm 执行选择、CPU/内存/GPU/时限申请、Job ID 展示与持久恢复监控
-
-Skill 的 `skill.json` 描述功能、方法角色与选择规则，通过 ID 引用 `methods/` 和 `pipelines/`；方法参数和输入输出只有一份定义。目录中已加入更多软件与数据集指南，数量以分层库列表为准；文档条目、环境可用与实际执行验证分别展示。尚无受审阅实现的内容不成为执行入口。模型按需检索契约，任务卡展示独立方法或已校验组合。详见 [结构与维护指南](deploy/structured-skill-methods.md)。
-
-平台只调用或管理原有项目实现、现有库 API 和已有软件命令；不根据方法名称、文档公式或基础库可用性补写算法。缺少原始可用入口的内容保留规划。Manifest 的 `runner_id` 只是执行契约，不等于已经有执行代码。只有同时出现在后端可信 Runner 注册表、并通过服务器运行时探测的方法才会在 Dry-run 后标记为可执行。从文档提取的命令始终是只读参考，不会被模型或后端直接运行。当前显式注册 187 个经过审核的 Runner；三个计算节点的公共环境中 180 个已就绪。103 个 Skill 中，75 个至少有一项可运行方法，共 566 个就绪的候选方法入口；另有 37 个入口缺少运行条件、167 个入口仍有明确的规划缺项。原 358 个规划入口中，191 个已映射到现有调用或具体组合。fMRIPrep、QSIPrep、nii2dcm 等已有契约仍缺软件，HCP Pipelines 仍缺完整环境。详细范围、输入要求及测试证据见 [Skill 执行配置](deploy/skill-runtime/README.md) 和 [逐方法清单](deploy/skill-runtime/readiness.json)。输入只读，本地结果写入 `LOCALFLOW_OUTPUT_ROOT/run_*/step/`，Slurm 结果写入共享的 `/home/data/neuroweave/runs/hipeson/run_*/step/`，并记录命令日志、进度、校验和与运行事件。
-
-## 目录
+## 源码结构
 
 ```text
-LocalFlow/
-├─ frontend/              # React + TypeScript + Vite + Tailwind CSS
-├─ models/                # 复用的模型代码、训练与评估实现
-├─ bakend/                # FastAPI（保留了现有目录名）
-│  ├─ app/
-│  └─ data/localflow.db   # 本地默认数据库；服务器使用 runtime/localflow.db
-├─ skills/
-│  └─ <skill-name>/       # SKILL.md / OVERVIEW.md / skill.json
-├─ scripts/               # Skill 清单生成、环境检查、部署与合成数据验证
-└─ THIRD_PARTY_NOTICES/   # NeuroClaw MIT 许可证
+frontend/                  React 19 / TypeScript / Vite 页面
+bakend/app/                FastAPI、对话、工作流、文件接口和 Runner
+bakend/tests/              后端契约、安全与行为回归
+bakend/resources/          能力树、类型、翻译与可信执行登记
+methods/                   独立方法契约
+skills/                    原生 Skill 指导及原始参考资料
+pipelines/                 内置 Pipeline
+models/                    方法引用的已有模型实现
+scripts/                   检查、打包、发布及合成验证工具
+deploy/                    使用、配置、维护及带日期的验证记录
+THIRD_PARTY_NOTICES/       第三方许可证
 ```
 
-## 代码维护
+`bakend` 是实际目录名。原有 `LOCALFLOW_*` 环境变量、`workspace_id` API 字段和部署路径仍在使用，不应根据产品名称自行改名。模块职责和扩展入口见 [代码维护指南](deploy/code-architecture.md)。
 
-完整模块图、依赖方向、扩展入口与回归检查见 [模块边界与维护指南](deploy/code-architecture.md)。
+## 本地开发
 
-- `bakend/app/main.py` 仅保留 ASGI 入口；应用装配和各类 HTTP 路由分别位于 `bootstrap.py`、`application.py`、`api/`。
-- `chat_service.py` 负责模型传输，`llm/` 分离需求解析、路由、规划、摘要与重试；`chat_coordinator.py` 协调对话。
-- `workflow_service.py` 管理修订与生命周期，`workflows/` 分离方法投影、状态计算、输入绑定、规划和 Dry-run。
-- Pipeline 的请求模型、编译、版本存储、草稿管理与目录集成分别位于 `pipeline_models.py`、`pipeline_compiler.py`、`pipeline_repository.py`、`pipeline_management.py`、`pipeline_library.py`。
-- `execution/` 保留受信任 Runner、样本队列和 Slurm 生命周期；方法真实契约仍以 `methods/`、`pipelines/` 为准。
-- `frontend/src/features/conversations/` 管理历史列表和缓存；`features/chat/useMessageViewport.ts` 管理滚动。
-- `frontend/src/features/library/` 分离 Pipeline 画布、方法列表、节点参数、描述生成与草稿恢复。
-- `frontend/src/features/workflows/WorkflowCard.tsx` 和 `features/runs/` 管理流程及运行展示。
-
-清理时保留 `skills/`、`models/`、`neuroclaw_compat/`、环境锁定文件、许可证和部署验证记录。
-这些内容分别用于方法发现、原始算法调用、兼容、环境复现和审计。数据库、研究输入、运行输出、
-日志、密钥及已安装环境均不属于构建缓存，不应随源码清理删除。
-
-常用检查（后端测试以临时合成数据为输入）：
+CI 使用 Python 3.11 和 Node.js 24。后端使用仓库锁文件安装依赖；科学软件环境与 API 环境分开管理。以下 PowerShell 命令从项目根目录开始：
 
 ```powershell
-cd D:\reference_projects\LocalFlow
-$env:PYTHONPATH = Join-Path (Get-Location) 'bakend'
-python -m pytest bakend/tests -q
+python -m venv bakend/.venv
+./bakend/.venv/Scripts/python -m pip install --no-deps -r bakend/requirements-dev.lock
+./bakend/.venv/Scripts/python -m pip check
+if (!(Test-Path bakend/.env)) { Copy-Item bakend/.env.example bakend/.env }
+```
+
+编辑 `bakend/.env`，按实际目录设置 `LOCALFLOW_DATA_ROOTS`、`LOCALFLOW_RUN_INPUT_ROOTS` 和输出目录访问范围。模型配置使用 `LOCALFLOW_LLM_BASE_URL`、`LOCALFLOW_LLM_MODEL`、`LOCALFLOW_LLM_API_KEY`；密钥仅保存在后端。未配置模型时的演示回答不等于真实模型规划验收。完整目录权限配置见 [数据集与输出目录](deploy/workspaces.md)。
+
+```powershell
+# 终端一：后端
+cd bakend
+./.venv/Scripts/python -m uvicorn app.main:app --host 127.0.0.1 --port 8010
+```
+
+```powershell
+# 终端二：从项目根目录启动前端
 cd frontend
 npm ci
+npm run dev -- --host 127.0.0.1 --port 5173
+```
+
+Linux 使用对应的 `.venv/bin/python`。打开 `http://127.0.0.1:5173`；Vite 将 `/api` 代理到 `127.0.0.1:8010`。测试结束后在两个终端按 Ctrl+C 关闭服务。开发页面连接的仍是后端账户可访问的文件系统。
+
+## 检查与发布
+
+```powershell
+# 从项目根目录，使用与 CI 一致的锁定依赖
+$env:PYTHONPATH='bakend'
+$env:LOCALFLOW_SLURM_ENABLED='false'
+./bakend/.venv/Scripts/python -m pytest bakend/tests -q --tb=short
+./bakend/.venv/Scripts/python scripts/check_release.py
+./bakend/.venv/Scripts/python scripts/build_capability_tree.py --check
+
+cd frontend
 npm run lint
 npm test
 npm run build
 ```
 
-## 本地启动
+后端测试使用隔离的临时数据库和合成文件；命令的真实执行证据另见 [质量检查与证据](deploy/catalog-quality.md)。发布检查会验证原生契约、Runner 登记、参数绑定、双语覆盖和依赖锁。不要用早期 bootstrap 生成器覆盖已经人工完善的 Method JSON。
 
-后端：
+该分支的服务器测试入口使用 **3002**，与主站 3000 分开。GitHub 推送与服务器部署是两项独立操作。服务器更新前比较本地与服务器源码，合并有效差异；保留环境文件、数据库、输出、旧静态资源和仍被作业引用的 Worker。后端重启只在维护锁启用、计算和规划队列空闲后进行。
 
-```powershell
-cd D:\reference_projects\LocalFlow\bakend
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-uvicorn app.main:app --reload --host 127.0.0.1 --port 8010
-```
-
-前端：
-
-```powershell
-cd D:\reference_projects\LocalFlow\frontend
-npm ci
-npm run dev
-```
-
-前端开发地址为 `http://127.0.0.1:5173`，Vite 将 `/api` 代理到本地 8010 后端。生产仍使用 3000 的同源网关。前端迁移、单独发布及回退见 [部署说明](deploy/frontend-migration.md)。
-
-## Linux 服务器部署（原生 Conda 后端）
-
-当前服务器架构是“原生 Conda 后端 + Docker 前端/Nginx”。FastAPI 在宿主机上
-直接调用 `/opt/software` 中的 FreeSurfer、FSL、ANTs 和 MRtrix3，避免将完整科学
-软件树映射进后端容器。项目只新建独立前缀环境
-`/home/hipeson/LocalFlow/.conda/backend`，不修改 Conda `base`、`midcc`、`sp` 或 FSL
-自带的 Python 环境。Docker Compose 仅管理前端和 Nginx 网关，不再包含已废弃的后端容器配置。
-
-```bash
-cd /home/hipeson/LocalFlow
-cp .env.deploy.example .env
-cp bakend/.env.example bakend/.env
-mkdir -p runtime datasets outputs
-/opt/miniconda3/bin/conda create \
-  --prefix /home/hipeson/LocalFlow/.conda/backend python=3.12 pip -y
-/home/hipeson/LocalFlow/.conda/backend/bin/python -m pip install \
-  -r bakend/requirements.txt
-cp deploy/native-backend.env.example deploy/native-backend.env
-chmod 600 deploy/native-backend.env bakend/.env
-mkdir -p ~/.config/systemd/user
-ln -sfn /home/hipeson/LocalFlow/deploy/localflow-backend.service \
-  ~/.config/systemd/user/localflow-backend.service
-systemctl --user daemon-reload
-systemctl --user enable --now localflow-backend.service
-loginctl enable-linger "$USER"
-docker compose up -d --build frontend gateway
-```
-
-真实模型配置仅写入 `bakend/.env`，不要把 API Key 提交到版本库。Nginx 通过
-`runtime/localflow-backend.sock` 访问原生后端，不对外暴露 Uvicorn TCP 端口。日常管理命令：
-
-```bash
-systemctl --user status localflow-backend.service
-systemctl --user restart localflow-backend.service
-journalctl --user -u localflow-backend.service -f
-docker compose ps
-```
-
-部署文件使用 AWS ECR Public 中的 Docker Official Images，以避免服务器本地 Docker Hub
-镜像加速器配置异常时阻断前端或网关构建。
-
-校园网内可直接访问当前部署地址：`http://192.10.84.6:3000/`。如果服务器改为只监听
-回环地址，或需要从不直通该校园网的设备访问，再在 Windows 本机建立 SSH 隧道：
-
-```powershell
-ssh -N -L 3000:127.0.0.1:3000 localflow-server
-```
-
-保持该窗口打开，然后访问 `http://localhost:3000/`。无论采用校园网直连还是 SSH 隧道，后端都通过同源 `/api` 访问，
-不需要在浏览器中直接暴露 8010 端口。
-
-文件夹选择器由原生后端直接读取宿主机路径。当前 `deploy/native-backend.env`
-将 `/` 登记为“服务器根目录”，因此可从根目录开始浏览；Linux 权限仍按
-`hipeson` 用户执行，隐藏目录默认禁止访问。要缩小可访问范围，修改：
-
-```text
-LOCALFLOW_DATA_ROOTS=数据目录::/希望允许访问的数据目录
-```
-
-修改后运行 `systemctl --user restart localflow-backend.service` 生效。输入数据只用作
-Runner 的受审核输入，产物仍限定写入项目 `outputs` 目录。网页支持
-面包屑导航、相对路径跳转、当前目录筛选和文件/文件夹计数，但拒绝绝对路径、`..` 和
-逃逸授权根目录的符号链接。即使从服务器 `/` 开始浏览，也不会显示或接受 `.ssh` 等隐藏
-路径；只有显式设置 `LOCALFLOW_ALLOW_HIDDEN_PATHS=true` 才会解除这层限制，不建议启用。
-
-启动前后端后，可以先选择交互模式：
-
-- **普通对话**：只返回文字回答，后端强制绕过 Workflow 推荐与创建。
-- **任务模式**：先由本地混合检索从全部 Skill 的名称、关键词、说明、方法与参数选项中生成最多 8 个候选，再由模型把自然语言标准化为一个或多个数据处理操作，并且只能从后端给出的具体能力 ID 中选择。高置信度且覆盖完整时直接生成单步或组合流程；覆盖不完整时才从根节点逐层读取“当前节点的直接子项”。到达叶子能力后，后端才加载对应 Skill 摘要。叶子分为 `structured`（已有受审 runner 方法）和 `planning`（已有结构化方法与参数、但没有 runner）两类；两者都能生成任务卡。
-
-浏览器首次发言时，后端自动创建 `conversation_id`。后续请求只提交该 ID 和当前
-消息，历史由 SQLite 管理；达到配置阈值后，较早内容会整理为
-`Conversation Working Summary`，保留目标、约束、选择、稳定 ID、已完成工作、
-未解决事项和下一步。完整原始消息不会因压缩而删除。
-
-左侧栏的“对话”页通过 `GET /api/conversations` 按最近活动列出本地历史；选择一条记录后，
-前端通过 `GET /api/conversations/{conversation_id}` 恢复完整消息，并根据消息元数据恢复最近
-使用的普通/任务模式、Skill 选择和数据集关联。历史回复引用的 Workflow 会通过其持久化 ID
-重新载入，因此方法选择、参数、输入绑定和流程状态仍可继续操作。新建对话不会预先创建空
-记录，第一次发送成功后才写入 SQLite，并使用首条用户消息生成标题。
-
-对话历史支持按标题或消息正文搜索、重命名、归档与恢复。`GET /api/conversations` 接受 `q`
-和 `archived` 查询参数，`PATCH /api/conversations/{conversation_id}` 用于更新标题或归档状态。
-归档是可逆操作，不会删除原始消息、工作摘要或 Workflow 引用；前端可在“最近对话”和
-“已归档”之间切换。旧版 SQLite 数据库会在启动时自动增加归档字段，无需重建数据库。
-
-对话列表首次加载 20 条，滚动接近列表底部会自动追加下一页；也可以点击“加载更多”。
-`GET /api/conversations` 默认 `limit=20`（最大 50），返回 `conversations`、`has_more` 和
-`next_cursor`；继续请求时传入 `cursor=next_cursor`。排序使用活动时间与唯一 ID，配合复合索引
-进行游标查询，避免同一时间戳或删除记录造成翻页重复/漏项。列表不传完整历史摘要；完整消息
-仍在打开具体会话时读取。搜索和归档筛选会从第一页开始，并取消过时的列表请求。
-
-已归档对话的管理菜单提供“永久删除”，二次确认后调用
-`DELETE /api/conversations/{conversation_id}`。服务端在同一事务内检查归档状态并删除会话，
-其消息和摘要一并删除；未归档会话返回 409，不存在的会话返回 404，成功返回 204。
-删除会话不会删除数据集、Workflow、运行审计或输出文件；被删除的对话无法通过网页恢复。
-
-需要处理数据时，先点击顶部“选择数据集”，在允许的根目录中浏览并登记一个文件夹，切换到“任务模式”，再在对话中输入：
-
-```text
-请对 DWI 做预处理并计算 FA 和 MD
-```
-
-模型会结合数据集扫描结果返回一张结构化流程卡片。先只选择各步骤的方法并点击“确定流程链”；锁定后页面才显示输入绑定与参数选项。随后补齐必需输入、审核参数、运行 Dry-run，最后点击“最终确认方案”。若所有步骤都已接入可信 Runner，卡片才显示“开始运行”；运行中的步骤、进度、日志、取消状态和输出制品均会持久化。Workflow 与每次变更事件写入 SQLite，重启后端后仍可通过 API 查询。
-
-推荐步骤依据现有方法声明的输入输出关系及已有流程模板排序；独立步骤保持相对顺序，排序本身不会补回被移除的步骤。方法列表仍匹配当前任务，扫描未识别输入或用户移除上游步骤时，相关方法不会因此被禁用或隐藏。锁定后按已有输入槽位手动绑定文件，必需输入未补齐不能通过审核。方法内部包含被移除操作时显示明确提示，用户仍可手动选择，实际执行保持该方法原有定义；不会为它增加原本不存在的“跳过算法”接口。缺少可信 Runner 或真实运行环境时仍保留执行限制。
-
-当前流程锁定后，顶部数据集选择同步禁用，输入配置、参数审核和 Dry-run 阶段均不能更换数据集。先点击“解锁流程”才能更换；更换后保留兼容的方法及参数，清除旧文件绑定和审核结果，并重新检查方法兼容性。已确认流程的数据集不可更改，可新建对话处理其他数据。重新打开历史对话时，顶部显示最新流程持久化的数据集快照，而非旧消息中的数据集记录。更换使用 `PATCH /api/workflows/{workflow_id}/dataset`，携带 `dataset_id` 和 `expected_revision`；后端拒绝锁定状态和过期版本的请求。
-
-数据集登记时会建立样本索引：BIDS 数据按 `sub-*` / `ses-*` 识别，普通目录默认将一级子目录视为样本。锁定流程后，输入路径选择器从当前数据集目录开始浏览；从一个代表样本选择文件或目录后，后端会推断 `{subject}`、`{session}` 或 `{sample}` 相对路径模板，逐样本验证匹配结果，并在全部样本匹配成功后保存为批量输入绑定。
-
-任务规划分为两个受约束阶段：
-
-```text
-用户需求 + 允许复用的输入 + 禁止复用的结果
-  → 语义解析为明确目标、输入策略和检索改写
-  → 精确命令/ID + 全库稀疏检索 + 真实输入输出依赖检索
-  → 原生 Skill / Method / Pipeline 能力树提供导航提示，不作为硬过滤
-  → 候选不足时扩大检索并分页语义扫描；允许“没有匹配方法”
-  → 以真实 Method/Pipeline 契约构建和校验流程，再生成说明
-  → 用户选择文件和参数，Dry-run 检查路径、环境与条件输入输出
-  → 确认后将不可变快照提交给 Runner / Slurm
-```
-
-当前能力树文件为 `skills/capability.tree.json`，结构化规划文件由以下命令生成：
-
-```powershell
-python scripts/check_release.py
-python scripts/build_capability_tree.py
-```
-
-分类直接由原生资源引用生成；数据集专属 Skill 单列，其 Method 仍按实际处理功能检索。例如：
-
-```text
-只整理并校验为 BIDS
-  → 单步任务：dwi.bids
-
-先整理为 BIDS，再做图像配准
-  → 组合任务：dwi.bids → image.registration
-
-只做纤维追踪
-  → 默认只生成：dwi.tractography
-  → 若预处理 DWI 输入不足：选择已有制品，或点击“补充最小上游”生成 dwi.preprocess → dwi.tractography
-
-从预处理到纤维追踪
-  → 组合任务：dwi.preprocess → dwi.tractography
-```
-
-模型只能引用已登记的能力、Method 和 Pipeline ID；检索不限于能力树当前分支。独立方法契约存放于 `methods/`，Skill 仅引用与描述方法；多个方法的执行顺序、参数映射和端口连接存放于 `pipelines/`。同一方法可以由多个 Skill 统筹，不能在 Skill 内重复或覆盖执行契约。
-
-组合流程在 Dry-run/执行前编译为明确的独立方法，每一步的真实制品交给后续步骤。`mrtrix.tckgen` 只生成流线，SIFT2 是独立步骤；已有 FOD/5TT 可以直接复用。缺少受审核实现的规划能力保持不可执行，模型不能从参考命令自动提升执行权限。当前分支不兼容旧 manifest 或工作流快照；完整结构、维护与隔离测试方式见 [结构化方法说明](deploy/structured-skill-methods.md)。
-
-Prompt 使用 `planner-v4-recipe-aware` 分为任务语义标准化、分层能力路由和受约束方法排序三段。当前消息定义本轮任务范围，历史摘要和已选 Skill 仅是弱提示；缺少输入或软件被视为执行约束，不再自动扩大成完整上游流程；当用户要求实际处理时，模型优先排序语义匹配的 Runner 或受审核 Runner 配方，并优先复用数据集中已经检测到的 FOD/5TT 等中间制品。配方内部步骤由后端固定，模型不能改写或重排。`GET /api/health` 会返回当前 `prompt_version`。
-
-当用户在当前消息中明确写出软件或 Skill 名称时，该显式名称优先于之前选择的无关 Skill；
-具体工具名也优先于同时出现的宽泛模态名，例如 `MNE + EEG` 会先定位 `mne-eeg-tool`。
-界面中之前选择的 Skill 只作为弱偏好，不能覆盖当前需求。后端还会对未明确写出软件名的
-需求做本地稀疏召回，并把最多 8 个 planning Skill 连同从 `SKILL.md` 提取的任务选项临时
-加入精确语义目录；不会把全部 103 个 Skill 一次发送给模型。能力定位完成后只展开命中 Skill
-的方法；方法较多时先在本地按当前需求过滤明显无关的病种、模态和运行选项，再由模型排序。
-疾病、数据集或生物标志物专用
-Skill 只有在当前需求提供相应语义时才能优先命中；同一目标的多个实现如果无法可靠区分，
-系统在任务卡中展示推荐方法与备选方法供用户选择，而不是误拼成多步流程。例如“用 FreeSurfer 对 T1 做组织分割”
-会定位 `freesurfer-tool`，而只有包含 WMH、白质高信号或 FLAIR 病灶语义时才优先选择
-`wmh-segmentation`；“组织分割”也不会再被解释为整理 BIDS 文件。
-
-每个方法还带有 `structure_level`：`reviewed` 表示人工审核过的方法结构，`evidence`
-表示由 Skill 文档、脚本或命令示例支撑的规划结构，`profile` 表示只有类别级规划模板。
-`source_references` 记录依据文件与行号，`command_references` 记录经过脱敏的命令示例并固定
-设置 `executable: false`，`delegate_skill_ids` 记录该方法可能需要协作的其他 Skill。前端在
-流程锁定后显示这些依据，便于用户判断当前卡片是可执行工具还是文档驱动的规划建议。
-
-参数声明支持 `required`、`level`（`basic` / `advanced`）、`group`、`control`、数值
-`minimum` / `maximum` / `step` 以及 `visible_when`。非必选参数可以保持空值，此时命令
-预览不会生成对应参数，而是交由软件使用默认行为。前端默认只展示常用参数；展开
-“高级参数”后按组显示方法细节。后端只校验并预览当前条件下可见的参数，模型不能添加
-方法未声明的参数。每个独立契约维护在 `methods/<group>/<id>/method.json`；修改后运行发布检查和相关测试。
-
-### DWI 输入与输出声明
-
-全局制品类型定义在 `skills/artifact-types.json`。DWI 预处理和纤维追踪相关方法在各自
-method.json 中通过 `input_slots` / `output_slots` 声明：
-
-- 输入槽包含制品类型、用途说明、允许格式、文件或文件夹绑定方式、伴随文件和条件必选规则。
-- 输出槽包含制品类型、格式、逻辑路径模板和条件生成规则，可自动绑定到后续步骤。
-- `required: false` 表示始终可选；`required_when` 表示只有选中 ACT、连接组等功能时才必选。
-- 输入来源可以是已登记数据集、用户从授权目录选择的已有文件/文件夹，或同一流程中上游步骤的输出。
-
-MRtrix3 的“重建 FOD”组合要求预处理 DWI；“已有 FOD”方法只要求 FOD，并在 ACT
-开启时要求 5TT、在 ROI 播种时要求种子影像。SIFT2 权重只在对应后处理启用时生成。文件型
-输入不会因为扫描器发现了某种文件就自动绑定整个数据集目录，用户仍需在流程锁定后选择一次
-明确的文件；多样本数据集则由路径模板预览扩展到各样本。
-
-### 服务器现有软件 Runner
-
-原生后端直接使用服务器的 `/opt/software`、`/usr/bin`、`/lib` 和 `/usr/lib`，
-不再需要把 `tcsh`、`bc`或共享库逐个映射进容器。
-FreeSurfer Runner 会按 `FreeSurferEnv.sh` 的非交互等价配置注入 FS-FAST、MNI/MINC、FSL、
-PERL 与辅助库路径，不再只检查和加载 `recon-all` 主程序。MRtrix 只额外指定系统 `libpng16`；不会把整个 FSL `lib` 注入 MRtrix，
-以免 FSL 的 `libstdc++/libgcc` 覆盖 MRtrix 构建时使用的系统 ABI。默认使用：
-
-```text
-FSL:        /opt/software/fsl
-MRtrix3:    /opt/software/mrtrix3-master
-FreeSurfer: /opt/software/freesurfer-7.4.1/usr/local/freesurfer/7.4.1
-```
-
-`GET /api/health` 的 `execution.runners` 会逐个返回 `available`、`reason` 和实际可执行文件路径。
-后端运行时不会创建或修改科学软件环境，也不会运行模型生成的任意命令；每个 Runner 都用固定
-可执行文件与参数白名单组装 `argv`，并以 `shell=false` 启动。
-
-部署或更换服务器软件后，可在原生后端环境中执行一次完整静态审计：
-
-```bash
-cd /home/hipeson/LocalFlow/bakend
-set -a; . ../deploy/native-backend.env; set +a
-../.conda/backend/bin/python -m app.execution.runtime_audit
-```
-
-审计会列出所有注册 Runner 的可用状态，并检查主程序、FreeSurfer/MRtrix/FSL 已知委托程序、
-脚本解释器、系统辅助命令与 ELF 动态库；FreeSurfer 还会启动 `UpdateNeeded` 和
-`nu_correct -version` 做无数据探针，以覆盖 csh 与 MINC/PERL 模块问题。它不会启动影像处理
-任务；返回码非零表示已启用环境仍有阻断项。未配置环境而安全禁用的 Runner 会单独列出。
-如需在部署或软件升级后扫描各软件 `bin` 目录下的全部可执行文件及动态库，可追加
-`--deep`；深度结果包含可执行文件数量、缺失 shebang 解释器和缺失共享库清单。
-
-当前可信 Runner 覆盖：数据集巡检、BIDS 安全整理、DICOM 转 NIfTI、ANTs/FLIRT 配准、
-FSL eddy 与 dtifit、MRtrix3 响应函数/FOD/5TT/纤维追踪/连接组、FreeSurfer recon-all、
-ASL CBF、PET SUVR、Nibabel 检查、表格清洗和可复现性报告。DIPY、fMRIPrep、QSIPrep 与
-nii2dcm 已具备完整输入输出、参数和 Runner 契约，但只有在其环境探测通过后才允许执行。
-
-缺少软件时采用 NeuroClaw 式“环境入口配置”，不在 NeuroWeave 中创建或修改环境。把已有
-环境中的解释器或入口程序配置到根目录 `.env`，重启 Compose 即可，不需要修改 Skill：
-
-```dotenv
-LOCALFLOW_SKILL_PYTHON=/已有环境/bin/python
-LOCALFLOW_DIPY_PYTHON=/已有DIPY环境/bin/python
-LOCALFLOW_FMRIPREP_EXECUTABLE=/已有环境/bin/fmriprep
-LOCALFLOW_QSIPREP_EXECUTABLE=/已有环境/bin/qsiprep
-LOCALFLOW_NII2DCM_EXECUTABLE=/已有环境/bin/nii2dcm
-```
-
-前端 Skill 列表按探测结果显示“可运行”“待配置环境”或“可规划”；待配置项的悬停提示会
-说明缺少的解释器、模块或可执行文件。NeuroClaw 中只有说明、数据入口、研究设计或模型训练
-用途的 Skill 仍保留为规划能力，不会把其文档中的示例命令自动提升为服务器执行权限。
-
-对于包含 `wmfod_norm.mif` 与 `5TT.mif` 的数据集，可在任务模式输入：
-
-```text
-使用这个数据集中已有的 FOD 和 5TT 做 1000 条 iFOD2 纤维追踪，启用 ACT，不运行 SIFT2。
-```
-
-选择“MRtrix3 基于已有 FOD 的纤维追踪”后锁定流程，分别绑定 FOD 与 5TT 文件，再依次完成
-参数审核、Dry-run、最终确认和“开始运行”。完整 FreeSurfer 通常耗时数小时；建议先用
-`autorecon1` 验证 T1 输入和运行环境，并优先选择原始全头 T1w，而不是已经脑提取的影像。
-
-`POST /api/chat` 的任务模式响应包含 `capability_routing`：记录标准化任务、语义候选、
-置信度、本次展开层数、每层选择和候选载荷占整树载荷的比例。该字段用于调试和前端
-提示，不包含模型思考过程或 SKILL.md 正文。数据集扫描结果不会发送给新增的语义理解
-调用，避免“缺少输入”改变用户实际要求的操作。模型接口失败时，本地高精度匹配继续
-提供具体能力锚点；只有没有可靠候选时才保持对话或要求补充目标。
-
-推荐状态流：
-
-```text
-awaiting_method_choice
-  → chain_ready（全部方法已选择，可以确定流程链）
-  → awaiting_input_binding（锁定后且当前方法缺少必需输入）
-  → awaiting_parameter_review
-  → awaiting_dry_run
-  → ready
-  → confirmed
-```
-
-锁定后仍可“解锁流程”重新选择方法；未锁定时可要求模型“重新规划”。所有修改都携带 `expected_revision`，旧页面提交过期版本时会收到 `409 revision_conflict` 和最新 Workflow 快照。
-
-样例工作流接口：
-
-```text
-POST  /api/workflows/draft
-GET   /api/workflows
-GET   /api/workflows/{workflow_id}
-GET   /api/workflows/{workflow_id}/events
-PATCH /api/workflows/{workflow_id}/steps/{step_id}/method
-PATCH /api/workflows/{workflow_id}/steps/{step_id}/inputs/{slot_id}
-POST  /api/workflows/{workflow_id}/complete-dependencies
-POST  /api/workflows/{workflow_id}/lock
-POST  /api/workflows/{workflow_id}/unlock
-POST  /api/workflows/{workflow_id}/replan
-PATCH /api/workflows/{workflow_id}/steps/{step_id}/parameters
-POST  /api/workflows/{workflow_id}/review-parameters
-POST  /api/workflows/{workflow_id}/dry-run
-POST  /api/workflows/{workflow_id}/confirm
-POST  /api/workflows/{workflow_id}/runs
-GET   /api/runs?workflow_id=...
-GET   /api/runs/{run_id}
-GET   /api/runs/{run_id}/events?after_event_id=...
-POST  /api/runs/{run_id}/cancel
-```
-
-数据集接口：
-
-```text
-GET  /api/datasets/roots
-GET  /api/datasets/directories?root_id=...&relative_path=...
-GET  /api/datasets
-POST /api/datasets/register
-GET  /api/datasets/{dataset_id}
-POST /api/datasets/{dataset_id}/inspect
-
-GET  /api/capabilities/tree
-GET  /api/artifacts/types
-
-POST /api/conversations
-GET  /api/conversations/{conversation_id}
-POST /api/conversations/{conversation_id}/compact
-```
-
-未设置 `LOCALFLOW_LLM_BASE_URL` 和 `LOCALFLOW_LLM_MODEL` 时，后端使用演示回复。需要连接本机或局域网内的 OpenAI-compatible 服务时，可参考 `bakend/.env.example` 配置环境变量。
-
-## 模型 API 配置
-
-后端启动时会通过 `python-dotenv` 自动读取 `bakend/.env`。先复制示例文件：
-
-```powershell
-cd D:\reference_projects\LocalFlow\bakend
-Copy-Item .env.example .env
-```
-
-然后编辑 `.env`：
-
-```dotenv
-LOCALFLOW_LLM_BASE_URL=https://api.deepseek.com
-LOCALFLOW_LLM_API_KEY=替换为自己的APIKey
-LOCALFLOW_LLM_MODEL=deepseek-v4-flash
-LOCALFLOW_LLM_MAX_TOKENS=800
-LOCALFLOW_LLM_THINKING=disabled
-LOCALFLOW_CORS_ORIGINS=http://127.0.0.1:3000,http://localhost:3000
-LOCALFLOW_DATA_ROOTS=D:\data;E:\research-data
-LOCALFLOW_DATABASE_PATH=./data/localflow.db
-LOCALFLOW_OUTPUT_ROOT=../outputs
-LOCALFLOW_RUN_WORKERS=2
-LOCALFLOW_HISTORY_COMPACT_TRIGGER_TOKENS=12000
-LOCALFLOW_HISTORY_KEEP_RECENT_MESSAGES=8
-```
-
-重新启动后端后，`GET /api/health` 的 `mode` 应为 `model`，前端顶部会显示当前模型名称。删除或留空 `LOCALFLOW_LLM_BASE_URL` / `LOCALFLOW_LLM_MODEL` 后会回到本地对话演示模式。
-
-面向普通前端对话时建议保持 `LOCALFLOW_LLM_THINKING=disabled`，避免有限的输出额度被思考内容耗尽。如果需要复杂推理，可改为 `enabled`，并相应提高 `LOCALFLOW_LLM_MAX_TOKENS`。
-
-`bakend/.env` 已加入根目录 `.gitignore`，真实密钥不应写入前端代码、`VITE_*` 等前端构建变量、README 或版本库。前端只连接本地 FastAPI，由后端向模型服务发送带密钥的请求。
-
-`LOCALFLOW_DATA_ROOTS` 使用英文分号分隔多个绝对目录。前端不能提交任意绝对路径，只能通过 `root_id + relative_path` 浏览；后端会解析真实路径并拒绝 `..`、符号链接等越界结果。未设置时仅开放项目的 `data` 目录。
-
-`LOCALFLOW_HISTORY_COMPACT_TRIGGER_TOKENS` 是混合中英文的本地保守估算阈值，不是
-DeepSeek 官方 tokenizer 的精确计数。压缩默认保留最近 8 条原始消息；摘要失败时
-后端不会推进 `summarized_through_sequence`，因此不会静默丢失历史。
-
-## 上游复用与改造边界
-
-Skill 目录、SkillLoader、依赖图校验、离线摘要、103 个 Skill 及其配套文件直接复用自同级 NeuroClaw 项目。NeuroWeave 在外层增加缓存、来源标记、检索 API 和对话适配。具体清单见 `UPSTREAM.md`。
-
-环境管理类 Skill 和上游命令 handler 虽已保留，但只作为说明文件展示；后端不会执行其中的任意命令。独立的 `method.json` 声明 capability、输入输出类型、参数和 `runner_id`，实际执行还必须由 `bakend/app/execution/runner_registry.py` 显式注册经过代码审查的 Runner。模型文本、SKILL.md 命令块和前端命令预览都不能越过这个白名单。NeuroClaw 使用 MIT License，许可证副本位于 `THIRD_PARTY_NOTICES/NeuroClaw-LICENSE.txt`。
-
-方法契约检查、Skill 去重与运行证据规则见 [catalog-quality.md](deploy/catalog-quality.md)。
-
-目录分类、清理范围与离线批量翻译维护方式见 [数据集分类与双语说明](deploy/catalog-polish.md)。
+当前使用、维护和历史发布记录见 [文档索引](deploy/README.md)。原有实现来源与许可证见 [来源记录](UPSTREAM.md) 和 [第三方声明](THIRD_PARTY_NOTICES/)；它们不定义本分支的运行架构。

@@ -1,96 +1,25 @@
-# Task constraints and validated Method planning
+# 需求契约与方法图校验
 
-This change addresses the 3002 conversation in which the user requested tractography
-from preprocessed DWI, gradients and a mask, but received a preprocessing card.
-The relevant MRtrix Methods were registered and available. Semantic normalization
-failed; keyword fallback misinterpreted an existing input as an operation, assigned
-confidence 1.0, and sealed the candidate set before the method planner ran.
+规划从本轮意图与当前会话状态出发。用户可以询问方法、比较方案、检查文件、补充或修改已有流程，也可以提出独立的新目标；不能把每条追问都当作补齐上一流程缺失输入。具体对话策略见 [灵活对话](flexible-dialogue.md)。
 
-## Current behavior
+## 需求如何约束规划
 
-- A typed task contract records the desired output artifact types, permitted and
-  forbidden existing inputs (optionally exact filenames/relative paths), forbidden
-  operations, and whether necessary generated intermediates are permitted.
-- `only_listed` permits no other existing input types. An excluded *existing* FOD
-  may still be regenerated from authorized DWI. File discovery never grants reuse.
-- Task normalization and JSON method planning get at most two attempts. Invalid
-  JSON/schema and transient HTTP failures retry; authentication/client errors do
-  not. Logs contain stage, attempt, error class and HTTP status, never credentials,
-  request bodies or dataset file contents. Failure retains low confidence and
-  returns no workflow instead of selecting a default operation.
-- The graph prompt includes the actual Pydantic JSON Schema. A schema retry gets
-  field locations/error codes (without input values); it does not repeat an
-  identical failed request. External inputs are omitted from internal edge maps.
-- For a known output goal, the Method index covers every native method regardless
-  of Skill references. It joins real output/input types, starts with at most 24
-  candidates/depth 3, and widens once to at most 64/depth 5. Tree matches rank ties;
-  they do not exclude a method from another branch. Indexes refresh on definition
-  changes. Only shortlisted contracts are sent to the model.
-- Broad types (`generated_file`, `imaging_input`, etc.) are recorded as unresolved
-  semantic boundaries, not expanded into every command accepting a file. The
-  gradient-table parent and b-value/b-vector subtypes are checked using declared
-  port formats; b-value permission alone never grants b-vector permission.
-- The model produces a structured DAG, not independent explanatory prose.
-  The existing Pipeline compiler validates method IDs, parameters, ports, types,
-  cycles and conditional outputs. Additional checks verify permitted external
-  inputs, target output production and that every node contributes to a goal.
-- Exact output ports are preserved (WM/GM/CSF response files must not be substituted
-  just because their artifact type is the same). Editing parameters rechecks
-  conditional outputs and requirements. Constraint failures disable confirmation
-  and are also enforced by backend lock/review/dry-run checks.
-- The workflow stores the task contract and retrieval/validation diagnostics.
-  Titles and summaries come from real steps. Unmatched or invalid candidates do
-  not create a workflow or claim the software is absent. Existing histories and
-  user-defined Pipelines remain readable; Runner submission behavior is unchanged.
+TaskContract 描述目标输出、允许使用的已有输入、禁止复用的输入/结果、禁止操作和是否允许生成中间结果。`only_listed` 限制已有输入范围；禁止复用旧 FOD 仍可能允许从授权 DWI 重新生成 FOD。目录发现一个文件不授予复用权限。
 
-## Retrieval diagnosis and next design
+模型归一化或结构化规划失败时记录阶段、错误类型及状态，并有限重试；认证等不可重试错误直接返回原因。诊断不记录凭据、请求正文或数据集文件内容。失败保留低置信度，不把关键词命中升级为确定需求。
 
-The tree is useful for navigation and fast coarse routing. The defect was treating
-one selected branch as an exhaustive method inventory. The sparse retriever also
-indexes Skill-level aggregate text, so command relevance can be diluted by broad
-software descriptions. Metadata with only generic file types further weakens
-automatic composition.
+## 方法如何找到
 
-The long-term hybrid design should combine a Method-level inverted index (canonical
-IDs, command aliases, labels, operations), semantic retrieval over descriptions,
-and the output-contract index added here. Fuse and deduplicate by canonical ID;
-use Skill/Pipeline descriptions for orchestration guidance. Rank relevance before
-environment availability so a relevant unavailable method is reported separately
-instead of replaced by unrelated runnable software. Check goal/operation coverage
-before finalizing a shortlist; expand only uncovered operations with bounded pages.
+能力树提供分类提示，独立方法检索结合精确 ID/命令、语义改写的稀疏匹配、真实输出类型和 Pipeline 成员。候选不足时有界扩大至全库简短元数据，只读取命中候选的完整契约。当前召回与预算说明见 [检索链路](library-upgrade.md)。
 
-This change implements the typed contract lookup and bounded recovery needed for
-validated planning. It does not introduce an embedding provider or a new global
-Method/Pipeline search service. Unknown output semantics and generic contracts still
-require richer method metadata or further retrieval. No finite semantic search can
-promise zero missed matches; budget exhaustion and insufficient metadata must stay
-explicit and must never be reported as proof that no method exists.
+没有增加必须依赖外部 embedding 服务的检索前提。无法匹配时返回检索范围、截断或校验原因，不强制推荐首个候选，也不把预算耗尽说成平台不存在该方法。说明、操作语义和具体制品类型仍决定可检索性，泛型文件端口不能冒充已知脑区标签输出。
 
-## Validation and operations
+## 从图到可审核方案
 
-Run `python -m pytest tests -q` from `bakend`, and `npm run build` / `npm test` from
-`frontend`. Regression tests cover the exact reported request, transient/malformed
-responses, input restrictions, gradient subtypes, wrong tree leaves, conditional
-ports, output goals, extra steps, graph ordering, persisted workflows and edited
-parameters. Synthetic contracts do not establish scientific suitability of an
-algorithm for real acquisition data; users still review inputs and parameters.
+模型返回已注册方法组成的 DAG。编译器检查 ID、版本、参数、条件端口、格式/类型、拓扑、外部输入范围、目标产出及无关步骤；只有通过后才生成流程卡片说明。
 
-No new environment variables or database migration are required. Before deploying,
-compare affected server files against the local base revision, keep an exact backup,
-and restart only the idle test service. Preserve runs, outputs and immutable Slurm
-worker snapshots. No computational job is needed to validate planning.
+连线保留精确端口身份，例如白质/灰质/脑脊液响应不能因为类型相同而互换。参数编辑后重新计算条件输入输出，约束在锁定、审核、Dry-run 和提交时再次检查。类型兼容只证明契约关系，不证明空间对齐或影像内容正确。
 
-Verification on 2026-09-23: the complete backend suite passed 329 tests (3 skipped,
-611 subtests). After the final schema-feedback/goal-provenance correction, the 77
-affected regression tests passed (121 subtests), including 21 new tests. Frontend
-build and all 45 tests passed. Live-model isolated verification of the reported
-request produced dwi2response -> dwi2fod -> tckgen with ACT disabled, using 10
-candidate contracts from an index of 249 native Methods. Planning does not submit
-jobs; scientific parameters still require review against the acquisition data.
+Workflow 保存需求契约与检索/校验诊断，说明以真实步骤为依据。没有合格图时可以解释缺项、请求必要澄清，或先回答问题再提供可编辑的规划邀请；不会声称已执行或将无效图提交 Runner。
 
-The final 3002 HTTP smoke test also passed: the original user wording produced
-`mrtrix.dwi2response -> mrtrix.dwi2fod -> mrtrix.tckgen`, reached `chain_ready`,
-persisted the input contract and disabled ACT. The test conversation was archived;
-no Runner job was submitted. Deployment retained three historical runs, preserved
-the 3000 process, and verified the new worker snapshot on node01/node02/node03.
-Release marker: `04683c8+planning-b80d9fe26f43`.
+后端回归覆盖模型失败、已有输入限制、梯度子类型、错误树分支、条件端口、目标来源、额外步骤与参数编辑。检查方法见 [项目说明](../README.md)。测试不需要提交科研任务；原始问题及旧发布证据保留在 Git 历史中。

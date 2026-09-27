@@ -68,5 +68,6 @@ Rollback if required, provided no later release has replaced these files:
 python3 /home/hipeson/.cache/neuroweave/canvas-ui-e219f8f10d81/publish.py --rollback /home/hipeson/.cache/neuroweave/canvas-ui-e219f8f10d81/backup-20260927T100251375901Z
 ```
 
-This UI update does not require restarting any service. No GitHub commit or push was
-performed as part of this change. The existing Vite large-bundle warning remains.
+This UI update did not require restarting any service. The source was subsequently
+committed to the branch in `9370fed`; that push did not redeploy the backend. The
+existing Vite large-bundle warning remains.

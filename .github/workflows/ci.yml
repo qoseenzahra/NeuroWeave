@@ -26,6 +26,7 @@ jobs:
           PYTHONPATH: bakend
           LOCALFLOW_SLURM_ENABLED: 'false'
       - run: python scripts/check_release.py
+      - run: python scripts/build_capability_tree.py --check
   frontend:
     runs-on: ubuntu-24.04
     defaults:

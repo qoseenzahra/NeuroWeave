@@ -57,7 +57,7 @@ LOCALFLOW_SKILL_PYTHON=/opt/neuroweave/envs/scientific-py311/bin/python
 LOCALFLOW_DIPY_PYTHON=/opt/neuroweave/envs/scientific-py311/bin/python
 ```
 
-Worker 发布目录包含 `bakend/app`、`bakend/resources` 和 `skills`，不包含 `.env`、数据库或应用运行目录。已提交作业引用固定发布路径；旧版本在相关作业全部结束之前必须保留。公共 Python 环境对用户可读可执行，作业目录与结果默认仅 hipeson 可访问。环境变量使用显式白名单，提交脚本清理登录环境，模型 API 密钥不会复制到作业文件。
+Worker 发布目录包含 `bakend/app`、`bakend/resources`、`skills`、`methods`、`pipelines` 及被方法引用的实现，不包含 `.env`、数据库或应用运行目录。已提交作业引用固定发布路径；旧版本在相关作业全部结束之前必须保留。公共 Python 环境对用户可读可执行，作业目录与结果默认仅 hipeson 可访问。环境变量使用显式白名单，提交脚本清理登录环境，模型 API 密钥不会复制到作业文件。
 
 当前使用一个 FastAPI 进程、一个 SQLite 数据库，进程内锁防止重复提交和取消时覆盖 Job ID。不要直接增加 Uvicorn workers 或启动第二个 API 实例访问同一数据库；多进程部署需要数据库层的任务领取与唯一约束改造。
 
@@ -85,7 +85,7 @@ Worker 发布目录包含 `bakend/app`、`bakend/resources` 和 `skills`，不�
 
 成功必须同时具备 Slurm 的 COMPLETED/ExitCode=0:0、Worker 原子结果文件，以及经过路径和完整性验证的非空产物。调度器失败、超时、OOM 或 Worker 失败均不能登记成功。
 
-本集群目前未配置 Slurm 数据库记账。后端会持久保存查询到的终态；如果后端停机太久，`scontrol` 终态已经过期且没有 `sacct` 历史，则保留待核查状态，不依据单独的结果文件推断整个作业成功。提交中断后只有提交标记而没有 Job ID 时，也禁止自动重提；按日志中的 `nw-<标记>` 核查队列及作业文件。长期运行建议另行部署 slurmdbd 记账，以改善历史可追溯性。
+本集群已在 2026-09-08 配置 SlurmDBD 持久记账并通过 `sacct` 检查，见 [记账记录](reliability-upgrade.md)。后端也持久保存查询到的终态；若某次运行缺少可靠调度终态，则保留待核查状态，不依据单独结果文件推断成功。启用记账之前没有存储的历史不能补造。提交中断后只有提交标记而没有 Job ID 时，也禁止自动重提；按日志中的 `nw-<标记>` 核查队列及作业文件。
 
 ## 深度学习脚本与规划型 Skill
 

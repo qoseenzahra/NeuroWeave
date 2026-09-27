@@ -11,8 +11,10 @@ from app.bootstrap import build_services
 from app.settings import Settings
 from app.workflow_models import Workflow
 from app.workspace_models import WorkspaceCreate
+from fastapi import APIRouter, FastAPI, routing
 from fastapi.routing import APIRoute
 from fastapi.testclient import TestClient
+from pydantic import BaseModel
 
 ROOT = Path(__file__).resolve().parents[2]
 APP = ROOT / "bakend/app"
@@ -138,27 +140,73 @@ def application(tmp_path, monkeypatch):
         yield app, client, services
 
 
+def http_route_contexts(app):
+    """Inspect effective paths/defaults, including lazy included routers in FastAPI.
+
+    The locked FastAPI version exposes iter_route_contexts for this traversal.
+    Older development installs store the effective APIRoutes directly instead.
+    Neither branch may silently omit included endpoints or hide duplicate routes.
+    """
+    contexts = getattr(routing, "iter_route_contexts", iter)(app.routes)
+    return [
+        route
+        for route in contexts
+        if isinstance(getattr(route, "original_route", route), APIRoute)
+    ]
+
+
 def test_split_routes_preserve_paths_status_codes_and_response_models(application):
-    app, _, _ = application
+    app, client, _ = application
+    effective = http_route_contexts(app)
     routes = {
         (method, route.path): route
-        for route in app.routes
-        if isinstance(route, APIRoute)
+        for route in effective
         for method in route.methods
     }
     expected = json.loads((FIXTURES / "refactor_api_contract.json").read_text())
+    schema = client.get("/openapi.json").json()
     for item in expected:
-        route = routes[item["method"], item["path"]]
+        key = item["method"], item["path"]
+        assert key in routes, f"Missing effective route: {key}"
+        route = routes[key]
         assert (route.status_code or 200) == item["status"], item
         if item["response"]:
             assert route.response_model.__name__ == item["response"], item
-    keys = [
-        (method, route.path)
-        for route in app.routes
-        if isinstance(route, APIRoute)
-        for method in route.methods
-    ]
+        operation = schema["paths"][item["path"]][item["method"].lower()]
+        assert str(item["status"]) in operation["responses"], item
+    keys = [(method, route.path) for route in effective for method in route.methods]
     assert len(keys) == len(set(keys)), "An endpoint must not be registered twice"
+    root = client.get("/")
+    assert root.status_code == 200
+    assert root.json() == {"name": "NeuroWeave API", "docs": "/docs"}
+    assert client.get("/api/health?include_runtime=false").json()["status"] == "ok"
+
+
+def test_route_contract_traversal_keeps_nested_prefixes_metadata_and_duplicates():
+    class Payload(BaseModel):
+        value: str
+
+    leaf = APIRouter()
+
+    @leaf.post("/item", response_model=Payload, status_code=201)
+    def item():
+        return {"value": "ok"}
+
+    parent = APIRouter(prefix="/parent")
+    parent.include_router(leaf, prefix="/child")
+    app = FastAPI()
+    app.include_router(parent, prefix="/api")
+    effective = http_route_contexts(app)
+    assert [(r.path, r.status_code, r.response_model) for r in effective] == [
+        ("/api/parent/child/item", 201, Payload)
+    ]
+    with TestClient(app) as client:
+        response = client.post("/api/parent/child/item")
+        assert response.status_code == 201
+        assert response.json() == {"value": "ok"}
+    # Do not collapse duplicates into a dictionary before checking uniqueness.
+    app.include_router(parent, prefix="/api")
+    assert len(http_route_contexts(app)) == 2
 
 
 def test_output_adapter_keeps_revision_and_conversation_binding_consistent(

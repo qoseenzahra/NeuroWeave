@@ -1,108 +1,41 @@
-# 原生 Skill / Method / Pipeline 资源库
+# 资源库与 Pipeline 使用
 
-## 当前状态（2026-09-23）
+侧栏分为 Skill、Method、Pipeline，支持功能分类、软件筛选、搜索、分页和详情。Skill 另区分任务、工具和数据集专属；可以查看详情、加入当前会话、移除单项或清空已选项。Method 详情展示真实参数、条件输入输出、环境状态和执行证据。
 
-当前分支定义 249 个独立 Method、105 个正式 Skill（另保留 70 个旧名称别名）、28 个内置 Pipeline。用户保存的 Pipeline 存储于当前部署的 SQLite 数据库，不写入这些内置目录。数量表示定义覆盖，不表示全部软件及其全部参数已经接入或通过真实数据验证。
+内置定义来自仓库；用户 Pipeline 及草稿保存在当前部署的 SQLite 中。保存流程不修改安装环境，也不把用户路径写入内置定义。
 
-`/opt` 是本次软件覆盖范围；目前尚未完成穷尽接入。初步扫描 8,982 个带执行权限的条目，其中脚本 1,862、ELF 1,777、不能识别为命令 5,341、不可读 2。脚本和 ELF 候选仍包括重复安装、GUI、环境管理及内部辅助程序。扫描排除了数据、库、文档等目录，不能把结果当作精确命令总数。详见 `software-contracts/opt-inventory.json`。
+## 创建和复用
 
-本批新增 58 个 MRtrix Method，依据服务器 MRtrix 3.0.8 原始帮助建立有类型的输入、输出和参数。110 份原始命令帮助及覆盖报告保存在 `software-contracts/mrtrix3/`。存在可变参数、特殊语法、目录型输入和重复选项未开放的情况，每个 Method 的 `execution.contract.omitted_options` 和详情界面明确列出。不得称为“全参数覆盖”。
+1. 在 Pipeline 页面打开编辑器，将 Method 拖到画布或点击添加。点击方法查看详情，选中节点后调整该步骤参数。
+2. 从输出端口连接到输入端口，或依次点击端口。两个输入端口可建立共享输入组，表示复用同一个文件，不增加执行依赖。多文件端口支持有序多来源。
+3. 拖动节点标题布局；用平移、缩放、适应画布和自动排列检查连接。参数改变后按真实 Method 条件更新输入和输出。
+4. 校验面板展示错误、警告与推导接口。未绑定的步骤输入成为公共输入；未被后续步骤消费的输出作为整体输出。关闭条件输出仍被连接时，保留连线并阻止发布，要求修正参数或连接。
+5. 编排未完成可以保存草稿。完成后校验并发布不可变版本；旧版本保留，方法版本变化需迁移审阅。撤销/重做只属于当前编辑会话。
+6. 如需说明，点击“生成说明”；模型不可用时显示原因并提供基于真实接口的基础说明。添加、连线、保存和校验不自动调用模型。
 
-新增 Method 的基本真实执行已检查 mrconvert、mrcheckerboardmask、maskfilter、5tt2vis、sh2power、mrhistogram；其余新增命令目前只有定义/注册/构建检查，不宣称全部执行通过。原有六个 MRtrix 命令及独立 tckgen → SIFT2 链路仍通过合成数据检查。所有选项组合与科研正确性不在这些微型测试的证明范围内。
+图必须无环，运行顺序由拓扑决定，不依赖节点在画面上的位置。共享输入兼容性、文件数量、格式与条件必需性由契约校验；不能通过自由文本连线绕过。
 
-## 定义所有权
+已经运行或审核过的普通流程可“保存为可复用 Pipeline”，导出实际执行步骤及参数，不保留样本的绝对文件绑定。再次使用 Pipeline 时重新选择数据集、文件和输出目录，创建待审核的普通 Workflow；不会立即提交计算。
 
-- `methods/<group>/<id>/method.json`：最小执行单元，拥有参数、条件、输入输出、版本和 Runner 标识。前端不能上传任意命令或代码。
-- `skills/<id>/skill.json`：描述所管理 Method/Pipeline 的用途、选择规则和语义范围。`scope` 区分具体工具与领域任务，防止指定工具时扩大推荐。运行时不再从旧 SKILL.md 读取执行契约。
-- `pipelines/<id>/pipeline.json`：引用 Method 的版本、连接关系和参数映射。已有固定多步组合已经独立存储于此。
+三组织响应连接示例：Dhollander 产生白质、灰质和脑脊液响应，可分别连到 MSMT-CSD。改用单组织 Tournier 时，灰质/脑脊液连接不再有效，必须调整。系统不以“条件输出”为由一律禁止内部连接。
 
-Runner 仍是明确注册的 Python 适配器。增加 JSON 文件不等于自动获得任意程序执行权；命令通过参数数组调用，文件输入及输出继续经过既有授权检查。
-
-## 使用
-
-侧栏分为 Skill、Method、Pipeline，各自提供分类树、搜索、分页和详情。Skill 可加入或移出当前会话，Method 详情展示参数与运行环境。
-
-在 Pipeline 页面选择“拖拽创建 Pipeline”，拖入 Method（也可点击添加），通过输入输出端口连线，或连接两个输入端口以共享文件；拖动标题自由布局，执行顺序由依赖关系确定。未连接的端口成为整体输入，未被消费的输出成为整体输出。每个步骤可指定参数，继承 Method 的显示、启用、条件必填及互斥规则。
-
-先校验再保存。保存创建不可覆盖的版本；编辑使用版本校验，历史版本保留。已有流程也可以用“保存为可复用 Pipeline”导出，导出时展开真实执行单元并移除原样本文件路径。Pipeline 的整体文件输入在下次调用时重新选择。
-
-“创建流程并配置运行”生成普通工作流，不提交计算。文件绑定、输出目录、参数复核、dry run、确认和 Slurm 资源选择沿用原有流程。当前仅支持从前序步骤到后序步骤的有类型连接，不支持循环。条件输出可内部连接，保存与运行前按上游有效参数检查是否生成；多文件聚合输入暂需作为外部输入。
-
-## API
+## 主要 API
 
 | 方法 | 路径 | 用途 |
-|---|---|---|
-| GET | `/api/library?kind=skill\|method\|pipeline&q=&cursor=0&limit=100` | 分页目录 |
-| GET | `/api/library/methods/{id}` | 完整 Method 与环境状态 |
-| GET | `/api/library/pipelines/{id}?version=1` | Pipeline 或指定版本 |
-| POST | `/api/library/pipelines/validate` | 校验连接并推导整体接口 |
-| POST | `/api/library/pipelines` | 保存新 Pipeline |
-| PUT | `/api/library/pipelines/{id}` | 以 expected_version 保存新版本 |
-| POST | `/api/library/pipelines/{id}/workflows` | 创建待复核工作流 |
-| POST | `/api/library/from-workflow/{workflow_id}` | 按 expected_revision 导出当前流程 |
+| --- | --- | --- |
+| GET | `/api/library?kind=method&language=zh` | 分类、筛选、搜索与分页；kind 也支持 skill / pipeline |
+| GET | `/api/library/methods/{id}` | Method 详情、环境和证据 |
+| GET | `/api/library/pipelines/{id}?version=1` | 当前或指定 Pipeline 版本 |
+| POST | `/api/library/pipelines/validate` | 校验并推导整体接口 |
+| POST | `/api/library/pipelines/describe?language=zh` | 按明确请求生成说明 |
+| GET / PUT | `/api/library/drafts` / `/api/library/drafts/{id}` | 列出或保存草稿 |
+| POST / PUT | `/api/library/pipelines` / `/api/library/pipelines/{id}` | 发布新流程或新版本 |
+| GET | `/api/library/pipelines/{id}/versions` | 版本列表 |
+| GET | `/api/library/pipelines/{id}/migration` | 方法版本迁移审阅 |
+| PATCH | `/api/library/pipelines/{id}/versions/{version}` | 发布/归档状态 |
+| POST | `/api/library/pipelines/{id}/workflows` | 创建待审核 Workflow |
+| POST | `/api/library/from-workflow/{workflow_id}` | 按修订导出已选流程 |
 
-写接口沿用同源来源检查和维护模式。没有新增通用 Shell、软件安装、系统服务管理或提权接口。
+修改接口检查版本/修订，避免覆盖另一窗口的更新；同源检查、维护模式、输入授权和 Runner 白名单继续生效。
 
-## 验证与部署
-
-后端目录运行 `python -m pytest tests -q`；前端目录运行 `npm test`、`npm run lint`、`npm run build`。服务器合成检查：
-
-```bash
-/opt/neuroweave/envs/scientific-py311/bin/python scripts/smoke_mrtrix_commands.py --work-dir /明确指定的新测试目录
-```
-
-该脚本拒绝复用非空目录，不扫描用户数据。测试服务仅使用 3002。发布前核对变更文件旧哈希，发现服务器不同修改则停止；先建隔离副本执行验证。Worker 发布到新目录，保留旧目录给已有任务，不原地删除旧输出。仅在测试运行队列为空时重启测试后端。生产 3000 和运行中的任务保持不变。
-
-## 仍需完成
-
-1. 对 `/opt` 其余 FSL、ANTs、FreeSurfer、Python 环境入口等逐项确认正式 CLI、内部程序和重复安装。
-2. 按真实软件接口补齐缺失 Method 及参数条件，并分别完成命令构建、执行和 Slurm 验证。
-3. MRtrix 尚未开放的复杂参数与目录型方法需专门适配器；不要用自由字符串或 Shell 替代。
-4. 在真实浏览器继续检查大型分类树、拖拽和低分辨率布局；构建与单元测试不能替代浏览器验收。
-
-
-## 本次发布验证结果
-
-- 本地后端：285 项测试、678 个子用例通过，3 项环境相关跳过；随后增加的 HTTP 集成及格式复核共 17 项通过。
-- Linux 完整副本：289 项测试、678 个子用例通过；最后八份输出格式修正单独复核 17 项通过。
-- 前端：32 项测试、lint、TypeScript 和生产构建通过。构建有单个 JS 包超过 500 kB 的体积提示。
-- 合成 MRtrix：12 个命令及 tckgen → SIFT2 链路完成，不代表每种参数组合均已验证。
-- 两步 mrconvert Pipeline 在 node01 上以每步 1 CPU、2 GB、3 分钟限制执行；作业 6340、6341 均 COMPLETED / 0:0，输出体素数值与输入一致。
-- 首次 Slurm 验证脚本遗漏正式制品解析，第二步预检失败；脚本改用 RunService._resolve_runtime_bindings 后重测通过。没有修改生产制品解析来绕过检查。
-- 测试入口：http://192.10.84.6:3002/ ，未提交 GitHub，生产 3000 未变更。发布后资源目录实际返回 Skill=175、Method=249、内置 Pipeline=28。
-- 服务器备份：`/home/hipeson/.cache/neuroweave/library-validation-bsckh70w/publish-backup`。
-- Worker：`/home/data/neuroweave/testing/methods-20260922/code-library-20260922T094532Z`；旧 Worker 保留。
-- Slurm 证据：`/home/data/neuroweave/testing/methods-20260922/smoke-library-20260922T094959Z/evidence.json`。
-
-复现两步子节点检查（只对这次测试部署使用）：
-
-```bash
-/opt/neuroweave/envs/scientific-py311/bin/python scripts/smoke_library_slurm.py /home/data/neuroweave/testing/methods-20260922/code-library-20260922T094532Z
-```
-
-
-## 节点画布更新
-
-Pipeline 编辑器已改为节点画布：从左侧将 Method 拖到画布，自由移动节点标题，从右侧输出端口拖线到目标节点左侧输入端口；也可以依次点击两个端口。选中节点后在右侧设置参数。支持平移、缩放、自动排列、选中连线后删除，以及移除节点。
-
-连接按真实端口类型校验，拒绝自环、循环依赖和缺失端口；条件输出按有效参数校验，不再一律禁止连线。保存时根据连接拓扑排序，不按画面左右位置决定执行顺序。移除上游节点后，消费者端口恢复为整体输入。
-
-节点位置按 Pipeline ID/版本保存在当前浏览器；步骤、连接和参数仍保存服务器。位置数据不发送给执行接口，不影响正在运行的任务。浏览器存储不可用时，流程保存仍成功，界面提示下次使用默认布局。
-
-修复 HTTP 内网页面没有 crypto.randomUUID 时在 React 状态更新中抛错导致白屏的问题。ID 生成改用 HTTP 可用的 getRandomValues，并在更新 React 状态前生成；编辑器增加局部错误边界。
-
-验证：前端 39 项测试通过，含 HTTP ID、循环与类型约束、拓扑排序、布局恢复、实际组件渲染和保存请求检查；构建与 lint 通过。浏览器自动化访问内网地址失败，未完成真实浏览器拖拽验收。此次只发布前端与文档，后台正在处理数据，不重启后台、不改 Worker。
-
-
-### 条件响应函数连接修复
-
-响应函数估计的白质输出无条件生成，灰质和脑脊液响应仅在 Dhollander 下生成。画布现在允许同时连接这三个端口；若参数改成 Tournier，保留连线并提示需要 Dhollander，阻止保存无效配置。服务端保存/校验也检查有效参数；保存后在工作流中修改参数，现有 RecipeCompiler 仍在 dry run 和创建运行之前重新校验输出。
-
-三组织响应用于 FOD 时，选择响应算法 Dhollander、FOD 算法 MSMT-CSD。单组织 Tournier → CSD 仅连接白质响应仍可使用。本次不修改算法、软件命令或执行 Runner。
-
-
-### 共享输入（输入 ↔ 输入）
-
-在画布中从一个输入端口拖到另一输入端口，或依次点击两个输入端口，建立紫色虚线共享组。组内步骤只需绑定一个公共文件输入，按样本选择及历史结果绑定也复用同一组引用。共享不增加执行先后依赖，不复制文件。点击虚线或右侧输入的“解除共享”可退出共享组；移除节点会保留其余成员的共享关系。
-
-编辑协议的 `shared_inputs` 是输入端口组数组，成员为 `{step_id,input_slot_id}`。服务端校验真实端口、唯一成员、类型、文件/目录形式、文件数量及共同格式/来源，再把各消费者的已有 `workflow_input` 绑定指向同一公共输入。已经绑定上游输出的端口需先解除原连接，防止静默覆盖。共享输入的格式取交集，校验和 companion 要求取并集；必需性为消费者必需条件的 OR，以 `required_when_any` 保留参数切换时的动态判断。算法方法与软件调用均保持原定义。
+完整行为边界见 [可靠性与编排](reliability-and-pipeline-authoring.md)，画布布局见 [画布说明](pipeline-canvas-ui.md)，契约扩展见 [原生结构](structured-skill-methods.md)。真实软件测试记录与当前就绪状态分别查看，不把历史发布截图或方法数量当作全部命令已经验证。

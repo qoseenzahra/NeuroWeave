@@ -1,4 +1,10 @@
-# Chat scrolling and follow-up planning — 2026-09-26
+# Historical chat scrolling and follow-up fix — 2026-09-26
+
+This is the diagnosis and deployment record for that patch. The input-only
+follow-up strategy and missing-parcellation limitation described below were later
+revised: see [flexible dialogue](flexible-dialogue.md) and
+[method contracts](method-contracts-and-invitations.md). They are not current
+capability claims or instructions to restore the old routing policy.
 
 Sending a message now scrolls only the chat viewport. `appendLocal` enables tail
 following and the existing layout effect updates that viewport after rendering.
@@ -36,8 +42,8 @@ the response tells the model how to search the full catalog when needed.
 ## Separate method-contract limitation
 
 Isolated replay reaches the planner and finds FreeSurfer/MRtrix-related methods.
-However, the current registry has no method output explicitly typed as
-`parcellation_image`. FreeSurfer reconstruction currently registers a subject
+At the time of that replay, the registry had no method output explicitly typed as
+`parcellation_image`. FreeSurfer reconstruction then registered a subject
 directory, and relevant general-purpose commands do not establish the complete
 typed path into `tck2connectome`.
 

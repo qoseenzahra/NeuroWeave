@@ -2030,6 +2030,61 @@
                   "diffusion",
                   "tracking"
                 ]
+              },
+              {
+                "id": "skill.dwi-skill",
+                "label": "dwi-skill",
+                "description": "dwi-skill 统筹已登记的独立方法和可复用流程。支持：MRtrix3 tck2connectome；MRtrix3 5ttgen（FSL）；MRtrix3 CSD / MSMT-CSD；MRtrix3 响应函数估计；MRtrix3 基于已有 FOD 的纤维追踪；FSL ProbtrackX（已有方向采样，输出纤维密度图）；MRtrix3 从已有 5TT 生成灰白质界面种子；MRtrix3 MP-PCA DWI 去噪；其他方法可在详情中分页查询。",
+                "keywords": [
+                  "dwi-skill",
+                  "DWI",
+                  "DTI",
+                  "扩散磁共振",
+                  "纤维追踪",
+                  "MRI",
+                  "FOD"
+                ],
+                "skill_ids": [
+                  "dwi-skill"
+                ],
+                "method_ids": [
+                  "dcm2niix.convert",
+                  "dipy.tensor_fit",
+                  "fsl.dtifit",
+                  "fsl.eddy",
+                  "mrtrix.5ttgen",
+                  "mrtrix.command.5tt2gmwmi",
+                  "mrtrix.command.dwidenoise",
+                  "mrtrix.command.mrdegibbs",
+                  "mrtrix.command.mrthreshold",
+                  "mrtrix.command.tckresample",
+                  "mrtrix.command.tcksift2",
+                  "mrtrix.dwi2fod",
+                  "mrtrix.dwi2response",
+                  "mrtrix.tck2connectome",
+                  "mrtrix.tckgen",
+                  "qsiprep.run",
+                  "reviewed.bids-organizer.explicit-stage",
+                  "reviewed.dipy-tool.roi-stats",
+                  "reviewed.dwi-skill.bedpostx",
+                  "reviewed.dwi-skill.dwibiascorrect",
+                  "reviewed.dwi-skill.dwifslpreproc",
+                  "reviewed.dwi-skill.mrconvert",
+                  "reviewed.dwi-skill.probtrackx-existing",
+                  "reviewed.dwi-skill.sift-existing"
+                ],
+                "pipeline_ids": [
+                  "reviewed-existing-fod-connectome-abbfdbddaf",
+                  "reviewed-mrtrix3-existing-fod-true-ebb543ab01",
+                  "reviewed-rebuild-fod-connectome-4aa083106a",
+                  "reviewed-response-fod-21ed9aded5"
+                ],
+                "entity_kind": "capability",
+                "execution_level": "structured",
+                "category_ids": [
+                  "diffusion",
+                  "tracking"
+                ]
               }
             ]
           },
@@ -2115,12 +2170,17 @@
               {
                 "id": "skill.freesurfer-tool",
                 "label": "freesurfer-tool",
-                "description": "freesurfer-tool 统筹已登记的独立方法和可复用流程。支持：FreeSurfer recon-all（可执行）；FreeSurfer mri_convert；FreeSurfer mri_mask；FreeSurfer mri_binarize；FreeSurfer mri_concat；FreeSurfer mri_info；FreeSurfer mri_segstats；FreeSurfer mri_normalize；其他方法可在详情中分页查询。",
+                "description": "Coordinate FreeSurfer anatomical atlas parcellation, cortical surface reconstruction, subcortical segmentation and associated volume/surface operations. recon-all exposes both the subject directory and stage-specific files, including aparc+aseg.mgz for cortical/subcortical brain regions. Select individual Methods or matching Pipelines; check struct",
                 "keywords": [
                   "freesurfer-tool",
                   "FreeSurfer",
                   "皮层重建",
-                  "分割"
+                  "分割",
+                  "anatomical parcellation",
+                  "脑区分区",
+                  "Desikan-Killiany",
+                  "aparc+aseg",
+                  "connectome nodes"
                 ],
                 "skill_ids": [
                   "freesurfer-tool"
@@ -3057,61 +3117,6 @@
                   "reviewed.combraintf.original-trainer"
                 ],
                 "pipeline_ids": [],
-                "entity_kind": "capability",
-                "execution_level": "structured",
-                "category_ids": [
-                  "utilities",
-                  "images"
-                ]
-              },
-              {
-                "id": "skill.dwi-skill",
-                "label": "dwi-skill",
-                "description": "dwi-skill 统筹已登记的独立方法和可复用流程。支持：MRtrix3 tck2connectome；MRtrix3 5ttgen（FSL）；MRtrix3 CSD / MSMT-CSD；MRtrix3 响应函数估计；MRtrix3 基于已有 FOD 的纤维追踪；FSL ProbtrackX（已有方向采样，输出纤维密度图）；MRtrix3 从已有 5TT 生成灰白质界面种子；MRtrix3 MP-PCA DWI 去噪；其他方法可在详情中分页查询。",
-                "keywords": [
-                  "dwi-skill",
-                  "DWI",
-                  "DTI",
-                  "扩散磁共振",
-                  "纤维追踪",
-                  "MRI",
-                  "FOD"
-                ],
-                "skill_ids": [
-                  "dwi-skill"
-                ],
-                "method_ids": [
-                  "dcm2niix.convert",
-                  "dipy.tensor_fit",
-                  "fsl.dtifit",
-                  "fsl.eddy",
-                  "mrtrix.5ttgen",
-                  "mrtrix.command.5tt2gmwmi",
-                  "mrtrix.command.dwidenoise",
-                  "mrtrix.command.mrdegibbs",
-                  "mrtrix.command.mrthreshold",
-                  "mrtrix.command.tckresample",
-                  "mrtrix.command.tcksift2",
-                  "mrtrix.dwi2fod",
-                  "mrtrix.dwi2response",
-                  "mrtrix.tck2connectome",
-                  "mrtrix.tckgen",
-                  "qsiprep.run",
-                  "reviewed.bids-organizer.explicit-stage",
-                  "reviewed.dipy-tool.roi-stats",
-                  "reviewed.dwi-skill.bedpostx",
-                  "reviewed.dwi-skill.dwibiascorrect",
-                  "reviewed.dwi-skill.dwifslpreproc",
-                  "reviewed.dwi-skill.mrconvert",
-                  "reviewed.dwi-skill.probtrackx-existing",
-                  "reviewed.dwi-skill.sift-existing"
-                ],
-                "pipeline_ids": [
-                  "reviewed-existing-fod-connectome-abbfdbddaf",
-                  "reviewed-mrtrix3-existing-fod-true-ebb543ab01",
-                  "reviewed-rebuild-fod-connectome-4aa083106a",
-                  "reviewed-response-fod-21ed9aded5"
-                ],
                 "entity_kind": "capability",
                 "execution_level": "structured",
                 "category_ids": [
