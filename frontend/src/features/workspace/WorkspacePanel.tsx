@@ -101,7 +101,7 @@ export function WorkspacePanel({
   const mutationPending = useRef(false);
   const [width, setWidth] = useState(540);
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const {panelRef, style: panelStyle, handles: resizeHandles} = useResizablePanel(t.workspaceResize);
+  const {panelRef, style: panelStyle, handles: resizeHandles} = useResizablePanel(t.workspacePickerResize);
   useEffect(()=>{if(dialogRef.current&&!dialogRef.current.open)dialogRef.current.showModal();}, []);
   const dismissPending = useCallback(() => setPending(null), []);
   const boundId = registerMode || datasetOnly || selectionMode ? null : workspaceId;
@@ -120,8 +120,8 @@ export function WorkspacePanel({
         if(!active)return;
         setWorkspaces(items);setRoots(value.roots);
         const current=items.find(item=>item.id===workspaceId);
-        setRoot(current ? browseRootForPath(current.root_path,value.roots)??value.default_root : value.default_root);
-        setDirectory(initialPath ?? current?.root_path ?? '.');
+        setRoot(browseRootForPath(current?.root_path??value.default_root,value.roots)??value.default_root);
+        setDirectory(initialPath ?? current?.root_path ?? value.default_root);
       }).catch((e:unknown)=>{if(active)setError(errorText(e,t.errorMessage));});
       return ()=>{active=false;};
     }
@@ -314,7 +314,7 @@ export function WorkspacePanel({
                 .filter((item) => item.status === 'active')
                 .map((item) => (
                   <option key={item.id} value={item.id} disabled={!item.manageable}>
-                    {item.name}{item.manageable ? '' : ' (' + t.workspaceReadOnly + ')'}
+                    {item.name} · {item.root_path}{item.manageable ? '' : ' (' + t.workspaceReadOnly + ')'}
                   </option>
                 ))}
             </select>}
@@ -602,10 +602,10 @@ export function WorkspacePanel({
                   disabled={busy || selecting || (selectionMode&&!listingFresh) || (['register', 'workspace-edit'].includes(editor) && locked)}
                   className="rounded-control bg-accent-solid px-2.5 py-1.5 text-xs font-medium text-on-accent hover:bg-accent-solid-hover disabled:opacity-50"
                 >
-                  {t.workspaceExecute}
+                  {selectionMode&&editor==='register' ? t.workspaceRegisterSelect : t.workspaceExecute}
                 </button>
                 <button type="button" className={BTN} onClick={() => setEditor(null)}>
-                  {t.workspaceClose}
+                  {t.cancel}
                 </button>
                 {editor === 'workspace-edit' && (
                   <button

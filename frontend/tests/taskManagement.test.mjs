@@ -68,6 +68,21 @@ try {
     assert(html.includes('Recipe · v2'));
     assert(html.includes('选择或登记输出目录'));
   });
+  await test('task management opens the selected task configuration immediately',async()=>{
+    const {TaskDetails}=await load('features/workflows/TaskDetails.tsx');
+    const wf={workflow_id:'detail',revision:1,title:'Fixture',status:'confirmed',execution_mode:'runner',
+      steps:[],dataset:null,workspace_id:'ws',workspace_root_path:'/synthetic',requested_capabilities:[],
+      warnings:[],locked_at:'now',dry_run_report:{valid:false,execution_enabled:true,commands:[],warnings:[]}};
+    client.setQueryData(['workflow','detail'],wf);
+    client.setQueryData(['workflow-run','detail'],null);
+    const html=render(TaskDetails,{task:{workflow_id:'detail',title:'Fixture',source:'pipeline'},
+      sidebarOpen:true,onOpenSidebar(){},onOpenPipelines(){}});
+    assert.match(html,/aria-expanded="true"/);
+    const {translations}=await load('lib/i18n.ts');
+    const t=translations[useLanguageStore.getInitialState().language];
+    assert(html.includes(t.workflowCollapseDetails));
+    assert(html.includes(t.workspaceSelect));
+  });
   await test('editor collapse buttons are attached to the docks rather than the toolbar',async()=>{
     const {PipelineEditor}=await load('features/library/PipelineEditor.tsx');
     const html=render(PipelineEditor,{onClose(){},onSaved(){}});

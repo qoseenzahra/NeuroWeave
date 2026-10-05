@@ -18,8 +18,8 @@ export function TaskDetails({task, sidebarOpen, onOpenSidebar, onOpenPipelines}:
     </header>
     <div className="min-h-0 flex-1 overflow-auto p-4 sm:p-6">
       {task ? <div className="mx-auto max-w-6xl space-y-4">
-        <p className="text-meta text-subtle">{ui('任务来源')}：{task.source==='pipeline'?'Pipeline':ui('对话')} · {task.workflow_id}</p>
-        <WorkflowCard key={task.workflow_id} workflowId={task.workflow_id}/>
+        <p className="text-meta text-subtle">{ui('任务来源')}：{task.source==='pipeline'?'Pipeline':ui('对话')}</p>
+        <WorkflowCard defaultExpanded key={task.workflow_id} workflowId={task.workflow_id}/>
         <RunHistory key={'runs:'+task.workflow_id} workflowId={task.workflow_id}/>
       </div> : <div className="mx-auto mt-12 max-w-xl space-y-3 text-sm text-muted">
         <p>{ui('对话规划和 Pipeline 创建的任务都在这里管理。')}</p>

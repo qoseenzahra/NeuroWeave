@@ -493,7 +493,7 @@ function App() {
           datasetCount={selectedDataset ? 1 : 0}
           onDomainChange={handleRailDomain}
         />
-        {sidebarOpen && <button aria-label={t.closeSidebar} className="fixed inset-0 z-20 bg-black/20 lg:hidden" onClick={() => setSidebarOpen(false)} />}
+        {sidebarOpen && <button aria-label={t.closeSidebar} className="fixed inset-y-0 left-14 right-0 z-20 bg-black/20 lg:hidden" onClick={() => setSidebarOpen(false)} />}
         {sidebarOpen && (
           <aside className="max-lg:fixed max-lg:inset-y-0 max-lg:left-14 max-lg:z-30 flex w-72 max-w-[80vw] shrink-0 flex-col overflow-hidden border-r border-line bg-panel">
             <ContextPanelHeader

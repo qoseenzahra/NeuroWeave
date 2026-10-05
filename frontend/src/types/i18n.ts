@@ -58,6 +58,8 @@ export type TranslationKeys = {
   workspaceBreadcrumb: string;
   workspaceRegisterCurrent: string;
   workspaceRegisterName: string;
+  workspaceRegisterSelect: string;
+  workspacePickerResize: string;
   workspaceDismiss: string;
 
   appName: string;

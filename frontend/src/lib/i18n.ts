@@ -58,6 +58,8 @@ export const translations: Record<Language, TranslationKeys> = {
     workspaceBreadcrumb: "Directory breadcrumbs",
     workspaceRegisterCurrent: "Use current folder as output directory",
     workspaceRegisterName: "Output directory name",
+    workspaceRegisterSelect: "Register and select",
+    workspacePickerResize: "Drag borders to resize the window",
     workspaceDismiss: "Dismiss",
 
     appName: 'NeuroWeave',
@@ -670,6 +672,8 @@ export const translations: Record<Language, TranslationKeys> = {
     workspaceBreadcrumb: "目录面包屑",
     workspaceRegisterCurrent: "当前目录作为输出目录",
     workspaceRegisterName: "输出目录名称",
+    workspaceRegisterSelect: "登记并选择",
+    workspacePickerResize: "拖动边框调整窗口大小",
     workspaceDismiss: "收起",
 
     appName: 'NeuroWeave',
