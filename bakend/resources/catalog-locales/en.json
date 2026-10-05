@@ -3822,5 +3822,22 @@
   "画布视口": "Canvas viewport",
   "缩小画布": "Zoom out",
   "连接清单": "Connections",
-  "适应全部": "Fit all"
+  "适应全部": "Fit all",
+  "读取详情失败": "Could not load the details",
+  "创建流程失败": "Could not create the workflow",
+  "读取流程列表失败": "Could not load workflows",
+  "读取运行记录失败": "Could not load the run",
+  "读取运行历史失败": "Could not load run history",
+  "读取方法目录失败": "Could not load the method catalog",
+  "正在读取方法目录…": "Loading method catalog…",
+  "读取方法详情失败": "Could not load the method details",
+  "保存或校验流程失败": "Could not save or validate the pipeline",
+  "保存草稿失败": "Could not save the draft",
+  "自动排列失败": "Could not arrange the nodes",
+  "更新版本状态失败": "Could not update the version status",
+  "读取版本失败": "Could not load the version",
+  "读取版本信息失败": "Could not load version information",
+  "重试失败": "Retry failed",
+  "停止失败": "Could not stop the request",
+  "每个多文件端口最多连接 64 个输出": "A multi-file input can connect at most 64 outputs"
 }

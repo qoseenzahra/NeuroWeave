@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { adoptConflict } from '../workflows/useWorkflows';
+import { errorText } from '../../api/http';
 import { useLanguageStore } from '../../stores/languageStore';
 import { getTranslations } from '../../lib/i18n';
 import type { Workflow } from '../workflows/workflowTypes';
@@ -30,7 +31,7 @@ export function WorkspaceOutput({
     mutationKey: ['workflow-change', workflow.workflow_id, 'output'],
     mutationFn: () => saveWorkflowOutput(workflow.workflow_id, path, workflow.revision),
     onSuccess: value => { onChange(value); setEditing(false); },
-    onError: error => { adoptConflict(client, error); setError(String(error)); },
+    onError: error => { adoptConflict(client, error); setError(errorText(error, t.workflowErrorGeneric)); },
   });
   const bind = useMutation({
     mutationKey: ['workflow-change', workflow.workflow_id, 'output-root'],
@@ -39,7 +40,7 @@ export function WorkspaceOutput({
       { workspaceId: workspace?.id ?? null, conversationId: null }
     ),
     onSuccess: value => { onChange(value); setEditing(false); },
-    onError: error => { adoptConflict(client, error); setError(String(error)); },
+    onError: error => { adoptConflict(client, error); setError(errorText(error, t.workflowErrorGeneric)); },
   });
   const busy = save.isPending || bind.isPending;
   const hasOutput = !!workflow.workspace_id && !!workflow.workspace_root_path;

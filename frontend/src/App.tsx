@@ -17,7 +17,6 @@ import { useThemeStore } from './stores/themeStore';
 import { setMouseWaveEnabled } from './lib/mouseWave';
 import { ChatTurnPanel } from './features/chat/ChatTurnPanel';
 import { WorkflowHistory } from './features/workflows/WorkflowHistory';
-import { ui as libraryText } from './lib/libraryText';
 import { ChatHeader } from './features/chat/ChatHeader';
 import { MessageArea } from './features/chat/MessageArea';
 import { MessageComposer } from './features/chat/MessageComposer';
@@ -465,7 +464,7 @@ function App() {
       title: t.chatHistory,
       subtitle: t.chatsToday.replace('{{count}}', String(todayCount))
     },
-    workflows: {title:libraryText('流程与运行')},
+    workflows: {title:t.workflowsAndRuns},
     skills: { title: t.skills, subtitle: String(skills.length) },
     datasets: { title: t.datasetPickerTitle, subtitle: t.datasetPickerSubtitle },
     workspace: { title: t.workspaceTitle, subtitle: t.workspaceHint },
@@ -487,9 +486,6 @@ function App() {
           domain={sidebarView}
           datasetCount={selectedDataset ? 1 : 0}
           onDomainChange={handleRailDomain}
-          onOpenDatasets={openDatasetPicker}
-          onOpenWorkspace={() => setWorkspaceOpen(true)}
-          onOpenStorage={() => setStorageOpen(true)}
         />
         {sidebarOpen && <button aria-label={t.closeSidebar} className="fixed inset-0 z-20 bg-black/20 lg:hidden" onClick={() => setSidebarOpen(false)} />}
         {sidebarOpen && (
@@ -538,7 +534,7 @@ function App() {
             onOpenWorkspace={() => setWorkspaceOpen(true)}
             t={t}
             title={activeTitle}
-            domainLabel={sidebarView==='workflows'?libraryText('流程与运行'):sidebarView === 'skills' ? t.skills : sidebarView === 'datasets' ? t.datasetPickerTitle : sidebarView === 'workspace' ? t.workspaceTitle : sidebarView === 'storage' ? t.storageTitle : t.conversations}
+            domainLabel={sidebarView==='workflows'?t.workflowsAndRuns:sidebarView === 'skills' ? t.skills : sidebarView === 'datasets' ? t.datasetPickerTitle : sidebarView === 'workspace' ? t.workspaceTitle : sidebarView === 'storage' ? t.storageTitle : t.conversations}
             sidebarOpen={sidebarOpen}
             darkMode={darkMode}
             datasetLabel={selectedDataset ? selectedDataset.display_name : null}

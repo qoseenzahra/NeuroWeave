@@ -8,7 +8,9 @@ import {
 import type { Draft, Pipeline } from './libraryApi';
 import { request } from '../../api/http';
 import { createNodeId } from './pipelineGraph';
-import { ui } from '../../lib/libraryText';
+import { ui, useLibraryText } from '../../lib/libraryText';
+import { errorText } from '../../api/http';
+import type { LibraryMessage } from '../../lib/libraryText';
 
 /** Local recovery survives unload; versioned server drafts survive browser changes. */
 export function usePipelineDraft(
@@ -42,7 +44,8 @@ export function usePipelineDraft(
     canUndo: false,
     canRedo: false
   });
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState<LibraryMessage | null>(null);
+  const translate = useLibraryText();
   const saved = useRef(''),
     flight = useRef<Promise<void> | null>(null);
   const metadata = useRef({ pipelineId, pipelineVersion });
@@ -102,7 +105,7 @@ export function usePipelineDraft(
       const signature = JSON.stringify([editor, metadata.current]);
       if (signature === saved.current) return;
       const action = (async () => {
-        setStatus(ui('正在保存草稿…'));
+        setStatus({ source: '正在保存草稿…' });
         try {
           const result = await request<{ revision: number }>(
             `/api/library/drafts/${id}`,
@@ -133,9 +136,9 @@ export function usePipelineDraft(
           } catch {
             /* Server revision is durable even when browser storage is full. */
           }
-          setStatus(ui('草稿已保存'));
+          setStatus({ source: '草稿已保存' });
         } catch (error) {
-          setStatus(ui('草稿同步失败，保留浏览器恢复副本：{0}', String(error)));
+          setStatus({ source: '草稿同步失败，保留浏览器恢复副本：{0}', values: [errorText(error)] });
           throw error;
         }
       })();
@@ -164,7 +167,7 @@ export function usePipelineDraft(
         })
       );
     } catch {
-      setStatus(ui('浏览器恢复副本不可用，请保存到服务器。'));
+      setStatus({ source: '浏览器恢复副本不可用，请保存到服务器。' });
     }
     const timer = setTimeout(() => void flush().catch(() => {}), 1000);
     return () => clearTimeout(timer);
@@ -193,5 +196,8 @@ export function usePipelineDraft(
       window.removeEventListener('pagehide', save);
     };
   }, [key, id]);
-  return { draft, setDraft, undo, redo, ...historyState, flush, status };
+  const statusText = !status
+    ? ''
+    : 'text' in status ? status.text : translate(status.source, ...(status.values ?? []));
+  return { draft, setDraft, undo, redo, ...historyState, flush, status: statusText };
 }

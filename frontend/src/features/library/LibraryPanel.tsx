@@ -1,9 +1,11 @@
 import { stateText } from '../../lib/stateText';
 import { ui } from '../../lib/libraryText';
+import { errorText } from '../../api/http';
 import { DefinitionDetails } from './DefinitionDetails';
 import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Dialog } from '../../ui/Dialog';
+import { Tabs } from '../../ui/Tabs';
 import { useSkills } from '../skills/useSkills';
 import type { Skill } from '../skills/skillsApi';
 import { useDatasetStore } from '../../stores/datasetStore';
@@ -14,11 +16,11 @@ import type { Entry, Method, Pipeline } from './libraryApi';
 import { PipelineVersions } from './PipelineVersions';
 import { PipelineEditor } from './PipelineEditor';
 import { LibraryNavigation } from './LibraryNavigation';
+import { button } from './pipelineEditorStyles';
 import { useLanguageStore } from '../../stores/languageStore';
 
 type Props={selectedSkillIds:string[];disabled:boolean;onAdd:(id:string)=>void;onRemove:(id:string)=>void;
   onDetails:(s:Skill)=>void;onClear:()=>void;workspaceId?:string|null;conversationId?:string|null};
-const button='rounded border border-line px-2 py-1 text-xs hover:bg-hover disabled:opacity-40';
 export function LibraryPanel(props:Props) {
   const language=useLanguageStore(s=>s.language);
   const [category,setCategory]=useState(''); const [software,setSoftware]=useState('');
@@ -33,14 +35,23 @@ export function LibraryPanel(props:Props) {
   const query=useQuery({queryKey:['library',kind,search,cursor,category,software,language],queryFn:()=>api.catalog(kind,search,cursor,category,software,language)});
   const detailVersion=detail&&'steps' in detail?detail.version:undefined;
   const detailId=detail?.id; const detailKind=detail && 'runtime_status' in detail ? 'method' : 'pipeline';
-  useEffect(()=>{let active=true;if(detailId)void (detailKind==='method'?api.method(detailId):api.pipeline(detailId,detailVersion)).then(value=>{if(active)setDetail(value);}).catch(e=>{if(active)setError(String(e));});return()=>{active=false;};},[detailId,detailKind,detailVersion,language]);
+  useEffect(()=>{let active=true;if(detailId)void (detailKind==='method'?api.method(detailId):api.pipeline(detailId,detailVersion)).then(value=>{if(active)setDetail(value);}).catch(e=>{if(active)setError(errorText(e,ui("读取详情失败")));});return()=>{active=false;};},[detailId,detailKind,detailVersion,language]);
   const inspect=async(e:Entry)=>{setError('');try{
     if(e.kind==='skill'){const s=skills.data?.skills.find(s=>s.name===e.id);if(s)props.onDetails(s);else throw new Error(ui("Skill 元数据尚未加载"));}
     else setDetail(e.kind==='method'?await api.method(e.id):await api.pipeline(e.id));
-  }catch(e){setError(String(e));}};
-  const use=async(p:Pipeline)=>{setBusy(true);setError('');try{setWorkflow(await api.usePipeline(p.id,datasetId,props.workspaceId??null,p.version,props.conversationId));void client.invalidateQueries({queryKey:['conversation']});setDetail(null);}catch(e){setError(String(e));}finally{setBusy(false);}};
+  }catch(e){setError(errorText(e,ui("读取详情失败")));}};
+  const use=async(p:Pipeline)=>{setBusy(true);setError('');try{setWorkflow(await api.usePipeline(p.id,datasetId,props.workspaceId??null,p.version,props.conversationId));void client.invalidateQueries({queryKey:['conversation']});setDetail(null);}catch(e){setError(errorText(e,ui("创建流程失败")));}finally{setBusy(false);}};
   return <div className="min-w-0 space-y-3">
-    <div role="tablist" aria-label={ui("能力资源目录")} className="flex flex-wrap gap-1">{['skill','method','pipeline'].map(k=><button key={k} role="tab" aria-selected={kind===k} className={button+' '+(kind===k?'bg-selected':'')} onClick={()=>{setKind(k);setCursor(0);setCategory('');setSoftware('');}}>{k==='skill'?'Skill':k==='method'?'Method':'Pipeline'}</button>)}</div>
+    <Tabs
+      items={[
+        { value: 'skill', label: 'Skill' },
+        { value: 'method', label: 'Method' },
+        { value: 'pipeline', label: 'Pipeline' }
+      ]}
+      value={kind}
+      onChange={next => { setKind(next); setCursor(0); setCategory(''); setSoftware(''); }}
+      label={ui("能力资源目录")}
+    />
     <input className="w-full min-w-0 rounded border border-line bg-raised p-2 text-xs" aria-label={ui("搜索资源")} placeholder={ui("搜索名称、功能或软件")} value={q} onChange={e=>{setQ(e.target.value);setCursor(0);}}/>
     <p className="text-xs text-subtle">{kind==='skill'?ui("Skill：按目标统筹方法与流程"):kind==='method'?ui("Method：可执行的最小命令或库调用"):ui("Pipeline：已定义输入输出的可复用方法组合")}</p>
     <LibraryNavigation facets={query.data?.facets} category={category} software={software} onCategory={value=>{setCategory(value);setCursor(0);}} onSoftware={value=>{setSoftware(value);setCursor(0);}}/>
@@ -51,7 +62,7 @@ export function LibraryPanel(props:Props) {
     {query.isPending?<p className="text-xs">{ui("加载目录…")}</p>:<div className="space-y-2">{(query.data?.items??[]).map(e=><div key={e.id} className="min-w-0 rounded border border-line p-2 text-xs">
       <button className="block w-full break-words text-left font-medium" onClick={()=>void inspect(e)}>{e.label}</button>
       <p className="mt-1 line-clamp-3 break-words text-subtle" title={e.description}>{e.description}</p>
-      <p className="mt-1 break-words text-[10px] text-subtle">{e.category.join(" / ")}{e.software?.length ? " · "+e.software.join(", ") : ""}</p>
+      <p className="mt-1 break-words text-micro text-subtle">{e.category.join(" / ")}{e.software?.length ? " · "+e.software.join(", ") : ""}</p>
       {e.kind==='method'&&<p className="mt-1 text-subtle">{ui('已开放 {0} 个参数，{1} 个原生命令选项尚未开放',e.parameter_count??0,e.omitted_option_count??0)}</p>}
       <div className="mt-2 flex flex-wrap gap-1"><button className={button} onClick={()=>void inspect(e)}>{ui("查看详情")}</button>
         {e.kind==='skill'&&<button className={button} disabled={props.disabled} onClick={()=>props.selectedSkillIds.includes(e.id)?props.onRemove(e.id):props.onAdd(e.id)}>{props.selectedSkillIds.includes(e.id)?ui("移出会话"):ui("加入会话")}</button>}

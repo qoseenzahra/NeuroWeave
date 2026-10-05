@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { ui } from '../../lib/libraryText';
+import { useLibraryText } from '../../lib/libraryText';
+import { errorText } from '../../api/http';
+import type { LibraryMessage } from '../../lib/libraryText';
 import * as api from './libraryApi';
 import type { Draft } from './libraryApi';
 
@@ -18,7 +20,12 @@ export function usePipelineDescription({
 }: Props) {
   const request = useRef<AbortController | null>(null);
   const [generating, setGenerating] = useState(false);
-  const [descriptionStatus, setDescriptionStatus] = useState('');
+  // Hold the untranslated source so the status follows a language switch.
+  const [status, setStatus] = useState<LibraryMessage | null>(null);
+  const ui = useLibraryText();
+  const descriptionStatus = !status
+    ? ''
+    : 'text' in status ? status.text : ui(status.source, ...(status.values ?? []));
 
   // An obsolete response must not replace a newer graph or a manual description.
   useEffect(() => () => request.current?.abort(), [draft, language, blocked]);
@@ -30,7 +37,7 @@ export function usePipelineDescription({
     const snapshot = JSON.stringify(draft);
     request.current = controller;
     setGenerating(true);
-    setDescriptionStatus(ui('正在生成描述…'));
+    setStatus({ source: '正在生成描述…' });
     try {
       const result = await api.describe(draft, language, controller.signal);
       if (controller.signal.aborted) return false;
@@ -39,17 +46,19 @@ export function usePipelineDescription({
           ? { ...previous, description: result.description }
           : previous
       );
-      setDescriptionStatus(result.warning || ui('描述已根据实际编排生成'));
+      setStatus(
+        result.warning ? { text: result.warning } : { source: '描述已根据实际编排生成' }
+      );
       return true;
     } catch (error) {
       if (!controller.signal.aborted)
-        setDescriptionStatus(ui('描述暂未更新：{0}', String(error)));
+        setStatus({ source: '描述暂未更新：{0}', values: [errorText(error)] });
       return false;
     } finally {
       if (request.current === controller) {
         request.current = null;
         setGenerating(false);
-        if (controller.signal.aborted) setDescriptionStatus('');
+        if (controller.signal.aborted) setStatus(null);
       }
     }
   };

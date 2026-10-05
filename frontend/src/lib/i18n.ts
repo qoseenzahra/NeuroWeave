@@ -32,6 +32,7 @@ export const translations: Record<Language, TranslationKeys> = {
     datasetFilePermissions: "Permissions",
     datasetBinaryHint: "Image and binary files show metadata only. Use the corresponding Skill to analyze their contents.",
     datasetClosePreview: "Close preview",
+    openFullPanel: "Open full panel",
     datasetPreviewLoading: "Loading text preview…",
     datasetPreviewEnd: "End of file",
 
@@ -184,6 +185,7 @@ export const translations: Record<Language, TranslationKeys> = {
     datasetCounts: '{{directories}} folders',
     datasetSamples: '{{count}} samples',
     datasetFilesSize: '{{count}} files · {{size}}',
+    workflowsAndRuns: 'Workflows & runs',
     workflowLoading: 'Loading workflow…',
     workflowLoadError: 'Could not load the workflow.',
     workflowExpandDetails: 'Expand workflow',
@@ -642,6 +644,7 @@ export const translations: Record<Language, TranslationKeys> = {
     datasetFilePermissions: "权限",
     datasetBinaryHint: "影像与二进制文件仅展示元数据，内容分析请使用对应 Skill。",
     datasetClosePreview: "关闭预览",
+    openFullPanel: "打开完整面板",
     datasetPreviewLoading: "正在读取文本预览…",
     datasetPreviewEnd: "已到文件末尾",
 
@@ -793,6 +796,7 @@ export const translations: Record<Language, TranslationKeys> = {
     datasetCounts: '{{directories}} 个文件夹',
     datasetSamples: '{{count}} 样本',
     datasetFilesSize: '{{count}} 文件 · {{size}}',
+    workflowsAndRuns: '流程与运行',
     workflowLoading: '正在读取流程…',
     workflowLoadError: '无法读取流程，请重试',
     workflowExpandDetails: '展开流程',
