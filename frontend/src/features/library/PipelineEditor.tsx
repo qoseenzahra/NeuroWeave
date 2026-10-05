@@ -1,5 +1,6 @@
 import { ui } from '../../lib/libraryText';
 import { useLanguageStore } from '../../stores/languageStore';
+import { errorText } from '../../api/http';
 import { Component, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -187,7 +188,7 @@ function Editor({ initial, onClose, onSaved }: Props) {
       setPreview(null);
       setSaved(false);
     } catch (e) {
-      setError(String(e));
+      setError(errorText(e, ui('读取方法详情失败')));
     } finally {
       pending.current = false;
       setBusy(false);
@@ -209,14 +210,14 @@ function Editor({ initial, onClose, onSaved }: Props) {
         steps: connectNodes(draft.steps, definitions, from, output, to, input)
       });
     } catch (e) {
-      setError(String(e));
+      setError(errorText(e));
     }
   };
   const share = (from: InputPort, to: InputPort) => {
     try {
       change(shareInputs(draft, definitions, from, to));
     } catch (e) {
-      setError(String(e));
+      setError(errorText(e));
     }
   };
   const detach = (port: InputPort) =>
@@ -244,7 +245,7 @@ function Editor({ initial, onClose, onSaved }: Props) {
         if (p.layout_warning) setError(p.layout_warning);
       }
     } catch (e) {
-      setError(String(e));
+      setError(errorText(e, ui('保存或校验流程失败')));
     } finally {
       pending.current = false;
       setBusy(false);
@@ -256,7 +257,7 @@ function Editor({ initial, onClose, onSaved }: Props) {
     void authoring
       .flush()
       .then(onClose)
-      .catch((error) => setError(String(error)));
+      .catch((error) => setError(errorText(error, ui('保存草稿失败'))));
   };
   const canSave =
     !busy &&
@@ -299,7 +300,7 @@ function Editor({ initial, onClose, onSaved }: Props) {
             className={button}
             disabled={busy}
             onClick={() =>
-              void authoring.flush().catch((e) => setError(String(e)))
+              void authoring.flush().catch((e) => setError(errorText(e, ui('保存草稿失败'))))
             }
           >
             {ui('保存草稿')}
@@ -443,6 +444,7 @@ function Editor({ initial, onClose, onSaved }: Props) {
           <PipelineMethodPalette
             page={methods.data}
             error={methods.error}
+            loading={methods.isPending}
             q={q}
             cursor={cursor}
             busy={busy}
@@ -486,7 +488,7 @@ function Editor({ initial, onClose, onSaved }: Props) {
                 steps: arrangeNodes(draft.steps, definitions)
               });
             } catch (e) {
-              setError(String(e));
+              setError(errorText(e, ui('自动排列失败')));
             }
           }}
         />

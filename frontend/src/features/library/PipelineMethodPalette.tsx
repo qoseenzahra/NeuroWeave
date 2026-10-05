@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { errorText } from '../../api/http';
 import { MethodDetailsCard } from './MethodDetailsCard';
 import { ui } from '../../lib/libraryText';
 import type { Page, Entry } from './libraryApi';
@@ -7,6 +8,8 @@ import { button, field } from './pipelineEditorStyles';
 type Props = {
   page?: Page;
   error: unknown;
+  /** First load of the catalog, before any page has arrived. */
+  loading?: boolean;
   q: string;
   cursor: number;
   busy: boolean;
@@ -19,6 +22,7 @@ type Props = {
 export function PipelineMethodPalette({
   page,
   error,
+  loading = false,
   q,
   cursor,
   busy,
@@ -50,7 +54,8 @@ export function PipelineMethodPalette({
       <p className="my-2 text-xs text-subtle">
         {ui('点击方法查看详情；拖到画布或点击添加节点')}
       </p>
-      {!!error && <p role="alert">{String(error)}</p>}
+      {!!error && <p role="alert">{errorText(error, ui('读取方法目录失败'))}</p>}
+      {loading && <p role="status" className="text-xs text-subtle">{ui('正在读取方法目录…')}</p>}
       {[...groups].map(([group, entries]) => (
         <details key={group} open className="my-2">
           {/* The details element bounds sticky positioning so the next category pushes this heading away. */}

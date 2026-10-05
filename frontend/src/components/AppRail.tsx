@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { useLanguageStore } from '../stores/languageStore';
 import { Database, ListChecks, FolderOpen, HardDrive, MessageSquare, Settings, Sparkles } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { SettingsDialog } from './SettingsDialog';
@@ -9,19 +8,16 @@ import type { TranslationKeys } from '../types/i18n';
 
 export type RailDomain = 'conversations' | 'skills' | 'datasets' | 'workspace' | 'storage' | 'workflows';
 
-type RailItem = { value: RailDomain; label: string; icon: ReactNode; openFull?: () => void };
+type RailItem = { value: RailDomain; label: string; icon: ReactNode };
 
 type AppRailProps = {
   t: TranslationKeys;
   domain: RailDomain;
   datasetCount: number;
   onDomainChange: (domain: RailDomain) => void;
-  onOpenDatasets: () => void;
-  onOpenWorkspace: () => void;
-  onOpenStorage: () => void;
 };
 
-export function AppRail({ t, domain, datasetCount, onDomainChange, onOpenDatasets, onOpenWorkspace, onOpenStorage }: AppRailProps) {
+export function AppRail({ t, domain, datasetCount, onDomainChange }: AppRailProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsButtonRef = useRef<HTMLButtonElement | null>(null);
 
@@ -34,16 +30,15 @@ export function AppRail({ t, domain, datasetCount, onDomainChange, onOpenDataset
     return () => document.removeEventListener('keydown', onKey);
   }, [settingsOpen]);
 
-  const language=useLanguageStore(s=>s.language);
   const primary: RailItem[] = [
-    {value:'workflows',label:language==='zh'?'流程与运行':'Workflows & runs',icon:<ListChecks/>},
+    { value: 'workflows', label: t.workflowsAndRuns, icon: <ListChecks /> },
     { value: 'conversations', label: t.conversations, icon: <MessageSquare /> },
     { value: 'skills', label: t.skills, icon: <Sparkles /> }
   ];
   const resources: RailItem[] = [
-    { value: 'datasets', label: t.datasetSelectLocal, icon: <Database />, openFull: onOpenDatasets },
-    { value: 'workspace', label: t.workspaceTitle, icon: <FolderOpen />, openFull: onOpenWorkspace },
-    { value: 'storage', label: t.storageOpen, icon: <HardDrive />, openFull: onOpenStorage }
+    { value: 'datasets', label: t.datasetSelectLocal, icon: <Database /> },
+    { value: 'workspace', label: t.workspaceTitle, icon: <FolderOpen /> },
+    { value: 'storage', label: t.storageOpen, icon: <HardDrive /> }
   ];
   const btn = (active: boolean) =>
     cx(
@@ -76,11 +71,7 @@ export function AppRail({ t, domain, datasetCount, onDomainChange, onOpenDataset
               type="button"
               aria-current={active ? 'page' : undefined}
               aria-label={item.label}
-              onClick={(e) => {
-                if (e.metaKey || e.ctrlKey || e.shiftKey) item.openFull?.();
-                else onDomainChange(item.value);
-              }}
-              onDoubleClick={item.openFull}
+              onClick={() => onDomainChange(item.value)}
               className={btn(active)}
             >
               {active && <span aria-hidden="true" className="absolute -left-3 h-5 w-0.5 rounded-pill bg-accent-solid" />}

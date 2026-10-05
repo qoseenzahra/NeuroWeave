@@ -39,7 +39,7 @@ export function PipelineCanvasNode(props: Props) {
       className={
         'absolute rounded-lg border bg-raised shadow-md ' +
         (props.selected
-          ? 'border-blue-500 ring-2 ring-blue-500/30'
+          ? 'border-accent ring-2 ring-accent/30'
           : 'border-line')
       }
       style={{
@@ -80,14 +80,14 @@ export function PipelineCanvasNode(props: Props) {
           });
         }}
       >
-        <span className="mr-2 shrink-0 rounded bg-blue-500/10 px-1 text-blue-600">
+        <span className="mr-2 shrink-0 rounded bg-accent-quiet px-1 text-accent">
           {props.index + 1}
         </span>
         <span className="line-clamp-2 break-words">
           {method?.label ?? node.method_id}
         </span>
       </button>
-      <div className="grid grid-cols-2 pb-3 text-[11px]">
+      <div className="grid grid-cols-2 pb-3 text-micro">
         <div>
           {props.inputs.map((slot) => (
             <div
@@ -106,8 +106,8 @@ export function PipelineCanvasNode(props: Props) {
                 data-pipeline-input={slot.id}
                 aria-label={ui('输入 {0} / {1}', method?.label, slot.label)}
                 className={
-                  'absolute -left-2 top-2 h-4 w-4 rounded-full border-2 border-blue-500 ' +
-                  (node.inputs[slot.id] ? 'bg-blue-500' : 'bg-raised')
+                  'absolute -left-2 top-2 h-4 w-4 rounded-full border-2 border-accent ' +
+                  (node.inputs[slot.id] ? 'bg-accent' : 'bg-raised')
                 }
                 style={
                   focus?.input === slot.id
@@ -163,7 +163,7 @@ export function PipelineCanvasNode(props: Props) {
                 className={
                   'absolute -right-2 top-2 h-4 w-4 rounded-full border-2 ' +
                   (slot.available
-                    ? 'border-blue-500 bg-blue-500'
+                    ? 'border-accent bg-accent'
                     : 'border-warning bg-warning-quiet')
                 }
                 style={

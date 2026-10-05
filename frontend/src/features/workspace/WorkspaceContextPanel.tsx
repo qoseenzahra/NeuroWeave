@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { FolderOpen } from 'lucide-react';
+import { FolderOpen, Maximize2 } from 'lucide-react';
 import { getTranslations } from '../../lib/i18n';
 import { useLanguageStore } from '../../stores/languageStore';
 import { listWorkspaces } from './workspaceApi';
@@ -78,8 +78,10 @@ export function WorkspaceContextPanel({ workspaceId, onOpenFull }: WorkspaceCont
         </ul>
       )}
       <div className="mt-auto border-t border-line pt-2.5">
-        <Button size="sm" onClick={onOpenFull} className="w-full">
-          {t.workspaceTitle}
+        <Button size="sm" onClick={onOpenFull} className="w-full"
+          title={`${t.openFullPanel}: ${t.workspaceTitle}`}>
+          <Maximize2 aria-hidden="true" className="size-4 shrink-0 text-subtle" />
+          <span className="truncate">{t.workspaceTitle}</span>
         </Button>
       </div>
     </div>

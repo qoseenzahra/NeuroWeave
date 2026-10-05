@@ -31,6 +31,8 @@ export type TranslationKeys = {
   datasetFilePermissions: string;
   datasetBinaryHint: string;
   datasetClosePreview: string;
+  /** Opens the full-screen surface behind a rail domain's context panel. */
+  openFullPanel: string;
   datasetPreviewLoading: string;
   datasetPreviewEnd: string;
 
@@ -182,6 +184,7 @@ export type TranslationKeys = {
   datasetCounts: string;
   datasetSamples: string;
   datasetFilesSize: string;
+  workflowsAndRuns: string;
   workflowLoading: string;
   workflowLoadError: string;
   workflowExpandDetails: string;

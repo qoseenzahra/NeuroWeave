@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { HardDrive } from 'lucide-react';
+import { HardDrive, Maximize2 } from 'lucide-react';
 import { getTranslations } from '../../lib/i18n';
 import { useLanguageStore } from '../../stores/languageStore';
 import { fetchStorageStatus } from './storageApi';
@@ -60,8 +60,10 @@ export function StorageContextPanel({ onOpenFull }: StorageContextProps) {
         </ul>
       )}
       <div className="mt-auto border-t border-line pt-2.5">
-        <Button size="sm" onClick={onOpenFull} className="w-full">
-          {t.storageTitle}
+        <Button size="sm" onClick={onOpenFull} className="w-full"
+          title={`${t.openFullPanel}: ${t.storageTitle}`}>
+          <Maximize2 aria-hidden="true" className="size-4 shrink-0 text-subtle" />
+          <span className="truncate">{t.storageTitle}</span>
         </Button>
       </div>
     </div>

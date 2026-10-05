@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Link2, ScanSearch } from 'lucide-react';
+import { errorText } from '../../api/http';
+import { Link2, Maximize2, ScanSearch } from 'lucide-react';
 import { getTranslations } from '../../lib/i18n';
 import { useLanguageStore } from '../../stores/languageStore';
 import { useDatasetStore } from '../../stores/datasetStore';
@@ -80,7 +81,7 @@ export function DatasetContextPanel({ onOpenFull, onChoose, disabled, notice, on
                   disabled={disabled}
                   onClick={() => {
                     setError('');
-                    void onChoose(dataset).catch(error => setError(String(error)));
+                    void onChoose(dataset).catch(error => setError(errorText(error, t.datasetLoadError)));
                   }}
                   className={
                     active
@@ -101,9 +102,12 @@ export function DatasetContextPanel({ onOpenFull, onChoose, disabled, notice, on
       )}
 
       <div className="mt-auto flex shrink-0 items-center gap-2 border-t border-line pt-2.5">
-        <Button size="sm" disabled={disabled} onClick={onOpenFull} className="min-w-0 flex-1">
+        <Button size="sm" disabled={disabled} onClick={onOpenFull}
+          title={`${t.openFullPanel}: ${t.datasetPickerTitle}`}
+          className="min-w-0 flex-1">
           <ScanSearch aria-hidden="true" className="size-4 shrink-0" />
           <span className="truncate">{t.datasetPickerTitle}</span>
+          <Maximize2 aria-hidden="true" className="ml-auto size-3.5 shrink-0 text-subtle" />
         </Button>
       </div>
     </div>

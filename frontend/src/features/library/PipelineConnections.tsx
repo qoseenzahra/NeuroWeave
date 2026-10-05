@@ -110,8 +110,8 @@ export function PipelineConnectionList({
           type="button"
           aria-pressed={selected === edge.id}
           className={
-            'flex w-full items-start gap-2 rounded px-2 py-1 text-left hover:bg-blue-500/10 ' +
-            (selected === edge.id ? 'bg-blue-500/10' : '')
+            'flex w-full items-start gap-2 rounded px-2 py-1 text-left hover:bg-accent-quiet ' +
+            (selected === edge.id ? 'bg-accent-quiet' : '')
           }
           onClick={() => onSelect(edge)}
         >

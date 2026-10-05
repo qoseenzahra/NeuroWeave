@@ -70,6 +70,25 @@ async function parseError(response: Response): Promise<ApiError> {
   }
 }
 
+/**
+ * Readable one-line text for a caught value.
+ *
+ * `request()` rejects with an `ApiError` whose message is already the server's
+ * `detail` string, so the normal path returns that message unchanged. Anything
+ * else is handled defensively so the UI never renders `[object Object]` or a
+ * stack trace; `fallback` is returned when there is no usable text.
+ */
+export function errorText(error: unknown, fallback = ''): string {
+  if (error instanceof Error && error.message) return error.message;
+  if (typeof error === 'string' && error.trim()) return error;
+  if (error && typeof error === 'object') {
+    // Structured API rejections may carry `message` without extending Error.
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === 'string' && message.trim()) return message;
+  }
+  return fallback;
+}
+
 export async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const response = await fetch(`${apiBase()}${path}`, {
     ...init,

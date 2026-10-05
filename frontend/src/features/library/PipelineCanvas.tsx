@@ -1,3 +1,4 @@
+import { Minus, Plus } from 'lucide-react';
 import { nodeMethod } from './artifactSemantics';
 import { ui } from '../../lib/libraryText';
 import { useMemo, useRef, useState } from 'react';
@@ -201,11 +202,11 @@ export function PipelineCanvas(props: Props) {
           aria-label={ui('缩小画布')}
           onClick={() => changeZoom(zoom / 1.2)}
         >
-          −
+          <Minus aria-hidden="true" className="size-4" />
         </button>
         <input
           type="range"
-          className="w-20 accent-blue-600"
+          className="w-20 accent-accent"
           min={2}
           max={200}
           value={Math.round(zoom * 100)}
@@ -220,7 +221,7 @@ export function PipelineCanvas(props: Props) {
           aria-label={ui('放大画布')}
           onClick={() => changeZoom(zoom * 1.2)}
         >
-          ＋
+          <Plus aria-hidden="true" className="size-4" />
         </button>
         <button className={button} onClick={() => fit(bounds)}>
           {ui('适应全部')}
@@ -560,7 +561,7 @@ export function PipelineCanvas(props: Props) {
           </div>
         </div>
       </div>
-      <div className="flex shrink-0 items-center gap-2 border-t border-line bg-raised px-2 py-1 text-[11px] text-subtle">
+      <div className="flex shrink-0 items-center gap-2 border-t border-line bg-raised px-2 py-1 text-micro text-subtle">
         {wire ? (
           <>
             <span>

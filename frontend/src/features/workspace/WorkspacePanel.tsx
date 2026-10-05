@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { errorText } from '../../api/http';
 import { useLanguageStore } from '../../stores/languageStore';
 import { getTranslations } from '../../lib/i18n';
 import type { TranslationKeys } from '../../types/i18n';
@@ -747,7 +748,7 @@ export function WorkspacePanel({
               setDirectory(value.source); setFilter('');
             }
             setRefresh(v => v + 1);
-            if (trash && boundId) void fetchTrash(boundId).then(setTrash).catch(error => setError(String(error)));
+            if (trash && boundId) void fetchTrash(boundId).then(setTrash).catch(error => setError(errorText(error, t.errorMessage)));
           }}
         />
       )}
