@@ -8,8 +8,7 @@ import { Dialog } from '../../ui/Dialog';
 import { Tabs } from '../../ui/Tabs';
 import { useSkills } from '../skills/useSkills';
 import type { Skill } from '../skills/skillsApi';
-import { useDatasetStore } from '../../stores/datasetStore';
-import { WorkflowCard } from '../workflows/WorkflowCard';
+import { PipelineLaunchDialog } from './PipelineLaunchDialog';
 import type { Workflow } from '../workflows/workflowTypes';
 import * as api from './libraryApi';
 import type { Entry, Method, Pipeline } from './libraryApi';
@@ -20,16 +19,16 @@ import { button } from './pipelineEditorStyles';
 import { useLanguageStore } from '../../stores/languageStore';
 
 type Props={selectedSkillIds:string[];disabled:boolean;onAdd:(id:string)=>void;onRemove:(id:string)=>void;
-  onDetails:(s:Skill)=>void;onClear:()=>void;workspaceId?:string|null;conversationId?:string|null};
+  onDetails:(s:Skill)=>void;onClear:()=>void;domain?:'skills'|'pipelines';onTaskCreated?:(workflow:Workflow)=>void};
 export function LibraryPanel(props:Props) {
   const language=useLanguageStore(s=>s.language);
   const [category,setCategory]=useState(''); const [software,setSoftware]=useState('');
   const [search,setSearch]=useState('');
-  const [kind,setKind]=useState('skill');const [q,setQ]=useState('');const [cursor,setCursor]=useState(0);
+  const [kind,setKind]=useState(props.domain==='pipelines'?'pipeline':'skill');const [q,setQ]=useState('');const [cursor,setCursor]=useState(0);
   const [editing,setEditing]=useState<Pipeline|'new'|null>(null);
   const [detail,setDetail]=useState<Method|Pipeline|null>(null);const [error,setError]=useState('');
-  const [workflow,setWorkflow]=useState<Workflow|null>(null);const [busy,setBusy]=useState(false);
-  const datasetId=useDatasetStore(s=>s.selectedDatasetId);const client=useQueryClient();const skills=useSkills();
+  const [launch,setLaunch]=useState<Pipeline|null>(null);const [busy,setBusy]=useState(false);
+  const client=useQueryClient();const skills=useSkills();
   useEffect(()=>{const timer=setTimeout(()=>setSearch(q),200);return()=>clearTimeout(timer);},[q]);
   const draftQuery=useQuery({queryKey:['pipeline-drafts'],queryFn:api.drafts,enabled:kind==='pipeline',refetchOnWindowFocus:true});
   const query=useQuery({queryKey:['library',kind,search,cursor,category,software,language],queryFn:()=>api.catalog(kind,search,cursor,category,software,language)});
@@ -40,18 +39,17 @@ export function LibraryPanel(props:Props) {
     if(e.kind==='skill'){const s=skills.data?.skills.find(s=>s.name===e.id);if(s)props.onDetails(s);else throw new Error(ui("Skill 元数据尚未加载"));}
     else setDetail(e.kind==='method'?await api.method(e.id):await api.pipeline(e.id));
   }catch(e){setError(errorText(e,ui("读取详情失败")));}};
-  const use=async(p:Pipeline)=>{setBusy(true);setError('');try{setWorkflow(await api.usePipeline(p.id,datasetId,props.workspaceId??null,p.version,props.conversationId));void client.invalidateQueries({queryKey:['conversation']});setDetail(null);}catch(e){setError(errorText(e,ui("创建流程失败")));}finally{setBusy(false);}};
+  const prepare=async(e:Entry)=>{if(busy)return;setBusy(true);setError('');try{setLaunch(await api.pipeline(e.id,e.version));}catch(err){setError(errorText(err,ui('读取详情失败')));}finally{setBusy(false);}};
   return <div className="min-w-0 space-y-3">
-    <Tabs
+    {props.domain!=='pipelines'&&<Tabs
       items={[
         { value: 'skill', label: 'Skill' },
-        { value: 'method', label: 'Method' },
-        { value: 'pipeline', label: 'Pipeline' }
+        { value: 'method', label: 'Method' }
       ]}
       value={kind}
       onChange={next => { setKind(next); setCursor(0); setCategory(''); setSoftware(''); }}
       label={ui("能力资源目录")}
-    />
+    />}
     <input className="w-full min-w-0 rounded border border-line bg-raised p-2 text-xs" aria-label={ui("搜索资源")} placeholder={ui("搜索名称、功能或软件")} value={q} onChange={e=>{setQ(e.target.value);setCursor(0);}}/>
     <p className="text-xs text-subtle">{kind==='skill'?ui("Skill：按目标统筹方法与流程"):kind==='method'?ui("Method：可执行的最小命令或库调用"):ui("Pipeline：已定义输入输出的可复用方法组合")}</p>
     <LibraryNavigation facets={query.data?.facets} category={category} software={software} onCategory={value=>{setCategory(value);setCursor(0);}} onSoftware={value=>{setSoftware(value);setCursor(0);}}/>
@@ -64,7 +62,8 @@ export function LibraryPanel(props:Props) {
       <p className="mt-1 line-clamp-3 break-words text-subtle" title={e.description}>{e.description}</p>
       <p className="mt-1 break-words text-micro text-subtle">{e.category.join(" / ")}{e.software?.length ? " · "+e.software.join(", ") : ""}</p>
       {e.kind==='method'&&<p className="mt-1 text-subtle">{ui('已开放 {0} 个参数，{1} 个原生命令选项尚未开放',e.parameter_count??0,e.omitted_option_count??0)}</p>}
-      <div className="mt-2 flex flex-wrap gap-1"><button className={button} onClick={()=>void inspect(e)}>{ui("查看详情")}</button>
+      <div className="mt-2 flex flex-wrap gap-1">
+        {e.kind==='pipeline'&&<button className={button} disabled={busy||e.status==='archived'} onClick={()=>void prepare(e)}>{ui("创建任务")}</button>}
         {e.kind==='skill'&&<button className={button} disabled={props.disabled} onClick={()=>props.selectedSkillIds.includes(e.id)?props.onRemove(e.id):props.onAdd(e.id)}>{props.selectedSkillIds.includes(e.id)?ui("移出会话"):ui("加入会话")}</button>}
         {e.kind==='pipeline'&&<span className="text-subtle">{e.step_count} {ui("步 · v")}{e.version} · {stateText(e.status??'published')}</span>}</div>
     </div>)}</div>}
@@ -74,13 +73,13 @@ export function LibraryPanel(props:Props) {
     {editing&&<PipelineEditor initial={editing==='new'?undefined:editing} onClose={()=>{setEditing(null);void client.invalidateQueries({queryKey:['pipeline-drafts']});}} onSaved={()=>void client.invalidateQueries({queryKey:['library']})}/>}
     {detail&&<Dialog title={detail.label} closeLabel={ui("关闭")} size="xl" onClose={()=>setDetail(null)} footer={'steps' in detail?<>
 
-      <button className={button} disabled={busy||props.disabled||detail.status==='archived'} onClick={()=>void use(detail)}>{ui("创建流程并配置运行")}</button></>:undefined}>
+      <button className={button} disabled={busy||detail.status==='archived'} onClick={()=>{setLaunch(detail);setDetail(null);}}>{ui("创建任务")}</button></>:undefined}>
       {'steps' in detail&&<PipelineVersions key={detail.id+':'+detail.version} pipeline={detail} onSelect={setDetail} onEdit={p=>{setEditing(p);setDetail(null);}} onChange={()=>void client.invalidateQueries({queryKey:['library']})}/>}
       {'steps' in detail&&<ol className="my-3 list-inside list-decimal text-xs">{detail.steps.map(s=><li key={s.id}>{s.title||s.method_ref}</li>)}</ol>}
       <DefinitionDetails definition={detail}/>
       {error&&<p className="text-danger">{error}</p>}
     </Dialog>}
-    {workflow&&<Dialog title={workflow.title} closeLabel={ui("关闭")} size="xl" onClose={()=>setWorkflow(null)} description={ui("此处仅创建流程；选择文件、输出目录和资源，完成 dry run 和确认后才会提交计算。")}>
-      <WorkflowCard workflowId={workflow.workflow_id} initialWorkflow={workflow}/></Dialog>}
+    {launch&&<PipelineLaunchDialog key={launch.id+':'+launch.version} pipeline={launch} onClose={()=>setLaunch(null)}
+      onCreated={workflow=>{setLaunch(null);props.onTaskCreated?.(workflow);}}/>}
   </div>;
 }

@@ -69,51 +69,16 @@ export function ChatHeader({
 
       <div className="flex min-w-0 shrink items-center gap-2">
         <div className="hidden min-w-0 items-center gap-2 sm:flex">
-          {datasetCount > 0 && datasetLabel ? (
-            <Button
-              disabled={datasetDisabled} onClick={onOpenDatasets}
-              title={datasetNotice ?? datasetLabel}
-              size="sm"
-              className="max-w-64 lg:max-w-80"
-            >
-              <Database className="shrink-0" />
-              <span className="min-w-0 truncate">{datasetLabel}</span>
-            </Button>
-          ) : skillCount === 0 ? (
-            <span className="truncate rounded-control border border-dashed border-line px-2 py-1 text-meta text-subtle">
-              {t.noSkillSelected}
-            </span>
-          ) : (
-            <Badge
-              tone="neutral"
-              size="md"
-              title={skillLabel ?? undefined}
-              className="max-w-64 lg:max-w-80"
-            >
-              <span className="min-w-0 truncate">{skillLabel}</span>
-            </Badge>
-          )}
+          {skillCount>0 && <Badge tone="neutral" size="md" title={skillLabel??undefined} className="max-w-48">
+            <span className="truncate">{skillLabel}</span></Badge>}
         </div>
-
-        <span className="relative shrink-0">
-          <IconButton
-            label={datasetLabel ?? t.datasetSelectLocal}
-            title={datasetNotice ?? datasetLabel ?? t.datasetSelectLocal}
-            icon={<Database />}
-            size="lg"
-            variant="outline"
-            disabled={datasetDisabled} onClick={onOpenDatasets}
-          />
-          {datasetCount > 0 && (
-            /* Redundant for assistive tech - mirrors the visible chip above. */
-            <span
-              aria-hidden="true"
-              className="pointer-events-none absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-pill bg-accent-solid px-1 text-micro font-semibold text-on-accent"
-            >
-              {datasetCount}
-            </span>
-          )}
-        </span>
+        <Button disabled={datasetDisabled} onClick={onOpenDatasets}
+          aria-label={t.datasetSelectLocal} title={datasetNotice??datasetLabel??t.datasetSelectLocal}
+          size="lg" className="max-w-64 lg:max-w-80">
+          <Database className="shrink-0"/>
+          <span className="hidden min-w-0 truncate sm:inline">{datasetLabel??t.datasetSelectLocal}</span>
+          {datasetCount>0 && <span className="text-micro">{datasetCount}</span>}
+        </Button>
 
         <Button
           onClick={onOpenWorkspace}

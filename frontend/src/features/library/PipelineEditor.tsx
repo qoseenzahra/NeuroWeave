@@ -324,26 +324,6 @@ function Editor({ initial, onClose, onSaved }: Props) {
       }
     >
       <div className="flex shrink-0 flex-wrap items-center gap-2 text-xs">
-        <button
-          className={button}
-          aria-pressed={showMethods}
-          onClick={() => {
-            setShowMethods((v) => !v);
-            if (window.innerWidth < 1100) setShowInspector(false);
-          }}
-        >
-          {ui('方法目录')}
-        </button>
-        <button
-          className={button}
-          aria-pressed={showInspector}
-          onClick={() => {
-            setShowInspector((v) => !v);
-            if (window.innerWidth < 1100) setShowMethods(false);
-          }}
-        >
-          {ui('步骤参数')}
-        </button>
         <span
           className="min-w-0 flex-1 truncate font-medium"
           title={draft.name}
@@ -400,7 +380,6 @@ function Editor({ initial, onClose, onSaved }: Props) {
               {ui('完成编排后点击生成；将替换当前说明，可继续手动编辑。')}
             </span>
             <span role="status">{descriptionStatus}</span>
-            <span>{authoring.status}</span>
           </div>
         </div>
       </details>
@@ -436,12 +415,14 @@ function Editor({ initial, onClose, onSaved }: Props) {
       <div
         className="grid min-h-0 flex-1 gap-2 overflow-hidden"
         style={{
-          gridTemplateColumns: `${showMethods ? 'minmax(170px, 220px) ' : ''}minmax(0, 1fr)${showInspector ? ' minmax(210px, 280px)' : ''}`,
+          gridTemplateColumns: `${showMethods ? 'minmax(170px, 220px)' : '32px'} minmax(0, 1fr) ${showInspector ? 'minmax(210px, 280px)' : '32px'}`,
           gridTemplateRows: 'minmax(0, 1fr)'
         }}
       >
-        {showMethods && (
-          <PipelineMethodPalette
+        {showMethods ? <div className="flex min-h-0 flex-col gap-1">
+          <div className="flex shrink-0 items-center justify-between text-xs"><strong>{ui('方法目录')}</strong>
+            <button className={button} aria-label={ui('收起方法目录')} title={ui('收起方法目录')} onClick={()=>setShowMethods(false)}>‹</button></div>
+          <div className="min-h-0 flex-1"><PipelineMethodPalette
             page={methods.data}
             error={methods.error}
             loading={methods.isPending}
@@ -455,8 +436,10 @@ function Editor({ initial, onClose, onSaved }: Props) {
             }}
             onPage={setCursor}
             onAdd={(id) => void add(id)}
-          />
-        )}
+          /></div>
+        </div> : <button className="self-stretch rounded border border-line text-accent hover:bg-hover"
+          aria-label={ui('展开方法目录')} title={ui('展开方法目录')}
+          onClick={()=>{setShowMethods(true);if(window.innerWidth<1100)setShowInspector(false);}}>›</button>}
         <PipelineCanvas
           sharedInputs={draft.shared_inputs}
           onShareInputs={share}
@@ -492,8 +475,10 @@ function Editor({ initial, onClose, onSaved }: Props) {
             }
           }}
         />
-        {showInspector && (
-          <PipelineNodeInspector
+        {showInspector ? <div className="flex min-h-0 flex-col gap-1">
+          <div className="flex shrink-0 items-center justify-between text-xs"><strong>{ui('步骤参数')}</strong>
+            <button className={button} aria-label={ui('收起步骤参数')} title={ui('收起步骤参数')} onClick={()=>setShowInspector(false)}>›</button></div>
+          <div className="min-h-0 flex-1"><PipelineNodeInspector
             draft={draft}
             definitions={definitions}
             selectedNode={selectedNode}
@@ -515,8 +500,10 @@ function Editor({ initial, onClose, onSaved }: Props) {
               });
               setSelected(null);
             }}
-          />
-        )}
+          /></div>
+        </div> : <button className="self-stretch rounded border border-line text-accent hover:bg-hover"
+          aria-label={ui('展开步骤参数')} title={ui('展开步骤参数')}
+          onClick={()=>{setShowInspector(true);if(window.innerWidth<1100)setShowMethods(false);}}>‹</button>}
       </div>
       {preview && (
         <PipelineValidationPanel

@@ -70,7 +70,7 @@ export function WorkspaceOutput({
         label={`${workflow.output_relative_path ?? 'outputs'}/<run_id>`}
       /> : <p className="mt-2 text-warning">{t.workspaceOutputRequired}</p>}
       {workflow.status === 'confirmed' && <p className="mt-2 text-subtle">{t.workspaceLockedHint}</p>}
-      {selectingRoot && <WorkspacePanel
+      {selectingRoot && <WorkspacePanel selectionMode
         workspaceId={workflow.workspace_id ?? null}
         conversationId={null}
         locked={locked}

@@ -101,3 +101,29 @@ def test_http_save_version_instantiate_and_export(library):
             assert response.json()["editor"]["steps"][1]["inputs"]
 
     asyncio.run(check())
+
+
+def test_standalone_launch_preserves_current_chat_and_pins_requested_version(library):
+    from app.conversation_models import ConversationRecord
+
+    library.store.create_conversation(ConversationRecord(
+        conversation_id="existing-chat", title="Existing conversation",
+        created_at="2026-01-01", updated_at="2026-01-01",
+    ))
+    service = WorkflowService(
+        ROOT / "skills/dwi-skill/workflow.manifest.json", ChatService(),
+        library.registry, library.store, DatasetService(ROOT, library.store),
+    )
+    request = ComposeRequest.model_validate(draft(library))
+    first = library.save(request)
+    request.expected_version = 1
+    request.name = "Updated recipe"
+    library.save(request, first["id"])
+    before = library.store.get_conversation("existing-chat").model_dump()
+    workflow = library.workflow(first["id"], UsePipeline(version=1), service, SimpleNamespace())
+    assert workflow.title == "Threshold chain"
+    assert workflow.steps[0].selected_method_id.endswith("@1")
+    assert library.store.get_conversation("existing-chat").model_dump() == before
+    assert library.store.conversation_messages("existing-chat") == []
+    assert library.store.list_runs(workflow_id=workflow.workflow_id) == []
+    assert library.store.workflow_index(source="pipeline")["items"][0]["workflow_id"] == workflow.workflow_id

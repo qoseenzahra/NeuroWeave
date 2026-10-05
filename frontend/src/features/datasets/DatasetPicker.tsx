@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import { useResizablePanel } from '../../ui/useResizablePanel';
 import type { Dataset } from './datasetsApi';
@@ -30,15 +30,19 @@ function displayNameForPath(relativePath: string, fallback: string) {
 
 type DatasetPickerProps = {
   onClose: () => void;
+  selectedDatasetId?: string | null;
   onSelect?: (dataset: Dataset) => void | Promise<void>;
 };
 
-export function DatasetPicker({ onClose, onSelect }: DatasetPickerProps) {
+export function DatasetPicker({ onClose, onSelect, selectedDatasetId: selection }: DatasetPickerProps) {
   const { selectDataset } = useDatasetStore();
+  const dialogRef=useRef<HTMLDialogElement>(null);
+  useEffect(()=>{if(dialogRef.current&&!dialogRef.current.open)dialogRef.current.showModal();},[]);
   const language = useLanguageStore((s) => s.language);
   const t = getTranslations(language);
   const {panelRef, style: panelStyle, handles: resizeHandles} = useResizablePanel(language === 'zh' ? '拖动边框调整窗口大小' : 'Drag the border to resize the window');
-  const selectedDatasetId = useDatasetStore((s) => s.selectedDatasetId);
+  const conversationDatasetId = useDatasetStore((s) => s.selectedDatasetId);
+  const selectedDatasetId = selection === undefined ? conversationDatasetId : selection;
   const selectedDatasetQuery = useSelectedDataset(selectedDatasetId);
   // Follow the selected dataset until the user navigates. Do not fetch the root
   // while a restored conversation's dataset metadata is still loading.
@@ -387,17 +391,12 @@ export function DatasetPicker({ onClose, onSelect }: DatasetPickerProps) {
     </section>
   );
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-      onClick={onClose}
-      role="presentation"
-    >
+    <dialog ref={dialogRef} className="dialog-root" aria-label={t.datasetPickerTitle}
+      onClick={e=>{if(e.target===e.currentTarget)onClose();}}
+      onCancel={e=>{e.preventDefault();e.stopPropagation();onClose();}}>
       <div
         ref={panelRef}
         style={panelStyle}
-        role="dialog"
-        aria-modal="true"
-        aria-label={t.datasetPickerTitle}
         onClick={(e) => e.stopPropagation()}
         className="relative flex shrink-0 flex-col overflow-hidden rounded-card border border-line bg-raised shadow-xl"
       >
@@ -465,6 +464,6 @@ export function DatasetPicker({ onClose, onSelect }: DatasetPickerProps) {
           )}
         </div>
       </div>
-    </div>
+    </dialog>
   );
 }

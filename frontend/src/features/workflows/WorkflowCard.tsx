@@ -771,7 +771,7 @@ function WorkflowCardBody({
 
       </div>
       {expanded && pickerOpen && (
-        <DatasetPicker onClose={() => setPickerOpen(false)} onSelect={changeDataset} />
+        <DatasetPicker selectedDatasetId={workflow.dataset_id} onClose={() => setPickerOpen(false)} onSelect={changeDataset} />
       )}
     </section>
   );

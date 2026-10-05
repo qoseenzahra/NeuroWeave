@@ -17,6 +17,9 @@ import { useThemeStore } from './stores/themeStore';
 import { setMouseWaveEnabled } from './lib/mouseWave';
 import { ChatTurnPanel } from './features/chat/ChatTurnPanel';
 import { WorkflowHistory } from './features/workflows/WorkflowHistory';
+import { TaskDetails } from './features/workflows/TaskDetails';
+import { taskFromWorkflow } from './features/workflows/taskIndex';
+import type { TaskEntry } from './features/workflows/taskIndex';
 import { ChatHeader } from './features/chat/ChatHeader';
 import { MessageArea } from './features/chat/MessageArea';
 import { MessageComposer } from './features/chat/MessageComposer';
@@ -79,6 +82,7 @@ function App() {
   const [chatSection, setChatSection] = useState<'history' | 'archived'>('history');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [sidebarView, setSidebarView] = useState<RailDomain>('conversations');
+  const [selectedTask, setSelectedTask] = useState<TaskEntry|null>(null);
   const theme = useThemeStore((s) => s.theme);
   const wave = useThemeStore((s) => s.wave);
   const toggleTheme = useThemeStore((s) => s.toggleTheme);
@@ -126,6 +130,7 @@ function App() {
   const { events: liveWorkspaceEvents } = useWorkspaceToolEvents(activeTurn);
   const [storageOpen, setStorageOpen] = useState(false);
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
+  const [workspaceSelection, setWorkspaceSelection] = useState(true);
   const mutating =
     renameMutation.isPending || archiveMutation.isPending || deleteMutation.isPending;
   const detail = detailQuery.data ?? null;
@@ -465,6 +470,7 @@ function App() {
       subtitle: t.chatsToday.replace('{{count}}', String(todayCount))
     },
     workflows: {title:t.workflowsAndRuns},
+    pipelines: {title:'Pipeline'},
     skills: { title: t.skills, subtitle: String(skills.length) },
     datasets: { title: t.datasetPickerTitle, subtitle: t.datasetPickerSubtitle },
     workspace: { title: t.workspaceTitle, subtitle: t.workspaceHint },
@@ -504,7 +510,7 @@ function App() {
                 handleArchive={handleArchive} handleConfirmDelete={handleConfirmDelete}/>
             ) : sidebarView === 'skills' ? (
               <div className="view-enter min-h-0 flex-1 overflow-y-auto px-3 py-3">
-                <SkillList conversationId={activeConversationId} workspaceId={workspaceId} selectedSkillIds={selectedSkillIds} disabled={contextBusy || olderMutation.isPending}
+                <SkillList selectedSkillIds={selectedSkillIds} disabled={contextBusy || olderMutation.isPending}
                   onAdd={addSkill} onRemove={removeSkill} onDetails={setViewedSkill} onClear={clearSkills}/>
                 {skillsStats && (
                   <div className="mt-3 border-t border-line pt-2">
@@ -517,24 +523,33 @@ function App() {
                   </div>
                 )}
               </div>
-            ) : sidebarView === 'workflows' ? (<WorkflowHistory/>) : sidebarView === 'datasets' ? (
+            ) : sidebarView === 'pipelines' ? (
+              <div className="min-h-0 flex-1 overflow-y-auto p-3">
+                <SkillList key="pipelines" domain="pipelines" selectedSkillIds={[]} disabled={false}
+                  onAdd={()=>{}} onRemove={()=>{}} onDetails={setViewedSkill} onClear={()=>{}}
+                  onTaskCreated={workflow=>{setSelectedTask(taskFromWorkflow(workflow));setSidebarView('workflows');if(window.innerWidth<1024)setSidebarOpen(false);}}/>
+              </div>
+            ) : sidebarView === 'workflows' ? (<WorkflowHistory selectedId={selectedTask?.workflow_id??null}
+              onSelect={task=>{setSelectedTask(task);if(window.innerWidth<1024)setSidebarOpen(false);}}/>) : sidebarView === 'datasets' ? (
               <DatasetContextPanel onOpenFull={openDatasetPicker} onChoose={handleDatasetSelect}
                 disabled={datasetDisabled} notice={datasetNotice}
                 onBrowse={selectedDataset ? () => setDatasetFilesOpen(true) : undefined} />
             ) : sidebarView === 'workspace' ? (
-              <WorkspaceContextPanel workspaceId={workspaceId} onOpenFull={() => setWorkspaceOpen(true)} />
+              <WorkspaceContextPanel workspaceId={workspaceId} onOpenFull={() => {setWorkspaceSelection(false);setWorkspaceOpen(true);}} />
             ) : (
               <StorageContextPanel onOpenFull={() => setStorageOpen(true)} />
             )}
           </aside>
         )}
         <main ref={mainRef} className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+          {sidebarView==='workflows' ? <TaskDetails task={selectedTask} sidebarOpen={sidebarOpen}
+            onOpenSidebar={()=>setSidebarOpen(true)} onOpenPipelines={()=>handleRailDomain('pipelines')}/> : <>
           <ChatHeader
             workspaceId={workspaceId}
-            onOpenWorkspace={() => setWorkspaceOpen(true)}
+            onOpenWorkspace={() => {setWorkspaceSelection(true);setWorkspaceOpen(true);}}
             t={t}
             title={activeTitle}
-            domainLabel={sidebarView==='workflows'?t.workflowsAndRuns:sidebarView === 'skills' ? t.skills : sidebarView === 'datasets' ? t.datasetPickerTitle : sidebarView === 'workspace' ? t.workspaceTitle : sidebarView === 'storage' ? t.storageTitle : t.conversations}
+            domainLabel={sidebarView==='pipelines'?'Pipeline':sidebarView === 'skills' ? t.skills : sidebarView === 'datasets' ? t.datasetPickerTitle : sidebarView === 'workspace' ? t.workspaceTitle : sidebarView === 'storage' ? t.storageTitle : t.conversations}
             sidebarOpen={sidebarOpen}
             darkMode={darkMode}
             datasetLabel={selectedDataset ? selectedDataset.display_name : null}
@@ -587,6 +602,7 @@ function App() {
             onModeChange={setInteractionMode}
             onClearSkills={clearSkills}
           />
+          </>}
         </main>
       </div>
       {datasetPickerOpen && <DatasetPicker onSelect={handleDatasetSelect} onClose={() => setDatasetPickerOpen(false)} />}
@@ -599,7 +615,7 @@ function App() {
           onClose={() => setDatasetFilesOpen(false)} />
       )}
       {workspaceOpen && (
-        <WorkspacePanel
+        <WorkspacePanel selectionMode={workspaceSelection}
           key={activeConversationId ?? 'new'}
           workspaceId={workspaceId}
           conversationId={activeConversationId}
