@@ -519,7 +519,7 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(set(self.service.registry.definitions.skills), loaded)
         for skill in self.service.registry.definitions.skills.values():
             self.assertTrue(skill["description"])
-            self.assertTrue(skill["selection_rules"])
+            self.assertIsInstance(skill.get("selection_rules", []), list)
         for capability_id in self.service.registry.capabilities():
             node = tree.leaf(capability_id)
             self.assertIsNotNone(node)

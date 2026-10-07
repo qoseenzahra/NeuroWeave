@@ -107,12 +107,13 @@ class SkillLoader:
             methods = value.get('method_refs', [])
             pipelines = value.get('pipeline_refs', [])
             description = value.get('description', '')
-            rules = value.get('selection_rules', [])
-            overview = '\n'.join([value.get('name', name), description,
-                '按需通过 list_skill_methods 浏览，再 read_skill_method / read_skill_pipeline 读取准确契约。',
-                '适用情况：', *value.get('applicability', []), '选择规则：', *rules,
-                '限制：', *value.get('limitations', []),
-                f'统筹 {len({r["method_ref"] for r in methods})} 个 Method 与 {len({r["pipeline_ref"] for r in pipelines})} 个 Pipeline。'])
+            overview_parts = [value.get('name', name), description]
+            for field, label in [('applicability', '适用情况：'),
+                                 ('selection_rules', '选择规则：'), ('limitations', '限制：')]:
+                if value.get(field):
+                    overview_parts.extend([label, *value[field]])
+            overview_parts.append(f'统筹 {len({r["method_ref"] for r in methods})} 个 Method 与 {len({r["pipeline_ref"] for r in pipelines})} 个 Pipeline。')
+            overview = '\n'.join(overview_parts)
             mode = 'runner' if methods or pipelines else 'planning'
             skills.append(Skill(name=name, display_name=value.get('name', name), description=description,
                 summary_en=description, summary_zh=description, layer='orchestration', skill_type=value.get('scope','workflow'),

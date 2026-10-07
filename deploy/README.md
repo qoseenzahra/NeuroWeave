@@ -7,7 +7,7 @@
 | 主题 | 文档 |
 | --- | --- |
 | 开发环境、项目入口 | [项目说明](../README.md)、[前端开发](../frontend/README.md) |
-| Skill / Method / Pipeline 定义及扩展 | [原生结构](structured-skill-methods.md)、[参考资料边界](../skills/README.md)、[参考资料整理](skill-references.md) |
+| Skill / Method / Pipeline 定义及扩展 | [原生结构](structured-skill-methods.md)、[参考资料边界](../skills/README.md)、[参考资料整理](skill-references.md)、[专属指导整理](skill-guidance.md) |
 | 分类目录、节点画布与 Pipeline 使用 | [资源库](native-library.md)、[可靠性与编排](reliability-and-pipeline-authoring.md)、[方法参数与转换预设](pipeline-parameters-and-presets.md) |
 | 需求理解、候选检索与流程验证 | [检索链路](library-upgrade.md)、[需求契约](task-planning-contracts.md)、[灵活对话](flexible-dialogue.md) |
 | 方法语义与规划邀请 | [方法契约与邀请](method-contracts-and-invitations.md) |

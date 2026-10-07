@@ -48,11 +48,11 @@ export function SkillDetails({ skill, selected, disabled, onAdd, onRemove, onClo
     {query.isError && <div role="alert" className="py-4 text-danger">
       <p>{query.error.message}</p><Button onClick={() => void query.refetch()} loading={query.isFetching}>{t.retry}</Button>
     </div>}
-    {tab === 'instructions' && details?.orchestration && <section className="my-3 space-y-2 rounded-control border border-line p-3">
-      <p className="font-medium">{zh?'Skill 的统筹职责':'Skill orchestration'}</p><p>{details.orchestration.description}</p>
+    {tab === 'instructions' && details?.orchestration && !!(details.orchestration.applicability?.length || details.orchestration.limitations?.length || details.orchestration.selection_rules.length || details.orchestration.examples?.length) && <section className="my-3 space-y-2 rounded-control border border-line p-3">
+      <p className="font-medium">{zh?'Skill 专属指导':'Skill-specific guidance'}</p>
       {[[zh?'适用情况':'When to use', details.orchestration.applicability], [zh?'限制':'Limitations', details.orchestration.limitations]].map(([label, items]) => Array.isArray(items) && items.length > 0 && <div key={String(label)}><p className="font-medium">{String(label)}</p><ul className="list-disc space-y-1 pl-5 text-meta">{items.map(item => <li key={item}>{item}</li>)}</ul></div>)}
-      <p className="font-medium">{zh?'选择依据':'Selection guidance'}</p>
-      <ul className="list-disc space-y-1 pl-5 text-meta">{details.orchestration.selection_rules.map(rule=><li key={rule}>{rule}</li>)}</ul>
+      {!!details.orchestration.selection_rules.length && <div><p className="font-medium">{zh?'选择依据':'Selection guidance'}</p>
+        <ul className="list-disc space-y-1 pl-5 text-meta">{details.orchestration.selection_rules.map(rule=><li key={rule}>{rule}</li>)}</ul></div>}
       {details.orchestration.examples?.map(example=><div key={example.request} className="rounded-control bg-well p-2 text-meta"><p>{example.request}</p><p className="mt-1 text-muted">{example.decision}</p></div>)}
     </section>}
     {tab === 'methods'  && <SkillMethods key={skill.name} skillId={skill.name}/>}

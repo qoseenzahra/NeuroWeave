@@ -4,6 +4,10 @@
 
 分类包含 task（任务统筹）、tool（软件选择）和 dataset（数据集专属）。仅保留规范 Skill ID，不再解析旧版本的 Skill 别名。
 
+`selection_rules`、`applicability`、`limitations` 和 `examples` 是可选的专属指导。只登记能由本 Skill 的实际契约或参考资料支持、且能帮助区分操作的信息；没有额外信息时省略字段。单一方法的输入、参数和输出直接读取 Method，不为填满字段复制方法详情或改写通用模板。示例应表达有实际选择差异的场景，不使用“查看某方法所需的参数”这种批量生成的占位示例。
+
+通用查询、输入复用、科学产物区分及执行边界由 `bakend/app/skill_catalog.py` 的 `SKILL_PROMPT` 统一维护，规划阶段继续使用现有任务契约约束。读取 Skill 不会把通用句子填回其 JSON。详情 API 对省略的指导返回空列表，页面与模型概览省略空栏目。维护记录见 [专属指导整理](../deploy/skill-guidance.md)。
+
 补充的科研背景、结果解释、使用限制和排错资料放在各 Skill 的 `references/` 内，并通过 `skill.json` 的 `references` 显式登记。例如：
 
 ```json
