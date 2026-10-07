@@ -7,8 +7,6 @@ none receives a back-reference to this facade.
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
 from threading import RLock
 from typing import Any
 
@@ -45,7 +43,6 @@ from .workflows.state import WorkflowState
 class WorkflowService:
     def __init__(
         self,
-        manifest_path: Path,
         chat_service: ChatService,
         registry: CapabilityRegistry,
         store: LocalStore,
@@ -55,7 +52,6 @@ class WorkflowService:
         executable_runner_ids: set[str] | None = None,
         runner_registry: RunnerRegistry | None = None,
     ) -> None:
-        self.manifest_path = manifest_path
         self.chat_service = chat_service
         self.registry = registry
         self.store = store
@@ -63,9 +59,6 @@ class WorkflowService:
         self.capability_tree = capability_tree
         self.skill_loader = skill_loader
         self.executable_runner_ids = set(executable_runner_ids or set())
-        self._declared_order = [
-            step["capability"] for step in self._load_manifest()["steps"]
-        ]
         self.capability_retriever = (
             CapabilityRetriever(capability_tree, registry, skill_loader)
             if capability_tree is not None and skill_loader is not None
@@ -78,7 +71,7 @@ class WorkflowService:
         self.selector = CapabilitySelector(
             registry, capability_tree, skill_loader, self.capability_retriever
         )
-        self.state = WorkflowState(self.catalog, registry, self._declared_order)
+        self.state = WorkflowState(self.catalog, registry)
         self.session = WorkflowSession(store, self.state, RLock())
         self.router = WorkflowRouter(
             self.selector,
@@ -96,7 +89,6 @@ class WorkflowService:
             capability_tree,
             registry,
             self.method_index,
-            self._declared_order,
         )
         self.bindings = WorkflowBindings(
             self.session, self.state, store, dataset_service
@@ -569,17 +561,6 @@ class WorkflowService:
                 step.status = "confirmed"
             self.session.save(workflow, "workflow_confirmed")
             return workflow.model_copy(deep=True)
-
-    def _load_manifest(self) -> dict[str, Any]:
-        try:
-            payload = json.loads(self.manifest_path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError) as exc:
-            raise RuntimeError(f"无法载入 DWI workflow manifest：{exc}") from exc
-        if payload.get("schema_version") != 2 or not isinstance(
-            payload.get("steps"), list
-        ):
-            raise RuntimeError("DWI workflow manifest 格式不正确")
-        return payload
 
     async def assess_task(
         self, request: ChatRequest, *, conversation: bool = False

@@ -124,7 +124,6 @@ def history_case(tmp_path, monkeypatch):
     )
     store.save_run(source)
     service = WorkflowService(
-        PROJECT / "skills/dwi-skill/workflow.manifest.json",
         ChatService(),
         CapabilityRegistry(PROJECT / "skills"),
         store,

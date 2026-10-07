@@ -1,6 +1,6 @@
 # Skill、Method 与 Pipeline 的原生结构
 
-当前分支采用独立方法契约，不通过旧 planning/execution manifest 生成执行能力。与旧分支混用数据库、前后端或 Worker 前必须审核格式和版本；新部署应先使用隔离数据库与输出目录验证。
+当前分支采用独立方法契约；旧 Skill 别名、workflow/recipes manifest 和 Markdown 依赖图兼容接口已移除。能力顺序来自真实输入输出依赖。与旧分支混用数据库、前后端或 Worker 前必须审核格式和版本；新部署应先使用隔离数据库与输出目录验证。
 
 | 对象 | 定义与责任 |
 | --- | --- |

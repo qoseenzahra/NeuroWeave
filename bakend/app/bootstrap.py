@@ -50,7 +50,6 @@ def build_services(settings: Settings) -> ApplicationServices:
     skill_catalog = SkillCatalog(skill_loader, capability_registry, runner_registry)
     workspace_tools.skill_catalog = skill_catalog
     workflow_service = WorkflowService(
-        settings.skills_dir / "dwi-skill" / "workflow.manifest.json",
         chat_service,
         capability_registry,
         local_store,

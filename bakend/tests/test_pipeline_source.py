@@ -70,7 +70,7 @@ def test_copy_keeps_conditional_stages_and_shared_files(library):
     from app.pipeline_models import UsePipeline
     from app.workflow_service import WorkflowService
     root = Path(__file__).resolve().parents[2]
-    service = WorkflowService(root / 'skills/dwi-skill/workflow.manifest.json', ChatService(),
+    service = WorkflowService(ChatService(),
                               library.registry, library.store, DatasetService(root, library.store))
     workflow = library.workflow(copy_pipeline['id'], UsePipeline(version=1), service, SimpleNamespace())
     assert len(RecipeCompiler(library.registry).compile(workflow)) == 1

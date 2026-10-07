@@ -1,12 +1,10 @@
 """Stable display/execution ordering using registered method interfaces only."""
 from __future__ import annotations
-from collections.abc import Sequence
 
 from .capability_registry import CapabilityRegistry
 
 
-def order_capabilities(registry: CapabilityRegistry, requested: list[str],
-                       declared_order: Sequence[str] = ()) -> list[str]:
+def order_capabilities(registry: CapabilityRegistry, requested: list[str]) -> list[str]:
     nodes = list(dict.fromkeys(requested))
     generic = {"*", "dataset_folder", "analysis_input", "generated_file",
                "generated_folder", "planned_artifact", "execution_log"}
@@ -33,22 +31,6 @@ def order_capabilities(registry: CapabilityRegistry, requested: list[str],
             # proof that either operation must precede the other.
             if producer != consumer and (outputs[producer] - outputs[consumer]) & inputs[consumer]:
                 edges[producer].add(consumer)
-    declared = [node for node in declared_order if node in edges]
-    for before, after in zip(declared, declared[1:]):
-        edges[before].add(after)
-    if declared_order:
-        # Preserve the existing domain template's inspection/report boundaries,
-        # including when intermediate template steps were not requested.
-        prefix = declared_order[0].split(".", 1)[0] + "."
-        if all(node.startswith(prefix) for node in declared_order):
-            first, last = declared_order[0], declared_order[-1]
-            for node in nodes:
-                if node.startswith(prefix):
-                    if first in edges and node != first:
-                        edges[first].add(node)
-                    if last in edges and node != last:
-                        edges[node].add(last)
-
     # Alternative methods can imply cyclic capability-level edges. Keep their
     # relative order within each strongly connected group, while ordering all
     # unambiguous dependencies between groups.

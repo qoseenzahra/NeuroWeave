@@ -23,11 +23,9 @@ class WorkflowState:
         self,
         catalog: MethodCatalog,
         registry: CapabilityRegistry,
-        declared_order: list[str],
     ) -> None:
         self.catalog = catalog
         self.registry = registry
-        self._declared_order = declared_order
 
     def revalidate_chain(
         self, workflow: Workflow, *, check_runtime: bool = True
@@ -41,7 +39,6 @@ class WorkflowState:
             ordered = order_capabilities(
                 self.registry,
                 [step.capability for step in workflow.steps],
-                self._declared_order,
             )
             changed_order = ordered != [step.capability for step in workflow.steps]
             workflow.steps.sort(key=lambda step: ordered.index(step.capability))

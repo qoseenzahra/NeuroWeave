@@ -14,7 +14,7 @@ import re
 from pathlib import Path
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
-from .skill_definitions import canonical_skills
+from .skill_definitions import native_skills
 from .artifact_semantics import compatible
 from .method_validation import validate_contract, verification_status
 from .workflow_models import (
@@ -77,7 +77,6 @@ class MethodRegistry:
         self.methods = {}
         self.pipelines = {}
         self.skills = {}
-        self.skill_aliases = {}
         self._signature = None
 
     def paths(self):
@@ -134,7 +133,7 @@ class MethodRegistry:
                 if value["id"] in target:
                     raise ValueError("Duplicate catalog identity: " + value["id"])
                 target[value["id"]] = value
-        skills, aliases = canonical_skills(skills)
+        skills = native_skills(skills)
         # References are checked before exposing a partially loaded catalog.
         for pid, p in pipelines.items():
             if p.get("kind") != "pipeline":
@@ -218,7 +217,6 @@ class MethodRegistry:
                 if ref.get(key) not in collection:
                     raise ValueError("Dangling Skill reference: " + sid)
         self.methods, self.pipelines, self.skills = methods, pipelines, skills
-        self.skill_aliases = aliases
         self._signature = signature
 
     def method(self, identity):

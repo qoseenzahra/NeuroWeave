@@ -19,7 +19,6 @@ from app.workflow_service import RevisionConflict, WorkflowService
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
 PROJECT_ROOT = BACKEND_ROOT.parent
 SKILLS_DIR = PROJECT_ROOT / "skills"
-MANIFEST = SKILLS_DIR / "dwi-skill" / "workflow.manifest.json"
 
 
 class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
@@ -58,7 +57,6 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
         chat_service.base_url = ""
         chat_service.model = ""
         self.service = WorkflowService(
-            MANIFEST,
             chat_service,
             CapabilityRegistry(SKILLS_DIR),
             self.store,
@@ -416,7 +414,6 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
         chat_service.base_url = ""
         chat_service.model = ""
         service = WorkflowService(
-            MANIFEST,
             chat_service,
             CapabilityRegistry(SKILLS_DIR),
             self.store,
@@ -1456,7 +1453,9 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(
             [s.capability for s in workflow.steps],
-            ["dwi.inspect", "dwi.fod", "dwi.report"],
+            # These methods share no typed dependency. Their requested order
+            # survives without the retired DWI manifest's positional rules.
+            ["dwi.report", "dwi.fod", "dwi.inspect"],
         )
 
     async def test_legacy_locked_order_changes_only_after_unlock(self) -> None:

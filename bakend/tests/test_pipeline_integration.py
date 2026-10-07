@@ -13,7 +13,6 @@ from test_pipeline_library import library as library
 
 def test_saved_pipeline_instantiates_and_exports_without_submitting(library):
     service = WorkflowService(
-        ROOT / "skills/dwi-skill/workflow.manifest.json",
         ChatService(),
         library.registry,
         library.store,
@@ -56,7 +55,6 @@ def test_http_save_version_instantiate_and_export(library):
     from fastapi import FastAPI
 
     service = WorkflowService(
-        ROOT / "skills/dwi-skill/workflow.manifest.json",
         ChatService(),
         library.registry,
         library.store,
@@ -111,7 +109,7 @@ def test_standalone_launch_preserves_current_chat_and_pins_requested_version(lib
         created_at="2026-01-01", updated_at="2026-01-01",
     ))
     service = WorkflowService(
-        ROOT / "skills/dwi-skill/workflow.manifest.json", ChatService(),
+        ChatService(),
         library.registry, library.store, DatasetService(ROOT, library.store),
     )
     request = ComposeRequest.model_validate(draft(library))

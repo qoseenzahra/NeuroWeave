@@ -104,4 +104,4 @@ def test_reference_sources_survive_cleanup():
   if adapter.get('script'):assert (ROOT/adapter['script']).is_file()
  assert not list((ROOT/'skills').glob('*/OVERVIEW.md'))
  assert not list((ROOT/'skills').glob('*/planning.manifest.json'))
- assert (ROOT/'skills/dwi-skill/workflow.manifest.json').is_file()
+ assert not list((ROOT/'skills').glob('*/*.manifest.json'))

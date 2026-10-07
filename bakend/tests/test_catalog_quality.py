@@ -7,7 +7,7 @@ from types import SimpleNamespace
 import pytest
 from app.method_registry import MethodRegistry
 from app.method_validation import contract_errors, documentation_gaps, execution_fingerprint, verification_status
-from app.skill_definitions import canonical_skills
+from app.skill_definitions import native_skills
 from app.skill_loader import SkillLoader
 from app.skill_catalog import SkillCatalog
 from app.capability_registry import CapabilityRegistry
@@ -25,13 +25,18 @@ def store():
 def test_canonical_catalog_keeps_every_method_but_no_alias_entries(store):
     loader = SkillLoader(ROOT / 'skills')
     assert {s.name for s in loader.load_all()} == set(store.skills)
-    assert not store.skills.keys() & store.skill_aliases.keys()
     assert {r['method_ref'] for s in store.skills.values() for r in s['method_refs']} == set(store.methods)
-    assert store.skill_aliases['software-fsl'] == 'fsl-tool'
-    assert loader.find('software-fsl').name == 'fsl-tool'
+    assert len(store.skills) == 105
+    assert loader.find('software-fsl') is None
+    assert all(
+        'alias_of' not in json.loads(path.read_text(encoding='utf-8'))
+        for path in (ROOT/'skills').glob('*/skill.json')
+    )
     registry = CapabilityRegistry(ROOT/'skills')
     catalog = SkillCatalog(loader, registry, SimpleNamespace(get=lambda _: None))
-    assert catalog.list_methods('software-fsl') == catalog.list_methods('fsl-tool')
+    with pytest.raises(KeyError):
+        catalog.list_methods('software-fsl')
+    assert catalog.list_methods('fsl-tool')['total'] > 0
     for capability in registry.capabilities():
         choices = registry.selectable_methods_for(capability)
         keys = [(m.entry_kind, m.definition_id or m.method_id) for m in choices]
@@ -43,9 +48,9 @@ def test_canonical_catalog_keeps_every_method_but_no_alias_entries(store):
     {'a': {'alias_of': 'missing'}},
     {'a': {'alias_of': 'b', 'method_refs': [{}]}, 'b': {}},
 ])
-def test_aliases_cannot_hide_cycles_missing_targets_or_contracts(raw):
+def test_retired_alias_definitions_are_rejected(raw):
     with pytest.raises(ValueError):
-        canonical_skills(raw)
+        native_skills(raw)
 
 
 def test_every_contract_has_valid_parameters_and_port_documentation(store):

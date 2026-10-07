@@ -7,11 +7,6 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Query
 
 from ..application_services import ApplicationServices
-from ..neuroclaw_compat.validate_dag import (
-    find_cycles,
-    find_missing_deps,
-    load_skill_graph,
-)
 
 
 def router_for(services: ApplicationServices) -> APIRouter:
@@ -76,17 +71,6 @@ def router_for(services: ApplicationServices) -> APIRouter:
                 **skill_stats,
                 "capability_catalog": services.capability_registry.stats(),
             },
-        }
-
-    @router.get("/api/skills/graph")
-    def skill_graph() -> dict[str, Any]:
-        graph, _metadata = load_skill_graph(services.settings.skills_dir)
-        return {
-            "nodes": len(graph),
-            "edges": sum(len(dependencies) for dependencies in graph.values()),
-            "cycles": find_cycles(graph),
-            "missing_dependencies": find_missing_deps(graph),
-            "graph": graph,
         }
 
     @router.get("/api/skills/{skill_name}")

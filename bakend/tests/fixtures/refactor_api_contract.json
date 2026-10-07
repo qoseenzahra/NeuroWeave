@@ -121,12 +121,6 @@
   },
   {
     "method": "GET",
-    "path": "/api/skills/graph",
-    "status": 200,
-    "response": null
-  },
-  {
-    "method": "GET",
     "path": "/api/skills/{skill_name}",
     "status": 200,
     "response": null

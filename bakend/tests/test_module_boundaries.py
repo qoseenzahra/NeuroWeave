@@ -209,6 +209,13 @@ def test_route_contract_traversal_keeps_nested_prefixes_metadata_and_duplicates(
     assert len(http_route_contexts(app)) == 2
 
 
+def test_retired_skill_compatibility_endpoints_are_unavailable(application):
+    _, client, _ = application
+    assert client.get("/api/skills/graph").status_code == 404
+    assert client.get("/api/skills/software-fsl/methods").status_code == 404
+    assert client.get("/api/skills/fsl-tool/methods").status_code == 200
+
+
 def test_output_adapter_keeps_revision_and_conversation_binding_consistent(
     application, tmp_path
 ):

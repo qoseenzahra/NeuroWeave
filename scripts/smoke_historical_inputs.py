@@ -74,8 +74,7 @@ for index, name in enumerate(('subject-A', 'subject-B')[:int(sys.argv[2])]):
     runner_registry = RunnerRegistry()
     runtime = runner_registry.get(method.runner_id).runtime_status()
     assert runtime['available'], runtime['reason']
-    workflows = WorkflowService(PROJECT / 'skills/dwi-skill/workflow.manifest.json',
-        ChatService(), capabilities, store, datasets,
+    workflows = WorkflowService(ChatService(), capabilities, store, datasets,
         executable_runner_ids={method.runner_id}, runner_registry=runner_registry)
     runs = RunService(store, capabilities, runner_registry, root / 'local-unused')
     options = RunExecutionOptions(backend='slurm', sample_mode='per_sample',

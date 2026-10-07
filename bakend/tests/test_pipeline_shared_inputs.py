@@ -42,7 +42,6 @@ def test_share_save_reopen_and_recipe_reuses_file_and_sample_bindings(library):
         s["id"] for s in reopened["input_slots"]
     }
     service = WorkflowService(
-        ROOT / "skills/dwi-skill/workflow.manifest.json",
         ChatService(),
         library.registry,
         library.store,

@@ -8,7 +8,7 @@ from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-from .skill_definitions import canonical_skills
+from .skill_definitions import native_skills
 
 
 
@@ -39,7 +39,6 @@ class Skill:
     skill_md: Path
     instructions: str
     overview: str = ""
-    aliases: tuple[str, ...] = ()
 
     def public_dict(self) -> dict[str, Any]:
         return {
@@ -81,7 +80,6 @@ class SkillLoader:
     def _signature(self) -> tuple[tuple[str, int, int], ...]:
         entries: list[tuple[str, int, int]] = []
         paths = [
-            *self.skills_dir.glob("*/SKILL.md"),
             *self.skills_dir.glob("*/skill.json"),
         ]
         for path in sorted(paths):
@@ -99,8 +97,7 @@ class SkillLoader:
         loaded = [(path, json.loads(path.read_text(encoding='utf-8')))
                   for path in sorted(self.skills_dir.glob('*/skill.json'))]
         raw = {value['id']: value for _, value in loaded}
-        definitions, aliases = canonical_skills(raw)
-        self._aliases = aliases
+        definitions = native_skills(raw)
         for path, value in loaded:
             name = value['id']
             if name not in definitions:
@@ -120,26 +117,25 @@ class SkillLoader:
                 runtime='registered-methods', status='ready' if mode=='runner' else 'planning',
                 dependencies=[], complementary_skills=[], source='NeuroWeave', script_count=0, has_handler=False,
                 executable=mode=='runner', structure_mode=mode, path=path.parent, skill_md=path,
-                instructions=json.dumps(value, ensure_ascii=False, indent=2), overview=overview,
-                aliases=tuple(key for key, target in aliases.items() if target == name)))
+                instructions=json.dumps(value, ensure_ascii=False, indent=2), overview=overview))
         self._cache_signature=signature
         self._cache=skills
         return skills
 
     def find(self, name: str) -> Skill | None:
         self.load_all()
-        normalized = self._aliases.get(name.strip().lower(), name.strip().lower())
+        normalized = name.strip().lower()
         return next((skill for skill in self.load_all() if skill.name.lower() == normalized), None)
 
     def infer(self, user_text: str, limit: int = 5) -> list[Skill]:
-        """Infer explicitly mentioned skills by their registered identifiers and aliases."""
+        """Infer explicitly mentioned skills by their registered identifiers."""
         normalized_message = _normalize_skill_token(user_text)
         if not normalized_message:
             return []
 
         inferred: list[Skill] = []
         for skill in self.load_all():
-            candidates = (skill.name, skill.path.name, *skill.aliases)
+            candidates = (skill.name, skill.path.name)
             if any(
                 token and token in normalized_message
                 for candidate in candidates
