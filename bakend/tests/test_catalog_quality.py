@@ -9,7 +9,7 @@ from app.method_registry import MethodRegistry
 from app.method_validation import contract_errors, documentation_gaps, execution_fingerprint, verification_status
 from app.skill_definitions import native_skills
 from app.skill_loader import SkillLoader
-from app.skill_catalog import SkillCatalog
+from app.skill_catalog import SKILL_PROMPT, SkillCatalog
 from app.capability_registry import CapabilityRegistry
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -97,7 +97,9 @@ def test_skill_guidance_is_bounded_and_reuses_existing_inputs():
     excerpt = skill.prompt_excerpt()
     assert len(excerpt) <= 1805
     assert '5TT' in excerpt and '复用' in excerpt
-    assert 'list_skill_methods' in excerpt
+    assert 'list_skill_methods' in SKILL_PROMPT
+    assert 'list_skill_methods' not in excerpt
+    assert '仅复用用户允许的结果' in SKILL_PROMPT
     assert '已有 5TT 时直接复用' in excerpt
     assert len(excerpt) < len(skill.instructions)
 
