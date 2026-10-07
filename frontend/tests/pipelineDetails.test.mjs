@@ -48,8 +48,23 @@ try {
     assert.match(html,/data-parameter-id="nthreads"/);
     assert.match(html,/方法默认值：|Method default:/);
     assert.match(html,/Pipeline 预设值：2|Pipeline preset: 2/);
-    assert.doesNotMatch(html,/自动排列|移动或选择|保存草稿|发布可用版本|移除节点及连线|Auto arrange|Move or select|Save draft|Publish usable version/);
+    assert.doesNotMatch(html,/自动排列|移动或选择|保存草稿|发布可用版本|移除节点及连线|Auto arrange|Move or select|Save draft|Publish usable version|Delete Pipeline:|删除 Pipeline：/);
     client.clear();
+  });
+  await test('user detail exposes deletion while task selection remains read-only',async()=>{
+    const {PipelineDetails}=await server.ssrLoadModule('/src/features/library/PipelineDetails.tsx');
+    for(const taskPicker of [false,true]){
+      const client=new QueryClient({defaultOptions:{queries:{retry:false}}});
+      const user={...pipeline,id:'user-publication',deletion_revision:2};
+      client.setQueryData(['pipeline-source',user.id,'1'],{editor:source});
+      client.setQueryData(['library-method',method.id,language],method);
+      client.setQueryData(['pipeline-versions',user.id],{items:[]});
+      const noop=()=>{};
+      const html=renderToStaticMarkup(createElement(QueryClientProvider,{client},createElement(PipelineDetails,{pipeline:user,taskPicker,onClose:noop,onSelect:noop,onEdit:noop,onLaunch:noop,onChange:noop})));
+      if(taskPicker)assert.doesNotMatch(html,/Delete Pipeline:|删除 Pipeline：/);
+      else assert.match(html,/Delete Pipeline: Original|删除 Pipeline：Original/);
+      client.clear();
+    }
   });
   await test('draft and read-only method parameters share choices and defaults without changing the snapshot',async()=>{
     const {PipelineMethodParameters}=await server.ssrLoadModule('/src/features/library/PipelineMethodParameters.tsx');

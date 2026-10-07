@@ -59,3 +59,14 @@ class DraftSave(BaseModel):
     editor: dict
     pipeline_id: str | None = None
     pipeline_version: int | None = None
+
+
+class DeletePipeline(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    expected_version: int = Field(ge=1)
+    expected_deletion_revision: int = Field(ge=0)
+
+
+class RestorePipeline(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    expected_deletion_revision: int = Field(ge=1)

@@ -355,5 +355,18 @@
   "可选值": "Available values",
   "取值范围：{0} 至 {1}": "Value range: {0} to {1}",
   "当前参数下不生效。": "Inactive for the current parameters.",
-  "方法接口与说明": "Method interface and description"
+  "方法接口与说明": "Method interface and description",
+  "删除 Pipeline：{0}": "Delete Pipeline: {0}",
+  "删除 Pipeline": "Delete Pipeline",
+  "删除已发布的 Pipeline": "Delete published Pipeline",
+  "确认删除": "Confirm deletion",
+  "删除 Pipeline 失败": "Failed to delete Pipeline",
+  "将删除此 Pipeline 的全部发布版本，并从目录和新任务选择中移除。可在“已删除 Pipeline”中恢复。已有任务、运行结果和草稿保留。": "Delete all published versions of this Pipeline and remove it from the catalog and new task selection. You can restore it from Deleted Pipelines. Existing tasks, results and drafts are preserved.",
+  "已删除 Pipeline": "Deleted Pipelines",
+  "恢复全部版本，并保留删除前各版本的发布或归档状态。": "Restore all versions with their previous published or archived status.",
+  "共 {0} 个版本": "{0} versions",
+  "恢复 Pipeline：{0}": "Restore Pipeline: {0}",
+  "恢复 Pipeline 失败": "Failed to restore Pipeline",
+  "暂无已删除 Pipeline": "No deleted Pipelines",
+  "读取已删除 Pipeline 失败": "Failed to load deleted Pipelines"
 }

@@ -11,6 +11,7 @@ import { PipelineCanvas } from './PipelineCanvas';
 import { PipelineVersions } from './PipelineVersions';
 import { DefinitionDetails } from './DefinitionDetails';
 import { PipelineMethodParameters } from './PipelineMethodParameters';
+import { PipelineDeleteAction } from './PipelineDeleteAction';
 import { button } from './pipelineEditorStyles';
 
 /** Viewing an immutable version has no draft hook or graph mutation callbacks. */
@@ -37,6 +38,7 @@ export function PipelineDetails({pipeline, taskPicker=false, onClose, onSelect, 
     placement="fullscreen" className="!max-w-none h-full !rounded-none"
     contentClassName="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden p-2"
     footer={<><span className="mr-auto text-xs text-subtle">{ui('查看不会修改原 Pipeline，也不会启动任务。')}</span>
+      {!taskPicker&&<PipelineDeleteAction pipeline={pipeline} onDeleted={()=>{onClose();onChange();}}/>}
       <button className={button} disabled={!editor||!!error} onClick={()=>{if(editor)onEdit(copyPipeline(pipeline,editor));}}>{ui('基于此 Pipeline 创建')}</button>
       <button className={button} disabled={pipeline.status==='archived'} onClick={onLaunch}>{ui('创建任务')}</button></>}>
     <div className="flex shrink-0 flex-wrap items-center gap-2 text-xs">

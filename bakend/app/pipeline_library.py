@@ -38,6 +38,15 @@ class PipelineLibrary:
     def save(self, request, identity=None):
         return self.repository.save(request, identity)
 
+    def trash(self):
+        return self.repository.trash()
+
+    def delete(self, identity, expected_version, expected_deletion_revision):
+        return self.repository.delete(identity, expected_version, expected_deletion_revision)
+
+    def restore(self, identity, expected_deletion_revision):
+        return self.repository.restore(identity, expected_deletion_revision)
+
     def source(self, identity, version=None):
         from .pipeline_source import pipeline_source
         pipeline = self.get(identity, version)

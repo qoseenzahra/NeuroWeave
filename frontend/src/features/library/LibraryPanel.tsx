@@ -10,6 +10,8 @@ import { useSkills } from '../skills/useSkills';
 import type { Skill } from '../skills/skillsApi';
 import { PipelineLaunchDialog } from './PipelineLaunchDialog';
 import { PipelineDraftList } from './PipelineDraftList';
+import { PipelineDeleteAction } from './PipelineDeleteAction';
+import { PipelineTrashList } from './PipelineTrashList';
 import type { Workflow } from '../workflows/workflowTypes';
 import * as api from './libraryApi';
 import type { Entry, Method, Pipeline } from './libraryApi';
@@ -54,6 +56,7 @@ export function LibraryPanel(props:Props) {
     <p className="text-xs text-subtle">{kind==='skill'?ui("Skill：按目标统筹方法与流程"):kind==='method'?ui("Method：可执行的最小命令或库调用"):ui("Pipeline：已定义输入输出的可复用方法组合")}</p>
     {props.taskPicker?<details className="rounded-control border border-line p-2 text-xs"><summary className="cursor-pointer">{ui('按处理目标或软件筛选')}</summary><LibraryNavigation facets={query.data?.facets} category={category} software={software} onCategory={value=>{setCategory(value);setCursor(0);}} onSoftware={value=>{setSoftware(value);setCursor(0);}}/></details>:<LibraryNavigation facets={query.data?.facets} category={category} software={software} onCategory={value=>{setCategory(value);setCursor(0);}} onSoftware={value=>{setSoftware(value);setCursor(0);}}/>}
     {kind==='pipeline'&&!props.taskPicker&&<PipelineDraftList onEdit={setEditing}/>}
+    {kind==='pipeline'&&!props.taskPicker&&<PipelineTrashList/>}
     {kind==='pipeline'&&!props.taskPicker&&<button className={button} onClick={()=>setEditing('new')}>{ui("＋ 拖拽创建 Pipeline")}</button>}
     {kind==='skill'&&!!props.selectedSkillIds.length&&<button className={button} disabled={props.disabled} onClick={props.onClear}>{ui("清空已选 Skill")}</button>}
     {(error||query.isError)&&<p role="alert" className="break-words text-xs text-danger">{error||String(query.error)}</p>}
@@ -65,6 +68,7 @@ export function LibraryPanel(props:Props) {
       <div className="mt-2 flex flex-wrap gap-1">
         <button className={button} aria-label={ui('查看详情：{0}',e.label)} onClick={()=>void inspect(e)}>{ui('查看详情')}</button>
         {e.kind==='pipeline'&&<button className={button} disabled={busy||e.status==='archived'} onClick={()=>void prepare(e)}>{ui("创建任务")}</button>}
+        {e.kind==='pipeline'&&!props.taskPicker&&e.version&&<PipelineDeleteAction pipeline={{...e,version:e.version}} onDeleted={()=>{if(detail?.id===e.id)setDetail(null);if(launch?.id===e.id)setLaunch(null);}}/>}
         {e.kind==='skill'&&<button className={button} disabled={props.disabled} onClick={()=>props.selectedSkillIds.includes(e.id)?props.onRemove(e.id):props.onAdd(e.id)}>{props.selectedSkillIds.includes(e.id)?ui("移出会话"):ui("加入会话")}</button>}
         {e.kind==='pipeline'&&<span className="text-subtle">{e.step_count} {ui("步 · v")}{e.version} · {stateText(e.status??'published')}</span>}</div>
     </div>)}</div>}

@@ -160,6 +160,7 @@ class PipelineAuthoring:
             raise ValueError("Only user pipelines can be archived")
         self.repository.get(identity, version)
         with self.store.transaction() as db:
+            self.repository.require_active(db, identity)
             db.execute(
                 "INSERT INTO pipeline_states VALUES(?,?,?) ON CONFLICT(id,version) DO UPDATE SET status=excluded.status",
                 (identity, version, status),

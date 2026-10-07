@@ -3936,5 +3936,18 @@
   "需要 ANTs 的配准、偏置场校正、图像运算或标签统计，并明确所需输入的空间与维度。": "Use ANTs for registration, bias-field correction, image operations or label statistics, with explicit spatial and dimensional requirements for the inputs.",
   "需要 FA、MD 等张量指标时选择张量拟合；FOD 估计和基于 FOD 的追踪应查找 MRtrix3 的对应入口。": "Choose tensor fitting for FA, MD and other tensor metrics; look up the corresponding MRtrix3 entries for FOD estimation and FOD-based tracking.",
   "需要 evoked 结果时可复用已有 Epochs；传感器层分析与源空间分析需分别确认所需输入。": "Reuse existing Epochs when evoked responses are needed; establish inputs separately for sensor-level and source-space analysis.",
-  "需要关闭 JSON sidecar 时选择通用 GZip 预设或独立转换方法，避免固定生成 JSON 的预设。": "When JSON sidecars must be disabled, use the general GZip preset or the atomic converter instead of the preset that enforces JSON generation."
+  "需要关闭 JSON sidecar 时选择通用 GZip 预设或独立转换方法，避免固定生成 JSON 的预设。": "When JSON sidecars must be disabled, use the general GZip preset or the atomic converter instead of the preset that enforces JSON generation.",
+  "共 {0} 个版本": "{0} versions",
+  "删除 Pipeline": "Delete Pipeline",
+  "删除 Pipeline 失败": "Failed to delete Pipeline",
+  "删除 Pipeline：{0}": "Delete Pipeline: {0}",
+  "删除已发布的 Pipeline": "Delete published Pipeline",
+  "将删除此 Pipeline 的全部发布版本，并从目录和新任务选择中移除。可在“已删除 Pipeline”中恢复。已有任务、运行结果和草稿保留。": "Delete all published versions of this Pipeline and remove it from the catalog and new task selection. You can restore it from Deleted Pipelines. Existing tasks, results and drafts are preserved.",
+  "已删除 Pipeline": "Deleted Pipelines",
+  "恢复 Pipeline 失败": "Failed to restore Pipeline",
+  "恢复 Pipeline：{0}": "Restore Pipeline: {0}",
+  "恢复全部版本，并保留删除前各版本的发布或归档状态。": "Restore all versions with their previous published or archived status.",
+  "暂无已删除 Pipeline": "No deleted Pipelines",
+  "确认删除": "Confirm deletion",
+  "读取已删除 Pipeline 失败": "Failed to load deleted Pipelines"
 }

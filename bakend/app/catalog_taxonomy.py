@@ -125,7 +125,7 @@ def catalog_entries(definitions, user_pipelines=()):
         # conversion step. Additional categories remain searchable facets.
         category = members[-1]['category_ids'] if members else ['utilities', 'guidance']
         pipeline_entries[pipeline['id']] = dict(id=pipeline['id'], kind='pipeline', label=pipeline['label'],
-            description=pipeline.get('description', ''), version=pipeline['version'],status=pipeline.get('status','published'),
+            description=pipeline.get('description', ''), version=pipeline['version'],status=pipeline.get('status','published'),deletion_revision=pipeline.get('deletion_revision',0),
             category_ids=category, category=category_labels(category),
             categories=[list(c) for c in dict.fromkeys(tuple(m['category_ids']) for m in members)] or [category],
             software=sorted({s for m in members for s in m['software']}), step_count=len(pipeline['steps']),

@@ -3,7 +3,7 @@ import { executionDraft } from './pipelineGraph';
 import { rememberLayout, restoreLayout } from './pipelineLayout';
 import { mergeDraftRecovery } from './pipelineDraftRecovery';
 import type { ParameterSpec, InputSlotSpec, OutputSlotSpec, ParameterValue, Workflow } from '../workflows/workflowTypes';
-export type Entry = {id:string;label:string;description:string;kind:string;category:string[];category_ids?:string[];software?:string[];method_count?:number;pipeline_count?:number;version?:string;step_count?:number;status?:string;omitted_option_count?:number;parameter_count?:number};
+export type Entry = {id:string;label:string;description:string;kind:string;category:string[];category_ids?:string[];software?:string[];method_count?:number;pipeline_count?:number;version?:string;step_count?:number;status?:string;deletion_revision?:number;omitted_option_count?:number;parameter_count?:number};
 export type Facets = {categories:Array<{path:string[];label:string;count:number}>;software:Array<{id:string;label:string;count:number}>};
 export type Page = {facets?:Facets;items:Entry[];total:number;has_more:boolean;next_cursor:number|null};
 export type Method = Entry & {parameters:ParameterSpec[];input_slots:InputSlotSpec[];output_slots:OutputSlotSpec[];
@@ -15,7 +15,7 @@ export type Link = SourceLink & {additional_sources?:SourceLink[]};
 export type Node = {position?:{x:number;y:number};id:string;method_id:string;parameters:Record<string,ParameterValue>;inputs:Record<string,Link>;when?:Record<string,ParameterValue[]>};
 export type InputPort = {step_id:string;input_slot_id:string};
 export type Draft = {shared_inputs?:InputPort[][];controls?:ParameterSpec[];name:string;description:string;steps:Node[];expected_version?:number};
-export type Pipeline = {draft_id?:string;draft_revision?:number;status?:string;layout_warning?:string;id:string;version:string;label:string;description:string;editor?:Draft;
+export type Pipeline = {draft_id?:string;draft_revision?:number;status?:string;deletion_revision?:number;layout_warning?:string;id:string;version:string;label:string;description:string;editor?:Draft;
   parameters:ParameterSpec[];input_slots:InputSlotSpec[];output_slots:OutputSlotSpec[];
   steps:Array<{id:string;method_ref:string;method_id?:string;title:string;fixed_parameters?:Record<string,ParameterValue>}>};
 export const catalog = (kind:string,q:string,cursor=0,category='',software='',language='zh') => request<Page>(`/api/library?${new URLSearchParams({kind,q,cursor:String(cursor),limit:'100',category,software,language})}`);
@@ -51,3 +51,9 @@ export const restoreDraft=(draft:DeletedDraft)=>request(`/api/library/drafts/${e
 export const lifecycle=(id:string,version:string,status:string)=>request(`/api/library/pipelines/${encodeURIComponent(id)}/versions/${version}?status=${status}`,{method:'PATCH'});
 export const versions=(id:string)=>request<{items:Array<{version:string;status?:string}>}>(`/api/library/pipelines/${encodeURIComponent(id)}/versions`);
 export const migration=(id:string,version?:string)=>request<{changes:Array<{step_id:string;method_id:string;from_version:string;to_version:string}>;errors:string[];editor?:Draft}>(`/api/library/pipelines/${encodeURIComponent(id)}/migration${version?'?version='+version:''}`);
+export type DeletedPipeline={id:string;label:string;version:string;version_count:number;deletion_revision:number;deleted_at:string};
+export const pipelineTrash=()=>request<{items:DeletedPipeline[]}>('/api/library/pipelines/trash');
+export const deletePipeline=(pipeline:Pick<Pipeline,'id'|'version'|'deletion_revision'>)=>request(`/api/library/pipelines/${encodeURIComponent(pipeline.id)}`,
+  {method:'DELETE',body:JSON.stringify({expected_version:Number(pipeline.version),expected_deletion_revision:pipeline.deletion_revision??0})});
+export const restorePipeline=(pipeline:DeletedPipeline)=>request(`/api/library/pipelines/${encodeURIComponent(pipeline.id)}/restore`,
+  {method:'POST',body:JSON.stringify({expected_deletion_revision:pipeline.deletion_revision})});
