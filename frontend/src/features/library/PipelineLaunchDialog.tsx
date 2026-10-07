@@ -37,8 +37,8 @@ export function PipelineLaunchDialog({pipeline, onClose, onCreated}: {
   return <>
     <Dialog title={ui('创建 Pipeline 任务')} description={`${pipeline.label} · v${pipeline.version}`}
       closeLabel={ui('关闭')} onClose={()=>{if(!pending.current)onClose();}} size="lg"
-      footer={<button className={button} disabled={busy||!workspace||pipeline.status==='archived'}
-        onClick={()=>void create()}>{busy?ui('正在创建任务…'):ui('创建任务并配置运行')}</button>}>
+      footer={<><button className={button} disabled={busy} onClick={onClose}>{ui('返回选择 Pipeline')}</button><button className={button} disabled={busy||!workspace||pipeline.status==='archived'}
+        onClick={()=>void create()}>{busy?ui('正在创建任务…'):ui('创建任务并配置运行')}</button></>}>
       <div className="space-y-4 text-sm">
         <p>{ui('为本次任务选择输入和输出。创建后仍需检查参数、预检并确认执行。')}</p>
         <section className="space-y-2 rounded border border-line p-3">

@@ -18,6 +18,9 @@ class PipelineRepository:
                 "CREATE TABLE IF NOT EXISTS pipeline_drafts(id TEXT PRIMARY KEY, revision INTEGER NOT NULL, payload TEXT NOT NULL, updated_at TEXT NOT NULL)"
             )
             db.execute(
+                "CREATE TABLE IF NOT EXISTS pipeline_draft_trash(id TEXT PRIMARY KEY, revision INTEGER NOT NULL, payload TEXT NOT NULL, deleted_at TEXT NOT NULL)"
+            )
+            db.execute(
                 "CREATE TABLE IF NOT EXISTS pipeline_states(id TEXT NOT NULL, version INTEGER NOT NULL, status TEXT NOT NULL, PRIMARY KEY(id,version))"
             )
 

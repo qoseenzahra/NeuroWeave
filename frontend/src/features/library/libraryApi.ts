@@ -1,6 +1,7 @@
 import { request } from '../../api/http';
 import { executionDraft } from './pipelineGraph';
 import { rememberLayout, restoreLayout } from './pipelineLayout';
+import { mergeDraftRecovery } from './pipelineDraftRecovery';
 import type { ParameterSpec, InputSlotSpec, OutputSlotSpec, ParameterValue, Workflow } from '../workflows/workflowTypes';
 export type Entry = {id:string;label:string;description:string;kind:string;category:string[];category_ids?:string[];software?:string[];method_count?:number;pipeline_count?:number;version?:string;step_count?:number;status?:string;omitted_option_count?:number;parameter_count?:number};
 export type Facets = {categories:Array<{path:string[];label:string;count:number}>;software:Array<{id:string;label:string;count:number}>};
@@ -28,17 +29,24 @@ export const save = async (draft:Draft,id?:string) => {
 export const usePipeline = (id:string,dataset_id:string|null,workspace_id:string|null,version?:string,conversation_id?:string|null) => request<Workflow>(`/api/library/pipelines/${encodeURIComponent(id)}/workflows`,{method:'POST',body:JSON.stringify({dataset_id,workspace_id,conversation_id,version:version?Number(version):null})});
 
 export const describe = (draft:Draft,language:string,signal?:AbortSignal) => request<{description:string;source:string;warning:string;fingerprint:string}>(`/api/library/pipelines/describe?language=${language}`,{method:'POST',body:JSON.stringify(executionDraft(draft)),signal});
-export type SavedDraft={id:string;revision:number;updated_at:string;editor:Draft;pipeline_id:string|null;pipeline_version:number|null};
+export type SavedDraft={id:string;revision:number;updated_at:string;editor:Draft;pipeline_id:string|null;pipeline_version:number|null;server_revision?:number};
+export type DeletedDraft=SavedDraft&{deleted_at:string};
 export const drafts=async()=>{
-  const server=await request<{items:SavedDraft[]}>('/api/library/drafts');
-  const items=new Map(server.items.map(v=>[v.id,v]));
+  const server=await request<{items:SavedDraft[];deleted_ids:string[];deleted_items:DeletedDraft[]}>('/api/library/drafts');
+  const recovered:SavedDraft[]=[];
   try{for(let i=0;i<localStorage.length;i++){
     const key=localStorage.key(i);if(!key?.startsWith('neuroweave:pipeline-draft:'))continue;
-    const value=JSON.parse(localStorage.getItem(key)??'null') as SavedDraft|null;
-    if(value?.id&&value.editor&&(!items.has(value.id)||value.revision>=(items.get(value.id)?.revision??0)))items.set(value.id,value);
+    try{const value=JSON.parse(localStorage.getItem(key)??'null') as SavedDraft|null;if(value)recovered.push(value);}catch{/* Ignore one damaged browser copy. */}
   }}catch{/* Server drafts remain visible. */}
-  return {items:[...items.values()].sort((a,b)=>b.updated_at.localeCompare(a.updated_at)).slice(0,100)};
+  return {items:mergeDraftRecovery(server.items,recovered,server.deleted_ids??[]),deleted_items:server.deleted_items??[]};
 };
+export const deleteDraft=async(draft:SavedDraft)=>{
+  await request(`/api/library/drafts/${encodeURIComponent(draft.id)}`,{method:'DELETE',body:JSON.stringify({
+    expected_revision:draft.server_revision??draft.revision,editor:draft.editor,pipeline_id:draft.pipeline_id,pipeline_version:draft.pipeline_version})});
+  try{localStorage.removeItem('neuroweave:pipeline-draft:'+draft.id);}catch{/* The server tombstone also hides recovery copies. */}
+};
+export const restoreDraft=(draft:DeletedDraft)=>request(`/api/library/drafts/${encodeURIComponent(draft.id)}/restore`,
+  {method:'POST',body:JSON.stringify({expected_revision:draft.revision})});
 export const lifecycle=(id:string,version:string,status:string)=>request(`/api/library/pipelines/${encodeURIComponent(id)}/versions/${version}?status=${status}`,{method:'PATCH'});
 export const versions=(id:string)=>request<{items:Array<{version:string;status?:string}>}>(`/api/library/pipelines/${encodeURIComponent(id)}/versions`);
 export const migration=(id:string,version?:string)=>request<{changes:Array<{step_id:string;method_id:string;from_version:string;to_version:string}>;errors:string[];editor?:Draft}>(`/api/library/pipelines/${encodeURIComponent(id)}/migration${version?'?version='+version:''}`);

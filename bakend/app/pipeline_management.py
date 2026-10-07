@@ -8,6 +8,10 @@ from datetime import datetime, timezone
 from .pipeline_models import ComposeRequest, ComposeStep, InputPort
 
 
+class DraftDeletedError(ValueError):
+    pass
+
+
 class PipelineAuthoring:
     def __init__(self, repository, compiler):
         self.repository, self.compiler = repository, compiler
@@ -28,7 +32,19 @@ class PipelineAuthoring:
             for r in rows
         ]
 
-    def save_draft(self, identity, request):
+    def draft_trash(self):
+        with self.store.connection() as db:
+            rows = db.execute(
+                "SELECT * FROM pipeline_draft_trash ORDER BY deleted_at DESC"
+            ).fetchall()
+        return {
+            "deleted_ids": [r["id"] for r in rows],
+            "deleted_items": [dict(id=r["id"], revision=r["revision"],
+                                   deleted_at=r["deleted_at"], **json.loads(r["payload"]))
+                              for r in rows[:100]],
+        }
+
+    def _draft_payload(self, request):
         editor = request.editor
         if set(editor) - {
             "name",
@@ -78,7 +94,13 @@ class PipelineAuthoring:
         )
         if len(payload) > 1_000_000:
             raise ValueError("Draft is too large")
+        return payload
+
+    def save_draft(self, identity, request):
+        payload = self._draft_payload(request)
         with self.store.transaction() as db:
+            if db.execute("SELECT 1 FROM pipeline_draft_trash WHERE id=?", (identity,)).fetchone():
+                raise DraftDeletedError("草稿已删除，请从已删除草稿中恢复后再编辑。")
             row = db.execute(
                 "SELECT revision FROM pipeline_drafts WHERE id=?", (identity,)
             ).fetchone()
@@ -93,6 +115,36 @@ class PipelineAuthoring:
                 (identity, current + 1, payload, now),
             )
         return dict(id=identity, revision=current + 1, updated_at=now)
+
+    def delete_draft(self, identity, request):
+        recovery = self._draft_payload(request)
+        with self.store.transaction() as db:
+            deleted = db.execute("SELECT revision FROM pipeline_draft_trash WHERE id=?", (identity,)).fetchone()
+            if deleted:
+                if deleted[0] != request.expected_revision:
+                    raise ValueError("草稿版本已变化，请刷新后再删除。")
+                return dict(id=identity, deleted=True)
+            row = db.execute("SELECT revision,payload FROM pipeline_drafts WHERE id=?", (identity,)).fetchone()
+            current = row["revision"] if row else 0
+            if current != request.expected_revision:
+                raise ValueError("草稿已在其他窗口更新，请刷新后再删除。")
+            db.execute("INSERT INTO pipeline_draft_trash VALUES(?,?,?,?)",
+                       (identity, current, recovery, datetime.now(timezone.utc).isoformat()))
+            db.execute("DELETE FROM pipeline_drafts WHERE id=?", (identity,))
+        return dict(id=identity, deleted=True)
+
+    def restore_draft(self, identity, expected_revision):
+        with self.store.transaction() as db:
+            row = db.execute("SELECT * FROM pipeline_draft_trash WHERE id=?", (identity,)).fetchone()
+            if not row:
+                raise KeyError("已删除草稿不存在")
+            if row["revision"] != expected_revision:
+                raise ValueError("草稿版本已变化，请刷新后再恢复。")
+            now = datetime.now(timezone.utc).isoformat()
+            revision = row["revision"] + 1
+            db.execute("INSERT INTO pipeline_drafts VALUES(?,?,?,?)", (identity, revision, row["payload"], now))
+            db.execute("DELETE FROM pipeline_draft_trash WHERE id=?", (identity,))
+        return dict(id=identity, revision=revision, updated_at=now)
 
     def lifecycle(self, identity, version, status):
         if status not in {"published", "archived"}:

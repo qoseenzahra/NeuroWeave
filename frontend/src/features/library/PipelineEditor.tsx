@@ -1,6 +1,6 @@
 import { ui } from '../../lib/libraryText';
 import { useLanguageStore } from '../../stores/languageStore';
-import { errorText } from '../../api/http';
+import { ApiError, errorText } from '../../api/http';
 import { Component, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -257,7 +257,11 @@ function Editor({ initial, onClose, onSaved }: Props) {
     void authoring
       .flush()
       .then(onClose)
-      .catch((error) => setError(errorText(error, ui('保存草稿失败'))));
+      .catch((error) => {
+        // Another window may delete this draft while its editor remains open.
+        if(error instanceof ApiError&&error.code==='draft_deleted')onClose();
+        else setError(errorText(error, ui('保存草稿失败')));
+      });
   };
   const canSave =
     !busy &&

@@ -9,6 +9,7 @@ import { Tabs } from '../../ui/Tabs';
 import { useSkills } from '../skills/useSkills';
 import type { Skill } from '../skills/skillsApi';
 import { PipelineLaunchDialog } from './PipelineLaunchDialog';
+import { PipelineDraftList } from './PipelineDraftList';
 import type { Workflow } from '../workflows/workflowTypes';
 import * as api from './libraryApi';
 import type { Entry, Method, Pipeline } from './libraryApi';
@@ -19,7 +20,7 @@ import { button } from './pipelineEditorStyles';
 import { useLanguageStore } from '../../stores/languageStore';
 
 type Props={selectedSkillIds:string[];disabled:boolean;onAdd:(id:string)=>void;onRemove:(id:string)=>void;
-  onDetails:(s:Skill)=>void;onClear:()=>void;domain?:'skills'|'pipelines';onTaskCreated?:(workflow:Workflow)=>void};
+  onDetails:(s:Skill)=>void;onClear:()=>void;domain?:'skills'|'pipelines';taskPicker?:boolean;onTaskCreated?:(workflow:Workflow)=>void};
 export function LibraryPanel(props:Props) {
   const language=useLanguageStore(s=>s.language);
   const [category,setCategory]=useState(''); const [software,setSoftware]=useState('');
@@ -30,7 +31,6 @@ export function LibraryPanel(props:Props) {
   const [launch,setLaunch]=useState<Pipeline|null>(null);const [busy,setBusy]=useState(false);
   const client=useQueryClient();const skills=useSkills();
   useEffect(()=>{const timer=setTimeout(()=>setSearch(q),200);return()=>clearTimeout(timer);},[q]);
-  const draftQuery=useQuery({queryKey:['pipeline-drafts'],queryFn:api.drafts,enabled:kind==='pipeline',refetchOnWindowFocus:true});
   const query=useQuery({queryKey:['library',kind,search,cursor,category,software,language],queryFn:()=>api.catalog(kind,search,cursor,category,software,language)});
   const detailVersion=detail&&'steps' in detail?detail.version:undefined;
   const detailId=detail?.id; const detailKind=detail && 'runtime_status' in detail ? 'method' : 'pipeline';
@@ -52,17 +52,18 @@ export function LibraryPanel(props:Props) {
     />}
     <input className="w-full min-w-0 rounded border border-line bg-raised p-2 text-xs" aria-label={ui("搜索资源")} placeholder={ui("搜索名称、功能或软件")} value={q} onChange={e=>{setQ(e.target.value);setCursor(0);}}/>
     <p className="text-xs text-subtle">{kind==='skill'?ui("Skill：按目标统筹方法与流程"):kind==='method'?ui("Method：可执行的最小命令或库调用"):ui("Pipeline：已定义输入输出的可复用方法组合")}</p>
-    <LibraryNavigation facets={query.data?.facets} category={category} software={software} onCategory={value=>{setCategory(value);setCursor(0);}} onSoftware={value=>{setSoftware(value);setCursor(0);}}/>
-    {kind==='pipeline'&&<details className="rounded border border-line p-2 text-xs"><summary>{ui('未完成的 Pipeline 草稿')} · {draftQuery.data?.items.length??0}</summary>{draftQuery.data?.items.map(d=><button key={d.id} className="my-2 block w-full break-words text-left hover:text-accent" onClick={()=>setEditing({id:d.pipeline_id??'',version:d.pipeline_version?String(d.pipeline_version):'',label:d.editor.name,description:d.editor.description,editor:d.editor,draft_id:d.id,draft_revision:d.revision,parameters:[],input_slots:[],output_slots:[],steps:[]})}>{d.editor.name||ui('未命名草稿')} · {new Date(d.updated_at).toLocaleString()}</button>)}</details>}
-    {kind==='pipeline'&&<button className={button} onClick={()=>setEditing('new')}>{ui("＋ 拖拽创建 Pipeline")}</button>}
+    {props.taskPicker?<details className="rounded-control border border-line p-2 text-xs"><summary className="cursor-pointer">{ui('按处理目标或软件筛选')}</summary><LibraryNavigation facets={query.data?.facets} category={category} software={software} onCategory={value=>{setCategory(value);setCursor(0);}} onSoftware={value=>{setSoftware(value);setCursor(0);}}/></details>:<LibraryNavigation facets={query.data?.facets} category={category} software={software} onCategory={value=>{setCategory(value);setCursor(0);}} onSoftware={value=>{setSoftware(value);setCursor(0);}}/>}
+    {kind==='pipeline'&&!props.taskPicker&&<PipelineDraftList onEdit={setEditing}/>}
+    {kind==='pipeline'&&!props.taskPicker&&<button className={button} onClick={()=>setEditing('new')}>{ui("＋ 拖拽创建 Pipeline")}</button>}
     {kind==='skill'&&!!props.selectedSkillIds.length&&<button className={button} disabled={props.disabled} onClick={props.onClear}>{ui("清空已选 Skill")}</button>}
     {(error||query.isError)&&<p role="alert" className="break-words text-xs text-danger">{error||String(query.error)}</p>}
-    {query.isPending?<p className="text-xs">{ui("加载目录…")}</p>:<div className="space-y-2">{(query.data?.items??[]).map(e=><div key={e.id} className="min-w-0 rounded border border-line p-2 text-xs">
-      <button className="block w-full break-words text-left font-medium" onClick={()=>void inspect(e)}>{e.label}</button>
+    {query.isPending?<p className="text-xs">{ui("加载目录…")}</p>:<div className={props.taskPicker?'grid gap-3 sm:grid-cols-2':'space-y-2'}>{(query.data?.items??[]).map(e=><div key={e.id} className="min-w-0 rounded border border-line p-3 text-xs">
+      <p className="block w-full break-words text-left font-medium">{e.label}</p>
       <p className="mt-1 line-clamp-3 break-words text-subtle" title={e.description}>{e.description}</p>
       <p className="mt-1 break-words text-micro text-subtle">{e.category.join(" / ")}{e.software?.length ? " · "+e.software.join(", ") : ""}</p>
       {e.kind==='method'&&<p className="mt-1 text-subtle">{ui('已开放 {0} 个参数，{1} 个原生命令选项尚未开放',e.parameter_count??0,e.omitted_option_count??0)}</p>}
       <div className="mt-2 flex flex-wrap gap-1">
+        <button className={button} aria-label={ui('查看详情：{0}',e.label)} onClick={()=>void inspect(e)}>{ui('查看详情')}</button>
         {e.kind==='pipeline'&&<button className={button} disabled={busy||e.status==='archived'} onClick={()=>void prepare(e)}>{ui("创建任务")}</button>}
         {e.kind==='skill'&&<button className={button} disabled={props.disabled} onClick={()=>props.selectedSkillIds.includes(e.id)?props.onRemove(e.id):props.onAdd(e.id)}>{props.selectedSkillIds.includes(e.id)?ui("移出会话"):ui("加入会话")}</button>}
         {e.kind==='pipeline'&&<span className="text-subtle">{e.step_count} {ui("步 · v")}{e.version} · {stateText(e.status??'published')}</span>}</div>
@@ -74,7 +75,7 @@ export function LibraryPanel(props:Props) {
     {detail&&<Dialog title={detail.label} closeLabel={ui("关闭")} size="xl" onClose={()=>setDetail(null)} footer={'steps' in detail?<>
 
       <button className={button} disabled={busy||detail.status==='archived'} onClick={()=>{setLaunch(detail);setDetail(null);}}>{ui("创建任务")}</button></>:undefined}>
-      {'steps' in detail&&<PipelineVersions key={detail.id+':'+detail.version} pipeline={detail} onSelect={setDetail} onEdit={p=>{setEditing(p);setDetail(null);}} onChange={()=>void client.invalidateQueries({queryKey:['library']})}/>}
+      {'steps' in detail&&<PipelineVersions key={detail.id+':'+detail.version} readOnly={props.taskPicker} pipeline={detail} onSelect={setDetail} onEdit={p=>{setEditing(p);setDetail(null);}} onChange={()=>void client.invalidateQueries({queryKey:['library']})}/>}
       {'steps' in detail&&<ol className="my-3 list-inside list-decimal text-xs">{detail.steps.map(s=><li key={s.id}>{s.title||s.method_ref}</li>)}</ol>}
       <DefinitionDetails definition={detail}/>
       {error&&<p className="text-danger">{error}</p>}

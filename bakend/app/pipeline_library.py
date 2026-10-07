@@ -44,6 +44,15 @@ class PipelineLibrary:
     def save_draft(self, identity, request):
         return self.authoring.save_draft(identity, request)
 
+    def draft_trash(self):
+        return self.authoring.draft_trash()
+
+    def delete_draft(self, identity, request):
+        return self.authoring.delete_draft(identity, request)
+
+    def restore_draft(self, identity, expected_revision):
+        return self.authoring.restore_draft(identity, expected_revision)
+
     def lifecycle(self, identity, version, status):
         return self.authoring.lifecycle(identity, version, status)
 

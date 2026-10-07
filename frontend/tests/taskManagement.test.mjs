@@ -46,6 +46,31 @@ try {
     assert.equal(url.searchParams.get('status'),'active');
     assert.equal(url.searchParams.get('offset'),'30');
   });
+  await test('task picker exposes details and excludes draft authoring',async()=>{
+    const {LibraryPanel}=await load('features/library/LibraryPanel.tsx');
+    const language=useLanguageStore.getInitialState().language;
+    const props={selectedSkillIds:[],disabled:false,onAdd(){},onRemove(){},onDetails(){},onClear(){}};
+    for(const kind of ['skill','pipeline']){
+      const entry={id:kind,label:kind+' details fixture',kind,description:'Description',category:[],status:'published'};
+      client.setQueryData(['library',kind,'',0,'','',language],{items:[entry],total:1,has_more:false});
+      const html=render(LibraryPanel,{...props,...(kind==='pipeline'?{domain:'pipelines',taskPicker:true}:{})});
+      assert(html.includes(`aria-label="查看详情：${entry.label}"`));
+      if(kind==='pipeline')assert(!html.includes('拖拽创建 Pipeline'));
+    }
+    const {PipelineTaskDialog}=await load('features/library/PipelineTaskDialog.tsx');
+    const chooser=render(PipelineTaskDialog,{onClose(){},onCreated(){}});
+    assert(chooser.includes('选择 Pipeline'));
+    assert(chooser.includes('查看详情'));
+    assert(!chooser.includes('未完成的 Pipeline 草稿'));
+  });
+  await test('deleted drafts stay hidden from old browser recovery and restored revisions win',async()=>{
+    const {mergeDraftRecovery}=await load('features/library/pipelineDraftRecovery.ts');
+    const draft={id:'owned',revision:1,updated_at:'2026-10-01',editor:{name:'Old',steps:[]},pipeline_id:null,pipeline_version:null};
+    assert.deepEqual(mergeDraftRecovery([],[draft],['owned']),[]);
+    const merged=mergeDraftRecovery([{...draft,revision:2,editor:{name:'Restored',steps:[]}}],[draft],[]);
+    assert.equal(merged[0].editor.name,'Restored');assert.equal(merged[0].server_revision,2);
+    const local=mergeDraftRecovery([],[draft],[]);assert.equal(local[0].server_revision,0);
+  });
   await test('output selection supports ancestor navigation and reuses exact registered directories',async()=>{
     const {browseRootForPath,workspaceForPath}=await load('features/workspace/outputSelection.ts');
     assert.equal(browseRootForPath('/home/data/output',['/home/data','/']),'/');

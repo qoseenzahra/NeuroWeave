@@ -4,7 +4,7 @@ import { useState } from 'react';
 import * as api from './libraryApi';
 import { ui } from '../../lib/libraryText';
 import { errorText } from '../../api/http';
-export function PipelineVersions({pipeline,onSelect,onEdit,onChange}:{pipeline:api.Pipeline;onSelect:(value:api.Pipeline)=>void;onEdit:(value:api.Pipeline)=>void;onChange:()=>void}){
+export function PipelineVersions({pipeline,onSelect,onEdit,onChange,readOnly=false}:{pipeline:api.Pipeline;onSelect:(value:api.Pipeline)=>void;onEdit:(value:api.Pipeline)=>void;onChange:()=>void;readOnly?:boolean}){
  const [error,setError]=useState(''),[reviewed,setReviewed]=useState(false),[busy,setBusy]=useState(false);
  const versions=useQuery({queryKey:['pipeline-versions',pipeline.id],queryFn:()=>api.versions(pipeline.id)});
  const migration=useQuery({queryKey:['pipeline-migration',pipeline.id,pipeline.version],queryFn:()=>api.migration(pipeline.id,pipeline.version)});
@@ -13,10 +13,10 @@ export function PipelineVersions({pipeline,onSelect,onEdit,onChange}:{pipeline:a
   <p>{ui('当前版本')} v{pipeline.version} · {stateText(pipeline.status??'published')}</p>
   <p>{ui('新流程只检索最新发布且方法版本一致的 Pipeline；已有运行继续使用其快照。')}</p>
   <div className="flex flex-wrap gap-2">{versions.data?.items.map(v=><button key={v.version} className="rounded border border-line px-2 py-1" onClick={()=>void api.pipeline(pipeline.id,v.version).then(onSelect).catch(e=>setError(errorText(e,ui('读取版本失败'))))}>v{v.version} · {stateText(v.status??'published')}</button>)}
-  {pipeline.id.startsWith('user-')&&<button className="rounded border border-line px-2 py-1" disabled={busy} onClick={()=>void act()}>{ui(pipeline.status==='archived'?'恢复发布':'归档此版本')}</button>}</div>
+  {!readOnly&&pipeline.id.startsWith('user-')&&<button className="rounded border border-line px-2 py-1" disabled={busy} onClick={()=>void act()}>{ui(pipeline.status==='archived'?'恢复发布':'归档此版本')}</button>}</div>
   {!!migration.data?.changes.length&&<div><p className="text-warning">{ui('引用的方法已升级，请比较接口后重新发布。')}</p>{migration.data.changes.map(c=><p key={c.step_id}>{c.step_id} / {c.method_id} · {c.from_version} → {c.to_version}</p>)}<label className="flex gap-2"><input type="checkbox" checked={reviewed} onChange={e=>setReviewed(e.target.checked)}/>{ui('我将按最新方法重新检查参数、输入和输出')}</label></div>}
   {migration.data?.errors.map(e=><p key={e} className="break-words text-warning">{e}</p>)}
-  {pipeline.editor&&<button className="rounded border border-line px-2 py-1" disabled={!!migration.data?.changes.length&&!reviewed} onClick={()=>onEdit(pipeline)}>{ui(migration.data?.changes.length?'迁移到最新方法并编辑':'编辑新版本')}</button>}
+  {!readOnly&&pipeline.editor&&<button className="rounded border border-line px-2 py-1" disabled={!!migration.data?.changes.length&&!reviewed} onClick={()=>onEdit(pipeline)}>{ui(migration.data?.changes.length?'迁移到最新方法并编辑':'编辑新版本')}</button>}
   {(error||versions.error||migration.error)&&<p role="alert" className="break-words text-danger">{error||errorText(versions.error??migration.error,ui('读取版本信息失败'))}</p>}
  </div>;
 }

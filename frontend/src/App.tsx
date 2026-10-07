@@ -18,6 +18,7 @@ import { setMouseWaveEnabled } from './lib/mouseWave';
 import { ChatTurnPanel } from './features/chat/ChatTurnPanel';
 import { WorkflowHistory } from './features/workflows/WorkflowHistory';
 import { TaskDetails } from './features/workflows/TaskDetails';
+import { PipelineTaskDialog } from './features/library/PipelineTaskDialog';
 import { taskFromWorkflow } from './features/workflows/taskIndex';
 import type { TaskEntry } from './features/workflows/taskIndex';
 import { ChatHeader } from './features/chat/ChatHeader';
@@ -83,6 +84,7 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [sidebarView, setSidebarView] = useState<RailDomain>('conversations');
   const [selectedTask, setSelectedTask] = useState<TaskEntry|null>(null);
+  const [taskPickerOpen,setTaskPickerOpen]=useState(false);
   const theme = useThemeStore((s) => s.theme);
   const wave = useThemeStore((s) => s.wave);
   const toggleTheme = useThemeStore((s) => s.toggleTheme);
@@ -543,7 +545,7 @@ function App() {
         )}
         <main ref={mainRef} className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           {sidebarView==='workflows' ? <TaskDetails task={selectedTask} sidebarOpen={sidebarOpen}
-            onOpenSidebar={()=>setSidebarOpen(true)} onOpenPipelines={()=>handleRailDomain('pipelines')}/> : <>
+            onOpenSidebar={()=>setSidebarOpen(true)} onOpenPipelines={()=>setTaskPickerOpen(true)}/> : <>
           <ChatHeader
             workspaceId={workspaceId}
             onOpenWorkspace={() => {setWorkspaceSelection(true);setWorkspaceOpen(true);}}
@@ -606,6 +608,10 @@ function App() {
         </main>
       </div>
       {datasetPickerOpen && <DatasetPicker onSelect={handleDatasetSelect} onClose={() => setDatasetPickerOpen(false)} />}
+      {taskPickerOpen&&<PipelineTaskDialog onClose={()=>setTaskPickerOpen(false)} onCreated={workflow=>{
+        setTaskPickerOpen(false);setSelectedTask(taskFromWorkflow(workflow));setSidebarView('workflows');
+        if(window.innerWidth<1024)setSidebarOpen(false);
+      }}/>}
       {storageOpen && <StoragePanel onClose={() => setStorageOpen(false)} />}
       {viewedSkill && <SkillDetails key={viewedSkill.name} skill={viewedSkill}
         selected={selectedSkillIds.includes(viewedSkill.name)} disabled={contextBusy || olderMutation.isPending}
