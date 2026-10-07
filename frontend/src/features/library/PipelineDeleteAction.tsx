@@ -6,6 +6,7 @@ import { errorText } from '../../api/http';
 import { ui } from '../../lib/libraryText';
 import * as api from './libraryApi';
 import { button } from './pipelineEditorStyles';
+import { refreshPipelineViews } from './libraryQueries';
 
 export function PipelineDeleteAction({pipeline,onDeleted}:{
   pipeline:Pick<api.Pipeline,'id'|'label'|'version'|'deletion_revision'>;onDeleted:()=>void;
@@ -16,8 +17,7 @@ export function PipelineDeleteAction({pipeline,onDeleted}:{
     if(busy)return;setBusy(true);setError('');
     try {
       await api.deletePipeline(pipeline);setConfirm(false);onDeleted();
-      await Promise.all([client.invalidateQueries({queryKey:['library']}),client.invalidateQueries({queryKey:['pipeline-trash']}),
-        client.invalidateQueries({queryKey:['pipeline-versions',pipeline.id]})]);
+      await refreshPipelineViews(client,pipeline.id);
     }catch(e){
       setError(errorText(e,ui('删除 Pipeline 失败')));
       await client.invalidateQueries({queryKey:['library']});

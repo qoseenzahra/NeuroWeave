@@ -12,20 +12,21 @@ import { PipelineVersions } from './PipelineVersions';
 import { DefinitionDetails } from './DefinitionDetails';
 import { PipelineMethodParameters } from './PipelineMethodParameters';
 import { PipelineDeleteAction } from './PipelineDeleteAction';
+import { methodQuery } from './libraryQueries';
 import { button } from './pipelineEditorStyles';
 
 /** Viewing an immutable version has no draft hook or graph mutation callbacks. */
-export function PipelineDetails({pipeline, taskPicker=false, onClose, onSelect, onEdit, onLaunch, onChange}: {
+export function PipelineDetails({pipeline, taskPicker=false, onClose, onSelectVersion, onEdit, onLaunch}: {
   pipeline:api.Pipeline; taskPicker?:boolean; onClose:()=>void;
-  onSelect:(p:api.Pipeline)=>void; onEdit:(p:api.Pipeline)=>void;
-  onLaunch:()=>void; onChange:()=>void;
+  onSelectVersion:(version:string)=>void; onEdit:(p:api.Pipeline)=>void;
+  onLaunch:()=>void;
 }) {
   const language=useLanguageStore(s=>s.language);
   const [selected,setSelected]=useState<string|null>(null);
   const [showInspector,setShowInspector]=useState(()=>typeof window==='undefined'||window.innerWidth>=1100);
   const source=useQuery({queryKey:['pipeline-source',pipeline.id,pipeline.version],queryFn:()=>api.pipelineSource(pipeline.id,pipeline.version)});
   const ids=[...new Set(pipeline.steps.map(s=>s.method_ref??s.method_id!))];
-  const contracts=useQueries({queries:ids.map(id=>({queryKey:['library-method',id,language],queryFn:()=>api.method(id),staleTime:60000,retry:1}))});
+  const contracts=useQueries({queries:ids.map(id=>methodQuery(id,language))});
   const definitions=Object.fromEntries(contracts.flatMap(r=>r.data?[[r.data.id,r.data]]:[]));
   const loading=source.isPending||contracts.some(r=>r.isPending);
   const error=source.error??contracts.find(r=>r.error)?.error;
@@ -38,7 +39,7 @@ export function PipelineDetails({pipeline, taskPicker=false, onClose, onSelect, 
     placement="fullscreen" className="!max-w-none h-full !rounded-none"
     contentClassName="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden p-2"
     footer={<><span className="mr-auto text-xs text-subtle">{ui('查看不会修改原 Pipeline，也不会启动任务。')}</span>
-      {!taskPicker&&<PipelineDeleteAction pipeline={pipeline} onDeleted={()=>{onClose();onChange();}}/>}
+      {!taskPicker&&<PipelineDeleteAction pipeline={pipeline} onDeleted={onClose}/>}
       <button className={button} disabled={!editor||!!error} onClick={()=>{if(editor)onEdit(copyPipeline(pipeline,editor));}}>{ui('基于此 Pipeline 创建')}</button>
       <button className={button} disabled={pipeline.status==='archived'} onClick={onLaunch}>{ui('创建任务')}</button></>}>
     <div className="flex shrink-0 flex-wrap items-center gap-2 text-xs">
@@ -55,7 +56,7 @@ export function PipelineDetails({pipeline, taskPicker=false, onClose, onSelect, 
         onConnect={noop} onDisconnect={noop} onArrange={noop}/>
       {showInspector&&<aside aria-label={ui('Pipeline 画布详情')} className="min-h-0 overflow-auto rounded border border-line p-3 text-xs">
         <details className="mb-3"><summary className="cursor-pointer font-semibold">{ui('Pipeline 接口与版本')}</summary>
-          <PipelineVersions pipeline={pipeline} readOnly={taskPicker} onSelect={onSelect} onEdit={onEdit} onChange={onChange}/>
+          <PipelineVersions pipeline={pipeline} readOnly={taskPicker} onSelectVersion={onSelectVersion} onEdit={onEdit}/>
           <DefinitionDetails definition={pipeline}/>
         </details>
         {!!editor.controls?.length&&<div className="mb-3"><h3 className="font-semibold">{ui('Pipeline 控制参数')}</h3>

@@ -39,14 +39,6 @@ export type TranslationKeys = {
   workflowRunAgain: string;
   chatNeedsClarification: string;
   chatNoWorkflowNeeded: string;
-  skillRuntimeReady: string;
-  skillRuntimeReadyCount: string;
-  skillRuntimeMissing: string;
-  skillRuntimePlanning: string;
-  skillRuntimeUnknown: string;
-  skillMissingDependencies: string;
-  skillPlanningStructure: string;
-  skillAdvisory: string;
 
   datasetBrowseFiles: string;
   datasetFilesTitle: string;
@@ -66,8 +58,6 @@ export type TranslationKeys = {
   conversations: string;
   searchConversations: string;
   skills: string;
-  searchSkills: string;
-  noSkillsFound: string;
   startConversation: string;
   askAgent: string;
   selectedSkill: string;
@@ -75,10 +65,6 @@ export type TranslationKeys = {
   usingSkill: string;
   usingSkills: string;
   clearSelectedSkills: string;
-  skillTabAll: string;
-  skillTabNeuroClaw: string;
-  skillTabNeuroWeave: string;
-  skillTabGeneral: string;
   messagePlaceholder: string;
   backendNotice: string;
   agentExecution: string;
@@ -107,7 +93,6 @@ export type TranslationKeys = {
   processingRequest: string;
   runningWithSkill: string;
   loadingSkills: string;
-  skillsLoadError: string;
   retry: string;
   backendOnline: string;
   backendOffline: string;

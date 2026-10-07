@@ -30,6 +30,7 @@ import { PipelineMethodPalette } from './PipelineMethodPalette';
 import { PipelineNodeInspector } from './PipelineNodeInspector';
 import { usePipelineDescription } from './usePipelineDescription';
 import { PipelineControls } from './PipelineControls';
+import { methodQuery } from './libraryQueries';
 
 type Props = {
   initial?: Pipeline;
@@ -115,12 +116,7 @@ function Editor({ initial, onClose, onSaved }: Props) {
   });
   const ids = [...new Set(draft.steps.map((s) => s.method_id))];
   const contracts = useQueries({
-    queries: ids.map((id) => ({
-      queryKey: ['library-method', id, language],
-      queryFn: () => api.method(id),
-      staleTime: 60000,
-      retry: 1
-    }))
+    queries: ids.map((id) => methodQuery(id, language))
   });
   const definitions: Record<string, Method> = Object.fromEntries(
     contracts.flatMap((r) => (r.data ? [[r.data.id, r.data]] : []))
@@ -167,11 +163,7 @@ function Editor({ initial, onClose, onSaved }: Props) {
     setBusy(true);
     setError('');
     try {
-      await client.fetchQuery({
-        queryKey: ['library-method', id, language],
-        queryFn: () => api.method(id),
-        staleTime: 60000
-      });
+      await client.fetchQuery(methodQuery(id, language));
       // Generate outside React's updater: failures stay inside this try/catch,
       // and StrictMode cannot generate a second identity when replaying an updater.
       const node: Node = {

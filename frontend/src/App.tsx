@@ -41,7 +41,7 @@ import {
   useLoadOlderMessages,
   useRenameConversation
 } from './features/conversations/useConversations';
-import { LibraryPanel as SkillList } from './features/library/LibraryPanel';
+import { LibraryPanel } from './features/library/LibraryPanel';
 import { SkillDetails } from './features/skills/SkillDetails';
 import type { Skill } from './features/skills/skillsApi';
 import { DatasetFilesDrawer } from './features/datasets/DatasetFilesDrawer';
@@ -512,7 +512,7 @@ function App() {
                 handleArchive={handleArchive} handleConfirmDelete={handleConfirmDelete}/>
             ) : sidebarView === 'skills' ? (
               <div className="view-enter min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3">
-                <SkillList selectedSkillIds={selectedSkillIds} disabled={contextBusy || olderMutation.isPending}
+                <LibraryPanel selectedSkillIds={selectedSkillIds} disabled={contextBusy || olderMutation.isPending}
                   onAdd={addSkill} onRemove={removeSkill} onDetails={setViewedSkill} onClear={clearSkills}/>
                 {skillsStats && (
                   <div className="mt-3 border-t border-line pt-2">
@@ -527,7 +527,7 @@ function App() {
               </div>
             ) : sidebarView === 'pipelines' ? (
               <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3">
-                <SkillList key="pipelines" domain="pipelines" selectedSkillIds={[]} disabled={false}
+                <LibraryPanel key="pipelines" domain="pipelines" selectedSkillIds={[]} disabled={false}
                   onAdd={()=>{}} onRemove={()=>{}} onDetails={setViewedSkill} onClear={()=>{}}
                   onTaskCreated={workflow=>{setSelectedTask(taskFromWorkflow(workflow));setSidebarView('workflows');if(window.innerWidth<1024)setSidebarOpen(false);}}/>
               </div>

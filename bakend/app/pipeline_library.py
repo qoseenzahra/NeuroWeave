@@ -240,12 +240,9 @@ class PipelineLibrary:
             )
             if step.get("method_version", current.version) != current.version:
                 raise ValueError("方法版本已变化，请复制 Pipeline 并重新校验")
-        if any(
-            x["id"] == identity
-            and str(x["version"]) == str(p["version"])
-            and x.get("status") == "archived"
-            for x in self.records()
-        ):
+        # The repository already attaches state to this exact version; scanning
+        # the full library again is both redundant and a separate read snapshot.
+        if p.get("status") == "archived":
             raise ValueError("Pipeline 已归档，请先恢复发布状态")
         if request.conversation_id and not self.store.get_conversation(
             request.conversation_id

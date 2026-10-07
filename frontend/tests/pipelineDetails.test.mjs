@@ -39,7 +39,7 @@ try {
     client.setQueryData(['library-method',method.id,language],method);
     client.setQueryData(['pipeline-versions','builtin'],{items:[]});
     const noop=()=>{};
-    const html=renderToStaticMarkup(createElement(QueryClientProvider,{client},createElement(PipelineDetails,{pipeline,onClose:noop,onSelect:noop,onEdit:noop,onLaunch:noop,onChange:noop})));
+    const html=renderToStaticMarkup(createElement(QueryClientProvider,{client},createElement(PipelineDetails,{pipeline,onClose:noop,onSelectVersion:noop,onEdit:noop,onLaunch:noop})));
     assert.equal((html.match(/data-pipeline-node=/g)??[]).length,2);
     assert.match(html,/marker-end="url\(#pipeline-arrow\)"/);
     assert.match(html,/查看步骤：|Inspect step:/);
@@ -60,7 +60,7 @@ try {
       client.setQueryData(['library-method',method.id,language],method);
       client.setQueryData(['pipeline-versions',user.id],{items:[]});
       const noop=()=>{};
-      const html=renderToStaticMarkup(createElement(QueryClientProvider,{client},createElement(PipelineDetails,{pipeline:user,taskPicker,onClose:noop,onSelect:noop,onEdit:noop,onLaunch:noop,onChange:noop})));
+      const html=renderToStaticMarkup(createElement(QueryClientProvider,{client},createElement(PipelineDetails,{pipeline:user,taskPicker,onClose:noop,onSelectVersion:noop,onEdit:noop,onLaunch:noop})));
       if(taskPicker)assert.doesNotMatch(html,/Delete Pipeline:|删除 Pipeline：/);
       else assert.match(html,/Delete Pipeline: Original|删除 Pipeline：Original/);
       client.clear();

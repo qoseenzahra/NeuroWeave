@@ -20,7 +20,7 @@ export type Pipeline = {draft_id?:string;draft_revision?:number;status?:string;d
   steps:Array<{id:string;method_ref:string;method_id?:string;title:string;fixed_parameters?:Record<string,ParameterValue>}>};
 export const catalog = (kind:string,q:string,cursor=0,category='',software='',language='zh') => request<Page>(`/api/library?${new URLSearchParams({kind,q,cursor:String(cursor),limit:'100',category,software,language})}`);
 export const method = (id:string,signal?:AbortSignal) => request<Method>(`/api/library/methods/${encodeURIComponent(id)}`,{signal});
-export const pipeline = async (id:string,version?:string) => restoreLayout(await request<Pipeline>(`/api/library/pipelines/${encodeURIComponent(id)}${version?'?version='+version:''}`));
+export const pipeline = async (id:string,version?:string,signal?:AbortSignal) => restoreLayout(await request<Pipeline>(`/api/library/pipelines/${encodeURIComponent(id)}${version?'?version='+encodeURIComponent(version):''}`,{signal}));
 export const pipelineSource = (id:string,version:string) => request<{editor:Draft}>(`/api/library/pipelines/${encodeURIComponent(id)}/source?version=${encodeURIComponent(version)}`);
 export const validate = (draft:Draft) => request<Pipeline>('/api/library/pipelines/validate',{method:'POST',body:JSON.stringify(executionDraft(draft))});
 export const save = async (draft:Draft,id?:string) => {

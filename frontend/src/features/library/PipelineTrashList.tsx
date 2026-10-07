@@ -5,6 +5,7 @@ import { errorText } from '../../api/http';
 import { ui } from '../../lib/libraryText';
 import * as api from './libraryApi';
 import { button } from './pipelineEditorStyles';
+import { refreshPipelineViews } from './libraryQueries';
 
 export function PipelineTrashList() {
   const query=useQuery({queryKey:['pipeline-trash'],queryFn:api.pipelineTrash,refetchOnWindowFocus:true,refetchInterval:5000});
@@ -13,8 +14,7 @@ export function PipelineTrashList() {
     if(busy)return;setBusy(true);setError('');
     try{
       await api.restorePipeline(pipeline);
-      await Promise.all([client.invalidateQueries({queryKey:['library']}),client.invalidateQueries({queryKey:['pipeline-trash']}),
-        client.invalidateQueries({queryKey:['pipeline-versions',pipeline.id]})]);
+      await refreshPipelineViews(client,pipeline.id);
     }catch(e){setError(errorText(e,ui('恢复 Pipeline 失败')));await query.refetch();}
     finally{setBusy(false);}
   };
