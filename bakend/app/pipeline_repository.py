@@ -53,6 +53,9 @@ class PipelineRepository:
         return {**result, "status": state[0] if state else "published"}
 
     def save(self, request, identity=None):
+        self.registry.definitions.load()
+        if identity in self.registry.definitions.pipelines:
+            raise ValueError("内置 Pipeline 只读，请创建独立副本后编辑")
         with self.store.transaction() as db:
             if identity is None:
                 identity = "user-" + uuid4().hex[:16]

@@ -29,6 +29,7 @@ import { button, field } from './pipelineEditorStyles';
 import { PipelineMethodPalette } from './PipelineMethodPalette';
 import { PipelineNodeInspector } from './PipelineNodeInspector';
 import { usePipelineDescription } from './usePipelineDescription';
+import { PipelineControls } from './PipelineControls';
 
 type Props = {
   initial?: Pipeline;
@@ -336,6 +337,7 @@ function Editor({ initial, onClose, onSaved }: Props) {
         </span>
         <span className="text-subtle">{authoring.status}</span>
       </div>
+      <PipelineControls draft={draft} disabled={busy} onChange={change}/>
       <details className="max-h-[28dvh] shrink-0 overflow-auto rounded border border-line bg-raised px-3 py-2 text-xs">
         <summary className="cursor-pointer font-medium">
           {ui('名称与说明')}

@@ -1,7 +1,7 @@
 import { Minus, Plus } from 'lucide-react';
 import { nodeMethod } from './artifactSemantics';
 import { ui } from '../../lib/libraryText';
-import { useMemo, useRef, useState } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { displayedInputSlots } from '../workflows/workflowConditions';
 import type { InputPort, Method, Node, SourceLink } from './libraryApi';
 import {
@@ -41,6 +41,7 @@ type Props = {
   definitions: Record<string, Method>;
   selected: string | null;
   disabled: boolean;
+  readOnly?: boolean;
   onSelect: (id: string) => void;
   onMove: (id: string, position: Point) => void;
   onAdd: (id: string, position: Point) => void;
@@ -143,6 +144,13 @@ export function PipelineCanvas(props: Props) {
   ]);
   const { positions, outputs, inputs, endpoint, connections, bounds } =
     geometry;
+  const fitted = useRef(false);
+  useLayoutEffect(() => {
+    if (props.readOnly && props.steps.length && !fitted.current) {
+      fitted.current = true;
+      fit(bounds);
+    }
+  }, [props.readOnly, props.steps.length, bounds, fit]);
   const selectedEdge = edge
     ? dependencyKey(edge.to, edge.input, edge.source)
     : sharedEdge
@@ -170,7 +178,7 @@ export function PipelineCanvas(props: Props) {
     if (index >= 0) fit(geometry.boxes[index]);
   };
   const finish = (x: number, y: number) => {
-    if (!wire || props.disabled) return;
+    if (!wire || props.disabled || props.readOnly) return;
     const input = document
       .elementFromPoint(x, y)
       ?.closest<HTMLElement>('[data-pipeline-input]');
@@ -236,13 +244,13 @@ export function PipelineCanvas(props: Props) {
         <button className={button} onClick={reset}>
           {ui('重置视图')}
         </button>
-        <button
+        {!props.readOnly && <button
           className={button}
           disabled={props.disabled || !props.steps.length}
           onClick={props.onArrange}
         >
           {ui('自动排列')}
-        </button>
+        </button>}
         <button
           className={button}
           aria-expanded={showConnections}
@@ -295,7 +303,7 @@ export function PipelineCanvas(props: Props) {
           >
             {ui('定位连线')}
           </button>
-          <button
+          {!props.readOnly && <button
             className={button}
             disabled={props.disabled}
             onClick={() => {
@@ -314,7 +322,7 @@ export function PipelineCanvas(props: Props) {
             {selectedConnection.sharedPort
               ? ui('解除此输入共享')
               : ui('删除所选连线')}
-          </button>
+          </button>}
           <button
             className={button}
             onClick={() => {
@@ -352,6 +360,7 @@ export function PipelineCanvas(props: Props) {
         }}
         onDragOver={(e) => {
           if (
+            !props.readOnly &&
             e.dataTransfer.types.includes('application/x-neuroweave-method')
           ) {
             e.preventDefault();
@@ -361,7 +370,7 @@ export function PipelineCanvas(props: Props) {
         onDrop={(e) => {
           e.preventDefault();
           const id = e.dataTransfer.getData('application/x-neuroweave-method');
-          if (id && !props.disabled)
+          if (id && !props.disabled && !props.readOnly)
             props.onAdd(id, point(e.clientX, e.clientY));
         }}
         onPointerDown={(e) => {
@@ -390,7 +399,7 @@ export function PipelineCanvas(props: Props) {
         }}
         onPointerMove={(e) => {
           const g = gesture.current;
-          if (g?.kind === 'node' && !props.disabled) {
+          if (g?.kind === 'node' && !props.disabled && !props.readOnly) {
             const p = point(e.clientX, e.clientY);
             props.onMove(g.id, {
               x: Math.max(12, Math.min(30000, g.position.x + p.x - g.start.x)),
@@ -399,7 +408,7 @@ export function PipelineCanvas(props: Props) {
           } else if (g?.kind === 'pan') {
             e.currentTarget.scrollLeft = g.left + g.start.x - e.clientX;
             e.currentTarget.scrollTop = g.top + g.start.y - e.clientY;
-          } else if (wire && !props.disabled)
+          } else if (wire && !props.disabled && !props.readOnly)
             setWire({ ...wire, point: point(e.clientX, e.clientY) });
         }}
         onPointerUp={(e) => {
@@ -477,6 +486,7 @@ export function PipelineCanvas(props: Props) {
                 outputs={outputs[node.id]}
                 selected={props.selected === node.id}
                 disabled={props.disabled}
+                readOnly={props.readOnly}
                 sharedSlots={shared
                   .flat()
                   .filter((p) => p.step_id === node.id)
@@ -505,7 +515,7 @@ export function PipelineCanvas(props: Props) {
                   focusEdge.to !== node.id
                 }
                 onSelect={() => props.onSelect(node.id)}
-                onMove={(p) => props.onMove(node.id, p)}
+                onMove={(p) => { if (!props.readOnly && !props.disabled) props.onMove(node.id, p); }}
                 onDragStart={(event) => {
                   if (event.button !== 0) return;
                   event.stopPropagation();
@@ -513,6 +523,7 @@ export function PipelineCanvas(props: Props) {
                   setWire(null);
                   setEdge(null);
                   setSharedEdge(null);
+                  if (props.readOnly || props.disabled) return;
                   gesture.current = {
                     kind: 'node',
                     id: node.id,
@@ -524,6 +535,7 @@ export function PipelineCanvas(props: Props) {
                 onPortPointer={(event, slot, kind) => {
                   event.stopPropagation();
                   if (
+                    props.readOnly || props.disabled ||
                     event.button !== 0 ||
                     (kind === 'input' && (wire || !props.onShareInputs))
                   )
@@ -540,6 +552,7 @@ export function PipelineCanvas(props: Props) {
                   viewport.current?.setPointerCapture(event.pointerId);
                 }}
                 onPortKeyboard={(slot, kind) => {
+                  if (props.readOnly || props.disabled) return;
                   if (kind === 'input' && wire) {
                     if (wire.kind === 'input')
                       props.onShareInputs?.(

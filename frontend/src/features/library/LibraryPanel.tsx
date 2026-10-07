@@ -13,7 +13,7 @@ import { PipelineDraftList } from './PipelineDraftList';
 import type { Workflow } from '../workflows/workflowTypes';
 import * as api from './libraryApi';
 import type { Entry, Method, Pipeline } from './libraryApi';
-import { PipelineVersions } from './PipelineVersions';
+import { PipelineDetails } from './PipelineDetails';
 import { PipelineEditor } from './PipelineEditor';
 import { LibraryNavigation } from './LibraryNavigation';
 import { button } from './pipelineEditorStyles';
@@ -72,11 +72,10 @@ export function LibraryPanel(props:Props) {
     <div className="flex flex-wrap items-center justify-between gap-2 text-xs"><button className={button} disabled={!cursor} onClick={()=>setCursor(Math.max(0,cursor-100))}>{ui("上一页")}</button>
       <span>{query.data?.total??0} {ui("项")}</span><button className={button} disabled={!query.data?.has_more} onClick={()=>setCursor(query.data?.next_cursor??0)}>{ui("下一页")}</button></div>
     {editing&&<PipelineEditor initial={editing==='new'?undefined:editing} onClose={()=>{setEditing(null);void client.invalidateQueries({queryKey:['pipeline-drafts']});}} onSaved={()=>void client.invalidateQueries({queryKey:['library']})}/>}
-    {detail&&<Dialog title={detail.label} closeLabel={ui("关闭")} size="xl" onClose={()=>setDetail(null)} footer={'steps' in detail?<>
-
-      <button className={button} disabled={busy||detail.status==='archived'} onClick={()=>{setLaunch(detail);setDetail(null);}}>{ui("创建任务")}</button></>:undefined}>
-      {'steps' in detail&&<PipelineVersions key={detail.id+':'+detail.version} readOnly={props.taskPicker} pipeline={detail} onSelect={setDetail} onEdit={p=>{setEditing(p);setDetail(null);}} onChange={()=>void client.invalidateQueries({queryKey:['library']})}/>}
-      {'steps' in detail&&<ol className="my-3 list-inside list-decimal text-xs">{detail.steps.map(s=><li key={s.id}>{s.title||s.method_ref}</li>)}</ol>}
+    {detail&&'steps' in detail&&<PipelineDetails key={detail.id+':'+detail.version} pipeline={detail} taskPicker={props.taskPicker}
+      onClose={()=>setDetail(null)} onSelect={setDetail} onEdit={p=>{setEditing(p);setDetail(null);}}
+      onLaunch={()=>{setLaunch(detail);setDetail(null);}} onChange={()=>void client.invalidateQueries({queryKey:['library']})}/>}
+    {detail&&!('steps' in detail)&&<Dialog title={detail.label} closeLabel={ui("关闭")} size="xl" onClose={()=>setDetail(null)}>
       <DefinitionDetails definition={detail}/>
       {error&&<p className="text-danger">{error}</p>}
     </Dialog>}

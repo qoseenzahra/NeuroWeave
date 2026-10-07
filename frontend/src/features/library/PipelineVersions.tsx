@@ -7,7 +7,7 @@ import { errorText } from '../../api/http';
 export function PipelineVersions({pipeline,onSelect,onEdit,onChange,readOnly=false}:{pipeline:api.Pipeline;onSelect:(value:api.Pipeline)=>void;onEdit:(value:api.Pipeline)=>void;onChange:()=>void;readOnly?:boolean}){
  const [error,setError]=useState(''),[reviewed,setReviewed]=useState(false),[busy,setBusy]=useState(false);
  const versions=useQuery({queryKey:['pipeline-versions',pipeline.id],queryFn:()=>api.versions(pipeline.id)});
- const migration=useQuery({queryKey:['pipeline-migration',pipeline.id,pipeline.version],queryFn:()=>api.migration(pipeline.id,pipeline.version)});
+ const migration=useQuery({queryKey:['pipeline-migration',pipeline.id,pipeline.version],queryFn:()=>api.migration(pipeline.id,pipeline.version),enabled:!!pipeline.editor});
  const act=async()=>{setBusy(true);try{await api.lifecycle(pipeline.id,pipeline.version,pipeline.status==='archived'?'published':'archived');await versions.refetch();onSelect(await api.pipeline(pipeline.id,pipeline.version));onChange();}catch(e){setError(errorText(e,ui('更新版本状态失败')));}finally{setBusy(false);}};
  return <div className="my-3 space-y-2 rounded border border-line p-2 text-xs">
   <p>{ui('当前版本')} v{pipeline.version} · {stateText(pipeline.status??'published')}</p>

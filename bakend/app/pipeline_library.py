@@ -38,6 +38,11 @@ class PipelineLibrary:
     def save(self, request, identity=None):
         return self.repository.save(request, identity)
 
+    def source(self, identity, version=None):
+        from .pipeline_source import pipeline_source
+        pipeline = self.get(identity, version)
+        return {"editor": pipeline_source(pipeline, self.registry.definitions)}
+
     def drafts(self):
         return self.authoring.drafts()
 

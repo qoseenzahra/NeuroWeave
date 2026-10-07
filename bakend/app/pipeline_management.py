@@ -52,6 +52,7 @@ class PipelineAuthoring:
             "steps",
             "shared_inputs",
             "expected_version",
+            "controls",
         }:
             raise ValueError("Unknown draft fields")
         if (
@@ -76,6 +77,12 @@ class PipelineAuthoring:
                 )
             ):
                 raise ValueError("Invalid canvas coordinates")
+        from .workflow_models import ParameterSpec
+        controls = editor.get("controls", [])
+        if not isinstance(controls, list) or len(controls) > 50:
+            raise ValueError("Too many pipeline controls")
+        for control in controls:
+            ParameterSpec.model_validate(control)
         groups = editor.get("shared_inputs", [])
         if not isinstance(groups, list) or len(groups) > 500:
             raise ValueError("Too many shared input groups")

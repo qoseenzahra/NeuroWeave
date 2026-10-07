@@ -68,6 +68,12 @@ class PipelineCompiler:
         seen, consumed = {}, set()
         producer_values = {}
         inputs, outputs, parameters, steps, output_bindings = [], [], [], [], {}
+        control_ids = {p.id for p in request.controls}
+        if len(control_ids) != len(request.controls):
+            raise ValueError("Pipeline 控制参数 ID 重复")
+        for control in request.controls:
+            check_parameter(control, control.default)
+            parameters.append(control.model_dump(mode="json"))
         for step in request.steps:
             if step.id in seen:
                 raise ValueError("步骤 ID 重复：" + step.id)
@@ -93,6 +99,14 @@ class PipelineCompiler:
                 method, inferred, effective_parameters(method, step.parameters)
             )
             prefix = step.id + "__"
+            if any(prefix + p.id in control_ids for p in method.parameters):
+                raise ValueError("控制参数与步骤参数 ID 冲突")
+            for key, allowed in step.when.items():
+                spec = next((p for p in request.controls if p.id == key), None)
+                if spec is None or not allowed:
+                    raise ValueError("条件步骤必须引用 Pipeline 控制参数")
+                for value in allowed:
+                    check_parameter(spec, value)
             for p in method.parameters:
                 item = remap_conditions(p.model_dump(mode="json"), prefix)
                 item.update(
@@ -198,6 +212,7 @@ class PipelineCompiler:
                     "method_version": method.version,
                     "workspace": step.id,
                     "inherit_parameters": False,
+                    "when": step.when,
                     "fixed_parameters": {},
                     "parameter_bindings": {
                         p.id: prefix + p.id for p in method.parameters
@@ -213,6 +228,7 @@ class PipelineCompiler:
                 if (step_id, slot.id) in consumed:
                     continue
                 item = remap_conditions(slot.model_dump(mode="json"), step_id + "__")
+                item["generated_when"].update(next(s.when for s in request.steps if s.id == step_id))
                 item.update(
                     id=step_id + "__" + slot.id, label=step_id + " · " + slot.label
                 )

@@ -17,6 +17,7 @@ import {
   disconnectInput
 } from './pipelineGraph';
 import { button, field } from './pipelineEditorStyles';
+import { stageCondition } from './pipelineCopy';
 
 type Props = {
   draft: Draft;
@@ -64,6 +65,7 @@ export function PipelineNodeInspector({
           <h3 className="break-words text-sm font-semibold">
             {selectedMethod?.label ?? selectedNode.method_id}
           </h3>
+          {!!Object.keys(selectedNode.when??{}).length&&<p className="mt-2 text-xs text-warning">{ui('执行条件：{0}',stageCondition(selectedNode,draft))}</p>}
           <button
             className={button + ' my-2'}
             onClick={() => onRemove(selectedNode.id)}

@@ -73,6 +73,15 @@ def library_router(library, workflows, workspaces, runners, chat=None):
     def versions(identity: str):
         return {"items": [p for p in library.records() if p["id"] == identity]}
 
+    @router.get("/api/library/pipelines/{identity}/source")
+    def source(identity: str, version: int | None = None):
+        try:
+            return library.source(identity, version)
+        except KeyError as exc:
+            raise HTTPException(404, str(exc)) from exc
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
+
     @router.get("/api/library/pipelines/{identity}/migration")
     def migration(identity: str, version: int | None = None):
         try:
