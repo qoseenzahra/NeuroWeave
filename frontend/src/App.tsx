@@ -511,7 +511,7 @@ function App() {
                 handleNew={handleNew} handleSelect={handleSelect} handleCommitRename={handleCommitRename}
                 handleArchive={handleArchive} handleConfirmDelete={handleConfirmDelete}/>
             ) : sidebarView === 'skills' ? (
-              <div className="view-enter min-h-0 flex-1 overflow-y-auto px-3 py-3">
+              <div className="view-enter min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3">
                 <SkillList selectedSkillIds={selectedSkillIds} disabled={contextBusy || olderMutation.isPending}
                   onAdd={addSkill} onRemove={removeSkill} onDetails={setViewedSkill} onClear={clearSkills}/>
                 {skillsStats && (
@@ -526,7 +526,7 @@ function App() {
                 )}
               </div>
             ) : sidebarView === 'pipelines' ? (
-              <div className="min-h-0 flex-1 overflow-y-auto p-3">
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3">
                 <SkillList key="pipelines" domain="pipelines" selectedSkillIds={[]} disabled={false}
                   onAdd={()=>{}} onRemove={()=>{}} onDetails={setViewedSkill} onClear={()=>{}}
                   onTaskCreated={workflow=>{setSelectedTask(taskFromWorkflow(workflow));setSidebarView('workflows');if(window.innerWidth<1024)setSidebarOpen(false);}}/>
