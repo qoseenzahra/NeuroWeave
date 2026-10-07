@@ -1,7 +1,7 @@
 import { Minus, Plus } from 'lucide-react';
 import { nodeMethod } from './artifactSemantics';
 import { ui } from '../../lib/libraryText';
-import { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { displayedInputSlots } from '../workflows/workflowConditions';
 import type { InputPort, Method, Node, SourceLink } from './libraryApi';
 import {
@@ -145,12 +145,22 @@ export function PipelineCanvas(props: Props) {
   const { positions, outputs, inputs, endpoint, connections, bounds } =
     geometry;
   const fitted = useRef(false);
-  useLayoutEffect(() => {
-    if (props.readOnly && props.steps.length && !fitted.current) {
+  useEffect(() => {
+    if (!props.readOnly || !props.steps.length) return;
+    const element = viewport.current;
+    if (!element) return;
+    // Cached graphs mount before the native dialog opens. Observe its real
+    // layout instead of fitting a hidden, zero-sized viewport to minimum zoom.
+    const fitVisible = () => {
+      if (fitted.current || !element.clientWidth || !element.clientHeight) return;
       fitted.current = true;
       fit(bounds);
-    }
-  }, [props.readOnly, props.steps.length, bounds, fit]);
+    };
+    const observer = new ResizeObserver(fitVisible);
+    observer.observe(element);
+    fitVisible();
+    return () => observer.disconnect();
+  }, [props.readOnly, props.steps.length, bounds, fit, viewport]);
   const selectedEdge = edge
     ? dependencyKey(edge.to, edge.input, edge.source)
     : sharedEdge
