@@ -3419,5 +3419,10 @@
   "该入口为规划能力；用于讨论Verbose logging的目标、条件与限制，尚无独立执行 Method。": "该入口为规划能力；用于讨论详细日志记录的目标、条件与限制，尚无独立执行 Method。",
   "该入口为规划能力；用于讨论WMH lesion segmentation的目标、条件与限制，尚无独立执行 Method。": "该入口为规划能力；用于讨论WMH 病灶分割的目标、条件与限制，尚无独立执行 Method。",
   "该入口为规划能力；用于讨论Waveform to Mel-Spectrogram的目标、条件与限制，尚无独立执行 Method。": "该入口为规划能力；用于讨论波形到梅尔频谱图的目标、条件与限制，尚无独立执行 Method。",
-  "该入口为规划能力；用于讨论Write / Update file的目标、条件与限制，尚无独立执行 Method。": "该入口为规划能力；用于讨论写入 / 更新文件的目标、条件与限制，尚无独立执行 Method。"
+  "该入口为规划能力；用于讨论Write / Update file的目标、条件与限制，尚无独立执行 Method。": "该入口为规划能力；用于讨论写入 / 更新文件的目标、条件与限制，尚无独立执行 Method。",
+  "将只读 DICOM 目录转换到隔离的 NIfTI 输出目录，固定使用 GZip 压缩和 sidecar 匿名化；可配置是否生成 JSON sidecar以及文件名模板。匿名化仅作用于 dcm2niix 支持的 sidecar 字段，不修改原始 DICOM，也不执行图像去面部处理。": "将只读 DICOM 目录转换到隔离的 NIfTI 输出目录，固定使用 GZip 压缩和 sidecar 匿名化；可配置是否生成 JSON sidecar以及文件名模板。匿名化仅作用于 dcm2niix 支持的 sidecar 字段，不修改原始 DICOM，也不执行图像去面部处理。",
+  "将只读 DICOM 目录转换到隔离的 NIfTI 输出目录，固定使用 GZip 压缩并生成 JSON sidecar；可配置 sidecar 匿名化和文件名模板。此预设不组织完整 BIDS 目录，也不额外执行 4D 重建。": "将只读 DICOM 目录转换到隔离的 NIfTI 输出目录，固定使用 GZip 压缩并生成 JSON sidecar；可配置 sidecar 匿名化和文件名模板。此预设不组织完整 BIDS 目录，也不额外执行 4D 重建。",
+  "将只读 DICOM 目录转换到隔离的 NIfTI 输出目录，固定使用 GZip 压缩；可配置 JSON sidecar、sidecar 匿名化和文件名模板。序列维度与切片组织由 dcm2niix 按输入自动识别。": "将只读 DICOM 目录转换到隔离的 NIfTI 输出目录，固定使用 GZip 压缩；可配置 JSON sidecar、sidecar 匿名化和文件名模板。序列维度与切片组织由 dcm2niix 按输入自动识别。",
+  "执行 DICOM 到 NIfTI 转换；可配置压缩方式、JSON sidecar、sidecar 匿名化和文件名模板。": "执行 DICOM 到 NIfTI 转换；可配置压缩方式、JSON sidecar、sidecar 匿名化和文件名模板。",
+  "统筹 dcm2niix 的 DICOM 到 NIfTI 转换。独立 Method 提供完整参数配置；三个 Pipeline 分别固定 GZip 压缩、GZip 压缩与 JSON sidecar、GZip 压缩与 sidecar 匿名化。单序列或多维序列的识别由同一个 dcm2niix 方法完成，不作为重复 Pipeline 单独登记。": "统筹 dcm2niix 的 DICOM 到 NIfTI 转换。独立 Method 提供完整参数配置；三个 Pipeline 分别固定 GZip 压缩、GZip 压缩与 JSON sidecar、GZip 压缩与 sidecar 匿名化。单序列或多维序列的识别由同一个 dcm2niix 方法完成，不作为重复 Pipeline 单独登记。"
 }

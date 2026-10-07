@@ -920,7 +920,7 @@
               {
                 "id": "skill.dcm2nii",
                 "label": "dcm2nii",
-                "description": "dcm2nii 统筹已登记的独立方法和可复用流程。支持：dcm2niix 实际转换；Basic single-series conversion；4D fMRI/DWI/perfusion；BIDS-like naming + JSON sidecar；Lossless compression；Anonymize (remove most PHI)；Merge 2D slices into 3D volume；Custom output filename。",
+                "description": "统筹 dcm2niix 的 DICOM 到 NIfTI 转换。独立 Method 提供完整参数配置；三个 Pipeline 分别固定 GZip 压缩、GZip 压缩与 JSON sidecar、GZip 压缩与 sidecar 匿名化。单序列或多维序列的识别由同一个 dcm2niix 方法完成，不作为重复 Pipeline 单独登记。",
                 "keywords": [
                   "dcm2nii",
                   "DICOM",
@@ -934,11 +934,7 @@
                   "dcm2niix.convert"
                 ],
                 "pipeline_ids": [
-                  "reviewed-dcm2niix-convert-y-77efa6bba1",
                   "reviewed-dcm2niix-convert-y-aaf8accb64",
-                  "reviewed-dcm2niix-convert-y-ca0833fa79",
-                  "reviewed-dcm2niix-convert-y-fe7c1a2a51",
-                  "reviewed-dcm2niix-convert-y-true-0e093727e9",
                   "reviewed-dcm2niix-convert-y-true-4ca43bff7b",
                   "reviewed-dcm2niix-convert-y-true-989e0368fb"
                 ],

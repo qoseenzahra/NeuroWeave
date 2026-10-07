@@ -4068,5 +4068,19 @@
   "该入口为规划能力；用于讨论removeartifacts()的目标、条件与限制，尚无独立执行 Method。": "Planning capability for discussing removeartifacts() goals, conditions and limitations; no independent executable Method is registered.",
   "该入口为规划能力；用于讨论生成更新差异的目标、条件与限制，尚无独立执行 Method。": "Planning capability for discussing Generate update diff goals, conditions and limitations; no independent executable Method is registered.",
   "配准与影像处理注意事项": "Registration and image processing notes",
-  "原生 Skill 规划定义": "Native Skill planning definition"
+  "原生 Skill 规划定义": "Native Skill planning definition",
+  "DICOM → NIfTI（GZip 转换）": "DICOM → NIfTI (GZip conversion)",
+  "DICOM → NIfTI（固定匿名化 sidecar）": "DICOM → NIfTI (sidecar anonymization enforced)",
+  "DICOM → NIfTI（固定生成 JSON）": "DICOM → NIfTI (JSON sidecar enforced)",
+  "Pipeline 预设值：{0}": "Pipeline preset: {0}",
+  "取值范围：{0} 至 {1}": "Value range: {0} to {1}",
+  "可选值": "Available values",
+  "将只读 DICOM 目录转换到隔离的 NIfTI 输出目录，固定使用 GZip 压缩和 sidecar 匿名化；可配置是否生成 JSON sidecar以及文件名模板。匿名化仅作用于 dcm2niix 支持的 sidecar 字段，不修改原始 DICOM，也不执行图像去面部处理。": "Convert a read-only DICOM directory into an isolated NIfTI output directory with GZip compression and sidecar anonymization enforced. JSON sidecar generation and the filename template are configurable. Anonymization applies only to sidecar fields supported by dcm2niix; source DICOM files are unchanged and images are not defaced.",
+  "将只读 DICOM 目录转换到隔离的 NIfTI 输出目录，固定使用 GZip 压缩并生成 JSON sidecar；可配置 sidecar 匿名化和文件名模板。此预设不组织完整 BIDS 目录，也不额外执行 4D 重建。": "Convert a read-only DICOM directory into an isolated NIfTI output directory with GZip compression and JSON sidecars enforced. Sidecar anonymization and the filename template are configurable. This preset does not organize a complete BIDS directory or add a separate 4D reconstruction step.",
+  "将只读 DICOM 目录转换到隔离的 NIfTI 输出目录，固定使用 GZip 压缩；可配置 JSON sidecar、sidecar 匿名化和文件名模板。序列维度与切片组织由 dcm2niix 按输入自动识别。": "Convert a read-only DICOM directory into an isolated NIfTI output directory with GZip compression enforced. JSON sidecars, sidecar anonymization and the filename template are configurable. dcm2niix automatically detects series dimensions and slice organization from the input.",
+  "当前参数下不生效。": "Inactive for the current parameters.",
+  "执行 DICOM 到 NIfTI 转换；可配置压缩方式、JSON sidecar、sidecar 匿名化和文件名模板。": "Convert DICOM to NIfTI with configurable compression, JSON sidecars, sidecar anonymization and filename templates.",
+  "方法接口与说明": "Method interface and description",
+  "方法默认值：{0}": "Method default: {0}",
+  "统筹 dcm2niix 的 DICOM 到 NIfTI 转换。独立 Method 提供完整参数配置；三个 Pipeline 分别固定 GZip 压缩、GZip 压缩与 JSON sidecar、GZip 压缩与 sidecar 匿名化。单序列或多维序列的识别由同一个 dcm2niix 方法完成，不作为重复 Pipeline 单独登记。": "Coordinate DICOM to NIfTI conversion with dcm2niix. The atomic Method exposes the full parameter configuration. Three Pipelines enforce GZip compression, GZip compression with JSON sidecars, or GZip compression with sidecar anonymization. The same dcm2niix method recognizes single-series and multidimensional inputs; these are not registered as duplicate Pipelines."
 }

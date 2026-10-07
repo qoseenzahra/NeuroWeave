@@ -348,5 +348,12 @@
   "内置 Pipeline 只读，请创建独立副本后编辑": "Built-in Pipelines are read-only. Create an independent copy to edit.",
   "Pipeline 控制参数 ID 重复": "Duplicate Pipeline control parameter ID",
   "控制参数与步骤参数 ID 冲突": "Pipeline control and step parameter IDs conflict",
-  "条件步骤必须引用 Pipeline 控制参数": "Conditional stages must reference Pipeline controls"
+  "条件步骤必须引用 Pipeline 控制参数": "Conditional stages must reference Pipeline controls",
+  "方法默认值：{0}": "Method default: {0}",
+  "Pipeline 预设值：{0}": "Pipeline preset: {0}",
+  "固定参数": "Fixed parameter",
+  "可选值": "Available values",
+  "取值范围：{0} 至 {1}": "Value range: {0} to {1}",
+  "当前参数下不生效。": "Inactive for the current parameters.",
+  "方法接口与说明": "Method interface and description"
 }

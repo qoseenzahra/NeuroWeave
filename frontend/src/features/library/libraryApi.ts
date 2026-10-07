@@ -17,7 +17,7 @@ export type InputPort = {step_id:string;input_slot_id:string};
 export type Draft = {shared_inputs?:InputPort[][];controls?:ParameterSpec[];name:string;description:string;steps:Node[];expected_version?:number};
 export type Pipeline = {draft_id?:string;draft_revision?:number;status?:string;layout_warning?:string;id:string;version:string;label:string;description:string;editor?:Draft;
   parameters:ParameterSpec[];input_slots:InputSlotSpec[];output_slots:OutputSlotSpec[];
-  steps:Array<{id:string;method_ref:string;method_id?:string;title:string}>};
+  steps:Array<{id:string;method_ref:string;method_id?:string;title:string;fixed_parameters?:Record<string,ParameterValue>}>};
 export const catalog = (kind:string,q:string,cursor=0,category='',software='',language='zh') => request<Page>(`/api/library?${new URLSearchParams({kind,q,cursor:String(cursor),limit:'100',category,software,language})}`);
 export const method = (id:string,signal?:AbortSignal) => request<Method>(`/api/library/methods/${encodeURIComponent(id)}`,{signal});
 export const pipeline = async (id:string,version?:string) => restoreLayout(await request<Pipeline>(`/api/library/pipelines/${encodeURIComponent(id)}${version?'?version='+version:''}`));

@@ -3,8 +3,8 @@
   "id": "reviewed-dcm2niix-convert-y-true-4ca43bff7b",
   "version": "1",
   "kind": "pipeline",
-  "description": "依次执行：dcm2niix 实际转换。输入和参数由方法契约定义。",
-  "label": "Anonymize (remove most PHI)",
+  "description": "将只读 DICOM 目录转换到隔离的 NIfTI 输出目录，固定使用 GZip 压缩和 sidecar 匿名化；可配置是否生成 JSON sidecar以及文件名模板。匿名化仅作用于 dcm2niix 支持的 sidecar 字段，不修改原始 DICOM，也不执行图像去面部处理。",
+  "label": "DICOM → NIfTI（固定匿名化 sidecar）",
   "parameters": [
     {
       "id": "bids_sidecar",

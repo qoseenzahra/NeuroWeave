@@ -16,7 +16,7 @@ Existing task confirmation and execution behavior remains unchanged.
 
 The read-only `/api/library/pipelines/{id}/source?version=...` endpoint projects
 the immutable execution graph into authoring source without writing to storage.
-All 28 built-in sources are covered by compilation and preservation regressions.
+All 24 built-in sources are covered by compilation and preservation regressions.
 
 Deployed to the existing port 3002 frontend on 2026-09-27. Revision:
 `canvas-ui-e219f8f10d81`. No backend API or execution behavior changed.

@@ -45,7 +45,45 @@ try {
     assert.match(html,/查看步骤：|Inspect step:/);
     assert.match(html,/data-pipeline-input="input"[^>]*disabled|disabled[^>]*data-pipeline-input="input"/);
     assert.match(html,/基于此 Pipeline 创建|Create from this Pipeline/);
+    assert.match(html,/data-parameter-id="nthreads"/);
+    assert.match(html,/方法默认值：|Method default:/);
+    assert.match(html,/Pipeline 预设值：2|Pipeline preset: 2/);
     assert.doesNotMatch(html,/自动排列|移动或选择|保存草稿|发布可用版本|移除节点及连线|Auto arrange|Move or select|Save draft|Publish usable version/);
     client.clear();
+  });
+  await test('draft and read-only method parameters share choices and defaults without changing the snapshot',async()=>{
+    const {PipelineMethodParameters}=await server.ssrLoadModule('/src/features/library/PipelineMethodParameters.tsx');
+    const dcm=JSON.parse(await readFile(resolve(root,'../methods/dcm2niix/dcm2niix.convert/method.json'),'utf8'));
+    const node={id:'execute',method_id:dcm.id,parameters:{compression:'n',bids_sidecar:false,filename_template:null},inputs:{}};
+    const before=structuredClone(node);let calls=0;
+    for(const readOnly of [false,true]){
+      const html=renderToStaticMarkup(createElement(PipelineMethodParameters,{method:dcm,node,readOnly,fixedParameters:['compression'],onChange:()=>calls++}));
+      assert.match(html,/<option value="&quot;n&quot;" selected="">/);
+      assert.match(html,/<option value="false" selected="">/);
+      assert.match(html,/GZip <code>\(y\)<\/code>/);
+      assert.match(html,/\(n\)/);assert.match(html,/\(i\)/);
+      const filename=html.split('data-parameter-id="filename_template"')[1];
+      assert.match(filename,/<input[^>]*value=""/,'explicit omission must not fall back to the method default');
+      assert.match(filename,/%p_%s/,'the default is still documented');
+      if(readOnly){
+        assert.ok([...html.matchAll(/<(?:input|select)\b[^>]*>/g)].every(([tag])=>tag.includes('disabled=""')));
+        assert.match(html,/固定参数|Fixed parameter/);
+        assert.match(html,/Pipeline 预设值：未指定|Pipeline preset: Not specified/);
+      }else assert.doesNotMatch(html,/disabled=""/);
+    }
+    assert.deepEqual(node,before);assert.equal(calls,0);
+  });
+  await test('inspection exposes inactive parameter contracts while drafts keep conditional visibility',async()=>{
+    const {PipelineMethodParameters}=await server.ssrLoadModule('/src/features/library/PipelineMethodParameters.tsx');
+    const conditional={...method,parameters:[
+      {...method.parameters[0],id:'mode',type:'boolean',default:false,options:[],visible_when:{},enabled_when:{}},
+      {...method.parameters[0],id:'conditional',default:0,visible_when:{mode:[true]},minimum:0,maximum:10}
+    ]};
+    const node={id:'conditional-step',method_id:method.id,parameters:{mode:false,conditional:0},inputs:{}};
+    const view=readOnly=>renderToStaticMarkup(createElement(PipelineMethodParameters,{method:conditional,node,readOnly}));
+    assert.doesNotMatch(view(false),/data-parameter-id="conditional"/);
+    const html=view(true);assert.match(html,/data-parameter-id="conditional"/);
+    assert.match(html,/当前参数下不生效|Inactive for the current parameters/);
+    assert.match(html,/value="0"/);assert.match(html,/取值范围：0 至 10|Value range: 0 to 10/);
   });
 } finally {await server.close();}

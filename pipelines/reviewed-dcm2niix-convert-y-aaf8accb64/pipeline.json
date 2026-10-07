@@ -3,8 +3,8 @@
   "id": "reviewed-dcm2niix-convert-y-aaf8accb64",
   "version": "1",
   "kind": "pipeline",
-  "description": "依次执行：dcm2niix 实际转换。输入和参数由方法契约定义。",
-  "label": "Basic single-series conversion",
+  "description": "将只读 DICOM 目录转换到隔离的 NIfTI 输出目录，固定使用 GZip 压缩；可配置 JSON sidecar、sidecar 匿名化和文件名模板。序列维度与切片组织由 dcm2niix 按输入自动识别。",
+  "label": "DICOM → NIfTI（GZip 转换）",
   "parameters": [
     {
       "id": "bids_sidecar",

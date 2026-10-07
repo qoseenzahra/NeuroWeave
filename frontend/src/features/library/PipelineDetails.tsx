@@ -10,6 +10,7 @@ import { copyPipeline, stageCondition } from './pipelineCopy';
 import { PipelineCanvas } from './PipelineCanvas';
 import { PipelineVersions } from './PipelineVersions';
 import { DefinitionDetails } from './DefinitionDetails';
+import { PipelineMethodParameters } from './PipelineMethodParameters';
 import { button } from './pipelineEditorStyles';
 
 /** Viewing an immutable version has no draft hook or graph mutation callbacks. */
@@ -63,7 +64,11 @@ export function PipelineDetails({pipeline, taskPicker=false, onClose, onSelect, 
           <h4 className="mb-1 font-semibold">{ui('输入连接')}</h4>
           {method.input_slots.map(slot=><p key={slot.id} className="mb-1 break-words">{slot.label}：{node.inputs[slot.id]?linkSources(node.inputs[slot.id]).map(l=>`${l.step_id} / ${l.output_slot_id}`).join(' → '):ui('外部输入')}
             {editor.shared_inputs?.some(g=>g.some(p=>p.step_id===node.id&&p.input_slot_id===slot.id))?' · '+ui('共享输入'):''}</p>)}
-          <DefinitionDetails definition={{...method,parameters:method.parameters.map(p=>({...p,default:node.parameters[p.id]??p.default}))}}/>
+          <PipelineMethodParameters method={method} node={node} readOnly
+            fixedParameters={Object.keys(pipeline.steps.find(s=>s.id===node.id)?.fixed_parameters??{})}/>
+          <details className="mt-3"><summary className="cursor-pointer font-semibold">{ui('方法接口与说明')}</summary>
+            <DefinitionDetails definition={method} showParameters={false}/>
+          </details>
         </>}
       </aside>}
     </div>}

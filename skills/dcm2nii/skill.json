@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "id": "dcm2nii",
-  "description": "dcm2nii 统筹已登记的独立方法和可复用流程。支持：dcm2niix 实际转换；Basic single-series conversion；4D fMRI/DWI/perfusion；BIDS-like naming + JSON sidecar；Lossless compression；Anonymize (remove most PHI)；Merge 2D slices into 3D volume；Custom output filename。",
+  "description": "统筹 dcm2niix 的 DICOM 到 NIfTI 转换。独立 Method 提供完整参数配置；三个 Pipeline 分别固定 GZip 压缩、GZip 压缩与 JSON sidecar、GZip 压缩与 sidecar 匿名化。单序列或多维序列的识别由同一个 dcm2niix 方法完成，不作为重复 Pipeline 单独登记。",
   "method_refs": [
     {
       "capability": "skill.dcm2nii",
@@ -11,7 +11,7 @@
       "default_reason": "服务器已检测到 dcm2niix，适合把 DICOM 序列转换为 NIfTI。",
       "replaces_operations": [],
       "execution_resolution": {},
-      "role": "调用服务器现有 dcm2niix，将只读 DICOM 输入转换到隔离输出目录并生成 JSON sidecar。",
+      "role": "执行 DICOM 到 NIfTI 转换；可配置压缩方式、JSON sidecar、sidecar 匿名化和文件名模板。",
       "method_ref": "dcm2niix.convert"
     }
   ],
@@ -19,7 +19,7 @@
     {
       "capability": "skill.dcm2nii",
       "method_id": "dcm2nii-guided--basic-single-series-conversion",
-      "label": "Basic single-series conversion",
+      "label": "DICOM → NIfTI（GZip 转换）",
       "default_recommended": false,
       "default_reason": "服务器已检测到 dcm2niix，适合把 DICOM 序列转换为 NIfTI。",
       "replaces_operations": [],
@@ -29,13 +29,13 @@
         "source_method_id": "dcm2nii-guided--basic-single-series-conversion",
         "target_method_id": "dcm2niix-convert"
       },
-      "role": "依次执行：dcm2niix 实际转换。输入和参数由方法契约定义。",
+      "role": "将只读 DICOM 目录转换到隔离的 NIfTI 输出目录，固定使用 GZip 压缩；可配置 JSON sidecar、sidecar 匿名化和文件名模板。序列维度与切片组织由 dcm2niix 按输入自动识别。",
       "pipeline_ref": "reviewed-dcm2niix-convert-y-aaf8accb64"
     },
     {
       "capability": "skill.dcm2nii",
       "method_id": "dcm2nii-guided--4d-fmri-dwi-perfusion",
-      "label": "4D fMRI/DWI/perfusion",
+      "label": "DICOM → NIfTI（固定生成 JSON）",
       "default_recommended": false,
       "default_reason": "服务器已检测到 dcm2niix，适合把 DICOM 序列转换为 NIfTI。",
       "replaces_operations": [],
@@ -45,45 +45,13 @@
         "source_method_id": "dcm2nii-guided--4d-fmri-dwi-perfusion",
         "target_method_id": "dcm2niix-convert"
       },
-      "role": "依次执行：dcm2niix 实际转换。输入和参数由方法契约定义。",
+      "role": "将只读 DICOM 目录转换到隔离的 NIfTI 输出目录，固定使用 GZip 压缩并生成 JSON sidecar；可配置 sidecar 匿名化和文件名模板。此预设不组织完整 BIDS 目录，也不额外执行 4D 重建。",
       "pipeline_ref": "reviewed-dcm2niix-convert-y-true-989e0368fb"
     },
     {
       "capability": "skill.dcm2nii",
-      "method_id": "dcm2nii-guided--bids-like-naming-json-sidecar",
-      "label": "BIDS-like naming + JSON sidecar",
-      "default_recommended": false,
-      "default_reason": "服务器已检测到 dcm2niix，适合把 DICOM 序列转换为 NIfTI。",
-      "replaces_operations": [],
-      "execution_resolution": {
-        "state": "mapped",
-        "reason": "已核对到现有实现；选择具体入口后按其真实输入、参数和输出执行。",
-        "source_method_id": "dcm2nii-guided--bids-like-naming-json-sidecar",
-        "target_method_id": "dcm2niix-convert"
-      },
-      "role": "依次执行：dcm2niix 实际转换。输入和参数由方法契约定义。",
-      "pipeline_ref": "reviewed-dcm2niix-convert-y-true-0e093727e9"
-    },
-    {
-      "capability": "skill.dcm2nii",
-      "method_id": "dcm2nii-guided--lossless-compression",
-      "label": "Lossless compression",
-      "default_recommended": false,
-      "default_reason": "服务器已检测到 dcm2niix，适合把 DICOM 序列转换为 NIfTI。",
-      "replaces_operations": [],
-      "execution_resolution": {
-        "state": "mapped",
-        "reason": "已核对到现有实现；选择具体入口后按其真实输入、参数和输出执行。",
-        "source_method_id": "dcm2nii-guided--lossless-compression",
-        "target_method_id": "dcm2niix-convert"
-      },
-      "role": "依次执行：dcm2niix 实际转换。输入和参数由方法契约定义。",
-      "pipeline_ref": "reviewed-dcm2niix-convert-y-ca0833fa79"
-    },
-    {
-      "capability": "skill.dcm2nii",
       "method_id": "dcm2nii-guided--anonymize-remove-most-phi",
-      "label": "Anonymize (remove most PHI)",
+      "label": "DICOM → NIfTI（固定匿名化 sidecar）",
       "default_recommended": false,
       "default_reason": "服务器已检测到 dcm2niix，适合把 DICOM 序列转换为 NIfTI。",
       "replaces_operations": [],
@@ -93,40 +61,8 @@
         "source_method_id": "dcm2nii-guided--anonymize-remove-most-phi",
         "target_method_id": "dcm2niix-convert"
       },
-      "role": "依次执行：dcm2niix 实际转换。输入和参数由方法契约定义。",
+      "role": "将只读 DICOM 目录转换到隔离的 NIfTI 输出目录，固定使用 GZip 压缩和 sidecar 匿名化；可配置是否生成 JSON sidecar以及文件名模板。匿名化仅作用于 dcm2niix 支持的 sidecar 字段，不修改原始 DICOM，也不执行图像去面部处理。",
       "pipeline_ref": "reviewed-dcm2niix-convert-y-true-4ca43bff7b"
-    },
-    {
-      "capability": "skill.dcm2nii",
-      "method_id": "dcm2nii-guided--merge-2d-slices-into-3d-volume",
-      "label": "Merge 2D slices into 3D volume",
-      "default_recommended": false,
-      "default_reason": "服务器已检测到 dcm2niix，适合把 DICOM 序列转换为 NIfTI。",
-      "replaces_operations": [],
-      "execution_resolution": {
-        "state": "mapped",
-        "reason": "已核对到现有实现；选择具体入口后按其真实输入、参数和输出执行。",
-        "source_method_id": "dcm2nii-guided--merge-2d-slices-into-3d-volume",
-        "target_method_id": "dcm2niix-convert"
-      },
-      "role": "依次执行：dcm2niix 实际转换。输入和参数由方法契约定义。",
-      "pipeline_ref": "reviewed-dcm2niix-convert-y-fe7c1a2a51"
-    },
-    {
-      "capability": "skill.dcm2nii",
-      "method_id": "dcm2nii-guided--custom-output-filename",
-      "label": "Custom output filename",
-      "default_recommended": false,
-      "default_reason": "服务器已检测到 dcm2niix，适合把 DICOM 序列转换为 NIfTI。",
-      "replaces_operations": [],
-      "execution_resolution": {
-        "state": "mapped",
-        "reason": "已核对到现有实现；选择具体入口后按其真实输入、参数和输出执行。",
-        "source_method_id": "dcm2nii-guided--custom-output-filename",
-        "target_method_id": "dcm2niix-convert"
-      },
-      "role": "依次执行：dcm2niix 实际转换。输入和参数由方法契约定义。",
-      "pipeline_ref": "reviewed-dcm2niix-convert-y-77efa6bba1"
     }
   ],
   "planning_capabilities": [
