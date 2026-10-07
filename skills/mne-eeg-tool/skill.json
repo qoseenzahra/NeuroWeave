@@ -197,7 +197,7 @@
       "method_id": "mne-eeg-tool-guided--detectandinterpolatebadchannels",
       "skill_id": "mne-eeg-tool",
       "label": "detectandinterpolatebadchannels()",
-      "description": "Auto-detect + interpolate noisy channels；Yes（来源：SKILL.md:L45）",
+      "description": "该入口为规划能力；用于讨论detectandinterpolatebadchannels()的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -226,7 +226,7 @@
             {
               "value": "detectandinterpolatebadchannels",
               "label": "detectandinterpolatebadchannels()",
-              "description": "Auto-detect + interpolate noisy channels；Yes（来源：SKILL.md:L45）"
+              "description": "规划选项：detectandinterpolatebadchannels()；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -490,61 +490,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/mne-eeg-tool/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py",
           "label": "eeg_pipeline_reference.py",
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/mne-eeg-tool/SKILL.md",
-          "label": "已提取 5 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py --input path/to/data.set --resting --output-dir eeg_output/",
-          "language": "bash",
-          "source_path": "skills/mne-eeg-tool/SKILL.md",
-          "line_start": 34,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "conda create -n neuroclaw-eeg python=3.11 -y",
-          "language": "bash",
-          "source_path": "skills/mne-eeg-tool/SKILL.md",
-          "line_start": 63,
-          "kind": "setup",
-          "executable": false
-        },
-        {
-          "command": "conda activate neuroclaw-eeg",
-          "language": "bash",
-          "source_path": "skills/mne-eeg-tool/SKILL.md",
-          "line_start": 64,
-          "kind": "setup",
-          "executable": false
-        },
-        {
-          "command": "conda install -c conda-forge mne pyentrp scikit-learn pandas numpy matplotlib -y",
-          "language": "bash",
-          "source_path": "skills/mne-eeg-tool/SKILL.md",
-          "line_start": 65,
-          "kind": "setup",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -563,7 +516,7 @@
       "method_id": "mne-eeg-tool-guided--removeartifacts",
       "skill_id": "mne-eeg-tool",
       "label": "removeartifacts()",
-      "description": "ICA + AutoReject + EOG/ECG regression；Yes（来源：SKILL.md:L47）",
+      "description": "该入口为规划能力；用于讨论removeartifacts()的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -592,7 +545,7 @@
             {
               "value": "removeartifacts",
               "label": "removeartifacts()",
-              "description": "ICA + AutoReject + EOG/ECG regression；Yes（来源：SKILL.md:L47）"
+              "description": "规划选项：removeartifacts()；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -856,61 +809,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/mne-eeg-tool/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py",
           "label": "eeg_pipeline_reference.py",
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/mne-eeg-tool/SKILL.md",
-          "label": "已提取 5 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py --input path/to/data.set --resting --output-dir eeg_output/",
-          "language": "bash",
-          "source_path": "skills/mne-eeg-tool/SKILL.md",
-          "line_start": 34,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "conda create -n neuroclaw-eeg python=3.11 -y",
-          "language": "bash",
-          "source_path": "skills/mne-eeg-tool/SKILL.md",
-          "line_start": 63,
-          "kind": "setup",
-          "executable": false
-        },
-        {
-          "command": "conda activate neuroclaw-eeg",
-          "language": "bash",
-          "source_path": "skills/mne-eeg-tool/SKILL.md",
-          "line_start": 64,
-          "kind": "setup",
-          "executable": false
-        },
-        {
-          "command": "conda install -c conda-forge mne pyentrp scikit-learn pandas numpy matplotlib -y",
-          "language": "bash",
-          "source_path": "skills/mne-eeg-tool/SKILL.md",
-          "line_start": 65,
-          "kind": "setup",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -929,7 +835,7 @@
       "method_id": "mne-eeg-tool-guided--continuousdatacleaning",
       "skill_id": "mne-eeg-tool",
       "label": "continuousdatacleaning()",
-      "description": "Resting-state pipeline (no events)；Yes（来源：SKILL.md:L48）",
+      "description": "该入口为规划能力；用于讨论continuousdatacleaning()的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -958,7 +864,7 @@
             {
               "value": "continuousdatacleaning",
               "label": "continuousdatacleaning()",
-              "description": "Resting-state pipeline (no events)；Yes（来源：SKILL.md:L48）"
+              "description": "规划选项：continuousdatacleaning()；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1222,61 +1128,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/mne-eeg-tool/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py",
           "label": "eeg_pipeline_reference.py",
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/mne-eeg-tool/SKILL.md",
-          "label": "已提取 5 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python skills/mne-eeg-tool/scripts/eeg_pipeline_reference.py --input path/to/data.set --resting --output-dir eeg_output/",
-          "language": "bash",
-          "source_path": "skills/mne-eeg-tool/SKILL.md",
-          "line_start": 34,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "conda create -n neuroclaw-eeg python=3.11 -y",
-          "language": "bash",
-          "source_path": "skills/mne-eeg-tool/SKILL.md",
-          "line_start": 63,
-          "kind": "setup",
-          "executable": false
-        },
-        {
-          "command": "conda activate neuroclaw-eeg",
-          "language": "bash",
-          "source_path": "skills/mne-eeg-tool/SKILL.md",
-          "line_start": 64,
-          "kind": "setup",
-          "executable": false
-        },
-        {
-          "command": "conda install -c conda-forge mne pyentrp scikit-learn pandas numpy matplotlib -y",
-          "language": "bash",
-          "source_path": "skills/mne-eeg-tool/SKILL.md",
-          "line_start": 65,
-          "kind": "setup",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -1327,5 +1186,12 @@
     "脑电预处理",
     "MEG",
     "LOF"
+  ],
+  "references": [
+    {
+      "id": "notes",
+      "title": "背景与注意事项",
+      "path": "references/notes.md"
+    }
   ]
 }

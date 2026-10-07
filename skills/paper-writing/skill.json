@@ -10,7 +10,7 @@
       "method_id": "paper-writing-guided--1-section-content-generation",
       "skill_id": "paper-writing",
       "label": "1. Section Content Generation",
-      "description": "Build each section from IDEA.md + METHOD.md + EXPERIMENT.md (auto-generate tables from results if data is sufficient)；01sectioncontent.md（来源：SKILL.md:L30）",
+      "description": "该入口为规划能力；用于讨论1. Section Content Generation的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -39,7 +39,7 @@
             {
               "value": "1-section-content-generation",
               "label": "1. Section Content Generation",
-              "description": "Build each section from IDEA.md + METHOD.md + EXPERIMENT.md (auto-generate tables from results if data is sufficient)；01sectioncontent.md（来源：SKILL.md:L30）"
+              "description": "规划选项：1. Section Content Generation；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -297,13 +297,6 @@
       "output_slots": [],
       "structure_level": "evidence",
       "source_references": [
-        {
-          "path": "skills/paper-writing/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
         {
           "path": "skills/paper-writing/scripts/data_statement_templates.py",
           "label": "data_statement_templates.py",
@@ -352,7 +345,7 @@
       "method_id": "paper-writing-guided--2-ethics-review",
       "skill_id": "paper-writing",
       "label": "2. Ethics Review",
-      "description": "Verify dataset origin, license, and ethical approval；02ethicsreview.md（来源：SKILL.md:L31）",
+      "description": "该入口为规划能力；用于讨论2. Ethics Review的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -381,7 +374,7 @@
             {
               "value": "2-ethics-review",
               "label": "2. Ethics Review",
-              "description": "Verify dataset origin, license, and ethical approval；02ethicsreview.md（来源：SKILL.md:L31）"
+              "description": "规划选项：2. Ethics Review；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -639,13 +632,6 @@
       "output_slots": [],
       "structure_level": "evidence",
       "source_references": [
-        {
-          "path": "skills/paper-writing/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
         {
           "path": "skills/paper-writing/scripts/data_statement_templates.py",
           "label": "data_statement_templates.py",
@@ -694,7 +680,7 @@
       "method_id": "paper-writing-guided--3-iterative-optimization",
       "skill_id": "paper-writing",
       "label": "3. Iterative Optimization",
-      "description": "Refine content based on previous sections；03iterativeoptimization.md（来源：SKILL.md:L32）",
+      "description": "该入口为规划能力；用于讨论3. Iterative Optimization的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -723,7 +709,7 @@
             {
               "value": "3-iterative-optimization",
               "label": "3. Iterative Optimization",
-              "description": "Refine content based on previous sections；03iterativeoptimization.md（来源：SKILL.md:L32）"
+              "description": "规划选项：3. Iterative Optimization；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -981,13 +967,6 @@
       "output_slots": [],
       "structure_level": "evidence",
       "source_references": [
-        {
-          "path": "skills/paper-writing/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
         {
           "path": "skills/paper-writing/scripts/data_statement_templates.py",
           "label": "data_statement_templates.py",
@@ -1036,7 +1015,7 @@
       "method_id": "paper-writing-guided--4-narrative-storytelling",
       "skill_id": "paper-writing",
       "label": "4. Narrative Storytelling",
-      "description": "Convert technical content into coherent scientific story；04narrativestorytelling.md（来源：SKILL.md:L33）",
+      "description": "该入口为规划能力；用于讨论4. Narrative Storytelling的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -1065,7 +1044,7 @@
             {
               "value": "4-narrative-storytelling",
               "label": "4. Narrative Storytelling",
-              "description": "Convert technical content into coherent scientific story；04narrativestorytelling.md（来源：SKILL.md:L33）"
+              "description": "规划选项：4. Narrative Storytelling；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1323,13 +1302,6 @@
       "output_slots": [],
       "structure_level": "evidence",
       "source_references": [
-        {
-          "path": "skills/paper-writing/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
         {
           "path": "skills/paper-writing/scripts/data_statement_templates.py",
           "label": "data_statement_templates.py",
@@ -1378,7 +1350,7 @@
       "method_id": "paper-writing-guided--5-de-ai-polishing",
       "skill_id": "paper-writing",
       "label": "5. De-AI Polishing",
-      "description": "Remove AI artifacts and improve natural academic tone；05deaipolishing.md（来源：SKILL.md:L34）",
+      "description": "该入口为规划能力；用于讨论5. De-AI Polishing的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -1407,7 +1379,7 @@
             {
               "value": "5-de-ai-polishing",
               "label": "5. De-AI Polishing",
-              "description": "Remove AI artifacts and improve natural academic tone；05deaipolishing.md（来源：SKILL.md:L34）"
+              "description": "规划选项：5. De-AI Polishing；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1665,13 +1637,6 @@
       "output_slots": [],
       "structure_level": "evidence",
       "source_references": [
-        {
-          "path": "skills/paper-writing/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
         {
           "path": "skills/paper-writing/scripts/data_statement_templates.py",
           "label": "data_statement_templates.py",
@@ -1720,7 +1685,7 @@
       "method_id": "paper-writing-guided--6-logic-continuity-review",
       "skill_id": "paper-writing",
       "label": "6. Logic & Continuity Review",
-      "description": "Ensure logical flow and cross-section consistency；06logiccontinuityreview.md（来源：SKILL.md:L35）",
+      "description": "该入口为规划能力；用于讨论6. Logic & Continuity Review的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -1749,7 +1714,7 @@
             {
               "value": "6-logic-continuity-review",
               "label": "6. Logic & Continuity Review",
-              "description": "Ensure logical flow and cross-section consistency；06logiccontinuityreview.md（来源：SKILL.md:L35）"
+              "description": "规划选项：6. Logic & Continuity Review；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -2007,13 +1972,6 @@
       "output_slots": [],
       "structure_level": "evidence",
       "source_references": [
-        {
-          "path": "skills/paper-writing/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
         {
           "path": "skills/paper-writing/scripts/data_statement_templates.py",
           "label": "data_statement_templates.py",
@@ -2062,7 +2020,7 @@
       "method_id": "paper-writing-guided--7-length-control",
       "skill_id": "paper-writing",
       "label": "7. Length Control",
-      "description": "Adjust section lengths to target journal limits；07lengthcontrol.md（来源：SKILL.md:L36）",
+      "description": "该入口为规划能力；用于讨论7. Length Control的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -2091,7 +2049,7 @@
             {
               "value": "7-length-control",
               "label": "7. Length Control",
-              "description": "Adjust section lengths to target journal limits；07lengthcontrol.md（来源：SKILL.md:L36）"
+              "description": "规划选项：7. Length Control；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -2349,13 +2307,6 @@
       "output_slots": [],
       "structure_level": "evidence",
       "source_references": [
-        {
-          "path": "skills/paper-writing/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
         {
           "path": "skills/paper-writing/scripts/data_statement_templates.py",
           "label": "data_statement_templates.py",
@@ -2404,7 +2355,7 @@
       "method_id": "paper-writing-guided--8-reference-review-repair",
       "skill_id": "paper-writing",
       "label": "8. Reference Review & Repair",
-      "description": "Verify and fix all citations and cross-references；08referencereview.md（来源：SKILL.md:L37）",
+      "description": "该入口为规划能力；用于讨论8. Reference Review & Repair的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -2433,7 +2384,7 @@
             {
               "value": "8-reference-review-repair",
               "label": "8. Reference Review & Repair",
-              "description": "Verify and fix all citations and cross-references；08referencereview.md（来源：SKILL.md:L37）"
+              "description": "规划选项：8. Reference Review & Repair；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -2691,13 +2642,6 @@
       "output_slots": [],
       "structure_level": "evidence",
       "source_references": [
-        {
-          "path": "skills/paper-writing/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
         {
           "path": "skills/paper-writing/scripts/data_statement_templates.py",
           "label": "data_statement_templates.py",
@@ -2746,7 +2690,7 @@
       "method_id": "paper-writing-guided--9-latex-error-repair",
       "skill_id": "paper-writing",
       "label": "9. LaTeX Error Repair",
-      "description": "(LaTeX only) Automatically correct compilation errors；09latexerrorrepair.md（来源：SKILL.md:L38）",
+      "description": "该入口为规划能力；用于讨论9. LaTeX Error Repair的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -2775,7 +2719,7 @@
             {
               "value": "9-latex-error-repair",
               "label": "9. LaTeX Error Repair",
-              "description": "(LaTeX only) Automatically correct compilation errors；09latexerrorrepair.md（来源：SKILL.md:L38）"
+              "description": "规划选项：9. LaTeX Error Repair；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -3033,13 +2977,6 @@
       "output_slots": [],
       "structure_level": "evidence",
       "source_references": [
-        {
-          "path": "skills/paper-writing/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
         {
           "path": "skills/paper-writing/scripts/data_statement_templates.py",
           "label": "data_statement_templates.py",
@@ -3088,7 +3025,7 @@
       "method_id": "paper-writing-guided--10-final-draft-generation",
       "skill_id": "paper-writing",
       "label": "10. Final Draft Generation",
-      "description": "Produce and save the complete manuscript；10finaldraft.md or 10finaldraft.tex（来源：SKILL.md:L39）",
+      "description": "该入口为规划能力；用于讨论10. Final Draft Generation的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -3117,7 +3054,7 @@
             {
               "value": "10-final-draft-generation",
               "label": "10. Final Draft Generation",
-              "description": "Produce and save the complete manuscript；10finaldraft.md or 10finaldraft.tex（来源：SKILL.md:L39）"
+              "description": "规划选项：10. Final Draft Generation；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -3375,13 +3312,6 @@
       "output_slots": [],
       "structure_level": "evidence",
       "source_references": [
-        {
-          "path": "skills/paper-writing/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
         {
           "path": "skills/paper-writing/scripts/data_statement_templates.py",
           "label": "data_statement_templates.py",
@@ -3450,5 +3380,12 @@
   "examples": [],
   "keywords": [
     "paper-writing"
+  ],
+  "references": [
+    {
+      "id": "notes",
+      "title": "背景与注意事项",
+      "path": "references/notes.md"
+    }
   ]
 }

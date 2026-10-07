@@ -135,7 +135,7 @@
       "method_id": "dcm2nii-guided--keep-slice-timing-philips-diff",
       "skill_id": "dcm2nii",
       "label": "Keep slice timing / Philips diff",
-      "description": "-t y (important for fMRI)（来源：SKILL.md:L44）",
+      "description": "该入口为规划能力；用于讨论Keep slice timing / Philips diff的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -164,7 +164,7 @@
             {
               "value": "keep-slice-timing-philips-diff",
               "label": "Keep slice timing / Philips diff",
-              "description": "-t y (important for fMRI)（来源：SKILL.md:L44）"
+              "description": "规划选项：Keep slice timing / Philips diff；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -433,54 +433,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/dcm2nii/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/dcm2nii/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/dcm2nii/SKILL.md",
-          "label": "已提取 8 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "unzip dcm2niix_lnx.zip",
-          "language": "bash",
-          "source_path": "skills/dcm2nii/SKILL.md",
-          "line_start": 56,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "chmod +x dcm2niix",
-          "language": "bash",
-          "source_path": "skills/dcm2nii/SKILL.md",
-          "line_start": 57,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "mv dcm2niix /usr/local/bin/ # or add to PATH",
-          "language": "bash",
-          "source_path": "skills/dcm2nii/SKILL.md",
-          "line_start": 58,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "dcm2niix --version",
-          "language": "bash",
-          "source_path": "skills/dcm2nii/SKILL.md",
-          "line_start": 59,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -528,5 +488,12 @@
     "DICOM",
     "NIfTI",
     "格式转换"
+  ],
+  "references": [
+    {
+      "id": "notes",
+      "title": "背景与注意事项",
+      "path": "references/notes.md"
+    }
   ]
 }

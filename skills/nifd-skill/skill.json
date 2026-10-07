@@ -219,7 +219,7 @@
       "method_id": "nifd-skill-guided--data-access",
       "skill_id": "nifd-skill",
       "label": "Data access",
-      "description": "Apply for NIFD/FTLDNI access and accept the DUA in LONI IDA；Manual access gate；Approved IDA project access（来源：SKILL.md:L44）",
+      "description": "该入口为规划能力；用于讨论Data access的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -248,7 +248,7 @@
             {
               "value": "data-access",
               "label": "Data access",
-              "description": "Apply for NIFD/FTLDNI access and accept the DUA in LONI IDA；Manual access gate；Approved IDA project access（来源：SKILL.md:L44）"
+              "description": "规划选项：Data access；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -512,13 +512,6 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/nifd-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/nifd-skill/scripts/extract_nifd_phenotype.py",
           "label": "extract_nifd_phenotype.py",
           "kind": "script",
@@ -538,25 +531,9 @@
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/nifd-skill/SKILL.md",
-          "label": "已提取 1 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python skills/nifd-skill/scripts/validate_nifd.py --input /path/to/NIFD/bids --output /path/to/nifd_output/qc/bids_validation.csv",
-          "language": "bash",
-          "source_path": "skills/nifd-skill/SKILL.md",
-          "line_start": 107,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -603,5 +580,12 @@
   "keywords": [
     "nifd-skill",
     "FSL"
+  ],
+  "references": [
+    {
+      "id": "notes",
+      "title": "背景与注意事项",
+      "path": "references/notes.md"
+    }
   ]
 }

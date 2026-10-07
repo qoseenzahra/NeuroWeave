@@ -169,5 +169,12 @@
     "功能连接",
     "解码",
     "BOLD"
+  ],
+  "references": [
+    {
+      "id": "notes",
+      "title": "背景与注意事项",
+      "path": "references/notes.md"
+    }
   ]
 }

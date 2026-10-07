@@ -14,7 +14,6 @@ export type TranslationKeys = {
   skillDependencies: string;
   skillComplementary: string;
   skillNone: string;
-  skillInstructions: string;
   skillFiles: string;
   skillNoInstructions: string;
   datasetResize: string;

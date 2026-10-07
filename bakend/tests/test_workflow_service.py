@@ -507,7 +507,8 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
             registry_stats["evidence_backed_methods"], registry_stats["methods"]
         )
         self.assertGreaterEqual(registry_stats["artifact_types"], 39)
-        self.assertGreater(registry_stats["reference_commands"], 0)
+        # Old Markdown-extracted command examples no longer describe capabilities.
+        self.assertEqual(registry_stats["reference_commands"], 0)
         for method in self.service.registry.all_methods():
             self.assertIn(method.structure_level, {"evidence", "reviewed"})
             self.assertTrue(method.source_references, method.method_id)

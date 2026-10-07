@@ -14,6 +14,11 @@ def main():
     from app.method_registry import MethodRegistry
     from app.execution.runner_registry import RunnerRegistry
     store=MethodRegistry(root);store.load(force=True)
+    from app.skill_loader import SkillLoader
+    from app.skill_references import reference_path
+    for skill in SkillLoader(root / 'skills').load_all():
+        for reference in skill.references:
+            reference_path(skill.path, reference)
     if set(store.methods) != RunnerRegistry().ids():
         raise RuntimeError('Atomic method catalog and Runner allowlist differ')
     # Native method.json is the authoritative reviewed contract. Bootstrap

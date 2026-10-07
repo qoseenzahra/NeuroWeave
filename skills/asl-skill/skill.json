@@ -58,7 +58,7 @@
       "method_id": "asl-skill-guided--asl-preprocessing",
       "skill_id": "asl-skill",
       "label": "ASL preprocessing",
-      "description": "Motion correction, masking, registration to T1w；fsl-tool (ASLPREPCORE)；Preprocessed ASL in T1w space（来源：SKILL.md:L43）",
+      "description": "该入口为规划能力；用于讨论ASL preprocessing的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -87,7 +87,7 @@
             {
               "value": "asl-preprocessing",
               "label": "ASL preprocessing",
-              "description": "Motion correction, masking, registration to T1w；fsl-tool (ASLPREPCORE)；Preprocessed ASL in T1w space（来源：SKILL.md:L43）"
+              "description": "规划选项：ASL preprocessing；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -356,37 +356,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/asl-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/asl-skill/scripts/compute_cbf.py",
           "label": "compute_cbf.py",
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/asl-skill/SKILL.md",
-          "label": "已提取 1 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python skills/asl-skill/scripts/compute_cbf.py --diff /path/to/asl_diff.nii.gz --m0 /path/to/m0_reference.nii.gz --output /path/to/asl_output/cbf_map.nii.gz --roi-summary /path/to/asl_output/cbf_roi.csv --roi-atlas /path/to/atlas_in_asl_space.nii.gz --label-strategy pcasl --pld 1.8 --label-duration 1.8 --field-strength 3.0",
-          "language": "bash",
-          "source_path": "skills/asl-skill/SKILL.md",
-          "line_start": 88,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [
         "fsl-tool"
       ],
@@ -407,7 +384,7 @@
       "method_id": "asl-skill-guided--m0-normalization",
       "skill_id": "asl-skill",
       "label": "M0 normalization",
-      "description": "Divide ASL difference image by M0 reference image to get perfusion signal；fsl-tool or scripts/computecbf.py；Normalized perfusion map（来源：SKILL.md:L44）",
+      "description": "该入口为规划能力；用于讨论M0 normalization的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -436,7 +413,7 @@
             {
               "value": "m0-normalization",
               "label": "M0 normalization",
-              "description": "Divide ASL difference image by M0 reference image to get perfusion signal；fsl-tool or scripts/computecbf.py；Normalized perfusion map（来源：SKILL.md:L44）"
+              "description": "规划选项：M0 normalization；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -705,37 +682,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/asl-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/asl-skill/scripts/compute_cbf.py",
           "label": "compute_cbf.py",
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/asl-skill/SKILL.md",
-          "label": "已提取 1 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python skills/asl-skill/scripts/compute_cbf.py --diff /path/to/asl_diff.nii.gz --m0 /path/to/m0_reference.nii.gz --output /path/to/asl_output/cbf_map.nii.gz --roi-summary /path/to/asl_output/cbf_roi.csv --roi-atlas /path/to/atlas_in_asl_space.nii.gz --label-strategy pcasl --pld 1.8 --label-duration 1.8 --field-strength 3.0",
-          "language": "bash",
-          "source_path": "skills/asl-skill/SKILL.md",
-          "line_start": 88,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [
         "fsl-tool"
       ],
@@ -756,7 +710,7 @@
       "method_id": "asl-skill-guided--partial-volume-correction",
       "skill_id": "asl-skill",
       "label": "Partial volume correction",
-      "description": "Correct CBF for gray/white matter partial volume effects；fsl-tool + tissue segmentation；PVC-corrected CBF map（来源：SKILL.md:L46）",
+      "description": "该入口为规划能力；用于讨论Partial volume correction的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -785,7 +739,7 @@
             {
               "value": "partial-volume-correction",
               "label": "Partial volume correction",
-              "description": "Correct CBF for gray/white matter partial volume effects；fsl-tool + tissue segmentation；PVC-corrected CBF map（来源：SKILL.md:L46）"
+              "description": "规划选项：Partial volume correction；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1054,37 +1008,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/asl-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/asl-skill/scripts/compute_cbf.py",
           "label": "compute_cbf.py",
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/asl-skill/SKILL.md",
-          "label": "已提取 1 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python skills/asl-skill/scripts/compute_cbf.py --diff /path/to/asl_diff.nii.gz --m0 /path/to/m0_reference.nii.gz --output /path/to/asl_output/cbf_map.nii.gz --roi-summary /path/to/asl_output/cbf_roi.csv --roi-atlas /path/to/atlas_in_asl_space.nii.gz --label-strategy pcasl --pld 1.8 --label-duration 1.8 --field-strength 3.0",
-          "language": "bash",
-          "source_path": "skills/asl-skill/SKILL.md",
-          "line_start": 88,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [
         "fsl-tool"
       ],
@@ -1105,7 +1036,7 @@
       "method_id": "asl-skill-guided--quality-control",
       "skill_id": "asl-skill",
       "label": "Quality control",
-      "description": "Check for outliers, low SNR, motion artifacts in ASL series；scripts/computecbf.py (--qc)；QC report（来源：SKILL.md:L49）",
+      "description": "该入口为规划能力；用于讨论Quality control的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -1134,7 +1065,7 @@
             {
               "value": "quality-control",
               "label": "Quality control",
-              "description": "Check for outliers, low SNR, motion artifacts in ASL series；scripts/computecbf.py (--qc)；QC report（来源：SKILL.md:L49）"
+              "description": "规划选项：Quality control；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1403,37 +1334,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/asl-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/asl-skill/scripts/compute_cbf.py",
           "label": "compute_cbf.py",
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/asl-skill/SKILL.md",
-          "label": "已提取 1 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python skills/asl-skill/scripts/compute_cbf.py --diff /path/to/asl_diff.nii.gz --m0 /path/to/m0_reference.nii.gz --output /path/to/asl_output/cbf_map.nii.gz --roi-summary /path/to/asl_output/cbf_roi.csv --roi-atlas /path/to/atlas_in_asl_space.nii.gz --label-strategy pcasl --pld 1.8 --label-duration 1.8 --field-strength 3.0",
-          "language": "bash",
-          "source_path": "skills/asl-skill/SKILL.md",
-          "line_start": 88,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -1482,5 +1390,12 @@
     "CBF",
     "脑灌注",
     "FSL"
+  ],
+  "references": [
+    {
+      "id": "notes",
+      "title": "背景与注意事项",
+      "path": "references/notes.md"
+    }
   ]
 }

@@ -126,5 +126,12 @@
     "DWI 预处理",
     "topup",
     "eddy"
+  ],
+  "references": [
+    {
+      "id": "notes",
+      "title": "背景与注意事项",
+      "path": "references/notes.md"
+    }
   ]
 }

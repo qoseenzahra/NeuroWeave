@@ -10,7 +10,7 @@
       "method_id": "wmh-segmentation-guided--standard-wmh-segmentation",
       "skill_id": "wmh-segmentation",
       "label": "Standard WMH segmentation",
-      "description": "Default Docker run (nnU-Net, GPU)（来源：SKILL.md:L33）",
+      "description": "该入口为规划能力；用于讨论Standard WMH segmentation的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -39,7 +39,7 @@
             {
               "value": "standard-wmh-segmentation",
               "label": "Standard WMH segmentation",
-              "description": "Default Docker run (nnU-Net, GPU)（来源：SKILL.md:L33）"
+              "description": "规划选项：Standard WMH segmentation；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -303,46 +303,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/wmh-segmentation/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/wmh-segmentation/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/wmh-segmentation/SKILL.md",
-          "label": "已提取 8 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "sudo nvidia-ctk runtime configure --runtime=docker",
-          "language": "bash",
-          "source_path": "skills/wmh-segmentation/SKILL.md",
-          "line_start": 52,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "sudo systemctl restart docker",
-          "language": "bash",
-          "source_path": "skills/wmh-segmentation/SKILL.md",
-          "line_start": 53,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "echo \"GPU not detected. Run the following commands to install NVIDIA Container Toolkit:\"",
-          "language": "bash",
-          "source_path": "skills/wmh-segmentation/SKILL.md",
-          "line_start": 68,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -362,7 +330,7 @@
       "method_id": "wmh-segmentation-guided--already-co-registered-images",
       "skill_id": "wmh-segmentation",
       "label": "Already co-registered images",
-      "description": "Add --skipRegistration flag（来源：SKILL.md:L34）",
+      "description": "该入口为规划能力；用于讨论Already co-registered images的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -391,7 +359,7 @@
             {
               "value": "already-co-registered-images",
               "label": "Already co-registered images",
-              "description": "Add --skipRegistration flag（来源：SKILL.md:L34）"
+              "description": "规划选项：Already co-registered images；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -655,54 +623,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/wmh-segmentation/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/wmh-segmentation/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/wmh-segmentation/SKILL.md",
-          "label": "已提取 8 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "sudo apt-get update",
-          "language": "bash",
-          "source_path": "skills/wmh-segmentation/SKILL.md",
-          "line_start": 50,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "sudo apt-get install -y nvidia-container-toolkit",
-          "language": "bash",
-          "source_path": "skills/wmh-segmentation/SKILL.md",
-          "line_start": 51,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "sudo nvidia-ctk runtime configure --runtime=docker",
-          "language": "bash",
-          "source_path": "skills/wmh-segmentation/SKILL.md",
-          "line_start": 52,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "sudo systemctl restart docker",
-          "language": "bash",
-          "source_path": "skills/wmh-segmentation/SKILL.md",
-          "line_start": 53,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -722,7 +650,7 @@
       "method_id": "wmh-segmentation-guided--cpu-only-fallback",
       "skill_id": "wmh-segmentation",
       "label": "CPU-only fallback",
-      "description": "Remove --gpus all (slow)（来源：SKILL.md:L35）",
+      "description": "该入口为规划能力；用于讨论CPU-only fallback的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -751,7 +679,7 @@
             {
               "value": "cpu-only-fallback",
               "label": "CPU-only fallback",
-              "description": "Remove --gpus all (slow)（来源：SKILL.md:L35）"
+              "description": "规划选项：CPU-only fallback；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1015,54 +943,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/wmh-segmentation/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/wmh-segmentation/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/wmh-segmentation/SKILL.md",
-          "label": "已提取 8 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "sudo apt-get update",
-          "language": "bash",
-          "source_path": "skills/wmh-segmentation/SKILL.md",
-          "line_start": 50,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "sudo apt-get install -y nvidia-container-toolkit",
-          "language": "bash",
-          "source_path": "skills/wmh-segmentation/SKILL.md",
-          "line_start": 51,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "sudo nvidia-ctk runtime configure --runtime=docker",
-          "language": "bash",
-          "source_path": "skills/wmh-segmentation/SKILL.md",
-          "line_start": 52,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "sudo systemctl restart docker",
-          "language": "bash",
-          "source_path": "skills/wmh-segmentation/SKILL.md",
-          "line_start": 53,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -1105,5 +993,12 @@
     "WMH",
     "FLAIR",
     "白质高信号"
+  ],
+  "references": [
+    {
+      "id": "notes",
+      "title": "背景与注意事项",
+      "path": "references/notes.md"
+    }
   ]
 }

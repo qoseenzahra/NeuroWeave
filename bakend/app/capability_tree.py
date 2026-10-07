@@ -68,7 +68,7 @@ class CapabilityTree:
         """Return only direct children for the current routing level.
 
         Descendants and Skill ids are deliberately omitted so a model request never
-        receives an accidental copy of the full taxonomy or any SKILL.md content.
+        receives an accidental copy of the full taxonomy or reference document text.
         """
         self._load()
         groups: list[dict[str, Any]] = []

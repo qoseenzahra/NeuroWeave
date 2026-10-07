@@ -55,7 +55,7 @@
       "method_id": "bids-organizer-guided--dicom-to-bids",
       "skill_id": "bids-organizer",
       "label": "DICOM to BIDS",
-      "description": "Convert DICOM → NIfTI + apply BIDS naming；dcm2nii + claw-shell；BIDS-compliant NIfTI + JSON sidecars（来源：SKILL.md:L32）",
+      "description": "该入口为规划能力；用于讨论DICOM to BIDS的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -84,7 +84,7 @@
             {
               "value": "dicom-to-bids",
               "label": "DICOM to BIDS",
-              "description": "Convert DICOM → NIfTI + apply BIDS naming；dcm2nii + claw-shell；BIDS-compliant NIfTI + JSON sidecars（来源：SKILL.md:L32）"
+              "description": "规划选项：DICOM to BIDS；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -353,33 +353,16 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/bids-organizer/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/bids-organizer/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/bids-organizer/SKILL.md",
-          "label": "已提取 4 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "dcm2niix -o ./bids/sub-001/ses-01/anat -f \"%p_%s\" -b y -z y /path/to/dicom/T1",
-          "language": "bash",
-          "source_path": "skills/bids-organizer/SKILL.md",
-          "line_start": 43,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [
-        "dcm2nii",
-        "claw-shell"
+        "dcm2nii"
       ],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -399,7 +382,7 @@
       "method_id": "bids-organizer-guided--eeg-to-bids",
       "skill_id": "bids-organizer",
       "label": "EEG to BIDS",
-      "description": "Convert .set/.edf/.bdf/.fif to BIDS EEG format；mne-eeg-tool + claw-shell；BIDS EEG files + events（来源：SKILL.md:L34）",
+      "description": "该入口为规划能力；用于讨论EEG to BIDS的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -428,7 +411,7 @@
             {
               "value": "eeg-to-bids",
               "label": "EEG to BIDS",
-              "description": "Convert .set/.edf/.bdf/.fif to BIDS EEG format；mne-eeg-tool + claw-shell；BIDS EEG files + events（来源：SKILL.md:L34）"
+              "description": "规划选项：EEG to BIDS；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -697,33 +680,15 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/bids-organizer/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/bids-organizer/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/bids-organizer/SKILL.md",
-          "label": "已提取 4 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "dcm2niix -o ./bids/sub-001/ses-01/anat -f \"%p_%s\" -b y -z y /path/to/dicom/T1",
-          "language": "bash",
-          "source_path": "skills/bids-organizer/SKILL.md",
-          "line_start": 43,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
-      "delegate_skill_ids": [
-        "claw-shell"
-      ],
+      "command_references": [],
+      "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
       "replaces_operations": [],
@@ -742,7 +707,7 @@
       "method_id": "bids-organizer-guided--validate-bids-dataset",
       "skill_id": "bids-organizer",
       "label": "Validate BIDS dataset",
-      "description": "Run bids-validator and generate report；claw-shell；validation report（来源：SKILL.md:L36）",
+      "description": "该入口为规划能力；用于讨论Validate BIDS dataset的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -771,7 +736,7 @@
             {
               "value": "validate-bids-dataset",
               "label": "Validate BIDS dataset",
-              "description": "Run bids-validator and generate report；claw-shell；validation report（来源：SKILL.md:L36）"
+              "description": "规划选项：Validate BIDS dataset；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1040,49 +1005,15 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/bids-organizer/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/bids-organizer/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/bids-organizer/SKILL.md",
-          "label": "已提取 4 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "dcm2niix -o ./bids/sub-001/ses-01/anat -f \"%p_%s\" -b y -z y /path/to/dicom/T1",
-          "language": "bash",
-          "source_path": "skills/bids-organizer/SKILL.md",
-          "line_start": 43,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "bids-validator /path/to/bids_dataset",
-          "language": "bash",
-          "source_path": "skills/bids-organizer/SKILL.md",
-          "line_start": 46,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "bids-validator --version",
-          "language": "bash",
-          "source_path": "skills/bids-organizer/SKILL.md",
-          "line_start": 58,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
-      "delegate_skill_ids": [
-        "claw-shell"
-      ],
+      "command_references": [],
+      "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
       "replaces_operations": [],
@@ -1100,7 +1031,7 @@
       "method_id": "bids-organizer-guided--full-automatic-organization",
       "skill_id": "bids-organizer",
       "label": "Full automatic organization",
-      "description": "End-to-end raw data → valid BIDS dataset；All above tools；Complete BIDS dataset + QC report（来源：SKILL.md:L37）",
+      "description": "该入口为规划能力；用于讨论Full automatic organization的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -1129,7 +1060,7 @@
             {
               "value": "full-automatic-organization",
               "label": "Full automatic organization",
-              "description": "End-to-end raw data → valid BIDS dataset；All above tools；Complete BIDS dataset + QC report（来源：SKILL.md:L37）"
+              "description": "规划选项：Full automatic organization；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1398,30 +1329,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/bids-organizer/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/bids-organizer/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/bids-organizer/SKILL.md",
-          "label": "已提取 4 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "dcm2niix -o ./bids/sub-001/ses-01/anat -f \"%p_%s\" -b y -z y /path/to/dicom/T1",
-          "language": "bash",
-          "source_path": "skills/bids-organizer/SKILL.md",
-          "line_start": 43,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -1471,5 +1386,12 @@
     "数据整理",
     "数据组织",
     "Organizer"
+  ],
+  "references": [
+    {
+      "id": "notes",
+      "title": "背景与注意事项",
+      "path": "references/notes.md"
+    }
   ]
 }

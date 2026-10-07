@@ -579,7 +579,7 @@
       "method_id": "dwi-skill-guided--hcp-grade-diffusion-preprocessing",
       "skill_id": "dwi-skill",
       "label": "HCP-grade diffusion preprocessing",
-      "description": "HCP diffusion pipeline end-to-end；hcppipeline-tool；HCP-style diffusion outputs（来源：SKILL.md:L95）",
+      "description": "该入口为规划能力；用于讨论HCP-grade diffusion preprocessing的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -608,7 +608,7 @@
             {
               "value": "hcp-grade-diffusion-preprocessing",
               "label": "HCP-grade diffusion preprocessing",
-              "description": "HCP diffusion pipeline end-to-end；hcppipeline-tool；HCP-style diffusion outputs（来源：SKILL.md:L95）"
+              "description": "规划选项：HCP-grade diffusion preprocessing；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -877,54 +877,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/dwi-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/dwi-skill/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/dwi-skill/SKILL.md",
-          "label": "已提取 5 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "export FSLDIR=/usr/local/fsl",
-          "language": "bash",
-          "source_path": "skills/dwi-skill/SKILL.md",
-          "line_start": 173,
-          "kind": "environment",
-          "executable": false
-        },
-        {
-          "command": "source $FSLDIR/etc/fslconf/fsl.sh && export PATH=$FSLDIR/bin:$PATH",
-          "language": "bash",
-          "source_path": "skills/dwi-skill/SKILL.md",
-          "line_start": 174,
-          "kind": "environment",
-          "executable": false
-        },
-        {
-          "command": "conda install -c conda-forge -c mrtrix3 mrtrix3 libstdcxx-ng",
-          "language": "bash",
-          "source_path": "skills/dwi-skill/SKILL.md",
-          "line_start": 166,
-          "kind": "setup",
-          "executable": false
-        },
-        {
-          "command": "conda update -c mrtrix3 mrtrix3",
-          "language": "bash",
-          "source_path": "skills/dwi-skill/SKILL.md",
-          "line_start": 167,
-          "kind": "setup",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -985,5 +945,47 @@
     "纤维追踪",
     "MRI",
     "FOD"
+  ],
+  "references": [
+    {
+      "id": "notes",
+      "title": "背景与注意事项",
+      "path": "references/notes.md"
+    },
+    {
+      "id": "mrtrix-3.0.8-5tt2gmwmi",
+      "title": "MRtrix3 3.0.8 原生帮助：5tt2gmwmi",
+      "path": "references/mrtrix-3.0.8/5tt2gmwmi.md"
+    },
+    {
+      "id": "mrtrix-3.0.8-dwidenoise",
+      "title": "MRtrix3 3.0.8 原生帮助：dwidenoise",
+      "path": "references/mrtrix-3.0.8/dwidenoise.md"
+    },
+    {
+      "id": "mrtrix-3.0.8-mrdegibbs",
+      "title": "MRtrix3 3.0.8 原生帮助：mrdegibbs",
+      "path": "references/mrtrix-3.0.8/mrdegibbs.md"
+    },
+    {
+      "id": "mrtrix-3.0.8-mrthreshold",
+      "title": "MRtrix3 3.0.8 原生帮助：mrthreshold",
+      "path": "references/mrtrix-3.0.8/mrthreshold.md"
+    },
+    {
+      "id": "mrtrix-3.0.8-tckgen",
+      "title": "MRtrix3 3.0.8 原生帮助：tckgen",
+      "path": "references/mrtrix-3.0.8/tckgen.md"
+    },
+    {
+      "id": "mrtrix-3.0.8-tckresample",
+      "title": "MRtrix3 3.0.8 原生帮助：tckresample",
+      "path": "references/mrtrix-3.0.8/tckresample.md"
+    },
+    {
+      "id": "mrtrix-3.0.8-tcksift2",
+      "title": "MRtrix3 3.0.8 原生帮助：tcksift2",
+      "path": "references/mrtrix-3.0.8/tcksift2.md"
+    }
   ]
 }

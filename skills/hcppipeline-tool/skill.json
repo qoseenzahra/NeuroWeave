@@ -345,13 +345,6 @@
           "kind": "skill",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/hcppipeline-tool/SKILL.md",
-          "label": "Skill 使用说明",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
         }
       ],
       "command_references": [],
@@ -701,13 +694,6 @@
           "kind": "skill",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/hcppipeline-tool/SKILL.md",
-          "label": "Skill 使用说明",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
         }
       ],
       "command_references": [],
@@ -722,7 +708,7 @@
       "method_id": "hcppipeline-tool-guided--structural-preprocessing",
       "skill_id": "hcppipeline-tool",
       "label": "Structural preprocessing",
-      "description": "PreFreeSurfer + FreeSurfer + PostFreeSurfer；4–12 hours（来源：SKILL.md:L31）",
+      "description": "该入口为规划能力；用于讨论Structural preprocessing的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -751,7 +737,7 @@
             {
               "value": "structural-preprocessing",
               "label": "Structural preprocessing",
-              "description": "PreFreeSurfer + FreeSurfer + PostFreeSurfer；4–12 hours（来源：SKILL.md:L31）"
+              "description": "规划选项：Structural preprocessing；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1015,54 +1001,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/hcppipeline-tool/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/hcppipeline-tool/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/hcppipeline-tool/SKILL.md",
-          "label": "已提取 8 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "SUBJECT=\"sub-001\"",
-          "language": "bash",
-          "source_path": "skills/hcppipeline-tool/SKILL.md",
-          "line_start": 41,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "SESSION=\"\"",
-          "language": "bash",
-          "source_path": "skills/hcppipeline-tool/SKILL.md",
-          "line_start": 42,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "BIDS_DIR=\"/data/bids\"",
-          "language": "bash",
-          "source_path": "skills/hcppipeline-tool/SKILL.md",
-          "line_start": 43,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "OUTDIR=\"/data/hcp_output\"",
-          "language": "bash",
-          "source_path": "skills/hcppipeline-tool/SKILL.md",
-          "line_start": 44,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -1083,7 +1029,7 @@
       "method_id": "hcppipeline-tool-guided--functional-preprocessing",
       "skill_id": "hcppipeline-tool",
       "label": "Functional preprocessing",
-      "description": "fMRIVolume + fMRISurface + ICA-FIX；2–6 hours（来源：SKILL.md:L32）",
+      "description": "该入口为规划能力；用于讨论Functional preprocessing的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -1112,7 +1058,7 @@
             {
               "value": "functional-preprocessing",
               "label": "Functional preprocessing",
-              "description": "fMRIVolume + fMRISurface + ICA-FIX；2–6 hours（来源：SKILL.md:L32）"
+              "description": "规划选项：Functional preprocessing；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1376,54 +1322,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/hcppipeline-tool/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/hcppipeline-tool/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/hcppipeline-tool/SKILL.md",
-          "label": "已提取 8 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "SUBJECT=\"sub-001\"",
-          "language": "bash",
-          "source_path": "skills/hcppipeline-tool/SKILL.md",
-          "line_start": 41,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "SESSION=\"\"",
-          "language": "bash",
-          "source_path": "skills/hcppipeline-tool/SKILL.md",
-          "line_start": 42,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "BIDS_DIR=\"/data/bids\"",
-          "language": "bash",
-          "source_path": "skills/hcppipeline-tool/SKILL.md",
-          "line_start": 43,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "OUTDIR=\"/data/hcp_output\"",
-          "language": "bash",
-          "source_path": "skills/hcppipeline-tool/SKILL.md",
-          "line_start": 44,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -1444,7 +1350,7 @@
       "method_id": "hcppipeline-tool-guided--diffusion-preprocessing",
       "skill_id": "hcppipeline-tool",
       "label": "Diffusion preprocessing",
-      "description": "DiffusionPreprocessing + bedpostx + probtrackx；6–24 hours（来源：SKILL.md:L33）",
+      "description": "该入口为规划能力；用于讨论Diffusion preprocessing的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -1473,7 +1379,7 @@
             {
               "value": "diffusion-preprocessing",
               "label": "Diffusion preprocessing",
-              "description": "DiffusionPreprocessing + bedpostx + probtrackx；6–24 hours（来源：SKILL.md:L33）"
+              "description": "规划选项：Diffusion preprocessing；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1737,54 +1643,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/hcppipeline-tool/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/hcppipeline-tool/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/hcppipeline-tool/SKILL.md",
-          "label": "已提取 8 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "SUBJECT=\"sub-001\"",
-          "language": "bash",
-          "source_path": "skills/hcppipeline-tool/SKILL.md",
-          "line_start": 41,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "SESSION=\"\"",
-          "language": "bash",
-          "source_path": "skills/hcppipeline-tool/SKILL.md",
-          "line_start": 42,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "BIDS_DIR=\"/data/bids\"",
-          "language": "bash",
-          "source_path": "skills/hcppipeline-tool/SKILL.md",
-          "line_start": 43,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "OUTDIR=\"/data/hcp_output\"",
-          "language": "bash",
-          "source_path": "skills/hcppipeline-tool/SKILL.md",
-          "line_start": 44,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -1805,7 +1671,7 @@
       "method_id": "hcppipeline-tool-guided--surface-based-registration",
       "skill_id": "hcppipeline-tool",
       "label": "Surface-based registration",
-      "description": "MSMAll；2–4 hours（来源：SKILL.md:L34）",
+      "description": "该入口为规划能力；用于讨论Surface-based registration的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -1834,7 +1700,7 @@
             {
               "value": "surface-based-registration",
               "label": "Surface-based registration",
-              "description": "MSMAll；2–4 hours（来源：SKILL.md:L34）"
+              "description": "规划选项：Surface-based registration；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -2098,54 +1964,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/hcppipeline-tool/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/hcppipeline-tool/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/hcppipeline-tool/SKILL.md",
-          "label": "已提取 8 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "SUBJECT=\"sub-001\"",
-          "language": "bash",
-          "source_path": "skills/hcppipeline-tool/SKILL.md",
-          "line_start": 41,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "SESSION=\"\"",
-          "language": "bash",
-          "source_path": "skills/hcppipeline-tool/SKILL.md",
-          "line_start": 42,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "BIDS_DIR=\"/data/bids\"",
-          "language": "bash",
-          "source_path": "skills/hcppipeline-tool/SKILL.md",
-          "line_start": 43,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "OUTDIR=\"/data/hcp_output\"",
-          "language": "bash",
-          "source_path": "skills/hcppipeline-tool/SKILL.md",
-          "line_start": 44,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -2166,7 +1992,7 @@
       "method_id": "hcppipeline-tool-guided--full-hcp-style-multimodal-pipeline",
       "skill_id": "hcppipeline-tool",
       "label": "Full HCP-style multimodal pipeline",
-      "description": "All stages combined；12–36+ hours（来源：SKILL.md:L35）",
+      "description": "该入口为规划能力；用于讨论Full HCP-style multimodal pipeline的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -2195,7 +2021,7 @@
             {
               "value": "full-hcp-style-multimodal-pipeline",
               "label": "Full HCP-style multimodal pipeline",
-              "description": "All stages combined；12–36+ hours（来源：SKILL.md:L35）"
+              "description": "规划选项：Full HCP-style multimodal pipeline；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -2459,54 +2285,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/hcppipeline-tool/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/hcppipeline-tool/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/hcppipeline-tool/SKILL.md",
-          "label": "已提取 8 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "SUBJECT=\"sub-001\"",
-          "language": "bash",
-          "source_path": "skills/hcppipeline-tool/SKILL.md",
-          "line_start": 41,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "SESSION=\"\"",
-          "language": "bash",
-          "source_path": "skills/hcppipeline-tool/SKILL.md",
-          "line_start": 42,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "BIDS_DIR=\"/data/bids\"",
-          "language": "bash",
-          "source_path": "skills/hcppipeline-tool/SKILL.md",
-          "line_start": 43,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "OUTDIR=\"/data/hcp_output\"",
-          "language": "bash",
-          "source_path": "skills/hcppipeline-tool/SKILL.md",
-          "line_start": 44,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -2547,5 +2333,12 @@
   "examples": [],
   "keywords": [
     "hcppipeline-tool"
+  ],
+  "references": [
+    {
+      "id": "notes",
+      "title": "背景与注意事项",
+      "path": "references/notes.md"
+    }
   ]
 }

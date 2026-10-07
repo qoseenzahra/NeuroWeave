@@ -10,7 +10,7 @@
       "method_id": "git-workflows-guided",
       "skill_id": "git-workflows",
       "label": "Git Workflows 受约束方案",
-      "description": "依据 git-workflows/SKILL.md 生成结构化步骤；当前为规划型方法，不对应可直接执行的 runner。",
+      "description": "该入口为规划能力；用于讨论Git Workflows 受约束方案的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -21,7 +21,7 @@
       ],
       "requires_features": [],
       "default_recommended": true,
-      "default_reason": "该规划方法包含从 SKILL.md 提取的任务选项、脚本或命令依据。",
+      "default_reason": "根据当前 Skill 的适用条件进行规划；实际执行需要独立 Method。",
       "parameters": [
         {
           "id": "change_policy",
@@ -255,86 +255,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/git-workflows/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/git-workflows/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/git-workflows/SKILL.md",
-          "label": "已提取 8 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "git rebase -i HEAD~5",
-          "language": "bash",
-          "source_path": "skills/git-workflows/SKILL.md",
-          "line_start": 30,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "git rebase -i main",
-          "language": "bash",
-          "source_path": "skills/git-workflows/SKILL.md",
-          "line_start": 33,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "pick a1b2c3d Add user model",
-          "language": "bash",
-          "source_path": "skills/git-workflows/SKILL.md",
-          "line_start": 61,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "fixup e4f5g6h Fix typo in user model",
-          "language": "bash",
-          "source_path": "skills/git-workflows/SKILL.md",
-          "line_start": 62,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "pick i7j8k9l Add user controller",
-          "language": "bash",
-          "source_path": "skills/git-workflows/SKILL.md",
-          "line_start": 63,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "fixup q3r4s5t Fix import in controller",
-          "language": "bash",
-          "source_path": "skills/git-workflows/SKILL.md",
-          "line_start": 64,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "pick m0n1o2p Add user routes",
-          "language": "bash",
-          "source_path": "skills/git-workflows/SKILL.md",
-          "line_start": 65,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "git reset HEAD~",
-          "language": "bash",
-          "source_path": "skills/git-workflows/SKILL.md",
-          "line_start": 74,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [
         "git-essentials"
       ],
@@ -375,5 +303,12 @@
   "examples": [],
   "keywords": [
     "git-workflows"
+  ],
+  "references": [
+    {
+      "id": "notes",
+      "title": "背景与注意事项",
+      "path": "references/notes.md"
+    }
   ]
 }

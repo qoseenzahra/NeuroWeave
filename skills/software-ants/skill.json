@@ -168,5 +168,12 @@
     "software-ants",
     "ants",
     "ANTs"
+  ],
+  "references": [
+    {
+      "id": "notes",
+      "title": "配准与影像处理注意事项",
+      "path": "references/notes.md"
+    }
   ]
 }

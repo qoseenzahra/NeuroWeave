@@ -10,7 +10,7 @@
       "method_id": "conda-env-manager-guided--create-ml-env-with-specific-python-cuda",
       "skill_id": "conda-env-manager",
       "label": "Create ML env with specific Python + CUDA",
-      "description": "conda create -n neuroclaw-dl python=3.11 then install via dependency-planner（来源：SKILL.md:L43）",
+      "description": "该入口为规划能力；用于讨论Create ML env with specific Python + CUDA的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -39,7 +39,7 @@
             {
               "value": "create-ml-env-with-specific-python-cuda",
               "label": "Create ML env with specific Python + CUDA",
-              "description": "conda create -n neuroclaw-dl python=3.11 then install via dependency-planner（来源：SKILL.md:L43）"
+              "description": "规划选项：Create ML env with specific Python + CUDA；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -287,30 +287,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/conda-env-manager/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/conda-env-manager/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/conda-env-manager/SKILL.md",
-          "label": "已提取 1 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "conda create --name neuroclaw-dl-v2 --clone neuroclaw-dl",
-          "language": "bash",
-          "source_path": "skills/conda-env-manager/SKILL.md",
-          "line_start": 261,
-          "kind": "setup",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [
         "dependency-planner"
       ],
@@ -331,7 +315,7 @@
       "method_id": "conda-env-manager-guided--export-current-env-for-reproducibility",
       "skill_id": "conda-env-manager",
       "label": "Export current env for reproducibility",
-      "description": "conda env export --from-history > env-neuroclaw.yml（来源：SKILL.md:L44）",
+      "description": "该入口为规划能力；用于讨论Export current env for reproducibility的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -360,7 +344,7 @@
             {
               "value": "export-current-env-for-reproducibility",
               "label": "Export current env for reproducibility",
-              "description": "conda env export --from-history > env-neuroclaw.yml（来源：SKILL.md:L44）"
+              "description": "规划选项：Export current env for reproducibility；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -608,30 +592,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/conda-env-manager/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/conda-env-manager/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/conda-env-manager/SKILL.md",
-          "label": "已提取 1 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "conda create --name neuroclaw-dl-v2 --clone neuroclaw-dl",
-          "language": "bash",
-          "source_path": "skills/conda-env-manager/SKILL.md",
-          "line_start": 261,
-          "kind": "setup",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -650,7 +618,7 @@
       "method_id": "conda-env-manager-guided--create-env-from-yml-file",
       "skill_id": "conda-env-manager",
       "label": "Create env from yml file",
-      "description": "conda env create -f environment.yml（来源：SKILL.md:L45）",
+      "description": "该入口为规划能力；用于讨论Create env from yml file的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -679,7 +647,7 @@
             {
               "value": "create-env-from-yml-file",
               "label": "Create env from yml file",
-              "description": "conda env create -f environment.yml（来源：SKILL.md:L45）"
+              "description": "规划选项：Create env from yml file；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -927,30 +895,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/conda-env-manager/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/conda-env-manager/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/conda-env-manager/SKILL.md",
-          "label": "已提取 1 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "conda create --name neuroclaw-dl-v2 --clone neuroclaw-dl",
-          "language": "bash",
-          "source_path": "skills/conda-env-manager/SKILL.md",
-          "line_start": 261,
-          "kind": "setup",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -969,7 +921,7 @@
       "method_id": "conda-env-manager-guided--list-all-environments",
       "skill_id": "conda-env-manager",
       "label": "List all environments",
-      "description": "conda env list or conda info --envs（来源：SKILL.md:L46）",
+      "description": "该入口为规划能力；用于讨论List all environments的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -998,7 +950,7 @@
             {
               "value": "list-all-environments",
               "label": "List all environments",
-              "description": "conda env list or conda info --envs（来源：SKILL.md:L46）"
+              "description": "规划选项：List all environments；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1246,30 +1198,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/conda-env-manager/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/conda-env-manager/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/conda-env-manager/SKILL.md",
-          "label": "已提取 1 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "conda create --name neuroclaw-dl-v2 --clone neuroclaw-dl",
-          "language": "bash",
-          "source_path": "skills/conda-env-manager/SKILL.md",
-          "line_start": 261,
-          "kind": "setup",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -1288,7 +1224,7 @@
       "method_id": "conda-env-manager-guided--clone-env-for-testing-branching",
       "skill_id": "conda-env-manager",
       "label": "Clone env for testing / branching",
-      "description": "conda create --name neuroclaw-test --clone neuroclaw-dl（来源：SKILL.md:L47）",
+      "description": "该入口为规划能力；用于讨论Clone env for testing / branching的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -1317,7 +1253,7 @@
             {
               "value": "clone-env-for-testing-branching",
               "label": "Clone env for testing / branching",
-              "description": "conda create --name neuroclaw-test --clone neuroclaw-dl（来源：SKILL.md:L47）"
+              "description": "规划选项：Clone env for testing / branching；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1565,30 +1501,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/conda-env-manager/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/conda-env-manager/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/conda-env-manager/SKILL.md",
-          "label": "已提取 1 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "conda create --name neuroclaw-dl-v2 --clone neuroclaw-dl",
-          "language": "bash",
-          "source_path": "skills/conda-env-manager/SKILL.md",
-          "line_start": 261,
-          "kind": "setup",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -1607,7 +1527,7 @@
       "method_id": "conda-env-manager-guided--update-packages-safely",
       "skill_id": "conda-env-manager",
       "label": "Update packages safely",
-      "description": "conda update --all --dry-run → confirm → execute（来源：SKILL.md:L48）",
+      "description": "该入口为规划能力；用于讨论Update packages safely的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -1636,7 +1556,7 @@
             {
               "value": "update-packages-safely",
               "label": "Update packages safely",
-              "description": "conda update --all --dry-run → confirm → execute（来源：SKILL.md:L48）"
+              "description": "规划选项：Update packages safely；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1884,30 +1804,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/conda-env-manager/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/conda-env-manager/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/conda-env-manager/SKILL.md",
-          "label": "已提取 1 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "conda create --name neuroclaw-dl-v2 --clone neuroclaw-dl",
-          "language": "bash",
-          "source_path": "skills/conda-env-manager/SKILL.md",
-          "line_start": 261,
-          "kind": "setup",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -1926,7 +1830,7 @@
       "method_id": "conda-env-manager-guided--remove-unused-env",
       "skill_id": "conda-env-manager",
       "label": "Remove unused env",
-      "description": "conda env remove -n old-env（来源：SKILL.md:L49）",
+      "description": "该入口为规划能力；用于讨论Remove unused env的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -1955,7 +1859,7 @@
             {
               "value": "remove-unused-env",
               "label": "Remove unused env",
-              "description": "conda env remove -n old-env（来源：SKILL.md:L49）"
+              "description": "规划选项：Remove unused env；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -2203,30 +2107,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/conda-env-manager/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/conda-env-manager/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/conda-env-manager/SKILL.md",
-          "label": "已提取 1 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "conda create --name neuroclaw-dl-v2 --clone neuroclaw-dl",
-          "language": "bash",
-          "source_path": "skills/conda-env-manager/SKILL.md",
-          "line_start": 261,
-          "kind": "setup",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -2245,7 +2133,7 @@
       "method_id": "conda-env-manager-guided--activate-switch-env-guidance-only",
       "skill_id": "conda-env-manager",
       "label": "Activate / switch env (guidance only)",
-      "description": "Print instructions: conda activate neuroclaw-dl（来源：SKILL.md:L50）",
+      "description": "该入口为规划能力；用于讨论Activate / switch env (guidance only)的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -2274,7 +2162,7 @@
             {
               "value": "activate-switch-env-guidance-only",
               "label": "Activate / switch env (guidance only)",
-              "description": "Print instructions: conda activate neuroclaw-dl（来源：SKILL.md:L50）"
+              "description": "规划选项：Activate / switch env (guidance only)；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -2522,30 +2410,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/conda-env-manager/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/conda-env-manager/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/conda-env-manager/SKILL.md",
-          "label": "已提取 1 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "conda create --name neuroclaw-dl-v2 --clone neuroclaw-dl",
-          "language": "bash",
-          "source_path": "skills/conda-env-manager/SKILL.md",
-          "line_start": 261,
-          "kind": "setup",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -2584,5 +2456,12 @@
   "examples": [],
   "keywords": [
     "conda-env-manager"
+  ],
+  "references": [
+    {
+      "id": "notes",
+      "title": "背景与注意事项",
+      "path": "references/notes.md"
+    }
   ]
 }

@@ -10,7 +10,7 @@
       "method_id": "braingnn-guided",
       "skill_id": "braingnn",
       "label": "Braingnn 受约束方案",
-      "description": "依据 braingnn/SKILL.md 生成结构化步骤；当前为规划型方法，不对应可直接执行的 runner。",
+      "description": "该入口为规划能力；用于讨论Braingnn 受约束方案的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -21,7 +21,7 @@
       ],
       "requires_features": [],
       "default_recommended": true,
-      "default_reason": "该规划方法包含从 SKILL.md 提取的任务选项、脚本或命令依据。",
+      "default_reason": "根据当前 Skill 的适用条件进行规划；实际执行需要独立 Method。",
       "parameters": [
         {
           "id": "evaluation_scope",
@@ -318,13 +318,6 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/braingnn/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/brain_gnn/scripts/data_adapter_reference.py",
           "label": "data_adapter_reference.py",
           "kind": "script",
@@ -379,49 +372,9 @@
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/braingnn/SKILL.md",
-          "label": "已提取 4 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python models/braingnn/scripts/train.py --atlas schaefer_100_7net --labels-csv data/hcp_gender_labels.csv --subjects-file data/ready_subjects.txt --fold 0 --kfold 5 --n-epochs 50 --batch-size 16 --lr 0.005 --include-t1",
-          "language": "bash",
-          "source_path": "skills/braingnn/SKILL.md",
-          "line_start": 48,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "python models/braingnn/scripts/train.py --atlas aal_116 --labels-csv data/hcp_age_labels.csv --subject-col subject_id --label-col age --task regression --label-scaling standardization --fold 0 --n-epochs 50",
-          "language": "bash",
-          "source_path": "skills/braingnn/SKILL.md",
-          "line_start": 59,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "python models/braingnn/scripts/sweep_atlases.py",
-          "language": "bash",
-          "source_path": "skills/braingnn/SKILL.md",
-          "line_start": 69,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "python models/braingnn/scripts/train.py --atlas aal_116 --dry-run",
-          "language": "bash",
-          "source_path": "skills/braingnn/SKILL.md",
-          "line_start": 75,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [
         "fmri-skill",
         "run_models"
@@ -461,5 +414,12 @@
     "环境探测与运行证据分别显示；合成数据测试不代表真实数据的科学有效性。",
     "尚无 Method 的规划能力只能提供说明，不能当作可执行步骤。"
   ],
-  "examples": []
+  "examples": [],
+  "references": [
+    {
+      "id": "notes",
+      "title": "背景与注意事项",
+      "path": "references/notes.md"
+    }
+  ]
 }

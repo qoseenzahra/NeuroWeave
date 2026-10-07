@@ -99,10 +99,10 @@ class SkillLayerTests(unittest.TestCase):
             loader = SkillLoader(ROOT / "skills")
             with patch("pathlib.Path.cwd", return_value=Path(tmp)):
                 skill = loader.find("dwi-skill")
-            self.assertTrue(skill.skill_md.is_relative_to(ROOT / "skills"))
+            self.assertTrue(skill.definition_path.is_relative_to(ROOT / "skills"))
             self.assertNotEqual(skill.instructions, "FOREIGN")
 
-    def test_prompt_uses_overview_and_original_document_is_preserved(self):
+    def test_prompt_uses_json_overview(self):
         skill = self.loader.find("dwi-skill")
         self.assertTrue(skill.overview)
         self.assertIn("list_skill_methods", skill.prompt_excerpt())

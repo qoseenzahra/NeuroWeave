@@ -715,5 +715,12 @@
     "software-mrtrix3",
     "mrtrix3",
     "MRtrix3"
+  ],
+  "references": [
+    {
+      "id": "notes",
+      "title": "扩散数据与连接组注意事项",
+      "path": "references/notes.md"
+    }
   ]
 }

@@ -10,7 +10,7 @@
       "method_id": "neurostorm-guided",
       "skill_id": "neurostorm",
       "label": "Neurostorm 受约束方案",
-      "description": "依据 neurostorm/SKILL.md 生成结构化步骤；当前为规划型方法，不对应可直接执行的 runner。",
+      "description": "该入口为规划能力；用于讨论Neurostorm 受约束方案的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -21,7 +21,7 @@
       ],
       "requires_features": [],
       "default_recommended": true,
-      "default_reason": "该规划方法包含从 SKILL.md 提取的任务选项、脚本或命令依据。",
+      "default_reason": "根据当前 Skill 的适用条件进行规划；实际执行需要独立 Method。",
       "parameters": [
         {
           "id": "evaluation_scope",
@@ -318,86 +318,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/neurostorm/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/neurostorm/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/neurostorm/SKILL.md",
-          "label": "已提取 8 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "cd NeuroSTORM",
-          "language": "bash",
-          "source_path": "skills/neurostorm/SKILL.md",
-          "line_start": 54,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "source ./set_env.sh",
-          "language": "bash",
-          "source_path": "skills/neurostorm/SKILL.md",
-          "line_start": 61,
-          "kind": "environment",
-          "executable": false
-        },
-        {
-          "command": "git clone https://github.com/CUHK-AIM-Group/NeuroSTORM.git",
-          "language": "bash",
-          "source_path": "skills/neurostorm/SKILL.md",
-          "line_start": 53,
-          "kind": "setup",
-          "executable": false
-        },
-        {
-          "command": "conda create -n neurostorm python=3.11",
-          "language": "bash",
-          "source_path": "skills/neurostorm/SKILL.md",
-          "line_start": 57,
-          "kind": "setup",
-          "executable": false
-        },
-        {
-          "command": "conda activate neurostorm",
-          "language": "bash",
-          "source_path": "skills/neurostorm/SKILL.md",
-          "line_start": 58,
-          "kind": "setup",
-          "executable": false
-        },
-        {
-          "command": "pip install -r requirements.txt",
-          "language": "bash",
-          "source_path": "skills/neurostorm/SKILL.md",
-          "line_start": 64,
-          "kind": "setup",
-          "executable": false
-        },
-        {
-          "command": "pip install \"setuptools<81\" # pytorch-lightning 1.9.4 compat",
-          "language": "bash",
-          "source_path": "skills/neurostorm/SKILL.md",
-          "line_start": 65,
-          "kind": "setup",
-          "executable": false
-        },
-        {
-          "command": "pip install \"transformers<=4.39.3\" # mamba-ssm compat",
-          "language": "bash",
-          "source_path": "skills/neurostorm/SKILL.md",
-          "line_start": 66,
-          "kind": "setup",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [
         "fmri-skill",
         "smri-skill",
@@ -440,5 +368,12 @@
   "examples": [],
   "keywords": [
     "neurostorm"
+  ],
+  "references": [
+    {
+      "id": "notes",
+      "title": "背景与注意事项",
+      "path": "references/notes.md"
+    }
   ]
 }

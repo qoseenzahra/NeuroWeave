@@ -142,7 +142,7 @@
       "method_id": "meg-skill-guided--source-space-connectivity",
       "skill_id": "meg-skill",
       "label": "Source-space connectivity",
-      "description": "Coherence, PLV, dPLI between source parcels；MNE-Python (mneconnectivity)；Connectivity matrices（来源：SKILL.md:L49）",
+      "description": "该入口为规划能力；用于讨论Source-space connectivity的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -171,7 +171,7 @@
             {
               "value": "source-space-connectivity",
               "label": "Source-space connectivity",
-              "description": "Coherence, PLV, dPLI between source parcels；MNE-Python (mneconnectivity)；Connectivity matrices（来源：SKILL.md:L49）"
+              "description": "规划选项：Source-space connectivity；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -440,37 +440,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/meg-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/meg-skill/scripts/time_frequency.py",
           "label": "time_frequency.py",
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/meg-skill/SKILL.md",
-          "label": "已提取 1 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python skills/meg-skill/scripts/time_frequency.py --epochs /path/to/epochs.fif --output /path/to/meg_output/tfr/ --freq-min 1 --freq-max 100 --freq-steps 40 --method morlet --baseline -0.2 0.0",
-          "language": "bash",
-          "source_path": "skills/meg-skill/SKILL.md",
-          "line_start": 109,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -523,5 +500,12 @@
     "EEG",
     "MNE",
     "ICA"
+  ],
+  "references": [
+    {
+      "id": "notes",
+      "title": "背景与注意事项",
+      "path": "references/notes.md"
+    }
   ]
 }

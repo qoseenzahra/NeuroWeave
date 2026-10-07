@@ -234,7 +234,7 @@
       "method_id": "hcpa-skill-guided--data-download",
       "skill_id": "hcpa-skill",
       "label": "Data download",
-      "description": "Select HCP-A/AABC packages in ConnectomeDB powered by BALSA；claw-shell；Raw or preprocessed imaging packages（来源：SKILL.md:L44）",
+      "description": "该入口为规划能力；用于讨论Data download的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -263,7 +263,7 @@
             {
               "value": "data-download",
               "label": "Data download",
-              "description": "Select HCP-A/AABC packages in ConnectomeDB powered by BALSA；claw-shell；Raw or preprocessed imaging packages（来源：SKILL.md:L44）"
+              "description": "规划选项：Data download；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -527,13 +527,6 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/hcpa-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/hcpa-skill/scripts/extract_hcpa_phenotype.py",
           "label": "extract_hcpa_phenotype.py",
           "kind": "script",
@@ -553,28 +546,10 @@
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/hcpa-skill/SKILL.md",
-          "label": "已提取 1 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python skills/hcpa-skill/scripts/reorganize_hcpa.py --input /path/to/HCPA/raw --output /path/to/HCPA/bids --participants /path/to/subject_list.txt",
-          "language": "bash",
-          "source_path": "skills/hcpa-skill/SKILL.md",
-          "line_start": 97,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
-      "delegate_skill_ids": [
-        "claw-shell"
-      ],
+      "command_references": [],
+      "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
       "replaces_operations": [],
@@ -621,5 +596,12 @@
     "hcpa-skill",
     "BIDS",
     "FSL"
+  ],
+  "references": [
+    {
+      "id": "notes",
+      "title": "背景与注意事项",
+      "path": "references/notes.md"
+    }
   ]
 }

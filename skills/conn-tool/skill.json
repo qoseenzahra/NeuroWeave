@@ -10,7 +10,7 @@
       "method_id": "conn-tool-guided--project-setup",
       "skill_id": "conn-tool",
       "label": "Project setup",
-      "description": "Create new CONN project from preprocessed data；claw-shell；conn.mat project file（来源：SKILL.md:L32）",
+      "description": "该入口为规划能力；用于讨论Project setup的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -39,7 +39,7 @@
             {
               "value": "project-setup",
               "label": "Project setup",
-              "description": "Create new CONN project from preprocessed data；claw-shell；conn.mat project file（来源：SKILL.md:L32）"
+              "description": "规划选项：Project setup；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -303,41 +303,15 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/conn-tool/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/conn-tool/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/conn-tool/SKILL.md",
-          "label": "已提取 2 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "matlab -nodisplay -nosplash -r \"conn; conn_batch('conn_project.mat'); exit;\"",
-          "language": "bash",
-          "source_path": "skills/conn-tool/SKILL.md",
-          "line_start": 45,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "matlab -batch \"conn; disp('CONN version:'); conn('ver')\"",
-          "language": "bash",
-          "source_path": "skills/conn-tool/SKILL.md",
-          "line_start": 57,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
-      "delegate_skill_ids": [
-        "claw-shell"
-      ],
+      "command_references": [],
+      "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
       "replaces_operations": [],
@@ -356,7 +330,7 @@
       "method_id": "conn-tool-guided--roi-definition-extraction",
       "skill_id": "conn-tool",
       "label": "ROI definition & extraction",
-      "description": "Define ROIs from atlas or seed regions；claw-shell；ROI time series（来源：SKILL.md:L33）",
+      "description": "该入口为规划能力；用于讨论ROI definition & extraction的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -385,7 +359,7 @@
             {
               "value": "roi-definition-extraction",
               "label": "ROI definition & extraction",
-              "description": "Define ROIs from atlas or seed regions；claw-shell；ROI time series（来源：SKILL.md:L33）"
+              "description": "规划选项：ROI definition & extraction；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -649,41 +623,15 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/conn-tool/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/conn-tool/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/conn-tool/SKILL.md",
-          "label": "已提取 2 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "matlab -nodisplay -nosplash -r \"conn; conn_batch('conn_project.mat'); exit;\"",
-          "language": "bash",
-          "source_path": "skills/conn-tool/SKILL.md",
-          "line_start": 45,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "matlab -batch \"conn; disp('CONN version:'); conn('ver')\"",
-          "language": "bash",
-          "source_path": "skills/conn-tool/SKILL.md",
-          "line_start": 57,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
-      "delegate_skill_ids": [
-        "claw-shell"
-      ],
+      "command_references": [],
+      "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
       "replaces_operations": [],
@@ -702,7 +650,7 @@
       "method_id": "conn-tool-guided--functional-connectivity-roi-to-roi",
       "skill_id": "conn-tool",
       "label": "Functional connectivity (ROI-to-ROI)",
-      "description": "ROI-to-ROI correlation analysis；claw-shell；Correlation matrices（来源：SKILL.md:L34）",
+      "description": "该入口为规划能力；用于讨论Functional connectivity (ROI-to-ROI)的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -731,7 +679,7 @@
             {
               "value": "functional-connectivity-roi-to-roi",
               "label": "Functional connectivity (ROI-to-ROI)",
-              "description": "ROI-to-ROI correlation analysis；claw-shell；Correlation matrices（来源：SKILL.md:L34）"
+              "description": "规划选项：Functional connectivity (ROI-to-ROI)；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -995,41 +943,15 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/conn-tool/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/conn-tool/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/conn-tool/SKILL.md",
-          "label": "已提取 2 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "matlab -nodisplay -nosplash -r \"conn; conn_batch('conn_project.mat'); exit;\"",
-          "language": "bash",
-          "source_path": "skills/conn-tool/SKILL.md",
-          "line_start": 45,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "matlab -batch \"conn; disp('CONN version:'); conn('ver')\"",
-          "language": "bash",
-          "source_path": "skills/conn-tool/SKILL.md",
-          "line_start": 57,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
-      "delegate_skill_ids": [
-        "claw-shell"
-      ],
+      "command_references": [],
+      "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
       "replaces_operations": [],
@@ -1048,7 +970,7 @@
       "method_id": "conn-tool-guided--seed-to-voxel-connectivity",
       "skill_id": "conn-tool",
       "label": "Seed-to-voxel connectivity",
-      "description": "Seed-based whole-brain correlation；claw-shell；Seed-to-voxel maps（来源：SKILL.md:L35）",
+      "description": "该入口为规划能力；用于讨论Seed-to-voxel connectivity的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -1077,7 +999,7 @@
             {
               "value": "seed-to-voxel-connectivity",
               "label": "Seed-to-voxel connectivity",
-              "description": "Seed-based whole-brain correlation；claw-shell；Seed-to-voxel maps（来源：SKILL.md:L35）"
+              "description": "规划选项：Seed-to-voxel connectivity；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1341,41 +1263,15 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/conn-tool/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/conn-tool/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/conn-tool/SKILL.md",
-          "label": "已提取 2 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "matlab -nodisplay -nosplash -r \"conn; conn_batch('conn_project.mat'); exit;\"",
-          "language": "bash",
-          "source_path": "skills/conn-tool/SKILL.md",
-          "line_start": 45,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "matlab -batch \"conn; disp('CONN version:'); conn('ver')\"",
-          "language": "bash",
-          "source_path": "skills/conn-tool/SKILL.md",
-          "line_start": 57,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
-      "delegate_skill_ids": [
-        "claw-shell"
-      ],
+      "command_references": [],
+      "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
       "replaces_operations": [],
@@ -1394,7 +1290,7 @@
       "method_id": "conn-tool-guided--ica-network-analysis",
       "skill_id": "conn-tool",
       "label": "ICA network analysis",
-      "description": "Group ICA + network component extraction；claw-shell；ICA components + networks（来源：SKILL.md:L36）",
+      "description": "该入口为规划能力；用于讨论ICA network analysis的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -1423,7 +1319,7 @@
             {
               "value": "ica-network-analysis",
               "label": "ICA network analysis",
-              "description": "Group ICA + network component extraction；claw-shell；ICA components + networks（来源：SKILL.md:L36）"
+              "description": "规划选项：ICA network analysis；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1687,41 +1583,15 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/conn-tool/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/conn-tool/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/conn-tool/SKILL.md",
-          "label": "已提取 2 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "matlab -nodisplay -nosplash -r \"conn; conn_batch('conn_project.mat'); exit;\"",
-          "language": "bash",
-          "source_path": "skills/conn-tool/SKILL.md",
-          "line_start": 45,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "matlab -batch \"conn; disp('CONN version:'); conn('ver')\"",
-          "language": "bash",
-          "source_path": "skills/conn-tool/SKILL.md",
-          "line_start": 57,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
-      "delegate_skill_ids": [
-        "claw-shell"
-      ],
+      "command_references": [],
+      "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
       "replaces_operations": [],
@@ -1740,7 +1610,7 @@
       "method_id": "conn-tool-guided--ppi-gppi",
       "skill_id": "conn-tool",
       "label": "PPI / gPPI",
-      "description": "Psychophysiological interaction analysis；claw-shell；PPI contrast maps（来源：SKILL.md:L37）",
+      "description": "该入口为规划能力；用于讨论PPI / gPPI的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -1769,7 +1639,7 @@
             {
               "value": "ppi-gppi",
               "label": "PPI / gPPI",
-              "description": "Psychophysiological interaction analysis；claw-shell；PPI contrast maps（来源：SKILL.md:L37）"
+              "description": "规划选项：PPI / gPPI；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -2033,41 +1903,15 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/conn-tool/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/conn-tool/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/conn-tool/SKILL.md",
-          "label": "已提取 2 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "matlab -nodisplay -nosplash -r \"conn; conn_batch('conn_project.mat'); exit;\"",
-          "language": "bash",
-          "source_path": "skills/conn-tool/SKILL.md",
-          "line_start": 45,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "matlab -batch \"conn; disp('CONN version:'); conn('ver')\"",
-          "language": "bash",
-          "source_path": "skills/conn-tool/SKILL.md",
-          "line_start": 57,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
-      "delegate_skill_ids": [
-        "claw-shell"
-      ],
+      "command_references": [],
+      "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
       "replaces_operations": [],
@@ -2086,7 +1930,7 @@
       "method_id": "conn-tool-guided--effective-connectivity-dcm",
       "skill_id": "conn-tool",
       "label": "Effective connectivity (DCM)",
-      "description": "Dynamic Causal Modeling；claw-shell；DCM parameters & model comparison（来源：SKILL.md:L38）",
+      "description": "该入口为规划能力；用于讨论Effective connectivity (DCM)的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -2115,7 +1959,7 @@
             {
               "value": "effective-connectivity-dcm",
               "label": "Effective connectivity (DCM)",
-              "description": "Dynamic Causal Modeling；claw-shell；DCM parameters & model comparison（来源：SKILL.md:L38）"
+              "description": "规划选项：Effective connectivity (DCM)；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -2379,41 +2223,15 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/conn-tool/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/conn-tool/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/conn-tool/SKILL.md",
-          "label": "已提取 2 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "matlab -nodisplay -nosplash -r \"conn; conn_batch('conn_project.mat'); exit;\"",
-          "language": "bash",
-          "source_path": "skills/conn-tool/SKILL.md",
-          "line_start": 45,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "matlab -batch \"conn; disp('CONN version:'); conn('ver')\"",
-          "language": "bash",
-          "source_path": "skills/conn-tool/SKILL.md",
-          "line_start": 57,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
-      "delegate_skill_ids": [
-        "claw-shell"
-      ],
+      "command_references": [],
+      "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
       "replaces_operations": [],
@@ -2432,7 +2250,7 @@
       "method_id": "conn-tool-guided--full-connectivity-pipeline",
       "skill_id": "conn-tool",
       "label": "Full connectivity pipeline",
-      "description": "Preprocessed data → ROI definition → connectivity → statistics；claw-shell；Complete CONN results + figures（来源：SKILL.md:L39）",
+      "description": "该入口为规划能力；用于讨论Full connectivity pipeline的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -2461,7 +2279,7 @@
             {
               "value": "full-connectivity-pipeline",
               "label": "Full connectivity pipeline",
-              "description": "Preprocessed data → ROI definition → connectivity → statistics；claw-shell；Complete CONN results + figures（来源：SKILL.md:L39）"
+              "description": "规划选项：Full connectivity pipeline；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -2725,41 +2543,15 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/conn-tool/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/conn-tool/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/conn-tool/SKILL.md",
-          "label": "已提取 2 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "matlab -nodisplay -nosplash -r \"conn; conn_batch('conn_project.mat'); exit;\"",
-          "language": "bash",
-          "source_path": "skills/conn-tool/SKILL.md",
-          "line_start": 45,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "matlab -batch \"conn; disp('CONN version:'); conn('ver')\"",
-          "language": "bash",
-          "source_path": "skills/conn-tool/SKILL.md",
-          "line_start": 57,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
-      "delegate_skill_ids": [
-        "claw-shell"
-      ],
+      "command_references": [],
+      "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
       "replaces_operations": [],
@@ -2798,5 +2590,12 @@
   "examples": [],
   "keywords": [
     "conn-tool"
+  ],
+  "references": [
+    {
+      "id": "notes",
+      "title": "背景与注意事项",
+      "path": "references/notes.md"
+    }
   ]
 }

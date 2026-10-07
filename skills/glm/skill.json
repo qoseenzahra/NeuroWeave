@@ -63,5 +63,12 @@
   "keywords": [
     "glm",
     "GLM"
+  ],
+  "references": [
+    {
+      "id": "notes",
+      "title": "背景与注意事项",
+      "path": "references/notes.md"
+    }
   ]
 }

@@ -374,5 +374,12 @@
     "FEAT",
     "eddy",
     "配准"
+  ],
+  "references": [
+    {
+      "id": "notes",
+      "title": "背景与注意事项",
+      "path": "references/notes.md"
+    }
   ]
 }

@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 from .skill_definitions import native_skills
+from .skill_references import SkillReference, reference_specs
 
 
 
@@ -36,9 +37,10 @@ class Skill:
     executable: bool
     structure_mode: str
     path: Path
-    skill_md: Path
+    definition_path: Path
     instructions: str
     overview: str = ""
+    references: tuple[SkillReference, ...] = ()
 
     def public_dict(self) -> dict[str, Any]:
         return {
@@ -116,8 +118,9 @@ class SkillLoader:
                 summary_en=description, summary_zh=description, layer='orchestration', skill_type=value.get('scope','workflow'),
                 runtime='registered-methods', status='ready' if mode=='runner' else 'planning',
                 dependencies=[], complementary_skills=[], source='NeuroWeave', script_count=0, has_handler=False,
-                executable=mode=='runner', structure_mode=mode, path=path.parent, skill_md=path,
-                instructions=json.dumps(value, ensure_ascii=False, indent=2), overview=overview))
+                executable=mode=='runner', structure_mode=mode, path=path.parent, definition_path=path,
+                instructions=json.dumps(value, ensure_ascii=False, indent=2), overview=overview,
+                references=reference_specs(value)))
         self._cache_signature=signature
         self._cache=skills
         return skills

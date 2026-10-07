@@ -86,7 +86,7 @@ def router_for(services: ApplicationServices) -> APIRouter:
         return {
             **services.skill_catalog.execution_status(skill),
             "instructions": skill.overview or skill.prompt_excerpt(),
-            "reference_chars": len(skill.instructions),
+            "references": [reference.public_dict() for reference in skill.references],
             "orchestration": services.skill_catalog.skill_structure(skill.name),
             "layered": bool(skill.overview),
             "files": files,
@@ -129,10 +129,13 @@ def router_for(services: ApplicationServices) -> APIRouter:
         skill_name: str,
         offset: int = Query(0, ge=0, le=2000000),
         max_chars: int = Query(6000, ge=1, le=12000),
+        reference_id: str = Query("", max_length=80),
     ):
         try:
-            return services.skill_catalog.read_reference(skill_name, offset, max_chars)
+            return services.skill_catalog.read_reference(skill_name, offset, max_chars, reference_id)
         except KeyError as exc:
             raise HTTPException(404, str(exc)) from exc
+        except ValueError as exc:
+            raise HTTPException(400, str(exc)) from exc
 
     return router
