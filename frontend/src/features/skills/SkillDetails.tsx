@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { FileText, Plus, Minus } from 'lucide-react';
-import { SkillMethods, SkillReference } from './SkillMethods';
+import { SkillMethods } from './SkillMethods';
 import { fetchSkill } from './skillsApi';
 import type { Skill } from './skillsApi';
 import { useLanguageStore } from '../../stores/languageStore';
@@ -17,7 +17,7 @@ export function SkillDetails({ skill, selected, disabled, onAdd, onRemove, onClo
   const language = useLanguageStore(s => s.language);
   const t = getTranslations(language);
   const zh = language === 'zh';
-  const [tab, setTab] = useState<'instructions' | 'methods' | 'reference' | 'files'>('instructions');
+  const [tab, setTab] = useState<'instructions' | 'methods' | 'files'>('instructions');
   // Fetch the full document only when its dialog is opened, never with the catalog.
   const query = useQuery({ queryKey: ['skill-detail', skill.name, language],
     queryFn: ({ signal }) => fetchSkill(skill.name, signal), staleTime: 60_000, retry: 1 });
@@ -42,7 +42,7 @@ export function SkillDetails({ skill, selected, disabled, onAdd, onRemove, onClo
       {(details ?? skill).runtime_reasons!.map(reason => <li key={reason}>{reason}</li>)}
     </ul>}
     <Tabs label={t.skillDetailsTitle} value={tab} onChange={setTab} items={[
-      {value:'instructions',label:zh?'概览':'Overview'}, {value:'methods',label:zh?'命令与方法':'Commands & methods'}, {value:'reference',label:zh?'原始参考':'Original reference'}, {value:'files',label:t.skillFiles,badge:details?.files.length}
+      {value:'instructions',label:zh?'概览':'Overview'}, {value:'methods',label:zh?'命令与方法':'Commands & methods'}, {value:'files',label:t.skillFiles,badge:details?.files.length}
     ]} />
     {query.isPending && <p role="status" className="py-4 text-muted">{t.loadingSkills}</p>}
     {query.isError && <div role="alert" className="py-4 text-danger">
@@ -56,7 +56,6 @@ export function SkillDetails({ skill, selected, disabled, onAdd, onRemove, onClo
       {details.orchestration.examples?.map(example=><div key={example.request} className="rounded-control bg-well p-2 text-meta"><p>{example.request}</p><p className="mt-1 text-muted">{example.decision}</p></div>)}
     </section>}
     {tab === 'methods'  && <SkillMethods key={skill.name} skillId={skill.name}/>}
-    {tab === 'reference' && <SkillReference key={skill.name} skillId={skill.name}/>}
     {details && (tab === 'instructions'
       // Render source as text: Skill documents may contain HTML or executable examples.
       ? !details.orchestration && <pre className="mt-3 whitespace-pre-wrap break-words rounded-control border border-line bg-well p-4 font-mono text-meta leading-6">{details.instructions || t.skillNoInstructions}</pre>

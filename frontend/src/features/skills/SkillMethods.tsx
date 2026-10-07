@@ -4,7 +4,7 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '../../ui/Button';
 import { useLanguageStore } from '../../stores/languageStore';
-import { fetchSkillMethods, fetchSkillMethod, fetchSkillReference } from './skillsApi';
+import { fetchSkillMethods, fetchSkillMethod } from './skillsApi';
 import type { SkillMethodSummary } from './skillsApi';
 
 export function SkillMethods({ skillId }: { skillId: string }) {
@@ -76,7 +76,7 @@ function SkillMethodDetail({ method, onBack }: { method: SkillMethodSummary; onB
         placeholder={zh ? '搜索参数名或说明' : 'Search parameter name or description'} className="w-full rounded-control border border-line px-3 py-2"/>
       {data.parameters.filter(p => `${p.id} ${p.argument} ${p.label} ${p.description}`.toLowerCase().includes(filter.toLowerCase())).map(p => <details key={p.id} className="min-w-0 rounded-control border border-line p-3">
         <summary className="cursor-pointer break-words">{p.label} <code className="text-meta">{p.argument}</code> · {p.required ? (zh ? '必填' : 'Required') : Object.keys(p.required_when ?? {}).length ? (zh ? '条件必填' : 'Conditionally required') : (zh ? '可选' : 'Optional')}</summary>
-        <div className="mt-2 space-y-2 break-words text-meta"><p>{p.description || (zh ? '使用说明待补充；请核对原始参考文档。' : 'Usage needs review; consult the original reference.')}</p>
+        <div className="mt-2 space-y-2 break-words text-meta"><p>{p.description || (zh ? '使用说明待补充。' : 'Usage documentation needs review.')}</p>
           <p>{p.type}{p.unit ? ` · ${p.unit}` : ''} · {zh ? '平台默认值：' : 'Platform default: '}{p.default === null ? (zh ? '不显式传入' : 'Not passed') : String(p.default)}</p>
           {p.software_default && <p>{zh ? '软件默认行为：' : 'Software default: '}{p.software_default}</p>}
           {(p.minimum != null || p.maximum != null) && <p>{zh ? '允许范围：' : 'Allowed range: '}{p.minimum ?? '−∞'} … {p.maximum ?? '∞'}</p>}
@@ -92,21 +92,5 @@ function SkillMethodDetail({ method, onBack }: { method: SkillMethodSummary; onB
         <ul className="text-meta">{data.source_references.map((s,i) => <li className="break-all" key={i}>{s.label}：{s.path}</li>)}</ul>
       </details>
     </>}
-  </section>;
-}
-
-export function SkillReference({skillId}: {skillId:string}) {
-  const language = useLanguageStore(s => s.language);
-  const zh = language === 'zh';
-  const [offset,setOffset] = useState(0);
-  const query = useQuery({queryKey:['skill-reference',skillId,offset,language],
-    queryFn:({signal})=>fetchSkillReference(skillId,offset,signal),staleTime:60_000});
-  return <section className="mt-3 space-y-3">
-    {query.isPending && <p role="status">{zh ? '读取参考文档…' : 'Loading reference…'}</p>}
-    {query.isError && <p role="alert">{query.error.message}<Button onClick={()=>void query.refetch()}>{zh?'重试':'Retry'}</Button></p>}
-    {query.data && <><p className="text-meta text-subtle">{offset}–{offset+query.data.text.length} / {query.data.total_chars}</p>
-      <pre className="whitespace-pre-wrap break-words rounded-control border border-line bg-well p-3 text-meta leading-6">{query.data.text}</pre>
-      <div className="flex flex-wrap gap-2"><Button disabled={offset===0} onClick={()=>setOffset(Math.max(0,offset-6000))}>{zh?'上一页':'Previous'}</Button>
-        <Button disabled={!query.data.truncated} onClick={()=>setOffset(query.data!.next_offset!)}>{zh?'下一页':'Next'}</Button></div></>}
   </section>;
 }

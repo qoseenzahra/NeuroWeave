@@ -87,6 +87,3 @@ export function fetchSkillMethods(skill:string,q:string,cursor:string,signal?:Ab
 export function fetchSkillMethod(kind:string,method:string,signal?:AbortSignal) {
   return request<SkillMethodDetail>(`/api/${kind === 'pipeline' ? 'pipelines' : 'methods'}/${encodeURIComponent(method)}`,{signal});
 }
-export function fetchSkillReference(skill:string,offset:number,signal?:AbortSignal) {
-  return request<{text:string;total_chars:number;truncated:boolean;next_offset:number|null}>(`/api/skills/${encodeURIComponent(skill)}/reference?offset=${offset}&max_chars=6000`,{signal});
-}
