@@ -89,3 +89,15 @@ def test_filtering_happens_before_count():
     ]
     visible = service.filter_visible(resources, ResourceAction.READ)
     assert len(visible) == 1
+
+
+def test_owner_cannot_take_over_own_resource():
+    with pytest.raises(AuthorizationDenied):
+        svc("u1").require(ref(), ResourceAction.TAKEOVER)
+
+
+def test_shared_pipeline_member_can_submit_own_task():
+    svc("u2").require(
+        ref(SharingScope.PROJECT, creator="u1", manager="u1"),
+        ResourceAction.SUBMIT,
+    )
