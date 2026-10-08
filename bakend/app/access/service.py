@@ -18,6 +18,12 @@ class AuthorizationService:
         self.identity_reader = identity_reader
         self.audit = audit
 
+    def require_authenticated(self) -> Identity:
+        identity = self.identity_reader.current_identity()
+        if not identity.enabled:
+            raise AuthorizationDenied("account_disabled")
+        return identity
+
     def context_for(self, resource: ResourceRef) -> AuthorizationContext:
         identity = self.identity_reader.current_identity()
         membership = (
@@ -27,6 +33,7 @@ class AuthorizationService:
         return AuthorizationContext(identity, membership, resource)
 
     def check(self, resource: ResourceRef, action: ResourceAction) -> AuthorizationDecision:
+        self.require_authenticated()
         ctx = self.context_for(resource)
         decision = decide(ctx, action)
         if self.audit:
