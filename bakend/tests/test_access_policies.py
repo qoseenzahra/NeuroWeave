@@ -84,8 +84,8 @@ def test_disabled_identity_is_denied():
 def test_filtering_happens_before_count():
     service = svc("u1")
     resources = [
-        ref(creator="u1"),
-        ref(creator="u2"),
+        ref(creator="u1", manager="u1"),
+        ref(creator="u2", manager="u2"),
     ]
     visible = service.filter_visible(resources, ResourceAction.READ)
     assert len(visible) == 1
