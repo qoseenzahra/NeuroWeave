@@ -24,6 +24,7 @@ if TYPE_CHECKING:
     from .workflow_service import WorkflowService
     from .workspace_service import WorkspaceService
     from .workspace_tools import WorkspaceTools
+    from .access.service import AuthorizationService
 
 
 @dataclass
@@ -47,3 +48,4 @@ class ApplicationServices:
     pipeline_library: PipelineLibrary
     chat_turns: ChatTurns
     chat_coordinator: ChatCoordinator
+    authorization_service: AuthorizationService | None = None
