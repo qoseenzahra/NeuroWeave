@@ -33,12 +33,12 @@ def router_for(services: ApplicationServices) -> APIRouter:
 
     @router.get("/api/conversations", response_model=ConversationPage)
     def list_conversations(
-        require_current_user()
         limit: int = Query(default=20, ge=1, le=50),
         q: str = Query(default="", max_length=1000),
         archived: bool = False,
         cursor: str = Query(default="", max_length=1024),
     ) -> ConversationPage:
+        require_current_user()
         try:
             return services.conversation_service.list_page(
                 limit,
@@ -66,10 +66,10 @@ def router_for(services: ApplicationServices) -> APIRouter:
         "/api/conversations/{conversation_id}", response_model=ConversationRecord
     )
     def update_conversation(
-        require_current_user()
         conversation_id: str,
         request: ConversationUpdateRequest,
     ) -> ConversationRecord:
+        require_current_user()
         try:
             if "workspace_id" in request.model_fields_set:
                 services.workspace_service.bind_conversation(
@@ -93,11 +93,11 @@ def router_for(services: ApplicationServices) -> APIRouter:
         "/api/conversations/{conversation_id}", response_model=ConversationSnapshot
     )
     def get_conversation(
-        require_current_user()
         conversation_id: str,
         limit: int = Query(40, ge=1, le=100),
         before_sequence: int | None = Query(None, ge=1),
     ) -> ConversationSnapshot:
+        require_current_user()
         try:
             return services.conversation_service.snapshot(
                 conversation_id, limit=limit, before_sequence=before_sequence
