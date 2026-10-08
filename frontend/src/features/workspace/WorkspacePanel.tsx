@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useResizablePanel } from '../../ui/useResizablePanel';
+import { browseRootForPath, workspaceForPath } from './outputSelection';
 import { errorText } from '../../api/http';
 import { useLanguageStore } from '../../stores/languageStore';
 import { getTranslations } from '../../lib/i18n';
@@ -42,6 +44,7 @@ type WorkspacePanelProps = {
   conversationId: string | null;
   datasetId?: string | null;
   datasetOnly?: boolean;
+  selectionMode?: boolean;
   onSelect: (workspace: Workspace | null) => Promise<void>;
   onClose: () => void;
   locked?: boolean;
@@ -54,6 +57,7 @@ export function WorkspacePanel({
   conversationId,
   datasetId = null,
   datasetOnly = false,
+  selectionMode = false,
   onSelect,
   onClose,
   locked = false,
@@ -65,13 +69,15 @@ export function WorkspacePanel({
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [roots, setRoots] = useState<string[]>([]);
   const [root, setRoot] = useState(datasetOnly ? 'dataset' : '');
-  const [registerMode, setRegisterMode] = useState(!workspaceId);
+  const [registerMode, setRegisterMode] = useState(selectionMode || !workspaceId);
+  const [browsedWorkspaceId, setBrowsedWorkspaceId] = useState(workspaceId);
   const [directory, setDirectory] = useState(initialPath ?? '.');
   const [jump, setJump] = useState('');
   const [filter, setFilter] = useState('');
   const [sort, setSort] = useState('name');
   const [hidden, setHidden] = useState(false);
   const [listing, setListing] = useState<FsListing | null>(null);
+  const [loadedLocation, setLoadedLocation] = useState('');
   const [selected, setSelected] = useState<FsEntry | null>(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -92,15 +98,33 @@ export function WorkspacePanel({
   const requestVersion = useRef(0);
   const loading = useRef(false);
   const previewVersion = useRef(0);
+  const mutationPending = useRef(false);
   const [width, setWidth] = useState(540);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const {panelRef, style: panelStyle, handles: resizeHandles} = useResizablePanel(t.workspacePickerResize);
+  useEffect(()=>{if(dialogRef.current&&!dialogRef.current.open)dialogRef.current.showModal();}, []);
   const dismissPending = useCallback(() => setPending(null), []);
-  const boundId = registerMode || datasetOnly ? null : workspaceId;
+  const boundId = registerMode || datasetOnly || selectionMode ? null : workspaceId;
   const selectedWorkspace = workspaces.find((item) => item.id === workspaceId);
 
-  const canManage = !datasetOnly && !!selectedWorkspace?.manageable;
+  const canManage = !datasetOnly && !selectionMode && !!selectedWorkspace?.manageable;
+  const locationKey=JSON.stringify([boundId,directory,root,filter,hidden,sort,datasetOnly,datasetId]);
+  const listingFresh=loadedLocation===locationKey;
+  const matchingWorkspace = listing ? workspaceForPath(workspaces, listing.path) : undefined;
   const loadWorkspaces = useCallback(async () => setWorkspaces(await listWorkspaces()), []);
   useEffect(() => {
     if (datasetOnly) return;
+    if (selectionMode) {
+      let active=true;
+      void Promise.all([listWorkspaces(), fetchFsRoots()]).then(([items, value])=>{
+        if(!active)return;
+        setWorkspaces(items);setRoots(value.roots);
+        const current=items.find(item=>item.id===workspaceId);
+        setRoot(browseRootForPath(current?.root_path??value.default_root,value.roots)??value.default_root);
+        setDirectory(initialPath ?? current?.root_path ?? value.default_root);
+      }).catch((e:unknown)=>{if(active)setError(errorText(e,t.errorMessage));});
+      return ()=>{active=false;};
+    }
     void listWorkspaces()
       .then(setWorkspaces)
       .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)));
@@ -110,7 +134,7 @@ export function WorkspacePanel({
         setRoot(value.default_root);
       })
       .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)));
-  }, [loadWorkspaces, datasetOnly]);
+  }, [loadWorkspaces, datasetOnly, selectionMode, workspaceId, initialPath, t.errorMessage]);
 
   const load = useCallback(
     async (cursor?: string) => {
@@ -134,6 +158,7 @@ export function WorkspacePanel({
         setListing((previous) =>
           cursor && previous ? { ...result, items: [...previous.items, ...result.items] } : result
         );
+        setLoadedLocation(locationKey);
         setJump(result.path);
       } catch (e) {
         if (version === requestVersion.current)
@@ -145,7 +170,7 @@ export function WorkspacePanel({
         }
       }
     },
-    [boundId, directory, root, filter, hidden, sort, datasetOnly, datasetId]
+    [boundId, directory, root, filter, hidden, sort, datasetOnly, datasetId, locationKey]
   );
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -163,9 +188,10 @@ export function WorkspacePanel({
   }, [load, refresh]);
 
   const perform = async () => {
-    if (!editor || datasetOnly || busy || selecting || !listing) return;
+    if (!editor || datasetOnly || busy || selecting || !listing || (selectionMode && !listingFresh)) return;
     if (['register', 'workspace-edit'].includes(editor) && locked) return;
     if (editor !== 'register' && editor !== 'workspace-edit' && (registerMode ? locked || editor !== 'mkdir' : !canManage)) return;
+    mutationPending.current=true;
     setBusy(true);
     setError('');
     try {
@@ -174,6 +200,7 @@ export function WorkspacePanel({
         const value = await createWorkspace(destination.trim(), listing.path);
         await loadWorkspaces();
         await onSelect(value);
+        if(selectionMode){onClose();return;}
         setRegisterMode(false); setDirectory('.'); setEditor(null);
         return;
       }
@@ -200,7 +227,7 @@ export function WorkspacePanel({
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
-      setBusy(false);
+      mutationPending.current=false;setBusy(false);
     }
   };
   const read = async (append = false) => {
@@ -225,13 +252,14 @@ export function WorkspacePanel({
       : (listing?.relative_path.split(/[\\/]/).filter(Boolean) ?? []);
 
   return (
-    <dialog
-      open
-      aria-label={datasetOnly ? t.datasetFilesTitle : t.workspaceTitle}
-      className="fixed inset-y-0 right-0 left-auto z-50 m-0 flex h-dvh min-w-0 flex-col border-l border-line bg-raised p-0 shadow-2xl "
-      style={{ width, maxWidth: 'calc(100vw - 12px)' }}
-    >
-      <button type="button" aria-label={t.workspaceResize} className="absolute inset-y-0 left-0 z-10 w-2 cursor-col-resize touch-none hover:bg-accent-quiet"
+    <dialog ref={dialogRef} aria-label={datasetOnly ? t.datasetFilesTitle : selectionMode ? t.workspaceSelect : t.workspaceTitle}
+      className="dialog-root" data-placement={selectionMode?'center':'right'}
+      onCancel={e=>{e.preventDefault();e.stopPropagation();if(!selecting&&!mutationPending.current)onClose();}}
+      onClick={e=>{if(e.target===dialogRef.current&&!selecting&&!mutationPending.current)onClose();}}>
+      <div ref={panelRef} style={selectionMode ? panelStyle : {width,maxWidth:'calc(100vw - 12px)'}}
+        className="dialog-panel relative flex h-dvh min-h-0 min-w-0 flex-col overflow-hidden border border-line bg-raised shadow-2xl rounded-panel">
+      {selectionMode && resizeHandles}
+      {!selectionMode && <button type="button" aria-label={t.workspaceResize} className="absolute inset-y-0 left-0 z-10 w-2 cursor-col-resize touch-none hover:bg-accent-quiet"
         onKeyDown={e => {
           if (e.key === 'ArrowLeft') setWidth(w => Math.min(window.innerWidth - 12, w + 32));
           if (e.key === 'ArrowRight') setWidth(w => Math.max(320, w - 32));
@@ -240,12 +268,12 @@ export function WorkspacePanel({
         onPointerMove={e => {
           if (e.currentTarget.hasPointerCapture(e.pointerId))
             setWidth(Math.max(320, Math.min(window.innerWidth - 12, window.innerWidth - e.clientX)));
-        }} />
+        }} />}
       <div className="flex shrink-0 items-center justify-between border-b border-line p-3 pl-5 ">
-        <strong className="text-sm">{datasetOnly ? t.datasetFilesTitle : t.workspaceTitle}</strong>
+        <strong className="text-sm">{datasetOnly ? t.datasetFilesTitle : selectionMode ? t.workspaceSelect : t.workspaceTitle}</strong>
         <button
           type="button"
-          onClick={onClose}
+          onClick={()=>{if(!selecting&&!mutationPending.current)onClose();}} disabled={selecting||(busy&&!!editor)}
           className="rounded-control border border-line px-2.5 py-1.5 text-xs "
         >
           {t.workspaceClose}
@@ -262,9 +290,10 @@ export function WorkspacePanel({
               aria-label={t.workspaceSelect}
               className={`${FIELD} flex-1`}
               disabled={locked || selecting || !!onPick}
-              value={registerMode ? '' : (workspaceId ?? '')}
+              value={selectionMode ? (browsedWorkspaceId??'') : registerMode ? '' : (workspaceId ?? '')}
               onChange={(e) => {
                 const value = workspaces.find((item) => item.id === e.target.value) ?? null;
+                if(selectionMode){setBrowsedWorkspaceId(value?.id??null);setRoot(value ? browseRootForPath(value.root_path,roots)??root : root);setDirectory(value?.root_path??'.');setEditor(null);return;}
                 setSelecting(true);
                 setError('');
                 void onSelect(value)
@@ -285,11 +314,11 @@ export function WorkspacePanel({
                 .filter((item) => item.status === 'active')
                 .map((item) => (
                   <option key={item.id} value={item.id} disabled={!item.manageable}>
-                    {item.name}{item.manageable ? '' : ' (' + t.workspaceReadOnly + ')'}
+                    {item.name} · {item.root_path}{item.manageable ? '' : ' (' + t.workspaceReadOnly + ')'}
                   </option>
                 ))}
             </select>}
-            {!datasetOnly && !onPick && (
+            {!datasetOnly && !selectionMode && !onPick && (
               <button
                 type="button"
                 className={BTN}
@@ -332,7 +361,8 @@ export function WorkspacePanel({
             className="flex min-w-0 gap-2"
             onSubmit={(e) => {
               e.preventDefault();
-              setDirectory(jump);
+              if(selectionMode && jump.startsWith('/'))setRoot(browseRootForPath(jump,roots)??root);
+              setEditor(null);setDirectory(jump);
             }}
           >
             <input
@@ -432,7 +462,7 @@ export function WorkspacePanel({
               {t.workspaceSensitiveButton}
             </button>
           )}
-          {!datasetOnly && !onPick && (
+          {!datasetOnly && !selectionMode && !onPick && (
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
@@ -475,7 +505,7 @@ export function WorkspacePanel({
               )}
             </div>
           )}
-          {workspaceId && !registerMode && !datasetOnly && (
+          {workspaceId && !registerMode && !datasetOnly && !selectionMode && (
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
@@ -569,13 +599,13 @@ export function WorkspacePanel({
               <div className="flex gap-2">
                 <button
                   type="submit"
-                  disabled={busy || selecting || (['register', 'workspace-edit'].includes(editor) && locked)}
+                  disabled={busy || selecting || (selectionMode&&!listingFresh) || (['register', 'workspace-edit'].includes(editor) && locked)}
                   className="rounded-control bg-accent-solid px-2.5 py-1.5 text-xs font-medium text-on-accent hover:bg-accent-solid-hover disabled:opacity-50"
                 >
-                  {t.workspaceExecute}
+                  {selectionMode&&editor==='register' ? t.workspaceRegisterSelect : t.workspaceExecute}
                 </button>
                 <button type="button" className={BTN} onClick={() => setEditor(null)}>
-                  {t.workspaceClose}
+                  {t.cancel}
                 </button>
                 {editor === 'workspace-edit' && (
                   <button
@@ -752,6 +782,19 @@ export function WorkspacePanel({
           }}
         />
       )}
+      {selectionMode && <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-line p-3 text-xs">
+        <div className="min-w-0 flex-1">{listing && <ServerPath path={listing.path}/>}</div>
+        <button type="button" className={BTN} disabled={!listing||!listingFresh||busy||locked||selecting||!!editor}
+          onClick={()=>{setEditor('mkdir');setDestination('');setOverwrite(false);setPermanent(false);}}>{t.workspaceActionMkdir}</button>
+        <button type="button" className={BTN} disabled={!listing||!listingFresh||busy||locked||selecting||!!error||!!editor}
+          onClick={()=>{
+            if(!listing)return;
+            if(!matchingWorkspace){setEditor('register');setDestination(listing.path.split('/').filter(Boolean).at(-1)||t.workspaceTitle);return;}
+            setSelecting(true);setError('');
+            void onSelect(matchingWorkspace).then(onClose).catch(e=>setError(errorText(e,t.errorMessage))).finally(()=>setSelecting(false));
+          }}>{matchingWorkspace ? t.workspacePickPath : t.workspaceRegisterCurrent}</button>
+      </div>}
+      </div>
     </dialog>
   );
 }

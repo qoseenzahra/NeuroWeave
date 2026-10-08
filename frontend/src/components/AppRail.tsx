@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { Database, ListChecks, FolderOpen, HardDrive, MessageSquare, Settings, Sparkles } from 'lucide-react';
+import { Database, ListChecks, FolderOpen, HardDrive, MessageSquare, Settings, Sparkles, Workflow } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { SettingsDialog } from './SettingsDialog';
 import { Tooltip } from '../ui/Tooltip';
 import { cx } from '../ui/cx';
 import type { TranslationKeys } from '../types/i18n';
 
-export type RailDomain = 'conversations' | 'skills' | 'datasets' | 'workspace' | 'storage' | 'workflows';
+export type RailDomain = 'conversations' | 'skills' | 'datasets' | 'workspace' | 'storage' | 'workflows' | 'pipelines';
 
 type RailItem = { value: RailDomain; label: string; icon: ReactNode };
 
@@ -33,7 +33,8 @@ export function AppRail({ t, domain, datasetCount, onDomainChange }: AppRailProp
   const primary: RailItem[] = [
     { value: 'workflows', label: t.workflowsAndRuns, icon: <ListChecks /> },
     { value: 'conversations', label: t.conversations, icon: <MessageSquare /> },
-    { value: 'skills', label: t.skills, icon: <Sparkles /> }
+    { value: 'skills', label: t.skills, icon: <Sparkles /> },
+    { value: 'pipelines', label: 'Pipeline', icon: <Workflow /> }
   ];
   const resources: RailItem[] = [
     { value: 'datasets', label: t.datasetSelectLocal, icon: <Database /> },

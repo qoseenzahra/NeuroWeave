@@ -66,7 +66,7 @@ class DryRunUpstreamTests(unittest.TestCase):
         )
         self.store = LocalStore(self.root / "test.db")
         self.service = WorkflowService(
-            ROOT / "skills/dwi-skill/workflow.manifest.json", ChatService(),
+            ChatService(),
             self.capabilities, self.store, DatasetService(ROOT, self.store),
             runner_registry=self.runners,
         )

@@ -138,7 +138,7 @@
       "method_id": "fmri-skill-guided--post-processing-denoising-xcp-d",
       "skill_id": "fmri-skill",
       "label": "Post-processing denoising (XCP-D)",
-      "description": "Spatial smoothing, band-pass filtering (0.01–0.08 Hz), nuisance regression (36P model), scrubbing (FD > 0.2mm)；fmriprep-tool (XCP-D integration)；Clean 4D BOLD + ROI timeseries (.tsv) + functional connectivity matrices（来源：SKILL.md:L65）",
+      "description": "该入口为规划能力；用于讨论Post-processing denoising (XCP-D)的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -167,7 +167,7 @@
             {
               "value": "post-processing-denoising-xcp-d",
               "label": "Post-processing denoising (XCP-D)",
-              "description": "Spatial smoothing, band-pass filtering (0.01–0.08 Hz), nuisance regression (36P model), scrubbing (FD > 0.2mm)；fmriprep-tool (XCP-D integration)；Clean 4D BOLD + ROI timeseries (.tsv) + functional connectivity matrices（来源：SKILL.md:L65）"
+              "description": "规划选项：Post-processing denoising (XCP-D)；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -436,30 +436,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/fmri-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/fmri-skill/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/fmri-skill/SKILL.md",
-          "label": "已提取 2 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "docker run -ti --rm -v <FMRIPREP_DERIVATIVES>:/fmriprep:ro -v <XCPD_OUTPUT>:/out -v <FREESURFER_LICENSE>:/opt/freesurfer/license.txt:ro pennlinc/xcp_d:latest /fmriprep /out participant --participant-label <SUBID> --nuisance-regressors 36P --despike --lower-bpf 0.01 --upper-bpf 0.08 --smoothing 6 --fd-thresh 0.2 --nthreads 8 --mem_gb 32",
-          "language": "bash",
-          "source_path": "skills/fmri-skill/SKILL.md",
-          "line_start": 160,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [
         "fmriprep-tool",
         "conn-tool"
@@ -482,7 +466,7 @@
       "method_id": "fmri-skill-guided--high-quality-hcp-style-preprocessing",
       "skill_id": "fmri-skill",
       "label": "High-quality HCP-style preprocessing",
-      "description": "Structural + functional (ICA-FIX) + diffusion + MSMAll surface alignment；hcppipeline-tool；HCP-style preprocessed data（来源：SKILL.md:L66）",
+      "description": "该入口为规划能力；用于讨论High-quality HCP-style preprocessing的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -511,7 +495,7 @@
             {
               "value": "high-quality-hcp-style-preprocessing",
               "label": "High-quality HCP-style preprocessing",
-              "description": "Structural + functional (ICA-FIX) + diffusion + MSMAll surface alignment；hcppipeline-tool；HCP-style preprocessed data（来源：SKILL.md:L66）"
+              "description": "规划选项：High-quality HCP-style preprocessing；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -780,30 +764,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/fmri-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/fmri-skill/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/fmri-skill/SKILL.md",
-          "label": "已提取 2 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "docker run --rm -it -v <BIDS_PATH>:/data:ro -v <OUTPUT_PATH>:/out -v <WORK_PATH>:/work -v <FREESURFER_LICENSE_PATH>:/fs nipreps/fmriprep:23.2.1 /data /out participant --participant-label <SUBID> --fs-license-file /fs/license.txt --output-spaces T1w --work-dir /work --clean-workdir",
-          "language": "bash",
-          "source_path": "skills/fmri-skill/SKILL.md",
-          "line_start": 121,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [
         "hcppipeline-tool"
       ],
@@ -826,7 +794,7 @@
       "method_id": "fmri-skill-guided--effective-connectivity",
       "skill_id": "fmri-skill",
       "label": "Effective connectivity",
-      "description": "Psychophysiological Interaction (PPI/gPPI), Granger causality, Dynamic Causal Modeling (DCM)；fsl-tool or conn-tool；PPI maps, causality matrices, DCM parameters（来源：SKILL.md:L70）",
+      "description": "该入口为规划能力；用于讨论Effective connectivity的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -855,7 +823,7 @@
             {
               "value": "effective-connectivity",
               "label": "Effective connectivity",
-              "description": "Psychophysiological Interaction (PPI/gPPI), Granger causality, Dynamic Causal Modeling (DCM)；fsl-tool or conn-tool；PPI maps, causality matrices, DCM parameters（来源：SKILL.md:L70）"
+              "description": "规划选项：Effective connectivity；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1124,38 +1092,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/fmri-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/fmri-skill/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/fmri-skill/SKILL.md",
-          "label": "已提取 2 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "docker run --rm -it -v <BIDS_PATH>:/data:ro -v <OUTPUT_PATH>:/out -v <WORK_PATH>:/work -v <FREESURFER_LICENSE_PATH>:/fs nipreps/fmriprep:23.2.1 /data /out participant --participant-label <SUBID> --fs-license-file /fs/license.txt --output-spaces T1w --work-dir /work --clean-workdir",
-          "language": "bash",
-          "source_path": "skills/fmri-skill/SKILL.md",
-          "line_start": 121,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "docker run -ti --rm -v <FMRIPREP_DERIVATIVES>:/fmriprep:ro -v <XCPD_OUTPUT>:/out -v <FREESURFER_LICENSE>:/opt/freesurfer/license.txt:ro pennlinc/xcp_d:latest /fmriprep /out participant --participant-label <SUBID> --nuisance-regressors 36P --despike --lower-bpf 0.01 --upper-bpf 0.08 --smoothing 6 --fd-thresh 0.2 --nthreads 8 --mem_gb 32",
-          "language": "bash",
-          "source_path": "skills/fmri-skill/SKILL.md",
-          "line_start": 160,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [
         "conn-tool",
         "fsl-tool"
@@ -1178,7 +1122,7 @@
       "method_id": "fmri-skill-guided--full-adni-style-rsfmri-pipeline",
       "skill_id": "fmri-skill",
       "label": "Full ADNI-style rsfMRI pipeline",
-      "description": "BIDS → fMRIPrep → XCP-D → connectivity analysis (resting state optimized)；bids-organizer + fmriprep-tool + fmriprep-tool (XCP-D)；Clean BOLD + timeseries + connectivity matrices + QC（来源：SKILL.md:L73）",
+      "description": "该入口为规划能力；用于讨论Full ADNI-style rsfMRI pipeline的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -1207,7 +1151,7 @@
             {
               "value": "full-adni-style-rsfmri-pipeline",
               "label": "Full ADNI-style rsfMRI pipeline",
-              "description": "BIDS → fMRIPrep → XCP-D → connectivity analysis (resting state optimized)；bids-organizer + fmriprep-tool + fmriprep-tool (XCP-D)；Clean BOLD + timeseries + connectivity matrices + QC（来源：SKILL.md:L73）"
+              "description": "规划选项：Full ADNI-style rsfMRI pipeline；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1476,38 +1420,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/fmri-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/fmri-skill/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/fmri-skill/SKILL.md",
-          "label": "已提取 2 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "docker run --rm -it -v <BIDS_PATH>:/data:ro -v <OUTPUT_PATH>:/out -v <WORK_PATH>:/work -v <FREESURFER_LICENSE_PATH>:/fs nipreps/fmriprep:23.2.1 /data /out participant --participant-label <SUBID> --fs-license-file /fs/license.txt --output-spaces T1w --work-dir /work --clean-workdir",
-          "language": "bash",
-          "source_path": "skills/fmri-skill/SKILL.md",
-          "line_start": 121,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "docker run -ti --rm -v <FMRIPREP_DERIVATIVES>:/fmriprep:ro -v <XCPD_OUTPUT>:/out -v <FREESURFER_LICENSE>:/opt/freesurfer/license.txt:ro pennlinc/xcp_d:latest /fmriprep /out participant --participant-label <SUBID> --nuisance-regressors 36P --despike --lower-bpf 0.01 --upper-bpf 0.08 --smoothing 6 --fd-thresh 0.2 --nthreads 8 --mem_gb 32",
-          "language": "bash",
-          "source_path": "skills/fmri-skill/SKILL.md",
-          "line_start": 160,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [
         "fmriprep-tool",
         "conn-tool",
@@ -1531,7 +1451,7 @@
       "method_id": "fmri-skill-guided--advanced-connectivity-conn",
       "skill_id": "fmri-skill",
       "label": "Advanced connectivity (CONN)",
-      "description": "ROI-to-ROI, seed-to-voxel, ICA networks, PPI/gPPI, DCM；conn-tool；Comprehensive connectivity results（来源：SKILL.md:L74）",
+      "description": "该入口为规划能力；用于讨论Advanced connectivity (CONN)的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -1560,7 +1480,7 @@
             {
               "value": "advanced-connectivity-conn",
               "label": "Advanced connectivity (CONN)",
-              "description": "ROI-to-ROI, seed-to-voxel, ICA networks, PPI/gPPI, DCM；conn-tool；Comprehensive connectivity results（来源：SKILL.md:L74）"
+              "description": "规划选项：Advanced connectivity (CONN)；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1829,38 +1749,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/fmri-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/fmri-skill/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/fmri-skill/SKILL.md",
-          "label": "已提取 2 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "docker run --rm -it -v <BIDS_PATH>:/data:ro -v <OUTPUT_PATH>:/out -v <WORK_PATH>:/work -v <FREESURFER_LICENSE_PATH>:/fs nipreps/fmriprep:23.2.1 /data /out participant --participant-label <SUBID> --fs-license-file /fs/license.txt --output-spaces T1w --work-dir /work --clean-workdir",
-          "language": "bash",
-          "source_path": "skills/fmri-skill/SKILL.md",
-          "line_start": 121,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "docker run -ti --rm -v <FMRIPREP_DERIVATIVES>:/fmriprep:ro -v <XCPD_OUTPUT>:/out -v <FREESURFER_LICENSE>:/opt/freesurfer/license.txt:ro pennlinc/xcp_d:latest /fmriprep /out participant --participant-label <SUBID> --nuisance-regressors 36P --despike --lower-bpf 0.01 --upper-bpf 0.08 --smoothing 6 --fd-thresh 0.2 --nthreads 8 --mem_gb 32",
-          "language": "bash",
-          "source_path": "skills/fmri-skill/SKILL.md",
-          "line_start": 160,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [
         "conn-tool"
       ],
@@ -1879,11 +1775,7 @@
     }
   ],
   "selection_rules": [
-    "先确认目标产物、允许使用的已有输入与禁止复用的结果；仅在用户允许时复用已有数据，不默认追加上游步骤。",
-    "独立操作选择 Method；确需固定组合时选择 Pipeline，并检查每一步输入输出。",
-    "软件工具 Skill 用于选择实现，任务 Skill 用于组织需求，不因为同时匹配两类 Skill 重复添加方法。",
-    "Treat missing inputs according to the current goal: for explicitly requested steps, ask for binding or discuss alternatives; when asked to produce a target from stated inputs, add only necessary available producers allowed by the user. Never regenerate an explicitly reused result or silently broaden the scientific goal.",
-    "Select by scientific output meaning, stage conditions and spatial/data requirements. A directory, generic image or report does not certify a typed derivative. Do not equate tissue classes, anatomical atlas regions and learned clusters. Query the Method contract for exact ports and conditional parameters; use Pipelines only when their actual steps match the request."
+    "目标为任务对比图时检查事件表和对比定义并选择 GLM；目标为功能连接矩阵时检查分区图谱与 ROI 时间序列提取。"
   ],
   "name": "fmri-skill",
   "category": [
@@ -1891,21 +1783,6 @@
     "fmri"
   ],
   "scope": "modality",
-  "applicability": [
-    "根据目标选择对应 Method 或 Pipeline；每个入口的输入格式、必要参数和产物以其独立契约为准。"
-  ],
-  "limitations": [
-    "格式和样本数量满足仅是必要条件；空间、单位、样本标识与方法假设仍须按所选方法检查。",
-    "这里只统筹已登记入口；目录收录不代表覆盖软件全部命令或参数。",
-    "环境探测与运行证据分别显示；合成数据测试不代表真实数据的科学有效性。",
-    "尚无 Method 的规划能力只能提供说明，不能当作可执行步骤。"
-  ],
-  "examples": [
-    {
-      "request": "查看 ROI 时间序列与功能连接 所需的输入和参数",
-      "decision": "查询 reviewed.nilearn-tool.connectome 的契约，绑定文件后再规划执行。"
-    }
-  ],
   "keywords": [
     "fmri-skill",
     "fMRI",
@@ -1913,5 +1790,12 @@
     "功能连接",
     "GLM",
     "FSL"
+  ],
+  "references": [
+    {
+      "id": "notes",
+      "title": "背景与注意事项",
+      "path": "references/notes.md"
+    }
   ]
 }

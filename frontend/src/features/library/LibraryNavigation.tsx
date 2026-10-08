@@ -59,9 +59,11 @@ export function LibraryNavigation({
           ))}
         </select>
       </label>
+      {/* Categories scroll first, then hand off at either boundary to the
+          enclosing sidebar/dialog. The outer viewport owns containment. */}
       <nav
         aria-label={zh ? ui('功能分类') : 'Function categories'}
-        className="max-h-64 overflow-y-auto overscroll-contain text-xs"
+        className="max-h-64 overflow-y-auto overscroll-auto text-xs"
       >
         <button
           className={

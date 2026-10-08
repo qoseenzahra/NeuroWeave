@@ -3,8 +3,8 @@ import { useLanguageStore } from '../../stores/languageStore';
 import { ui } from '../../lib/libraryText';
 import { Dialog } from '../../ui/Dialog';
 import { DefinitionDetails } from './DefinitionDetails';
-import * as api from './libraryApi';
 import type { Entry } from './libraryApi';
+import { methodQuery } from './libraryQueries';
 import { button } from './pipelineEditorStyles';
 
 type Props = {
@@ -16,12 +16,7 @@ type Props = {
 /** Details are fetched only when opened. Browsing never creates a canvas node. */
 export function MethodDetailsCard({ entry, canAdd, onAdd, onClose }: Props) {
   const language = useLanguageStore((s) => s.language);
-  const query = useQuery({
-    queryKey: ['library-method', entry.id, language],
-    queryFn: ({ signal }) => api.method(entry.id, signal),
-    staleTime: 60000,
-    retry: 1
-  });
+  const query = useQuery(methodQuery(entry.id, language));
   return (
     <Dialog
       title={query.data?.label ?? entry.label}

@@ -142,7 +142,7 @@
       "method_id": "eeg-skill-guided--bad-channel-detection-interpolation",
       "skill_id": "eeg-skill",
       "label": "Bad-channel detection & interpolation",
-      "description": "Auto-detect + interpolate noisy channels；claw-shell (via mne-eeg-tool)；Cleaned raw data（来源：SKILL.md:L39）",
+      "description": "该入口为规划能力；用于讨论Bad-channel detection & interpolation的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -171,7 +171,7 @@
             {
               "value": "bad-channel-detection-interpolation",
               "label": "Bad-channel detection & interpolation",
-              "description": "Auto-detect + interpolate noisy channels；claw-shell (via mne-eeg-tool)；Cleaned raw data（来源：SKILL.md:L39）"
+              "description": "规划选项：Bad-channel detection & interpolation；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -440,17 +440,16 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/eeg-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/eeg-skill/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
+          "line_start": null,
           "line_end": null
         }
       ],
       "command_references": [],
       "delegate_skill_ids": [
-        "mne-eeg-tool",
-        "claw-shell"
+        "mne-eeg-tool"
       ],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -470,7 +469,7 @@
       "method_id": "eeg-skill-guided--artifact-removal",
       "skill_id": "eeg-skill",
       "label": "Artifact removal",
-      "description": "ICA + AutoReject + EOG/ECG regression；claw-shell (via mne-eeg-tool)；Cleaned data（来源：SKILL.md:L41）",
+      "description": "该入口为规划能力；用于讨论Artifact removal的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -499,7 +498,7 @@
             {
               "value": "artifact-removal",
               "label": "Artifact removal",
-              "description": "ICA + AutoReject + EOG/ECG regression；claw-shell (via mne-eeg-tool)；Cleaned data（来源：SKILL.md:L41）"
+              "description": "规划选项：Artifact removal；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -768,17 +767,16 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/eeg-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/eeg-skill/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
+          "line_start": null,
           "line_end": null
         }
       ],
       "command_references": [],
       "delegate_skill_ids": [
-        "mne-eeg-tool",
-        "claw-shell"
+        "mne-eeg-tool"
       ],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -798,7 +796,7 @@
       "method_id": "eeg-skill-guided--continuous-data-cleaning",
       "skill_id": "eeg-skill",
       "label": "Continuous data cleaning",
-      "description": "Resting-state pipeline (no events)；claw-shell (via mne-eeg-tool)；Cleaned continuous data（来源：SKILL.md:L42）",
+      "description": "该入口为规划能力；用于讨论Continuous data cleaning的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -827,7 +825,7 @@
             {
               "value": "continuous-data-cleaning",
               "label": "Continuous data cleaning",
-              "description": "Resting-state pipeline (no events)；claw-shell (via mne-eeg-tool)；Cleaned continuous data（来源：SKILL.md:L42）"
+              "description": "规划选项：Continuous data cleaning；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1096,17 +1094,16 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/eeg-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/eeg-skill/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
+          "line_start": null,
           "line_end": null
         }
       ],
       "command_references": [],
       "delegate_skill_ids": [
-        "mne-eeg-tool",
-        "claw-shell"
+        "mne-eeg-tool"
       ],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -1126,7 +1123,7 @@
       "method_id": "eeg-skill-guided--waveform-to-mel-spectrogram",
       "skill_id": "eeg-skill",
       "label": "Waveform to Mel-Spectrogram",
-      "description": "Convert raw waveform to Mel spectrogram using torchaudio；claw-shell (via mne-eeg-tool)；Mel-spectrogram tensors (.pt)（来源：SKILL.md:L44）",
+      "description": "该入口为规划能力；用于讨论Waveform to Mel-Spectrogram的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -1155,7 +1152,7 @@
             {
               "value": "waveform-to-mel-spectrogram",
               "label": "Waveform to Mel-Spectrogram",
-              "description": "Convert raw waveform to Mel spectrogram using torchaudio；claw-shell (via mne-eeg-tool)；Mel-spectrogram tensors (.pt)（来源：SKILL.md:L44）"
+              "description": "规划选项：Waveform to Mel-Spectrogram；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1424,17 +1421,16 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/eeg-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/eeg-skill/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
+          "line_start": null,
           "line_end": null
         }
       ],
       "command_references": [],
       "delegate_skill_ids": [
-        "mne-eeg-tool",
-        "claw-shell"
+        "mne-eeg-tool"
       ],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -1453,7 +1449,7 @@
       "method_id": "eeg-skill-guided--frequency-band-energy-extraction",
       "skill_id": "eeg-skill",
       "label": "Frequency-band energy extraction",
-      "description": "Extract δ/θ/α/β/γ band energy using CWT with morlet2 wavelet；claw-shell (via mne-eeg-tool)；Per-band power matrices (CSV / .npy)（来源：SKILL.md:L45）",
+      "description": "该入口为规划能力；用于讨论Frequency-band energy extraction的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -1482,7 +1478,7 @@
             {
               "value": "frequency-band-energy-extraction",
               "label": "Frequency-band energy extraction",
-              "description": "Extract δ/θ/α/β/γ band energy using CWT with morlet2 wavelet；claw-shell (via mne-eeg-tool)；Per-band power matrices (CSV / .npy)（来源：SKILL.md:L45）"
+              "description": "规划选项：Frequency-band energy extraction；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1751,17 +1747,16 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/eeg-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/eeg-skill/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
+          "line_start": null,
           "line_end": null
         }
       ],
       "command_references": [],
       "delegate_skill_ids": [
-        "mne-eeg-tool",
-        "claw-shell"
+        "mne-eeg-tool"
       ],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -1780,7 +1775,7 @@
       "method_id": "eeg-skill-guided--feature-extraction-core",
       "skill_id": "eeg-skill",
       "label": "Feature extraction (core)",
-      "description": "Band power, CSP, Hjorth, sample entropy；claw-shell (via mne-eeg-tool)；Feature matrices (CSV / .npy / .npz)（来源：SKILL.md:L46）",
+      "description": "该入口为规划能力；用于讨论Feature extraction (core)的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -1809,7 +1804,7 @@
             {
               "value": "feature-extraction-core",
               "label": "Feature extraction (core)",
-              "description": "Band power, CSP, Hjorth, sample entropy；claw-shell (via mne-eeg-tool)；Feature matrices (CSV / .npy / .npz)（来源：SKILL.md:L46）"
+              "description": "规划选项：Feature extraction (core)；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -2078,17 +2073,16 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/eeg-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/eeg-skill/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
+          "line_start": null,
           "line_end": null
         }
       ],
       "command_references": [],
       "delegate_skill_ids": [
-        "mne-eeg-tool",
-        "claw-shell"
+        "mne-eeg-tool"
       ],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -2108,7 +2102,7 @@
       "method_id": "eeg-skill-guided--advanced-features",
       "skill_id": "eeg-skill",
       "label": "Advanced features",
-      "description": "Functional connectivity, ERP peaks/latency/AUC, frontal alpha asymmetry, microstates；claw-shell (via mne-eeg-tool)；Connectivity matrices, ERP CSV, asymmetry .npy, microstates .fif（来源：SKILL.md:L47）",
+      "description": "该入口为规划能力；用于讨论Advanced features的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -2137,7 +2131,7 @@
             {
               "value": "advanced-features",
               "label": "Advanced features",
-              "description": "Functional connectivity, ERP peaks/latency/AUC, frontal alpha asymmetry, microstates；claw-shell (via mne-eeg-tool)；Connectivity matrices, ERP CSV, asymmetry .npy, microstates .fif（来源：SKILL.md:L47）"
+              "description": "规划选项：Advanced features；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -2406,17 +2400,16 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/eeg-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/eeg-skill/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
+          "line_start": null,
           "line_end": null
         }
       ],
       "command_references": [],
       "delegate_skill_ids": [
-        "mne-eeg-tool",
-        "claw-shell"
+        "mne-eeg-tool"
       ],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -2436,7 +2429,7 @@
       "method_id": "eeg-skill-guided--full-end-to-end-pipeline",
       "skill_id": "eeg-skill",
       "label": "Full end-to-end pipeline",
-      "description": "Any combination of the above for BCI, emotion, epilepsy, fatigue, etc.；claw-shell + dependency-planner；Complete processed dataset + QC report（来源：SKILL.md:L48）",
+      "description": "该入口为规划能力；用于讨论Full end-to-end pipeline的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -2465,7 +2458,7 @@
             {
               "value": "full-end-to-end-pipeline",
               "label": "Full end-to-end pipeline",
-              "description": "Any combination of the above for BCI, emotion, epilepsy, fatigue, etc.；claw-shell + dependency-planner；Complete processed dataset + QC report（来源：SKILL.md:L48）"
+              "description": "规划选项：Full end-to-end pipeline；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -2734,17 +2727,15 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/eeg-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/eeg-skill/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
+          "line_start": null,
           "line_end": null
         }
       ],
       "command_references": [],
-      "delegate_skill_ids": [
-        "claw-shell"
-      ],
+      "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
       "replaces_operations": [],
@@ -2760,11 +2751,7 @@
     }
   ],
   "selection_rules": [
-    "先确认目标产物、允许使用的已有输入与禁止复用的结果；仅在用户允许时复用已有数据，不默认追加上游步骤。",
-    "独立操作选择 Method；确需固定组合时选择 Pipeline，并检查每一步输入输出。",
-    "软件工具 Skill 用于选择实现，任务 Skill 用于组织需求，不因为同时匹配两类 Skill 重复添加方法。",
-    "Treat missing inputs according to the current goal: for explicitly requested steps, ask for binding or discuss alternatives; when asked to produce a target from stated inputs, add only necessary available producers allowed by the user. Never regenerate an explicitly reused result or silently broaden the scientific goal.",
-    "Select by scientific output meaning, stage conditions and spatial/data requirements. A directory, generic image or report does not certify a typed derivative. Do not equate tissue classes, anatomical atlas regions and learned clusters. Query the Method contract for exact ports and conditional parameters; use Pipelines only when their actual steps match the request."
+    "先区分连续 EEG 清理、事件分段、时频分析和特征建模；需要事件锁定结果时确认事件编码与分段时间窗。"
   ],
   "name": "eeg-skill",
   "category": [
@@ -2772,21 +2759,6 @@
     "eeg"
   ],
   "scope": "modality",
-  "applicability": [
-    "根据目标选择对应 Method 或 Pipeline；每个入口的输入格式、必要参数和产物以其独立契约为准。"
-  ],
-  "limitations": [
-    "格式和样本数量满足仅是必要条件；空间、单位、样本标识与方法假设仍须按所选方法检查。",
-    "这里只统筹已登记入口；目录收录不代表覆盖软件全部命令或参数。",
-    "环境探测与运行证据分别显示；合成数据测试不代表真实数据的科学有效性。",
-    "尚无 Method 的规划能力只能提供说明，不能当作可执行步骤。"
-  ],
-  "examples": [
-    {
-      "request": "查看 EEG/MEG 数据检查 所需的输入和参数",
-      "decision": "查询 reviewed.mne-eeg-tool.inspect 的契约，绑定文件后再规划执行。"
-    }
-  ],
   "keywords": [
     "eeg-skill",
     "EEG",
@@ -2797,5 +2769,12 @@
     "MNE",
     "LOF",
     "ICA"
+  ],
+  "references": [
+    {
+      "id": "notes",
+      "title": "背景与注意事项",
+      "path": "references/notes.md"
+    }
   ]
 }

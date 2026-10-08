@@ -51,8 +51,8 @@ class CapabilityRecommendation(BaseModel):
     fully_executable: bool = False
     items: list[CapabilityRecommendationItem] = Field(default_factory=list)
     notice: str = (
-        "推荐项来自现有 SKILL.md；planning Manifest 可进入流程并选择参数，"
-        "但只有 runner Manifest 才表示已定义执行方法。"
+        "推荐项来自当前 Skill、Method 和 Pipeline 目录；规划能力用于讨论，"
+        "只有已登记 Method 及其受信任 Runner 才能执行。"
     )
 
 

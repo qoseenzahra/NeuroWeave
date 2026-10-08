@@ -208,17 +208,6 @@ await test('bulk retry preserves the existing empty-step selection API contract'
     assert.deepEqual(requests,[{url:'/api/runs/failed%2Frun/retry',method:'POST',body:{step_ids:[]}}]);
   } finally { globalThis.fetch=previous; }
 });
-await test('skill readiness comes from server runtime evidence rather than catalog status', async () => {
-  const { SkillCard } = await load('features/skills/SkillCard.tsx');
-  const base={name:'skill',display_name:'Test',skill_type:'image',status:'ready',description:'Fixture'};
-  const render=extra=>renderToStaticMarkup(createElement(SkillCard,{skill:{...base,...extra},selected:false,onSelect(){}}));
-  assert(render({execution_state:'needs_environment',runtime_reasons:['MRtrix is unavailable']}).includes(translations.en.skillRuntimeMissing));
-  assert(render({execution_state:'needs_environment',runtime_reasons:['MRtrix is unavailable']}).includes('MRtrix is unavailable'));
-  assert(render({status:'imported',execution_state:'ready',ready_runner_count:3}).includes('Runnable: 3'));
-  assert(render({execution_state:'planning',structure_mode:'planning'}).includes(translations.en.skillPlanningStructure));
-  assert(render({}).includes(translations.en.skillRuntimeUnknown));
-  assert(!render({}).includes('aria-label="ready"'));
-});
 await test('task responses explain clarification or no workflow without affecting chat or existing plans', async () => {
   const { MessageArea } = await load('features/chat/MessageArea.tsx');
   const base={id:'message',role:'assistant',content:'Fixture reply',interactionMode:'task',workflowRecommended:false};

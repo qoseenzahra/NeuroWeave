@@ -10,7 +10,7 @@
       "method_id": "overleaf-skill-guided--list-projects",
       "skill_id": "overleaf-skill",
       "label": "List projects",
-      "description": "API / CLI；pyoverleaf ls；api.getprojects()；Safe (read-only)（来源：SKILL.md:L29）",
+      "description": "该入口为规划能力；用于讨论List projects的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -39,7 +39,7 @@
             {
               "value": "list-projects",
               "label": "List projects",
-              "description": "API / CLI；pyoverleaf ls；api.getprojects()；Safe (read-only)（来源：SKILL.md:L29）"
+              "description": "规划选项：List projects；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -298,45 +298,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/overleaf-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/overleaf-skill/scripts/install.sh",
           "label": "install.sh",
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/overleaf-skill/SKILL.md",
-          "label": "已提取 5 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python -c \"import pyoverleaf; api=pyoverleaf.Api(); print(api.get_projects())\"",
-          "language": "bash",
-          "source_path": "skills/overleaf-skill/SKILL.md",
-          "line_start": 112,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "pip install pyoverleaf",
-          "language": "bash",
-          "source_path": "skills/overleaf-skill/SKILL.md",
-          "line_start": 109,
-          "kind": "setup",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -355,7 +324,7 @@
       "method_id": "overleaf-skill-guided--download-project-zip",
       "skill_id": "overleaf-skill",
       "label": "Download project (ZIP)",
-      "description": "API / CLI；pyoverleaf download-project \"My Paper\" out.zip；api.downloadproject(projectid, \"out.zip\")；Safe（来源：SKILL.md:L30）",
+      "description": "该入口为规划能力；用于讨论Download project (ZIP)的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -384,7 +353,7 @@
             {
               "value": "download-project-zip",
               "label": "Download project (ZIP)",
-              "description": "API / CLI；pyoverleaf download-project \"My Paper\" out.zip；api.downloadproject(projectid, \"out.zip\")；Safe（来源：SKILL.md:L30）"
+              "description": "规划选项：Download project (ZIP)；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -643,45 +612,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/overleaf-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/overleaf-skill/scripts/install.sh",
           "label": "install.sh",
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/overleaf-skill/SKILL.md",
-          "label": "已提取 5 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python -c \"import pyoverleaf; api=pyoverleaf.Api(); print(api.get_projects())\"",
-          "language": "bash",
-          "source_path": "skills/overleaf-skill/SKILL.md",
-          "line_start": 112,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "pip install pyoverleaf",
-          "language": "bash",
-          "source_path": "skills/overleaf-skill/SKILL.md",
-          "line_start": 109,
-          "kind": "setup",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -700,7 +638,7 @@
       "method_id": "overleaf-skill-guided--read-file-content",
       "skill_id": "overleaf-skill",
       "label": "Read file content",
-      "description": "CLI / ProjectIO；pyoverleaf read \"My Paper/main.tex\"；with io.open(\"main.tex\", \"r\") as f: content = f.read()；Safe（来源：SKILL.md:L31）",
+      "description": "该入口为规划能力；用于讨论Read file content的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -729,7 +667,7 @@
             {
               "value": "read-file-content",
               "label": "Read file content",
-              "description": "CLI / ProjectIO；pyoverleaf read \"My Paper/main.tex\"；with io.open(\"main.tex\", \"r\") as f: content = f.read()；Safe（来源：SKILL.md:L31）"
+              "description": "规划选项：Read file content；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -988,45 +926,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/overleaf-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/overleaf-skill/scripts/install.sh",
           "label": "install.sh",
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/overleaf-skill/SKILL.md",
-          "label": "已提取 5 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python -c \"import pyoverleaf; api=pyoverleaf.Api(); print(api.get_projects())\"",
-          "language": "bash",
-          "source_path": "skills/overleaf-skill/SKILL.md",
-          "line_start": 112,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "pip install pyoverleaf",
-          "language": "bash",
-          "source_path": "skills/overleaf-skill/SKILL.md",
-          "line_start": 109,
-          "kind": "setup",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -1045,7 +952,7 @@
       "method_id": "overleaf-skill-guided--write-update-file",
       "skill_id": "overleaf-skill",
       "label": "Write / Update file",
-      "description": "CLI / ProjectIO；echo \"...\"；pyoverleaf write \"My Paper/main.tex\"；with io.open(\"main.tex\", \"w\") as f: f.write(newcontent)；Explicit user authorization required（来源：SKILL.md:L32）",
+      "description": "该入口为规划能力；用于讨论Write / Update file的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -1074,7 +981,7 @@
             {
               "value": "write-update-file",
               "label": "Write / Update file",
-              "description": "CLI / ProjectIO；echo \"...\"；pyoverleaf write \"My Paper/main.tex\"；with io.open(\"main.tex\", \"w\") as f: f.write(newcontent)；Explicit user authorization required（来源：SKILL.md:L32）"
+              "description": "规划选项：Write / Update file；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1333,45 +1240,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/overleaf-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/overleaf-skill/scripts/install.sh",
           "label": "install.sh",
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/overleaf-skill/SKILL.md",
-          "label": "已提取 5 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python -c \"import pyoverleaf; api=pyoverleaf.Api(); print(api.get_projects())\"",
-          "language": "bash",
-          "source_path": "skills/overleaf-skill/SKILL.md",
-          "line_start": 112,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "pip install pyoverleaf",
-          "language": "bash",
-          "source_path": "skills/overleaf-skill/SKILL.md",
-          "line_start": 109,
-          "kind": "setup",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -1390,7 +1266,7 @@
       "method_id": "overleaf-skill-guided--upload-binary-file",
       "skill_id": "overleaf-skill",
       "label": "Upload binary file",
-      "description": "ProjectIO / API；cat fig.png；pyoverleaf write \"My Paper/figures/fig.png\"；api.projectuploadfile(projectid, parentid, \"fig.png\", filebytes)；Explicit user authorization required（来源：SKILL.md:L33）",
+      "description": "该入口为规划能力；用于讨论Upload binary file的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -1419,7 +1295,7 @@
             {
               "value": "upload-binary-file",
               "label": "Upload binary file",
-              "description": "ProjectIO / API；cat fig.png；pyoverleaf write \"My Paper/figures/fig.png\"；api.projectuploadfile(projectid, parentid, \"fig.png\", filebytes)；Explicit user authorization required（来源：SKILL.md:L33）"
+              "description": "规划选项：Upload binary file；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1678,45 +1554,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/overleaf-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/overleaf-skill/scripts/install.sh",
           "label": "install.sh",
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/overleaf-skill/SKILL.md",
-          "label": "已提取 5 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python -c \"import pyoverleaf; api=pyoverleaf.Api(); print(api.get_projects())\"",
-          "language": "bash",
-          "source_path": "skills/overleaf-skill/SKILL.md",
-          "line_start": 112,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "pip install pyoverleaf",
-          "language": "bash",
-          "source_path": "skills/overleaf-skill/SKILL.md",
-          "line_start": 109,
-          "kind": "setup",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -1735,7 +1580,7 @@
       "method_id": "overleaf-skill-guided--create-folder",
       "skill_id": "overleaf-skill",
       "label": "Create folder",
-      "description": "CLI / API；pyoverleaf mkdir -p \"My Paper/chapters\"；api.projectcreatefolder(projectid, parentid, \"chapters\") or io.mkdir(...)；Explicit user authorization required（来源：SKILL.md:L34）",
+      "description": "该入口为规划能力；用于讨论Create folder的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -1764,7 +1609,7 @@
             {
               "value": "create-folder",
               "label": "Create folder",
-              "description": "CLI / API；pyoverleaf mkdir -p \"My Paper/chapters\"；api.projectcreatefolder(projectid, parentid, \"chapters\") or io.mkdir(...)；Explicit user authorization required（来源：SKILL.md:L34）"
+              "description": "规划选项：Create folder；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -2023,45 +1868,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/overleaf-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/overleaf-skill/scripts/install.sh",
           "label": "install.sh",
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/overleaf-skill/SKILL.md",
-          "label": "已提取 5 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python -c \"import pyoverleaf; api=pyoverleaf.Api(); print(api.get_projects())\"",
-          "language": "bash",
-          "source_path": "skills/overleaf-skill/SKILL.md",
-          "line_start": 112,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "pip install pyoverleaf",
-          "language": "bash",
-          "source_path": "skills/overleaf-skill/SKILL.md",
-          "line_start": 109,
-          "kind": "setup",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -2080,7 +1894,7 @@
       "method_id": "overleaf-skill-guided--delete-file-folder",
       "skill_id": "overleaf-skill",
       "label": "Delete file/folder",
-      "description": "CLI / API；pyoverleaf rm \"My Paper/old.tex\"；api.projectdeleteentity(projectid, entity)；Explicit user authorization required（来源：SKILL.md:L35）",
+      "description": "该入口为规划能力；用于讨论Delete file/folder的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -2109,7 +1923,7 @@
             {
               "value": "delete-file-folder",
               "label": "Delete file/folder",
-              "description": "CLI / API；pyoverleaf rm \"My Paper/old.tex\"；api.projectdeleteentity(projectid, entity)；Explicit user authorization required（来源：SKILL.md:L35）"
+              "description": "规划选项：Delete file/folder；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -2368,45 +2182,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/overleaf-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/overleaf-skill/scripts/install.sh",
           "label": "install.sh",
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/overleaf-skill/SKILL.md",
-          "label": "已提取 5 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python -c \"import pyoverleaf; api=pyoverleaf.Api(); print(api.get_projects())\"",
-          "language": "bash",
-          "source_path": "skills/overleaf-skill/SKILL.md",
-          "line_start": 112,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "pip install pyoverleaf",
-          "language": "bash",
-          "source_path": "skills/overleaf-skill/SKILL.md",
-          "line_start": 109,
-          "kind": "setup",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -2425,7 +2208,7 @@
       "method_id": "overleaf-skill-guided--create-new-project",
       "skill_id": "overleaf-skill",
       "label": "Create new project",
-      "description": "API (limited)；(web recommended first)；(internal call or ZIP upload simulation)；Double confirmation + auth required（来源：SKILL.md:L36）",
+      "description": "该入口为规划能力；用于讨论Create new project的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -2454,7 +2237,7 @@
             {
               "value": "create-new-project",
               "label": "Create new project",
-              "description": "API (limited)；(web recommended first)；(internal call or ZIP upload simulation)；Double confirmation + auth required（来源：SKILL.md:L36）"
+              "description": "规划选项：Create new project；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -2713,37 +2496,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/overleaf-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/overleaf-skill/scripts/install.sh",
           "label": "install.sh",
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/overleaf-skill/SKILL.md",
-          "label": "已提取 5 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python -c \"import pyoverleaf; api=pyoverleaf.Api(); print(api.get_projects())\"",
-          "language": "bash",
-          "source_path": "skills/overleaf-skill/SKILL.md",
-          "line_start": 112,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -2762,7 +2522,7 @@
       "method_id": "overleaf-skill-guided--rename-archive-project",
       "skill_id": "overleaf-skill",
       "label": "Rename / Archive project",
-      "description": "API；—；(API supports; method may vary)；Explicit user authorization required（来源：SKILL.md:L37）",
+      "description": "该入口为规划能力；用于讨论Rename / Archive project的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -2791,7 +2551,7 @@
             {
               "value": "rename-archive-project",
               "label": "Rename / Archive project",
-              "description": "API；—；(API supports; method may vary)；Explicit user authorization required（来源：SKILL.md:L37）"
+              "description": "规划选项：Rename / Archive project；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -3050,37 +2810,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/overleaf-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/overleaf-skill/scripts/install.sh",
           "label": "install.sh",
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/overleaf-skill/SKILL.md",
-          "label": "已提取 5 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python -c \"import pyoverleaf; api=pyoverleaf.Api(); print(api.get_projects())\"",
-          "language": "bash",
-          "source_path": "skills/overleaf-skill/SKILL.md",
-          "line_start": 112,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -3099,7 +2836,7 @@
       "method_id": "overleaf-skill-guided--pull-diff-review",
       "skill_id": "overleaf-skill",
       "label": "Pull + diff + review",
-      "description": "Skill logic + claw-shell；Auto: download → diff → summarize → ask user；Skill combines API download + local diff；Core safety workflow（来源：SKILL.md:L38）",
+      "description": "该入口为规划能力；用于讨论Pull + diff + review的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -3128,7 +2865,7 @@
             {
               "value": "pull-diff-review",
               "label": "Pull + diff + review",
-              "description": "Skill logic + claw-shell；Auto: download → diff → summarize → ask user；Skill combines API download + local diff；Core safety workflow（来源：SKILL.md:L38）"
+              "description": "规划选项：Pull + diff + review；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -3387,37 +3124,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/overleaf-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/overleaf-skill/scripts/install.sh",
           "label": "install.sh",
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/overleaf-skill/SKILL.md",
-          "label": "已提取 5 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python -c \"import pyoverleaf; api=pyoverleaf.Api(); print(api.get_projects())\"",
-          "language": "bash",
-          "source_path": "skills/overleaf-skill/SKILL.md",
-          "line_start": 112,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -3432,29 +3146,20 @@
       }
     }
   ],
-  "selection_rules": [
-    "先确认目标产物、允许使用的已有输入与禁止复用的结果；仅在用户允许时复用已有数据，不默认追加上游步骤。",
-    "独立操作选择 Method；确需固定组合时选择 Pipeline，并检查每一步输入输出。",
-    "软件工具 Skill 用于选择实现，任务 Skill 用于组织需求，不因为同时匹配两类 Skill 重复添加方法。",
-    "Treat missing inputs according to the current goal: for explicitly requested steps, ask for binding or discuss alternatives; when asked to produce a target from stated inputs, add only necessary available producers allowed by the user. Never regenerate an explicitly reused result or silently broaden the scientific goal.",
-    "Select by scientific output meaning, stage conditions and spatial/data requirements. A directory, generic image or report does not certify a typed derivative. Do not equate tissue classes, anatomical atlas regions and learned clusters. Query the Method contract for exact ports and conditional parameters; use Pipelines only when their actual steps match the request."
-  ],
   "name": "overleaf-skill",
   "category": [
     "软件工具",
     "overleaf"
   ],
   "scope": "software",
-  "applicability": [
-    "用于 overleaf-skill 的任务分析与方法说明；当前没有登记可独立执行的 Method。"
-  ],
-  "limitations": [
-    "这里只统筹已登记入口；目录收录不代表覆盖软件全部命令或参数。",
-    "环境探测与运行证据分别显示；合成数据测试不代表真实数据的科学有效性。",
-    "尚无 Method 的规划能力只能提供说明，不能当作可执行步骤。"
-  ],
-  "examples": [],
   "keywords": [
     "overleaf-skill"
+  ],
+  "references": [
+    {
+      "id": "notes",
+      "title": "背景与注意事项",
+      "path": "references/notes.md"
+    }
   ]
 }

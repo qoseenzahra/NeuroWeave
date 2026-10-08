@@ -86,6 +86,7 @@ type WorkflowCardProps = {
   workflowId: string;
   initialWorkflow?: Workflow | null;
   deferred?: boolean;
+  defaultExpanded?: boolean;
   disabled?: boolean;
 };
 
@@ -98,11 +99,12 @@ function WorkflowCardDisclosure({
   workflowId,
   initialWorkflow,
   deferred = false,
+  defaultExpanded = false,
   disabled = false
 }: WorkflowCardProps) {
   const language = useLanguageStore((s) => s.language);
   const t = getTranslations(language);
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(defaultExpanded);
   const [hasOpened, setHasOpened] = useState(!deferred);
   // Keep historical cards lazy until first opened. Afterwards hide the body
   // without unmounting it: draft state and in-flight mutation callbacks survive.
@@ -771,7 +773,7 @@ function WorkflowCardBody({
 
       </div>
       {expanded && pickerOpen && (
-        <DatasetPicker onClose={() => setPickerOpen(false)} onSelect={changeDataset} />
+        <DatasetPicker selectedDatasetId={workflow.dataset_id} onClose={() => setPickerOpen(false)} onSelect={changeDataset} />
       )}
     </section>
   );

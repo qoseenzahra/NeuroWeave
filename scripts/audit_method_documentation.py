@@ -23,7 +23,7 @@ def report():
         c=method.execution['contract']
         command_coverage.append(dict(command=c['command'],version=c['version'],total_options=c.get('total_options'),
                                      exposed_options=len(c['options']) if 'options' in c else len(method.parameters),omitted_options=c['omitted_options']))
-    return dict(skill_overviews=len(store.skills),skill_aliases=len(store.skill_aliases),
+    return dict(skill_overviews=len(store.skills),
         invalid_contracts={m.id:contract_errors(m) for m in methods if contract_errors(m)},
         documentation_gaps={m.id:documentation_gaps(m) for m in methods if documentation_gaps(m)},
         execution_evidence=dict(Counter(store.verification(m.id)['execution']['status'] for m in methods)),registered_methods=len(methods),pipelines=len(store.pipelines),

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 import httpx
 from fastapi import APIRouter, HTTPException, Query
@@ -61,8 +61,12 @@ def router_for(services: ApplicationServices) -> APIRouter:
         offset: int = Query(0, ge=0),
         limit: int = Query(30, ge=1, le=100),
         q: str = Query("", max_length=200),
+        source: Literal["", "pipeline", "conversation"] = "",
+        status: Literal["", "draft", "active", "succeeded", "failed", "cancelled"] = "",
     ):
-        return services.local_store.workflow_index(offset=offset, limit=limit, query=q)
+        return services.local_store.workflow_index(
+            offset=offset, limit=limit, query=q, source=source, status=status
+        )
 
     @router.get("/api/workflows/{workflow_id}", response_model=Workflow)
     def get_workflow(workflow_id: str) -> Workflow:

@@ -3,8 +3,8 @@
   "id": "reviewed-dcm2niix-convert-y-true-989e0368fb",
   "version": "1",
   "kind": "pipeline",
-  "description": "依次执行：dcm2niix 实际转换。输入和参数由方法契约定义。",
-  "label": "4D fMRI/DWI/perfusion",
+  "description": "将只读 DICOM 目录转换到隔离的 NIfTI 输出目录，固定使用 GZip 压缩并生成 JSON sidecar；可配置 sidecar 匿名化和文件名模板。此预设不组织完整 BIDS 目录，也不额外执行 4D 重建。",
+  "label": "DICOM → NIfTI（固定生成 JSON）",
   "parameters": [
     {
       "id": "anonymize",

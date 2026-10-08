@@ -624,15 +624,31 @@ class LocalStore(RunStoreMixin):
         return len(runs)
 
     def workflow_index(
-        self, *, offset: int = 0, limit: int = 30, query: str = ""
+        self, *, offset: int = 0, limit: int = 30, query: str = "",
+        source: str = "", status: str = "",
     ) -> dict:
         with self._connect() as db:
             rows = db.execute(
-                """SELECT w.workflow_id,w.status,w.updated_at,json_extract(w.payload_json,'$.title') AS title,
-                (SELECT COUNT(*) FROM runs r WHERE r.workflow_id=w.workflow_id) AS run_count,
-                (SELECT status FROM runs r WHERE r.workflow_id=w.workflow_id ORDER BY created_at DESC LIMIT 1) AS latest_run_status
-                FROM workflows w WHERE instr(lower(json_extract(w.payload_json,'$.title')),lower(?))>0
-                ORDER BY w.updated_at DESC,w.workflow_id LIMIT ? OFFSET ?""",
-                (query, limit + 1, offset),
+                """WITH tasks AS (
+                    SELECT w.workflow_id,w.status,
+                    MAX(w.updated_at,COALESCE((SELECT MAX(updated_at) FROM runs r
+                        WHERE r.workflow_id=w.workflow_id),w.updated_at)) AS updated_at,
+                    json_extract(w.payload_json,'$.title') AS title,
+                    CASE WHEN json_extract(w.payload_json,'$.planner_source')='pipeline-library'
+                        THEN 'pipeline' ELSE 'conversation' END AS source,
+                    json_extract(w.payload_json,'$.dataset.display_name') AS dataset_label,
+                    json_extract(w.payload_json,'$.workspace_root_path') AS workspace_path,
+                    (SELECT COUNT(*) FROM runs r WHERE r.workflow_id=w.workflow_id) AS run_count,
+                    (SELECT status FROM runs r WHERE r.workflow_id=w.workflow_id
+                        ORDER BY created_at DESC,run_id DESC LIMIT 1) AS latest_run_status
+                    FROM workflows w
+                ) SELECT * FROM tasks
+                WHERE instr(lower(COALESCE(title,'')),lower(?))>0
+                  AND (?='' OR source=?)
+                  AND (?='' OR (?='draft' AND latest_run_status IS NULL)
+                    OR (?='active' AND latest_run_status IN ('queued','running','cancel_requested'))
+                    OR latest_run_status=?)
+                ORDER BY updated_at DESC,workflow_id LIMIT ? OFFSET ?""",
+                (query, source, source, status, status, status, status, limit + 1, offset),
             ).fetchall()
         return {"items": [dict(r) for r in rows[:limit]], "has_more": len(rows) > limit}

@@ -4,9 +4,9 @@ import type { Method, Pipeline } from './libraryApi';
 
 /** Shared read-only projection of the registered contract; never edits the graph. */
 export function DefinitionDetails({
-  definition
+  definition, showParameters = true
 }: {
-  definition: Method | Pipeline;
+  definition: Method | Pipeline; showParameters?: boolean;
 }) {
   return (
     <div className="min-w-0 space-y-2 break-words">
@@ -49,8 +49,8 @@ export function DefinitionDetails({
           {s.label} · {s.type} — {s.description}
         </p>
       ))}
-      <h3 className="mt-3 font-medium">{ui('参数与用法')}</h3>
-      {definition.parameters.map((p) => (
+      {showParameters && <h3 className="mt-3 font-medium">{ui('参数与用法')}</h3>}
+      {showParameters && definition.parameters.map((p) => (
         <details
           key={p.id}
           className="my-2 rounded border border-line p-2 text-xs"

@@ -10,7 +10,7 @@
       "method_id": "academic-research-hub-guided--search-arxiv",
       "skill_id": "academic-research-hub",
       "label": "Search arXiv",
-      "description": "python scripts/research.py arxiv \"quantum computing\"（来源：SKILL.md:L38）",
+      "description": "该入口为规划能力；用于讨论Search arXiv的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -39,7 +39,7 @@
             {
               "value": "search-arxiv",
               "label": "Search arXiv",
-              "description": "python scripts/research.py arxiv \"quantum computing\"（来源：SKILL.md:L38）"
+              "description": "规划选项：Search arXiv；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -298,13 +298,6 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/academic-research-hub/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/academic-research-hub/scripts/requirements.txt",
           "label": "requirements.txt",
           "kind": "script",
@@ -317,41 +310,9 @@
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/academic-research-hub/SKILL.md",
-          "label": "已提取 3 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python -m venv venv",
-          "language": "bash",
-          "source_path": "skills/academic-research-hub/SKILL.md",
-          "line_start": 27,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "source venv/bin/activate # On Windows: venv\\Scripts\\activate",
-          "language": "bash",
-          "source_path": "skills/academic-research-hub/SKILL.md",
-          "line_start": 28,
-          "kind": "environment",
-          "executable": false
-        },
-        {
-          "command": "pip install arxiv scholarly pubmed-parser semanticscholar requests",
-          "language": "bash",
-          "source_path": "skills/academic-research-hub/SKILL.md",
-          "line_start": 24,
-          "kind": "setup",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -370,7 +331,7 @@
       "method_id": "academic-research-hub-guided--search-pubmed",
       "skill_id": "academic-research-hub",
       "label": "Search PubMed",
-      "description": "python scripts/research.py pubmed \"covid vaccine\"（来源：SKILL.md:L39）",
+      "description": "该入口为规划能力；用于讨论Search PubMed的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -399,7 +360,7 @@
             {
               "value": "search-pubmed",
               "label": "Search PubMed",
-              "description": "python scripts/research.py pubmed \"covid vaccine\"（来源：SKILL.md:L39）"
+              "description": "规划选项：Search PubMed；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -658,13 +619,6 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/academic-research-hub/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/academic-research-hub/scripts/requirements.txt",
           "label": "requirements.txt",
           "kind": "script",
@@ -677,33 +631,9 @@
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/academic-research-hub/SKILL.md",
-          "label": "已提取 3 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python -m venv venv",
-          "language": "bash",
-          "source_path": "skills/academic-research-hub/SKILL.md",
-          "line_start": 27,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "source venv/bin/activate # On Windows: venv\\Scripts\\activate",
-          "language": "bash",
-          "source_path": "skills/academic-research-hub/SKILL.md",
-          "line_start": 28,
-          "kind": "environment",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -722,7 +652,7 @@
       "method_id": "academic-research-hub-guided--search-semantic-scholar",
       "skill_id": "academic-research-hub",
       "label": "Search Semantic Scholar",
-      "description": "python scripts/research.py semantic \"machine learning\"（来源：SKILL.md:L40）",
+      "description": "该入口为规划能力；用于讨论Search Semantic Scholar的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -751,7 +681,7 @@
             {
               "value": "search-semantic-scholar",
               "label": "Search Semantic Scholar",
-              "description": "python scripts/research.py semantic \"machine learning\"（来源：SKILL.md:L40）"
+              "description": "规划选项：Search Semantic Scholar；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1010,13 +940,6 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/academic-research-hub/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/academic-research-hub/scripts/requirements.txt",
           "label": "requirements.txt",
           "kind": "script",
@@ -1029,33 +952,9 @@
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/academic-research-hub/SKILL.md",
-          "label": "已提取 3 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python -m venv venv",
-          "language": "bash",
-          "source_path": "skills/academic-research-hub/SKILL.md",
-          "line_start": 27,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "source venv/bin/activate # On Windows: venv\\Scripts\\activate",
-          "language": "bash",
-          "source_path": "skills/academic-research-hub/SKILL.md",
-          "line_start": 28,
-          "kind": "environment",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -1074,7 +973,7 @@
       "method_id": "academic-research-hub-guided--download-papers",
       "skill_id": "academic-research-hub",
       "label": "Download papers",
-      "description": "python scripts/research.py arxiv \"topic\" --download（来源：SKILL.md:L41）",
+      "description": "该入口为规划能力；用于讨论Download papers的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -1103,7 +1002,7 @@
             {
               "value": "download-papers",
               "label": "Download papers",
-              "description": "python scripts/research.py arxiv \"topic\" --download（来源：SKILL.md:L41）"
+              "description": "规划选项：Download papers；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1362,13 +1261,6 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/academic-research-hub/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/academic-research-hub/scripts/requirements.txt",
           "label": "requirements.txt",
           "kind": "script",
@@ -1381,41 +1273,9 @@
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/academic-research-hub/SKILL.md",
-          "label": "已提取 3 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python -m venv venv",
-          "language": "bash",
-          "source_path": "skills/academic-research-hub/SKILL.md",
-          "line_start": 27,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "source venv/bin/activate # On Windows: venv\\Scripts\\activate",
-          "language": "bash",
-          "source_path": "skills/academic-research-hub/SKILL.md",
-          "line_start": 28,
-          "kind": "environment",
-          "executable": false
-        },
-        {
-          "command": "pip install arxiv scholarly pubmed-parser semanticscholar requests",
-          "language": "bash",
-          "source_path": "skills/academic-research-hub/SKILL.md",
-          "line_start": 24,
-          "kind": "setup",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -1434,7 +1294,7 @@
       "method_id": "academic-research-hub-guided--get-citations",
       "skill_id": "academic-research-hub",
       "label": "Get citations",
-      "description": "python scripts/research.py arxiv \"topic\" --citations（来源：SKILL.md:L42）",
+      "description": "该入口为规划能力；用于讨论Get citations的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -1463,7 +1323,7 @@
             {
               "value": "get-citations",
               "label": "Get citations",
-              "description": "python scripts/research.py arxiv \"topic\" --citations（来源：SKILL.md:L42）"
+              "description": "规划选项：Get citations；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1722,13 +1582,6 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/academic-research-hub/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/academic-research-hub/scripts/requirements.txt",
           "label": "requirements.txt",
           "kind": "script",
@@ -1741,41 +1594,9 @@
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/academic-research-hub/SKILL.md",
-          "label": "已提取 3 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python -m venv venv",
-          "language": "bash",
-          "source_path": "skills/academic-research-hub/SKILL.md",
-          "line_start": 27,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "source venv/bin/activate # On Windows: venv\\Scripts\\activate",
-          "language": "bash",
-          "source_path": "skills/academic-research-hub/SKILL.md",
-          "line_start": 28,
-          "kind": "environment",
-          "executable": false
-        },
-        {
-          "command": "pip install arxiv scholarly pubmed-parser semanticscholar requests",
-          "language": "bash",
-          "source_path": "skills/academic-research-hub/SKILL.md",
-          "line_start": 24,
-          "kind": "setup",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -1794,7 +1615,7 @@
       "method_id": "academic-research-hub-guided--generate-bibliography",
       "skill_id": "academic-research-hub",
       "label": "Generate bibliography",
-      "description": "python scripts/research.py arxiv \"topic\" --format bibtex（来源：SKILL.md:L43）",
+      "description": "该入口为规划能力；用于讨论Generate bibliography的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -1823,7 +1644,7 @@
             {
               "value": "generate-bibliography",
               "label": "Generate bibliography",
-              "description": "python scripts/research.py arxiv \"topic\" --format bibtex（来源：SKILL.md:L43）"
+              "description": "规划选项：Generate bibliography；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -2082,13 +1903,6 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/academic-research-hub/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/academic-research-hub/scripts/requirements.txt",
           "label": "requirements.txt",
           "kind": "script",
@@ -2101,41 +1915,9 @@
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/academic-research-hub/SKILL.md",
-          "label": "已提取 3 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python -m venv venv",
-          "language": "bash",
-          "source_path": "skills/academic-research-hub/SKILL.md",
-          "line_start": 27,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "source venv/bin/activate # On Windows: venv\\Scripts\\activate",
-          "language": "bash",
-          "source_path": "skills/academic-research-hub/SKILL.md",
-          "line_start": 28,
-          "kind": "environment",
-          "executable": false
-        },
-        {
-          "command": "pip install arxiv scholarly pubmed-parser semanticscholar requests",
-          "language": "bash",
-          "source_path": "skills/academic-research-hub/SKILL.md",
-          "line_start": 24,
-          "kind": "setup",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -2154,7 +1936,7 @@
       "method_id": "academic-research-hub-guided--save-results",
       "skill_id": "academic-research-hub",
       "label": "Save results",
-      "description": "python scripts/research.py arxiv \"topic\" --output results.json（来源：SKILL.md:L44）",
+      "description": "该入口为规划能力；用于讨论Save results的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -2183,7 +1965,7 @@
             {
               "value": "save-results",
               "label": "Save results",
-              "description": "python scripts/research.py arxiv \"topic\" --output results.json（来源：SKILL.md:L44）"
+              "description": "规划选项：Save results；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -2442,13 +2224,6 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/academic-research-hub/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/academic-research-hub/scripts/requirements.txt",
           "label": "requirements.txt",
           "kind": "script",
@@ -2461,41 +2236,9 @@
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/academic-research-hub/SKILL.md",
-          "label": "已提取 3 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python -m venv venv",
-          "language": "bash",
-          "source_path": "skills/academic-research-hub/SKILL.md",
-          "line_start": 27,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "source venv/bin/activate # On Windows: venv\\Scripts\\activate",
-          "language": "bash",
-          "source_path": "skills/academic-research-hub/SKILL.md",
-          "line_start": 28,
-          "kind": "environment",
-          "executable": false
-        },
-        {
-          "command": "pip install arxiv scholarly pubmed-parser semanticscholar requests",
-          "language": "bash",
-          "source_path": "skills/academic-research-hub/SKILL.md",
-          "line_start": 24,
-          "kind": "setup",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -2510,29 +2253,20 @@
       }
     }
   ],
-  "selection_rules": [
-    "先确认目标产物、允许使用的已有输入与禁止复用的结果；仅在用户允许时复用已有数据，不默认追加上游步骤。",
-    "独立操作选择 Method；确需固定组合时选择 Pipeline，并检查每一步输入输出。",
-    "软件工具 Skill 用于选择实现，任务 Skill 用于组织需求，不因为同时匹配两类 Skill 重复添加方法。",
-    "Treat missing inputs according to the current goal: for explicitly requested steps, ask for binding or discuss alternatives; when asked to produce a target from stated inputs, add only necessary available producers allowed by the user. Never regenerate an explicitly reused result or silently broaden the scientific goal.",
-    "Select by scientific output meaning, stage conditions and spatial/data requirements. A directory, generic image or report does not certify a typed derivative. Do not equate tissue classes, anatomical atlas regions and learned clusters. Query the Method contract for exact ports and conditional parameters; use Pipelines only when their actual steps match the request."
-  ],
   "name": "academic-research-hub",
   "category": [
     "软件工具",
     "academic"
   ],
   "scope": "software",
-  "applicability": [
-    "用于 academic-research-hub 的任务分析与方法说明；当前没有登记可独立执行的 Method。"
-  ],
-  "limitations": [
-    "这里只统筹已登记入口；目录收录不代表覆盖软件全部命令或参数。",
-    "环境探测与运行证据分别显示；合成数据测试不代表真实数据的科学有效性。",
-    "尚无 Method 的规划能力只能提供说明，不能当作可执行步骤。"
-  ],
-  "examples": [],
   "keywords": [
     "academic-research-hub"
+  ],
+  "references": [
+    {
+      "id": "notes",
+      "title": "背景与注意事项",
+      "path": "references/notes.md"
+    }
   ]
 }

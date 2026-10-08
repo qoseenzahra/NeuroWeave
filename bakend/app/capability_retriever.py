@@ -312,7 +312,6 @@ class CapabilityRetriever:
             primary = self._identity_alias_candidates(node.id, skill_id, [])
             if skill is not None:
                 primary.update(self._identity_alias_candidates(node.id, skill.name, []))
-                primary.update(skill.aliases)
             combined = self._identity_alias_candidates(node.id, skill_id, node.keywords)
             secondary = combined - primary
             primary_aliases[node.id] = primary

@@ -1,6 +1,7 @@
 """Public pipeline/draft request schemas; no storage, transport or model dependencies."""
 
 from pydantic import BaseModel, ConfigDict, Field
+from .workflow_models import ParameterSpec
 
 
 class SourceLink(BaseModel):
@@ -26,6 +27,7 @@ class ComposeStep(BaseModel):
     parameters: dict = Field(default_factory=dict)
     inputs: dict[str, Link] = Field(default_factory=dict)
     position: dict[str, float] | None = None
+    when: dict[str, list] = Field(default_factory=dict)
 
 
 class InputPort(BaseModel):
@@ -41,6 +43,7 @@ class ComposeRequest(BaseModel):
     steps: list[ComposeStep] = Field(min_length=1, max_length=50)
     shared_inputs: list[list[InputPort]] = Field(default_factory=list, max_length=500)
     expected_version: int | None = None
+    controls: list[ParameterSpec] = Field(default_factory=list, max_length=50)
 
 
 class UsePipeline(BaseModel):
@@ -56,3 +59,14 @@ class DraftSave(BaseModel):
     editor: dict
     pipeline_id: str | None = None
     pipeline_version: int | None = None
+
+
+class DeletePipeline(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    expected_version: int = Field(ge=1)
+    expected_deletion_revision: int = Field(ge=0)
+
+
+class RestorePipeline(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    expected_deletion_revision: int = Field(ge=1)

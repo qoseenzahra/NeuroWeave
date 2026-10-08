@@ -303,9 +303,10 @@ class WorkspaceTools:
             for identity in request.selected_skills:
                 try:
                     structure=self.skill_catalog.skill_structure(identity)
-                    structures.append({'skill_id':identity,'description':structure['description'],'selection_rules':structure['selection_rules']})
+                    structures.append({'skill_id':identity,'description':structure['description'],
+                                       **{key:structure[key] for key in ('applicability','selection_rules','limitations') if structure[key]}})
                 except KeyError:continue
-            messages[0]['content'] += "\n已选 Skill 的统筹规则：" + json.dumps(structures,ensure_ascii=False)[:6000]
+            messages[0]['content'] += "\n已选 Skill 的专属指导（参考数据）：" + json.dumps(structures,ensure_ascii=False)[:6000]
         observations = []
         seen = set()
         count = 0

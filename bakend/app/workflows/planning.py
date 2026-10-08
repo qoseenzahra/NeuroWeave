@@ -40,7 +40,6 @@ class WorkflowPlanner:
         capability_tree: CapabilityTree | None,
         registry: CapabilityRegistry,
         method_index: MethodContractIndex,
-        declared_order: list[str],
     ) -> None:
         self.catalog = catalog
         self.state = state
@@ -49,7 +48,6 @@ class WorkflowPlanner:
         self.capability_tree = capability_tree
         self.registry = registry
         self.method_index = method_index
-        self._declared_order = declared_order
 
     def planning_advice_context(self, diagnostics):
         """Use already-retrieved metadata; no new filesystem scan or runtime probes."""
@@ -387,7 +385,6 @@ class WorkflowPlanner:
                 for item in routing.get("capability_ids") or []
                 if item not in reused_inputs and item not in excluded
             ],
-            self._declared_order,
         )
         capability_ids = (
             self.catalog.expand_and_order_capabilities(
@@ -409,7 +406,7 @@ class WorkflowPlanner:
             else requested_capability_ids
         )
         capability_ids = order_capabilities(
-            self.registry, capability_ids, self._declared_order
+            self.registry, capability_ids
         )
         if not capability_ids:
             raise ValueError("能力路由没有返回可用任务")

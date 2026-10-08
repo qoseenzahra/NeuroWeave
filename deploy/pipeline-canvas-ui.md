@@ -1,5 +1,23 @@
 # Pipeline canvas layout and connection visibility
 
+## Read-only details and independent copies
+
+Pipeline details now open a read-only canvas with node selection, parameter and
+port inspection, shared-input links, connection focus, zoom and panning. The
+viewer never saves a draft. Built-in pipelines cannot be edited, moved, rewired,
+archived or overwritten. The backend also rejects updates to built-in IDs.
+
+“Create from this Pipeline” opens an independent editable draft with a new
+recovery key and no association to the original ID or version. Publishing creates
+a new user Pipeline at v1. Method parameter defaults, fixed values, ordered links,
+shared external inputs and conditional stages are retained. Conditional stages
+keep their Pipeline control parameters; the copy editor exposes those controls.
+Existing task confirmation and execution behavior remains unchanged.
+
+The read-only `/api/library/pipelines/{id}/source?version=...` endpoint projects
+the immutable execution graph into authoring source without writing to storage.
+All 24 built-in sources are covered by compilation and preservation regressions.
+
 Deployed to the existing port 3002 frontend on 2026-09-27. Revision:
 `canvas-ui-e219f8f10d81`. No backend API or execution behavior changed.
 

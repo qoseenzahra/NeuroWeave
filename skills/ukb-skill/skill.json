@@ -433,7 +433,7 @@
       "method_id": "ukb-skill-guided--subgroup-analysis",
       "skill_id": "ukb-skill",
       "label": "Subgroup analysis",
-      "description": "Test heterogeneity by sex, age band, APOE, vascular risk, or other subgroup；claw-shell；subgroup effect tables, interaction summaries（来源：SKILL.md:L97）",
+      "description": "该入口为规划能力；用于讨论Subgroup analysis的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -462,7 +462,7 @@
             {
               "value": "subgroup-analysis",
               "label": "Subgroup analysis",
-              "description": "Test heterogeneity by sex, age band, APOE, vascular risk, or other subgroup；claw-shell；subgroup effect tables, interaction summaries（来源：SKILL.md:L97）"
+              "description": "规划选项：Subgroup analysis；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -726,13 +726,6 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/ukb-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/ukb-skill/scripts/build_ukb_survival.py",
           "label": "build_ukb_survival.py",
           "kind": "script",
@@ -759,28 +752,10 @@
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/ukb-skill/SKILL.md",
-          "label": "已提取 8 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python skills/ukb-skill/scripts/extract_ukb_phenotype.py --input ukb_raw.csv --variables sex,age,bmi,smoking,townsend --output covariates.csv",
-          "language": "bash",
-          "source_path": "skills/ukb-skill/SKILL.md",
-          "line_start": 232,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
-      "delegate_skill_ids": [
-        "claw-shell"
-      ],
+      "command_references": [],
+      "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
       "replaces_operations": [],
@@ -798,7 +773,7 @@
       "method_id": "ukb-skill-guided--mediation-analysis",
       "skill_id": "ukb-skill",
       "label": "Mediation analysis",
-      "description": "Test whether a biomarker or imaging phenotype mediates a brain-related outcome；claw-shell；direct/indirect effect summaries, mediation tables（来源：SKILL.md:L99）",
+      "description": "该入口为规划能力；用于讨论Mediation analysis的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -827,7 +802,7 @@
             {
               "value": "mediation-analysis",
               "label": "Mediation analysis",
-              "description": "Test whether a biomarker or imaging phenotype mediates a brain-related outcome；claw-shell；direct/indirect effect summaries, mediation tables（来源：SKILL.md:L99）"
+              "description": "规划选项：Mediation analysis；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1091,13 +1066,6 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/ukb-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/ukb-skill/scripts/build_ukb_survival.py",
           "label": "build_ukb_survival.py",
           "kind": "script",
@@ -1124,28 +1092,10 @@
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/ukb-skill/SKILL.md",
-          "label": "已提取 8 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python skills/ukb-skill/scripts/extract_ukb_phenotype.py --input ukb_raw.csv --output phenotype.csv",
-          "language": "bash",
-          "source_path": "skills/ukb-skill/SKILL.md",
-          "line_start": 229,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
-      "delegate_skill_ids": [
-        "claw-shell"
-      ],
+      "command_references": [],
+      "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
       "replaces_operations": [],
@@ -1163,7 +1113,7 @@
       "method_id": "ukb-skill-guided--sensitivity-analysis",
       "skill_id": "ukb-skill",
       "label": "Sensitivity analysis",
-      "description": "Exclude early events or rows with missing covariates, then rerun the same model；claw-shell；sensitivity tables, robustness comparison summaries（来源：SKILL.md:L100）",
+      "description": "该入口为规划能力；用于讨论Sensitivity analysis的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -1192,7 +1142,7 @@
             {
               "value": "sensitivity-analysis",
               "label": "Sensitivity analysis",
-              "description": "Exclude early events or rows with missing covariates, then rerun the same model；claw-shell；sensitivity tables, robustness comparison summaries（来源：SKILL.md:L100）"
+              "description": "规划选项：Sensitivity analysis；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1456,13 +1406,6 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/ukb-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/ukb-skill/scripts/build_ukb_survival.py",
           "label": "build_ukb_survival.py",
           "kind": "script",
@@ -1489,28 +1432,10 @@
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/ukb-skill/SKILL.md",
-          "label": "已提取 8 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python skills/ukb-skill/scripts/extract_ukb_phenotype.py --input ukb_raw.csv --variables sex,age,bmi,smoking,townsend --output covariates.csv",
-          "language": "bash",
-          "source_path": "skills/ukb-skill/SKILL.md",
-          "line_start": 232,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
-      "delegate_skill_ids": [
-        "claw-shell"
-      ],
+      "command_references": [],
+      "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
       "replaces_operations": [],
@@ -1525,11 +1450,7 @@
     }
   ],
   "selection_rules": [
-    "先确认目标产物、允许使用的已有输入与禁止复用的结果；仅在用户允许时复用已有数据，不默认追加上游步骤。",
-    "独立操作选择 Method；确需固定组合时选择 Pipeline，并检查每一步输入输出。",
-    "软件工具 Skill 用于选择实现，任务 Skill 用于组织需求，不因为同时匹配两类 Skill 重复添加方法。",
-    "Treat missing inputs according to the current goal: for explicitly requested steps, ask for binding or discuss alternatives; when asked to produce a target from stated inputs, add only necessary available producers allowed by the user. Never regenerate an explicitly reused result or silently broaden the scientific goal.",
-    "Select by scientific output meaning, stage conditions and spatial/data requirements. A directory, generic image or report does not certify a typed derivative. Do not equate tissue classes, anatomical atlas regions and learned clusters. Query the Method contract for exact ports and conditional parameters; use Pipelines only when their actual steps match the request."
+    "疾病病例提取先确定疾病或 ICD 定义；生存数据构造再明确基线列和截止日期，不能沿用无关研究的默认日期。"
   ],
   "name": "ukb-skill",
   "category": [
@@ -1537,23 +1458,17 @@
     "数据集适配与质控"
   ],
   "scope": "dataset",
-  "applicability": [
-    "输入必须符合 UKB 对应脚本的数据发布格式和字段约定；通用影像处理请选软件或任务 Skill。",
-    "根据目标选择对应 Method 或 Pipeline；每个入口的输入格式、必要参数和产物以其独立契约为准。"
-  ],
   "limitations": [
-    "格式和样本数量满足仅是必要条件；空间、单位、样本标识与方法假设仍须按所选方法检查。",
-    "这里只统筹已登记入口；目录收录不代表覆盖软件全部命令或参数。",
-    "环境探测与运行证据分别显示；合成数据测试不代表真实数据的科学有效性。",
-    "尚无 Method 的规划能力只能提供说明，不能当作可执行步骤。"
-  ],
-  "examples": [
-    {
-      "request": "查看 UKB 生存分析数据表 所需的输入和参数",
-      "decision": "查询 reviewed.ukb-skill.survival-dataset 的契约，绑定文件后再规划执行。"
-    }
+    "UKB 导出字段映射、疾病来源和随访日期随研究而变，不能由影像文件名推断这些分析定义。"
   ],
   "keywords": [
     "ukb-skill"
+  ],
+  "references": [
+    {
+      "id": "notes",
+      "title": "背景与注意事项",
+      "path": "references/notes.md"
+    }
   ]
 }

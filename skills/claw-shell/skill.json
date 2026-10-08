@@ -10,7 +10,7 @@
       "method_id": "claw-shell-guided--safe-direct-run",
       "skill_id": "claw-shell",
       "label": "Safe (direct run)",
-      "description": "ls -la, cat log.txt, git status；Executes immediately in claw session（来源：SKILL.md:L27）",
+      "description": "该入口为规划能力；用于讨论Safe (direct run)的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -39,7 +39,7 @@
             {
               "value": "safe-direct-run",
               "label": "Safe (direct run)",
-              "description": "ls -la, cat log.txt, git status；Executes immediately in claw session（来源：SKILL.md:L27）"
+              "description": "规划选项：Safe (direct run)；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -287,30 +287,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/claw-shell/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/claw-shell/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/claw-shell/SKILL.md",
-          "label": "已提取 1 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "tmux new -s claw -d || true",
-          "language": "bash",
-          "source_path": "skills/claw-shell/SKILL.md",
-          "line_start": 45,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -329,7 +313,7 @@
       "method_id": "claw-shell-guided--environment-setup",
       "skill_id": "claw-shell",
       "label": "Environment setup",
-      "description": "source $FREESURFERHOME/SetUpFreeSurfer.sh；Executes and returns output（来源：SKILL.md:L28）",
+      "description": "该入口为规划能力；用于讨论Environment setup的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -358,7 +342,7 @@
             {
               "value": "environment-setup",
               "label": "Environment setup",
-              "description": "source $FREESURFERHOME/SetUpFreeSurfer.sh；Executes and returns output（来源：SKILL.md:L28）"
+              "description": "规划选项：Environment setup；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -606,30 +590,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/claw-shell/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/claw-shell/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/claw-shell/SKILL.md",
-          "label": "已提取 1 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "tmux new -s claw -d || true",
-          "language": "bash",
-          "source_path": "skills/claw-shell/SKILL.md",
-          "line_start": 45,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -648,7 +616,7 @@
       "method_id": "claw-shell-guided--long-running-pipeline",
       "skill_id": "claw-shell",
       "label": "Long-running pipeline",
-      "description": "recon-all -subjid sub-001 -all -parallel；Runs in background-capable tmux pane（来源：SKILL.md:L29）",
+      "description": "该入口为规划能力；用于讨论Long-running pipeline的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -677,7 +645,7 @@
             {
               "value": "long-running-pipeline",
               "label": "Long-running pipeline",
-              "description": "recon-all -subjid sub-001 -all -parallel；Runs in background-capable tmux pane（来源：SKILL.md:L29）"
+              "description": "规划选项：Long-running pipeline；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -925,30 +893,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/claw-shell/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/claw-shell/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/claw-shell/SKILL.md",
-          "label": "已提取 1 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "tmux new -s claw -d || true",
-          "language": "bash",
-          "source_path": "skills/claw-shell/SKILL.md",
-          "line_start": 45,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -967,7 +919,7 @@
       "method_id": "claw-shell-guided--dangerous-requires-confirmation",
       "skill_id": "claw-shell",
       "label": "Dangerous (requires confirmation)",
-      "description": "rm -rf ..., sudo apt install ..., docker system prune -a；Asks user “YES” before proceeding（来源：SKILL.md:L30）",
+      "description": "该入口为规划能力；用于讨论Dangerous (requires confirmation)的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -996,7 +948,7 @@
             {
               "value": "dangerous-requires-confirmation",
               "label": "Dangerous (requires confirmation)",
-              "description": "rm -rf ..., sudo apt install ..., docker system prune -a；Asks user “YES” before proceeding（来源：SKILL.md:L30）"
+              "description": "规划选项：Dangerous (requires confirmation)；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1244,30 +1196,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/claw-shell/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/claw-shell/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/claw-shell/SKILL.md",
-          "label": "已提取 1 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "tmux new -s claw -d || true",
-          "language": "bash",
-          "source_path": "skills/claw-shell/SKILL.md",
-          "line_start": 45,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -1282,29 +1218,14 @@
       }
     }
   ],
-  "selection_rules": [
-    "先确认目标产物、允许使用的已有输入与禁止复用的结果；仅在用户允许时复用已有数据，不默认追加上游步骤。",
-    "独立操作选择 Method；确需固定组合时选择 Pipeline，并检查每一步输入输出。",
-    "软件工具 Skill 用于选择实现，任务 Skill 用于组织需求，不因为同时匹配两类 Skill 重复添加方法。",
-    "Treat missing inputs according to the current goal: for explicitly requested steps, ask for binding or discuss alternatives; when asked to produce a target from stated inputs, add only necessary available producers allowed by the user. Never regenerate an explicitly reused result or silently broaden the scientific goal.",
-    "Select by scientific output meaning, stage conditions and spatial/data requirements. A directory, generic image or report does not certify a typed derivative. Do not equate tissue classes, anatomical atlas regions and learned clusters. Query the Method contract for exact ports and conditional parameters; use Pipelines only when their actual steps match the request."
-  ],
   "name": "claw-shell",
   "category": [
     "软件工具",
     "claw"
   ],
   "scope": "software",
-  "applicability": [
-    "用于 claw-shell 的任务分析与方法说明；当前没有登记可独立执行的 Method。"
-  ],
-  "limitations": [
-    "这里只统筹已登记入口；目录收录不代表覆盖软件全部命令或参数。",
-    "环境探测与运行证据分别显示；合成数据测试不代表真实数据的科学有效性。",
-    "尚无 Method 的规划能力只能提供说明，不能当作可执行步骤。"
-  ],
-  "examples": [],
   "keywords": [
     "claw-shell"
-  ]
+  ],
+  "references": []
 }

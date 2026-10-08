@@ -15,6 +15,7 @@ type Props = {
   outputs: ReturnType<typeof canvasOutputSlots>;
   selected: boolean;
   disabled: boolean;
+  readOnly?: boolean;
   sharedSlots: string[];
   focus?: { color: string; input?: string; output?: string };
   dimmed: boolean;
@@ -51,11 +52,13 @@ export function PipelineCanvasNode(props: Props) {
       }}
     >
       <button
-        className="flex h-14 w-full cursor-grab items-center rounded-t-lg border-b border-line px-3 text-left text-xs font-semibold active:cursor-grabbing"
-        aria-label={ui('移动或选择 {0}', method?.label ?? node.method_id)}
+        className={'flex h-14 w-full items-center rounded-t-lg border-b border-line px-3 text-left text-xs font-semibold ' + (props.readOnly ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing')}
+        aria-label={ui(props.readOnly ? '查看步骤：{0}' : '移动或选择 {0}', method?.label ?? node.method_id)}
         disabled={props.disabled}
+        onClick={props.onSelect}
         onPointerDown={props.onDragStart}
         onKeyDown={(event) => {
+          if (props.readOnly) return;
           if (!event.key.startsWith('Arrow')) return;
           event.preventDefault();
           props.onMove({
@@ -87,6 +90,7 @@ export function PipelineCanvasNode(props: Props) {
           {method?.label ?? node.method_id}
         </span>
       </button>
+      {!!Object.keys(node.when ?? {}).length && <p className="absolute -top-5 right-1 rounded bg-raised px-1 text-micro text-subtle">{ui('条件步骤')}</p>}
       <div className="grid grid-cols-2 pb-3 text-micro">
         <div>
           {props.inputs.map((slot) => (
@@ -101,7 +105,7 @@ export function PipelineCanvasNode(props: Props) {
               title={`${slot.label} · ${slot.type}${slot.requiredNow ? ui(' · 必需') : ui(' · 可选')}${node.inputs[slot.id] ? ui(' · 已连接') : ''}`}
             >
               <button
-                disabled={props.disabled}
+                disabled={props.disabled || props.readOnly}
                 data-node={node.id}
                 data-pipeline-input={slot.id}
                 aria-label={ui('输入 {0} / {1}', method?.label, slot.label)}
@@ -156,7 +160,7 @@ export function PipelineCanvasNode(props: Props) {
                 {!slot.available && ui('（当前不生成）')}
               </span>
               <button
-                disabled={props.disabled || !slot.available}
+                disabled={props.disabled || props.readOnly || !slot.available}
                 data-node={node.id}
                 data-pipeline-output={slot.id}
                 aria-label={ui('输出 {0} / {1}', method?.label, slot.label)}

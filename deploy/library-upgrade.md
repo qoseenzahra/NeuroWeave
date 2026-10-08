@@ -1,6 +1,6 @@
 # 原生资源目录、检索与命令扩展
 
-当前分支以 Method 为执行单元、Skill 为统筹指导、Pipeline 为可复用的真实方法连接。当前静态目录包含 105 个规范 Skill、328 个 Method、28 个内置 Pipeline；用户保存的 Pipeline 另从数据库动态加载。
+当前分支以 Method 为执行单元、Skill 为统筹指导、Pipeline 为可复用的真实方法连接。当前静态目录包含 105 个规范 Skill、328 个 Method、24 个内置 Pipeline；用户保存的 Pipeline 另从数据库动态加载。
 
 ## 查找与规划
 

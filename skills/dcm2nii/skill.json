@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "id": "dcm2nii",
-  "description": "dcm2nii 统筹已登记的独立方法和可复用流程。支持：dcm2niix 实际转换；Basic single-series conversion；4D fMRI/DWI/perfusion；BIDS-like naming + JSON sidecar；Lossless compression；Anonymize (remove most PHI)；Merge 2D slices into 3D volume；Custom output filename。",
+  "description": "统筹 dcm2niix 的 DICOM 到 NIfTI 转换。独立 Method 提供完整参数配置；三个 Pipeline 分别固定 GZip 压缩、GZip 压缩与 JSON sidecar、GZip 压缩与 sidecar 匿名化。单序列或多维序列的识别由同一个 dcm2niix 方法完成，不作为重复 Pipeline 单独登记。",
   "method_refs": [
     {
       "capability": "skill.dcm2nii",
@@ -11,7 +11,7 @@
       "default_reason": "服务器已检测到 dcm2niix，适合把 DICOM 序列转换为 NIfTI。",
       "replaces_operations": [],
       "execution_resolution": {},
-      "role": "调用服务器现有 dcm2niix，将只读 DICOM 输入转换到隔离输出目录并生成 JSON sidecar。",
+      "role": "执行 DICOM 到 NIfTI 转换；可配置压缩方式、JSON sidecar、sidecar 匿名化和文件名模板。",
       "method_ref": "dcm2niix.convert"
     }
   ],
@@ -19,7 +19,7 @@
     {
       "capability": "skill.dcm2nii",
       "method_id": "dcm2nii-guided--basic-single-series-conversion",
-      "label": "Basic single-series conversion",
+      "label": "DICOM → NIfTI（GZip 转换）",
       "default_recommended": false,
       "default_reason": "服务器已检测到 dcm2niix，适合把 DICOM 序列转换为 NIfTI。",
       "replaces_operations": [],
@@ -29,13 +29,13 @@
         "source_method_id": "dcm2nii-guided--basic-single-series-conversion",
         "target_method_id": "dcm2niix-convert"
       },
-      "role": "依次执行：dcm2niix 实际转换。输入和参数由方法契约定义。",
+      "role": "将只读 DICOM 目录转换到隔离的 NIfTI 输出目录，固定使用 GZip 压缩；可配置 JSON sidecar、sidecar 匿名化和文件名模板。序列维度与切片组织由 dcm2niix 按输入自动识别。",
       "pipeline_ref": "reviewed-dcm2niix-convert-y-aaf8accb64"
     },
     {
       "capability": "skill.dcm2nii",
       "method_id": "dcm2nii-guided--4d-fmri-dwi-perfusion",
-      "label": "4D fMRI/DWI/perfusion",
+      "label": "DICOM → NIfTI（固定生成 JSON）",
       "default_recommended": false,
       "default_reason": "服务器已检测到 dcm2niix，适合把 DICOM 序列转换为 NIfTI。",
       "replaces_operations": [],
@@ -45,45 +45,13 @@
         "source_method_id": "dcm2nii-guided--4d-fmri-dwi-perfusion",
         "target_method_id": "dcm2niix-convert"
       },
-      "role": "依次执行：dcm2niix 实际转换。输入和参数由方法契约定义。",
+      "role": "将只读 DICOM 目录转换到隔离的 NIfTI 输出目录，固定使用 GZip 压缩并生成 JSON sidecar；可配置 sidecar 匿名化和文件名模板。此预设不组织完整 BIDS 目录，也不额外执行 4D 重建。",
       "pipeline_ref": "reviewed-dcm2niix-convert-y-true-989e0368fb"
     },
     {
       "capability": "skill.dcm2nii",
-      "method_id": "dcm2nii-guided--bids-like-naming-json-sidecar",
-      "label": "BIDS-like naming + JSON sidecar",
-      "default_recommended": false,
-      "default_reason": "服务器已检测到 dcm2niix，适合把 DICOM 序列转换为 NIfTI。",
-      "replaces_operations": [],
-      "execution_resolution": {
-        "state": "mapped",
-        "reason": "已核对到现有实现；选择具体入口后按其真实输入、参数和输出执行。",
-        "source_method_id": "dcm2nii-guided--bids-like-naming-json-sidecar",
-        "target_method_id": "dcm2niix-convert"
-      },
-      "role": "依次执行：dcm2niix 实际转换。输入和参数由方法契约定义。",
-      "pipeline_ref": "reviewed-dcm2niix-convert-y-true-0e093727e9"
-    },
-    {
-      "capability": "skill.dcm2nii",
-      "method_id": "dcm2nii-guided--lossless-compression",
-      "label": "Lossless compression",
-      "default_recommended": false,
-      "default_reason": "服务器已检测到 dcm2niix，适合把 DICOM 序列转换为 NIfTI。",
-      "replaces_operations": [],
-      "execution_resolution": {
-        "state": "mapped",
-        "reason": "已核对到现有实现；选择具体入口后按其真实输入、参数和输出执行。",
-        "source_method_id": "dcm2nii-guided--lossless-compression",
-        "target_method_id": "dcm2niix-convert"
-      },
-      "role": "依次执行：dcm2niix 实际转换。输入和参数由方法契约定义。",
-      "pipeline_ref": "reviewed-dcm2niix-convert-y-ca0833fa79"
-    },
-    {
-      "capability": "skill.dcm2nii",
       "method_id": "dcm2nii-guided--anonymize-remove-most-phi",
-      "label": "Anonymize (remove most PHI)",
+      "label": "DICOM → NIfTI（固定匿名化 sidecar）",
       "default_recommended": false,
       "default_reason": "服务器已检测到 dcm2niix，适合把 DICOM 序列转换为 NIfTI。",
       "replaces_operations": [],
@@ -93,40 +61,8 @@
         "source_method_id": "dcm2nii-guided--anonymize-remove-most-phi",
         "target_method_id": "dcm2niix-convert"
       },
-      "role": "依次执行：dcm2niix 实际转换。输入和参数由方法契约定义。",
+      "role": "将只读 DICOM 目录转换到隔离的 NIfTI 输出目录，固定使用 GZip 压缩和 sidecar 匿名化；可配置是否生成 JSON sidecar以及文件名模板。匿名化仅作用于 dcm2niix 支持的 sidecar 字段，不修改原始 DICOM，也不执行图像去面部处理。",
       "pipeline_ref": "reviewed-dcm2niix-convert-y-true-4ca43bff7b"
-    },
-    {
-      "capability": "skill.dcm2nii",
-      "method_id": "dcm2nii-guided--merge-2d-slices-into-3d-volume",
-      "label": "Merge 2D slices into 3D volume",
-      "default_recommended": false,
-      "default_reason": "服务器已检测到 dcm2niix，适合把 DICOM 序列转换为 NIfTI。",
-      "replaces_operations": [],
-      "execution_resolution": {
-        "state": "mapped",
-        "reason": "已核对到现有实现；选择具体入口后按其真实输入、参数和输出执行。",
-        "source_method_id": "dcm2nii-guided--merge-2d-slices-into-3d-volume",
-        "target_method_id": "dcm2niix-convert"
-      },
-      "role": "依次执行：dcm2niix 实际转换。输入和参数由方法契约定义。",
-      "pipeline_ref": "reviewed-dcm2niix-convert-y-fe7c1a2a51"
-    },
-    {
-      "capability": "skill.dcm2nii",
-      "method_id": "dcm2nii-guided--custom-output-filename",
-      "label": "Custom output filename",
-      "default_recommended": false,
-      "default_reason": "服务器已检测到 dcm2niix，适合把 DICOM 序列转换为 NIfTI。",
-      "replaces_operations": [],
-      "execution_resolution": {
-        "state": "mapped",
-        "reason": "已核对到现有实现；选择具体入口后按其真实输入、参数和输出执行。",
-        "source_method_id": "dcm2nii-guided--custom-output-filename",
-        "target_method_id": "dcm2niix-convert"
-      },
-      "role": "依次执行：dcm2niix 实际转换。输入和参数由方法契约定义。",
-      "pipeline_ref": "reviewed-dcm2niix-convert-y-77efa6bba1"
     }
   ],
   "planning_capabilities": [
@@ -135,7 +71,7 @@
       "method_id": "dcm2nii-guided--keep-slice-timing-philips-diff",
       "skill_id": "dcm2nii",
       "label": "Keep slice timing / Philips diff",
-      "description": "-t y (important for fMRI)（来源：SKILL.md:L44）",
+      "description": "该入口为规划能力；用于讨论Keep slice timing / Philips diff的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -164,7 +100,7 @@
             {
               "value": "keep-slice-timing-philips-diff",
               "label": "Keep slice timing / Philips diff",
-              "description": "-t y (important for fMRI)（来源：SKILL.md:L44）"
+              "description": "规划选项：Keep slice timing / Philips diff；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -433,54 +369,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/dcm2nii/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/dcm2nii/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
-          "path": "skills/dcm2nii/SKILL.md",
-          "label": "已提取 8 条参考命令",
-          "kind": "command",
           "line_start": null,
           "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "unzip dcm2niix_lnx.zip",
-          "language": "bash",
-          "source_path": "skills/dcm2nii/SKILL.md",
-          "line_start": 56,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "chmod +x dcm2niix",
-          "language": "bash",
-          "source_path": "skills/dcm2nii/SKILL.md",
-          "line_start": 57,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "mv dcm2niix /usr/local/bin/ # or add to PATH",
-          "language": "bash",
-          "source_path": "skills/dcm2nii/SKILL.md",
-          "line_start": 58,
-          "kind": "operation",
-          "executable": false
-        },
-        {
-          "command": "dcm2niix --version",
-          "language": "bash",
-          "source_path": "skills/dcm2nii/SKILL.md",
-          "line_start": 59,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -496,11 +392,7 @@
     }
   ],
   "selection_rules": [
-    "先确认目标产物、允许使用的已有输入与禁止复用的结果；仅在用户允许时复用已有数据，不默认追加上游步骤。",
-    "独立操作选择 Method；确需固定组合时选择 Pipeline，并检查每一步输入输出。",
-    "软件工具 Skill 用于选择实现，任务 Skill 用于组织需求，不因为同时匹配两类 Skill 重复添加方法。",
-    "Treat missing inputs according to the current goal: for explicitly requested steps, ask for binding or discuss alternatives; when asked to produce a target from stated inputs, add only necessary available producers allowed by the user. Never regenerate an explicitly reused result or silently broaden the scientific goal.",
-    "Select by scientific output meaning, stage conditions and spatial/data requirements. A directory, generic image or report does not certify a typed derivative. Do not equate tissue classes, anatomical atlas regions and learned clusters. Query the Method contract for exact ports and conditional parameters; use Pipelines only when their actual steps match the request."
+    "需要关闭 JSON sidecar 时选择通用 GZip 预设或独立转换方法，避免固定生成 JSON 的预设。"
   ],
   "name": "dcm2nii",
   "category": [
@@ -508,25 +400,20 @@
     "dcm2nii"
   ],
   "scope": "software",
-  "applicability": [
-    "根据目标选择对应 Method 或 Pipeline；每个入口的输入格式、必要参数和产物以其独立契约为准。"
-  ],
   "limitations": [
-    "格式和样本数量满足仅是必要条件；空间、单位、样本标识与方法假设仍须按所选方法检查。",
-    "这里只统筹已登记入口；目录收录不代表覆盖软件全部命令或参数。",
-    "环境探测与运行证据分别显示；合成数据测试不代表真实数据的科学有效性。",
-    "尚无 Method 的规划能力只能提供说明，不能当作可执行步骤。"
-  ],
-  "examples": [
-    {
-      "request": "查看 dcm2niix 实际转换 所需的输入和参数",
-      "decision": "查询 dcm2niix.convert 的契约，绑定文件后再规划执行。"
-    }
+    "原始 DICOM 中缺失的切片时序不能靠额外转换开关恢复。"
   ],
   "keywords": [
     "dcm2nii",
     "DICOM",
     "NIfTI",
     "格式转换"
+  ],
+  "references": [
+    {
+      "id": "notes",
+      "title": "背景与注意事项",
+      "path": "references/notes.md"
+    }
   ]
 }

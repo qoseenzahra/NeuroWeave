@@ -10,7 +10,7 @@
       "method_id": "research-idea-guided--1-search",
       "skill_id": "research-idea",
       "label": "1. Search",
-      "description": "Call search skills for recent literature；tempsearch.md（来源：SKILL.md:L30）",
+      "description": "该入口为规划能力；用于讨论1. Search的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -39,7 +39,7 @@
             {
               "value": "1-search",
               "label": "1. Search",
-              "description": "Call search skills for recent literature；tempsearch.md（来源：SKILL.md:L30）"
+              "description": "规划选项：1. Search；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -298,10 +298,10 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/research-idea/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/research-idea/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
+          "line_start": null,
           "line_end": null
         }
       ],
@@ -324,7 +324,7 @@
       "method_id": "research-idea-guided--2-analysis",
       "skill_id": "research-idea",
       "label": "2. Analysis",
-      "description": "Summarize trends & gaps；01gapanalysis.md（来源：SKILL.md:L31）",
+      "description": "该入口为规划能力；用于讨论2. Analysis的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -353,7 +353,7 @@
             {
               "value": "2-analysis",
               "label": "2. Analysis",
-              "description": "Summarize trends & gaps；01gapanalysis.md（来源：SKILL.md:L31）"
+              "description": "规划选项：2. Analysis；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -612,10 +612,10 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/research-idea/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/research-idea/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
+          "line_start": null,
           "line_end": null
         }
       ],
@@ -638,7 +638,7 @@
       "method_id": "research-idea-guided--3-draft",
       "skill_id": "research-idea",
       "label": "3. Draft",
-      "description": "Propose initial idea；02preliminary.md（来源：SKILL.md:L32）",
+      "description": "该入口为规划能力；用于讨论3. Draft的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -667,7 +667,7 @@
             {
               "value": "3-draft",
               "label": "3. Draft",
-              "description": "Propose initial idea；02preliminary.md（来源：SKILL.md:L32）"
+              "description": "规划选项：3. Draft；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -926,10 +926,10 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/research-idea/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/research-idea/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
+          "line_start": null,
           "line_end": null
         }
       ],
@@ -952,7 +952,7 @@
       "method_id": "research-idea-guided--4-discuss",
       "skill_id": "research-idea",
       "label": "4. Discuss",
-      "description": "Iterate with user feedback；03discussion.md（来源：SKILL.md:L33）",
+      "description": "该入口为规划能力；用于讨论4. Discuss的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -981,7 +981,7 @@
             {
               "value": "4-discuss",
               "label": "4. Discuss",
-              "description": "Iterate with user feedback；03discussion.md（来源：SKILL.md:L33）"
+              "description": "规划选项：4. Discuss；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1240,10 +1240,10 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/research-idea/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/research-idea/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
+          "line_start": null,
           "line_end": null
         }
       ],
@@ -1266,7 +1266,7 @@
       "method_id": "research-idea-guided--5-finalize",
       "skill_id": "research-idea",
       "label": "5. Finalize",
-      "description": "Polish and save；IDEA.md（来源：SKILL.md:L34）",
+      "description": "该入口为规划能力；用于讨论5. Finalize的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -1295,7 +1295,7 @@
             {
               "value": "5-finalize",
               "label": "5. Finalize",
-              "description": "Polish and save；IDEA.md（来源：SKILL.md:L34）"
+              "description": "规划选项：5. Finalize；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1554,10 +1554,10 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/research-idea/SKILL.md",
-          "label": "Skill 说明与方法依据",
+          "path": "skills/research-idea/skill.json",
+          "label": "原生 Skill 规划定义",
           "kind": "skill",
-          "line_start": 1,
+          "line_start": null,
           "line_end": null
         }
       ],
@@ -1576,29 +1576,20 @@
       }
     }
   ],
-  "selection_rules": [
-    "先确认目标产物、允许使用的已有输入与禁止复用的结果；仅在用户允许时复用已有数据，不默认追加上游步骤。",
-    "独立操作选择 Method；确需固定组合时选择 Pipeline，并检查每一步输入输出。",
-    "软件工具 Skill 用于选择实现，任务 Skill 用于组织需求，不因为同时匹配两类 Skill 重复添加方法。",
-    "Treat missing inputs according to the current goal: for explicitly requested steps, ask for binding or discuss alternatives; when asked to produce a target from stated inputs, add only necessary available producers allowed by the user. Never regenerate an explicitly reused result or silently broaden the scientific goal.",
-    "Select by scientific output meaning, stage conditions and spatial/data requirements. A directory, generic image or report does not certify a typed derivative. Do not equate tissue classes, anatomical atlas regions and learned clusters. Query the Method contract for exact ports and conditional parameters; use Pipelines only when their actual steps match the request."
-  ],
   "name": "research-idea",
   "category": [
     "任务能力",
     "research"
   ],
   "scope": "task",
-  "applicability": [
-    "用于 research-idea 的任务分析与方法说明；当前没有登记可独立执行的 Method。"
-  ],
-  "limitations": [
-    "这里只统筹已登记入口；目录收录不代表覆盖软件全部命令或参数。",
-    "环境探测与运行证据分别显示；合成数据测试不代表真实数据的科学有效性。",
-    "尚无 Method 的规划能力只能提供说明，不能当作可执行步骤。"
-  ],
-  "examples": [],
   "keywords": [
     "research-idea"
+  ],
+  "references": [
+    {
+      "id": "notes",
+      "title": "背景与注意事项",
+      "path": "references/notes.md"
+    }
   ]
 }

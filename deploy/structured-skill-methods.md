@@ -1,6 +1,6 @@
 # Skill、Method 与 Pipeline 的原生结构
 
-当前分支采用独立方法契约，不通过旧 planning/execution manifest 生成执行能力。与旧分支混用数据库、前后端或 Worker 前必须审核格式和版本；新部署应先使用隔离数据库与输出目录验证。
+当前分支采用独立方法契约；旧 Skill 别名、workflow/recipes manifest 和 Markdown 依赖图兼容接口已移除。能力顺序来自真实输入输出依赖。与旧分支混用数据库、前后端或 Worker 前必须审核格式和版本；新部署应先使用隔离数据库与输出目录验证。
 
 | 对象 | 定义与责任 |
 | --- | --- |
@@ -10,7 +10,7 @@
 
 最小单位是一条接入的软件命令、库操作或不可再拆的原有脚本，不要求把其内部实现拆成函数，也不新建算法。单命令预设可以保存为单步骤 Pipeline。同一方法被多个 Skill 引用时，不复制参数和端口。
 
-Skill 的 `scope` 区分 task、tool 和 dataset；待接入能力单列为 `planning_capabilities`。原始 `SKILL.md` 及 `references/` 为只读参考，不定义当前的自动执行策略。见 [参考资料边界](../skills/README.md)。
+Skill 的 `scope` 区分 task、tool 和 dataset；待接入能力单列为 `planning_capabilities`。补充资料放在 `references/` 并通过 Skill JSON 显式登记，只按需读取，不定义执行策略。特殊 `SKILL.md` 已移除。见 [参考资料边界](../skills/README.md)。
 
 ## 调用与检索
 
@@ -27,7 +27,7 @@ Skill 内 `method_id` 表示任务语境中的候选项，`method_ref` 指向全
 - `GET /api/library`：Skill / Method / Pipeline 分层目录。
 - `GET /api/skills/{skill}`、`GET /api/skills/{skill}/methods`：Skill 指导与分页候选。
 - `GET /api/methods/{method_id}`、`GET /api/pipelines/{pipeline_id}`：全局契约。
-- `GET /api/skills/{skill}/reference`：分页原始参考。
+- `GET /api/skills/{skill}/reference`：按 `reference_id` 选择已登记主题并分页读取；没有参考资料时返回 JSON 概览。
 - 模型只读工具：`list_skill_methods`、`read_skill_method`、`read_skill_pipeline`、`read_skill_reference`；读取本身不提交任务。
 
 用户 Pipeline 的草稿、校验、说明及版本 API 见 [资源库使用](native-library.md)。

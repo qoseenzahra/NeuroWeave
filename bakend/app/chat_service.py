@@ -93,7 +93,7 @@ class ChatService:
     def _demo_reply(self, request: ChatRequest, skills: list[Skill]) -> str:
         selected = "、".join(skill.display_name for skill in skills)
         skill_line = (
-            f"我已载入「{selected}」对应的 SKILL.md 与可用参考脚本，"
+            f"我已载入「{selected}」的 JSON 概览，补充参考资料会按需读取，"
             "会把它们作为这次需求的处理指南。"
             if selected
             else "这次还没有指定或识别到 Skill，我会先按通用数据处理流程理解需求。"

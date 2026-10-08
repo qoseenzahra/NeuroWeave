@@ -8,16 +8,9 @@
   ],
   "description": "mrtrix3 统筹已登记的独立方法和可复用流程。支持：MRtrix3 5ttgen（FSL）；MRtrix3 从已有 5TT 生成灰白质界面种子；MRtrix3 MP-PCA DWI 去噪；MRtrix3 Gibbs 振铃校正；MRtrix3 影像阈值处理；MRtrix3 流线顶点重采样；MRtrix3 SIFT2 独立流线赋权；MRtrix3 CSD / MSMT-CSD；其他方法可在详情中分页查询。",
   "selection_rules": [
-    "先确认目标产物、允许使用的已有输入与禁止复用的结果；仅在用户允许时复用已有数据，不默认追加上游步骤。",
     "优先选择与目标产物对应的独立命令；只有明确需要连续多个步骤时才选择 Pipeline。",
     "同一 DWI 可以作为响应函数与 FOD 估计的共享输入；响应输出按组织类型连接。",
-    "按已安装版本的命令契约解释选项，未接入选项不得自行拼接。",
-    "先确认目标产物和已有输入；只选择必要步骤，已有数据或历史结果优先复用。",
-    "独立操作选择 Method；确需固定组合时选择 Pipeline，并检查每一步输入输出。",
-    "软件工具 Skill 用于选择实现，任务 Skill 用于组织需求，不因为同时匹配两类 Skill 重复添加方法。",
-    "方法详情中的环境探测、契约校验与实际运行证据分别判断；未验证的命令不得宣称已经成功执行。",
-    "Treat missing inputs according to the current goal: for explicitly requested steps, ask for binding or discuss alternatives; when asked to produce a target from stated inputs, add only necessary available producers allowed by the user. Never regenerate an explicitly reused result or silently broaden the scientific goal.",
-    "Select by scientific output meaning, stage conditions and spatial/data requirements. A directory, generic image or report does not certify a typed derivative. Do not equate tissue classes, anatomical atlas regions and learned clusters. Query the Method contract for exact ports and conditional parameters; use Pipelines only when their actual steps match the request."
+    "按已安装版本的命令契约解释选项，未接入选项不得自行拼接。"
   ],
   "method_refs": [
     {
@@ -697,13 +690,7 @@
   "planning_capabilities": [],
   "scope": "software",
   "applicability": [
-    "用户明确使用 MRtrix3，或任务已确定为影像、扩散信号、FOD、纤维束及连接组处理。",
-    "根据目标选择对应 Method 或 Pipeline；每个入口的输入格式、必要参数和产物以其独立契约为准。"
-  ],
-  "limitations": [
-    "这里只统筹已登记入口；目录收录不代表覆盖软件全部命令或参数。",
-    "环境探测与运行证据分别显示；合成数据测试不代表真实数据的科学有效性。",
-    "尚无 Method 的规划能力只能提供说明，不能当作可执行步骤。"
+    "用户明确使用 MRtrix3，或任务已确定为影像、扩散信号、FOD、纤维束及连接组处理。"
   ],
   "examples": [
     {
@@ -715,5 +702,12 @@
     "software-mrtrix3",
     "mrtrix3",
     "MRtrix3"
+  ],
+  "references": [
+    {
+      "id": "notes",
+      "title": "扩散数据与连接组注意事项",
+      "path": "references/notes.md"
+    }
   ]
 }

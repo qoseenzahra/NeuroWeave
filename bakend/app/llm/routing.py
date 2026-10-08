@@ -215,8 +215,8 @@ async def explain_capability_recommendation(
     fallback = (
         f"能力树已定位到：{chain}。"
         f"我只加载了相关的 Skill（{'、'.join(skill_ids)}）来组织建议。\n\n"
-        "这些能力目前只有 SKILL.md 指南、尚未全部补齐受审 Manifest，"
-        "因此可以讨论方法选项、组合顺序和所需输入，但当前不会生成或执行命令。"
+        "这些建议依据当前 Skill 的适用范围和方法选择规则。"
+        "未接入独立 Method 的能力只能用于讨论和规划，不能直接执行。"
     )
     if client.mode != "model":
         return fallback

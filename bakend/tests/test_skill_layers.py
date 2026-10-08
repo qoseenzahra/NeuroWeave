@@ -99,13 +99,17 @@ class SkillLayerTests(unittest.TestCase):
             loader = SkillLoader(ROOT / "skills")
             with patch("pathlib.Path.cwd", return_value=Path(tmp)):
                 skill = loader.find("dwi-skill")
-            self.assertTrue(skill.skill_md.is_relative_to(ROOT / "skills"))
+            self.assertTrue(skill.definition_path.is_relative_to(ROOT / "skills"))
             self.assertNotEqual(skill.instructions, "FOREIGN")
 
-    def test_prompt_uses_overview_and_original_document_is_preserved(self):
+    def test_prompt_uses_json_overview(self):
         skill = self.loader.find("dwi-skill")
         self.assertTrue(skill.overview)
-        self.assertIn("list_skill_methods", skill.prompt_excerpt())
+        self.assertIn("已有 5TT", skill.prompt_excerpt())
+        # Catalog tool guidance has one platform owner, not one copy per Skill.
+        from app.skill_catalog import SKILL_PROMPT
+        self.assertIn("list_skill_methods", SKILL_PROMPT)
+        self.assertNotIn("list_skill_methods", skill.prompt_excerpt())
         self.assertGreater(len(skill.instructions), len(skill.prompt_excerpt()))
 
     def test_model_tools_work_without_dataset_and_cannot_execute_commands(self):

@@ -1,6 +1,6 @@
 # 模块边界与维护指南
 
-本文描述 `codex/structured-skill-methods` 的模块职责。目录定义、编排、文件授权和执行分别维护；拆分模块时通过 API 与 Prompt 回归检查防止意外改变外部行为。
+本文描述当前仓库的模块职责。目录定义、编排、文件授权和执行分别维护；拆分模块时通过 API 与 Prompt 回归检查防止意外改变外部行为。
 
 ## 后端职责
 
@@ -27,11 +27,15 @@
 
 跨模块写操作使用公开边界：`LocalStore.transaction()` 保证一次读、检查、写入的事务，`RunService.mutation_lock` 与 `WorkflowService.mutation_lock` 协调提交与文件操作。共享锁只能在应用装配处统一连接，不应在路由里新建另一个锁。关闭 Web 监控不等于取消 Slurm 作业。
 
+`PipelineRepository.get()` 用一次联表查询读取不可变版本、该版本的发布状态和全 Pipeline 的删除修订号。创建任务检查返回版本自身的状态，避免再次扫描全部版本。恢复后保留删除记录并递增修订号，防止旧窗口重新匹配删除前的修订号；删除不会修改已经保存在任务中的执行快照。
+
 ## 前端职责
 
 - `App.tsx` 保留当前对话和数据集/输出目录的协调；`ConversationHistoryPanel` 负责历史列表渲染和翻页观察。
 - `useMessageViewport` 管理消息容器滚动及前插历史时的锚点恢复，向界面提供操作函数，不暴露内部跟随标记。
 - `PipelineEditor` 组织编排操作；`PipelineMethodPalette` 只展示和选择注册方法，`PipelineNodeInspector` 根据实际契约展示条件输入与参数。
+- `LibraryPanel` 只保存待查看条目的 ID、类型和版本，定义加载交给查询缓存；版本选择只改变 ID/版本，不先请求再由 Effect 重复请求。Method 详情、方法面板和画布共用 `libraryQueries.methodQuery`；关闭窗口或切换条目后，查询可以取消失去观察者的请求。
+- `libraryQueries.refreshPipelineViews` 统一刷新发布、归档、删除及恢复影响的目录、回收站和对应 Pipeline 的详情、版本、来源及迁移缓存。更新这类操作时保持该列表完整，不分别在按钮组件中复制失效规则。
 - `pipelineGraph.ts` 保留连线、共享输入和拓扑顺序的规则；`PipelineCanvas` 负责画布交互，不能自行重写一份类型或条件规则。
 - `usePipelineDraft` 负责持久草稿、浏览器恢复、撤销/重做；`usePipelineDescription` 只在用户点击生成按钮时请求说明，负责取消过期请求和保护手动编辑；保存、校验与发布不生成说明。
 - 各文件的注释解释数据所有权、并发边界、失效规则和异常恢复，避免为明显的赋值逐行写重复说明。

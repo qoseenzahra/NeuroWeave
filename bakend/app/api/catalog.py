@@ -7,11 +7,6 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Query
 
 from ..application_services import ApplicationServices
-from ..neuroclaw_compat.validate_dag import (
-    find_cycles,
-    find_missing_deps,
-    load_skill_graph,
-)
 
 
 def router_for(services: ApplicationServices) -> APIRouter:
@@ -78,17 +73,6 @@ def router_for(services: ApplicationServices) -> APIRouter:
             },
         }
 
-    @router.get("/api/skills/graph")
-    def skill_graph() -> dict[str, Any]:
-        graph, _metadata = load_skill_graph(services.settings.skills_dir)
-        return {
-            "nodes": len(graph),
-            "edges": sum(len(dependencies) for dependencies in graph.values()),
-            "cycles": find_cycles(graph),
-            "missing_dependencies": find_missing_deps(graph),
-            "graph": graph,
-        }
-
     @router.get("/api/skills/{skill_name}")
     def get_skill(skill_name: str) -> dict[str, Any]:
         skill = services.skill_loader.find(skill_name)
@@ -102,7 +86,7 @@ def router_for(services: ApplicationServices) -> APIRouter:
         return {
             **services.skill_catalog.execution_status(skill),
             "instructions": skill.overview or skill.prompt_excerpt(),
-            "reference_chars": len(skill.instructions),
+            "references": [reference.public_dict() for reference in skill.references],
             "orchestration": services.skill_catalog.skill_structure(skill.name),
             "layered": bool(skill.overview),
             "files": files,
@@ -145,10 +129,13 @@ def router_for(services: ApplicationServices) -> APIRouter:
         skill_name: str,
         offset: int = Query(0, ge=0, le=2000000),
         max_chars: int = Query(6000, ge=1, le=12000),
+        reference_id: str = Query("", max_length=80),
     ):
         try:
-            return services.skill_catalog.read_reference(skill_name, offset, max_chars)
+            return services.skill_catalog.read_reference(skill_name, offset, max_chars, reference_id)
         except KeyError as exc:
             raise HTTPException(404, str(exc)) from exc
+        except ValueError as exc:
+            raise HTTPException(400, str(exc)) from exc
 
     return router

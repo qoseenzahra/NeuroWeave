@@ -10,7 +10,7 @@
       "method_id": "method-design-guided--1-read-parse",
       "skill_id": "method-design",
       "label": "1. Read & Parse",
-      "description": "Load and analyze IDEA.md；01ideasummary.md（来源：SKILL.md:L28）",
+      "description": "该入口为规划能力；用于讨论1. Read & Parse的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -39,7 +39,7 @@
             {
               "value": "1-read-parse",
               "label": "1. Read & Parse",
-              "description": "Load and analyze IDEA.md；01ideasummary.md（来源：SKILL.md:L28）"
+              "description": "规划选项：1. Read & Parse；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -298,13 +298,6 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/method-design/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/method-design/scripts/__init__.py",
           "label": "__init__.py",
           "kind": "script",
@@ -331,25 +324,9 @@
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/method-design/SKILL.md",
-          "label": "已提取 1 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python skills/method-design/scripts/tournament.py --candidates 02a_candidates.json --output 02c_ranking.csv --backend openai --model gpt-4o-mini",
-          "language": "bash",
-          "source_path": "skills/method-design/SKILL.md",
-          "line_start": 63,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -368,7 +345,7 @@
       "method_id": "method-design-guided--2a-draft-alternatives-tournament-mode",
       "skill_id": "method-design",
       "label": "2a. Draft Alternatives (Tournament Mode)",
-      "description": "Sketch N candidate architectures；02acandidates.json（来源：SKILL.md:L29）",
+      "description": "该入口为规划能力；用于讨论2a. Draft Alternatives (Tournament Mode)的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -397,7 +374,7 @@
             {
               "value": "2a-draft-alternatives-tournament-mode",
               "label": "2a. Draft Alternatives (Tournament Mode)",
-              "description": "Sketch N candidate architectures；02acandidates.json（来源：SKILL.md:L29）"
+              "description": "规划选项：2a. Draft Alternatives (Tournament Mode)；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -656,13 +633,6 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/method-design/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/method-design/scripts/__init__.py",
           "label": "__init__.py",
           "kind": "script",
@@ -689,25 +659,9 @@
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/method-design/SKILL.md",
-          "label": "已提取 1 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python skills/method-design/scripts/tournament.py --candidates 02a_candidates.json --output 02c_ranking.csv --backend openai --model gpt-4o-mini",
-          "language": "bash",
-          "source_path": "skills/method-design/SKILL.md",
-          "line_start": 63,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -726,7 +680,7 @@
       "method_id": "method-design-guided--2b-lit-probe-tournament-mode",
       "skill_id": "method-design",
       "label": "2b. Lit Probe (Tournament Mode)",
-      "description": "Per-candidate literature check via academic-research-hub；02blitcheck.md（来源：SKILL.md:L30）",
+      "description": "该入口为规划能力；用于讨论2b. Lit Probe (Tournament Mode)的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -755,7 +709,7 @@
             {
               "value": "2b-lit-probe-tournament-mode",
               "label": "2b. Lit Probe (Tournament Mode)",
-              "description": "Per-candidate literature check via academic-research-hub；02blitcheck.md（来源：SKILL.md:L30）"
+              "description": "规划选项：2b. Lit Probe (Tournament Mode)；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1014,13 +968,6 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/method-design/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/method-design/scripts/__init__.py",
           "label": "__init__.py",
           "kind": "script",
@@ -1047,25 +994,9 @@
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/method-design/SKILL.md",
-          "label": "已提取 1 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python skills/method-design/scripts/tournament.py --candidates 02a_candidates.json --output 02c_ranking.csv --backend openai --model gpt-4o-mini",
-          "language": "bash",
-          "source_path": "skills/method-design/SKILL.md",
-          "line_start": 63,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [
         "academic-research-hub"
       ],
@@ -1086,7 +1017,7 @@
       "method_id": "method-design-guided--2c-tournament-tournament-mode",
       "skill_id": "method-design",
       "label": "2c. Tournament (Tournament Mode)",
-      "description": "Pairwise LLM-judge + Bradley-Terry ranking；02cranking.csv（来源：SKILL.md:L31）",
+      "description": "该入口为规划能力；用于讨论2c. Tournament (Tournament Mode)的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -1115,7 +1046,7 @@
             {
               "value": "2c-tournament-tournament-mode",
               "label": "2c. Tournament (Tournament Mode)",
-              "description": "Pairwise LLM-judge + Bradley-Terry ranking；02cranking.csv（来源：SKILL.md:L31）"
+              "description": "规划选项：2c. Tournament (Tournament Mode)；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1374,13 +1305,6 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/method-design/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/method-design/scripts/__init__.py",
           "label": "__init__.py",
           "kind": "script",
@@ -1407,25 +1331,9 @@
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/method-design/SKILL.md",
-          "label": "已提取 1 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python skills/method-design/scripts/tournament.py --candidates 02a_candidates.json --output 02c_ranking.csv --backend openai --model gpt-4o-mini",
-          "language": "bash",
-          "source_path": "skills/method-design/SKILL.md",
-          "line_start": 63,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -1444,7 +1352,7 @@
       "method_id": "method-design-guided--2-architecture-design",
       "skill_id": "method-design",
       "label": "2. Architecture Design",
-      "description": "Define network layers & modules (top-1 from tournament if used)；02architecture.md（来源：SKILL.md:L32）",
+      "description": "该入口为规划能力；用于讨论2. Architecture Design的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -1473,7 +1381,7 @@
             {
               "value": "2-architecture-design",
               "label": "2. Architecture Design",
-              "description": "Define network layers & modules (top-1 from tournament if used)；02architecture.md（来源：SKILL.md:L32）"
+              "description": "规划选项：2. Architecture Design；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1732,13 +1640,6 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/method-design/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/method-design/scripts/__init__.py",
           "label": "__init__.py",
           "kind": "script",
@@ -1765,25 +1666,9 @@
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/method-design/SKILL.md",
-          "label": "已提取 1 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python skills/method-design/scripts/tournament.py --candidates 02a_candidates.json --output 02c_ranking.csv --backend openai --model gpt-4o-mini",
-          "language": "bash",
-          "source_path": "skills/method-design/SKILL.md",
-          "line_start": 63,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -1802,7 +1687,7 @@
       "method_id": "method-design-guided--3-formula-derivation",
       "skill_id": "method-design",
       "label": "3. Formula Derivation",
-      "description": "Derive equations & proofs；03formulas.md（来源：SKILL.md:L33）",
+      "description": "该入口为规划能力；用于讨论3. Formula Derivation的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -1831,7 +1716,7 @@
             {
               "value": "3-formula-derivation",
               "label": "3. Formula Derivation",
-              "description": "Derive equations & proofs；03formulas.md（来源：SKILL.md:L33）"
+              "description": "规划选项：3. Formula Derivation；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -2090,13 +1975,6 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/method-design/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/method-design/scripts/__init__.py",
           "label": "__init__.py",
           "kind": "script",
@@ -2123,25 +2001,9 @@
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/method-design/SKILL.md",
-          "label": "已提取 1 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python skills/method-design/scripts/tournament.py --candidates 02a_candidates.json --output 02c_ranking.csv --backend openai --model gpt-4o-mini",
-          "language": "bash",
-          "source_path": "skills/method-design/SKILL.md",
-          "line_start": 63,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -2160,7 +2022,7 @@
       "method_id": "method-design-guided--4-pseudocode-notes",
       "skill_id": "method-design",
       "label": "4. Pseudocode & Notes",
-      "description": "Generate implementation details；04pseudocode.md（来源：SKILL.md:L34）",
+      "description": "该入口为规划能力；用于讨论4. Pseudocode & Notes的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -2189,7 +2051,7 @@
             {
               "value": "4-pseudocode-notes",
               "label": "4. Pseudocode & Notes",
-              "description": "Generate implementation details；04pseudocode.md（来源：SKILL.md:L34）"
+              "description": "规划选项：4. Pseudocode & Notes；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -2448,13 +2310,6 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/method-design/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/method-design/scripts/__init__.py",
           "label": "__init__.py",
           "kind": "script",
@@ -2481,25 +2336,9 @@
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/method-design/SKILL.md",
-          "label": "已提取 1 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python skills/method-design/scripts/tournament.py --candidates 02a_candidates.json --output 02c_ranking.csv --backend openai --model gpt-4o-mini",
-          "language": "bash",
-          "source_path": "skills/method-design/SKILL.md",
-          "line_start": 63,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -2518,7 +2357,7 @@
       "method_id": "method-design-guided--5-finalize",
       "skill_id": "method-design",
       "label": "5. Finalize",
-      "description": "Compile and polish；METHOD.md（来源：SKILL.md:L35）",
+      "description": "该入口为规划能力；用于讨论5. Finalize的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -2547,7 +2386,7 @@
             {
               "value": "5-finalize",
               "label": "5. Finalize",
-              "description": "Compile and polish；METHOD.md（来源：SKILL.md:L35）"
+              "description": "规划选项：5. Finalize；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -2806,13 +2645,6 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/method-design/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/method-design/scripts/__init__.py",
           "label": "__init__.py",
           "kind": "script",
@@ -2839,25 +2671,9 @@
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/method-design/SKILL.md",
-          "label": "已提取 1 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python skills/method-design/scripts/tournament.py --candidates 02a_candidates.json --output 02c_ranking.csv --backend openai --model gpt-4o-mini",
-          "language": "bash",
-          "source_path": "skills/method-design/SKILL.md",
-          "line_start": 63,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -2872,29 +2688,20 @@
       }
     }
   ],
-  "selection_rules": [
-    "先确认目标产物、允许使用的已有输入与禁止复用的结果；仅在用户允许时复用已有数据，不默认追加上游步骤。",
-    "独立操作选择 Method；确需固定组合时选择 Pipeline，并检查每一步输入输出。",
-    "软件工具 Skill 用于选择实现，任务 Skill 用于组织需求，不因为同时匹配两类 Skill 重复添加方法。",
-    "Treat missing inputs according to the current goal: for explicitly requested steps, ask for binding or discuss alternatives; when asked to produce a target from stated inputs, add only necessary available producers allowed by the user. Never regenerate an explicitly reused result or silently broaden the scientific goal.",
-    "Select by scientific output meaning, stage conditions and spatial/data requirements. A directory, generic image or report does not certify a typed derivative. Do not equate tissue classes, anatomical atlas regions and learned clusters. Query the Method contract for exact ports and conditional parameters; use Pipelines only when their actual steps match the request."
-  ],
   "name": "method-design",
   "category": [
     "任务能力",
     "method"
   ],
   "scope": "task",
-  "applicability": [
-    "用于 method-design 的任务分析与方法说明；当前没有登记可独立执行的 Method。"
-  ],
-  "limitations": [
-    "这里只统筹已登记入口；目录收录不代表覆盖软件全部命令或参数。",
-    "环境探测与运行证据分别显示；合成数据测试不代表真实数据的科学有效性。",
-    "尚无 Method 的规划能力只能提供说明，不能当作可执行步骤。"
-  ],
-  "examples": [],
   "keywords": [
     "method-design"
+  ],
+  "references": [
+    {
+      "id": "notes",
+      "title": "背景与注意事项",
+      "path": "references/notes.md"
+    }
   ]
 }

@@ -13,7 +13,6 @@ from test_pipeline_library import library as library
 
 def test_saved_pipeline_instantiates_and_exports_without_submitting(library):
     service = WorkflowService(
-        ROOT / "skills/dwi-skill/workflow.manifest.json",
         ChatService(),
         library.registry,
         library.store,
@@ -48,6 +47,32 @@ def test_blank_name_and_nonfinite_parameter_fail(library):
         library.compile(ComposeRequest.model_validate(value))
 
 
+def test_launch_uses_publication_state_of_the_requested_version(library):
+    service = WorkflowService(
+        ChatService(), library.registry, library.store,
+        DatasetService(ROOT, library.store),
+    )
+    request = ComposeRequest.model_validate(draft(library))
+    first = library.save(request)
+    request.expected_version = 1
+    library.save(request, first["id"])
+    library.lifecycle(first["id"], 1, "archived")
+
+    # A published latest version must not make an archived older version usable.
+    with pytest.raises(ValueError, match="已归档"):
+        library.workflow(first["id"], UsePipeline(version=1), service, SimpleNamespace())
+    workflow = library.workflow(first["id"], UsePipeline(version=2), service, SimpleNamespace())
+    assert workflow.steps[0].selected_method_id.endswith("@2")
+
+    # Conversely, archiving the latest version does not archive a restored older one.
+    library.lifecycle(first["id"], 1, "published")
+    library.lifecycle(first["id"], 2, "archived")
+    workflow = library.workflow(first["id"], UsePipeline(version=1), service, SimpleNamespace())
+    assert workflow.steps[0].selected_method_id.endswith("@1")
+    with pytest.raises(ValueError, match="已归档"):
+        library.workflow(first["id"], UsePipeline(), service, SimpleNamespace())
+
+
 def test_http_save_version_instantiate_and_export(library):
     import asyncio
 
@@ -56,7 +81,6 @@ def test_http_save_version_instantiate_and_export(library):
     from fastapi import FastAPI
 
     service = WorkflowService(
-        ROOT / "skills/dwi-skill/workflow.manifest.json",
         ChatService(),
         library.registry,
         library.store,
@@ -101,3 +125,29 @@ def test_http_save_version_instantiate_and_export(library):
             assert response.json()["editor"]["steps"][1]["inputs"]
 
     asyncio.run(check())
+
+
+def test_standalone_launch_preserves_current_chat_and_pins_requested_version(library):
+    from app.conversation_models import ConversationRecord
+
+    library.store.create_conversation(ConversationRecord(
+        conversation_id="existing-chat", title="Existing conversation",
+        created_at="2026-01-01", updated_at="2026-01-01",
+    ))
+    service = WorkflowService(
+        ChatService(),
+        library.registry, library.store, DatasetService(ROOT, library.store),
+    )
+    request = ComposeRequest.model_validate(draft(library))
+    first = library.save(request)
+    request.expected_version = 1
+    request.name = "Updated recipe"
+    library.save(request, first["id"])
+    before = library.store.get_conversation("existing-chat").model_dump()
+    workflow = library.workflow(first["id"], UsePipeline(version=1), service, SimpleNamespace())
+    assert workflow.title == "Threshold chain"
+    assert workflow.steps[0].selected_method_id.endswith("@1")
+    assert library.store.get_conversation("existing-chat").model_dump() == before
+    assert library.store.conversation_messages("existing-chat") == []
+    assert library.store.list_runs(workflow_id=workflow.workflow_id) == []
+    assert library.store.workflow_index(source="pipeline")["items"][0]["workflow_id"] == workflow.workflow_id

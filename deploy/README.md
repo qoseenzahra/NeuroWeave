@@ -1,14 +1,16 @@
 # 分支文档索引
 
-这些指南对应 `codex/structured-skill-methods`。当前执行定义以 Method JSON 和注册 Runner 为准，运行环境以目标服务器的实时探测和 Dry-run 为准。带日期的测试报告、版本标识及备份路径是当时的记录，不能作为另一版本的就绪证明。
+这些指南描述当前仓库的使用和维护边界。任务管理开发分支的完整变更与清理范围见 [审阅说明](task-management-review.md)。当前执行定义以 Method JSON 和注册 Runner 为准，运行环境以目标服务器的实时探测和 Dry-run 为准。带日期的测试报告、版本标识及备份路径是当时的记录，不能作为另一版本的就绪证明。
 
 ## 使用与维护
 
 | 主题 | 文档 |
 | --- | --- |
 | 开发环境、项目入口 | [项目说明](../README.md)、[前端开发](../frontend/README.md) |
-| Skill / Method / Pipeline 定义及扩展 | [原生结构](structured-skill-methods.md)、[参考资料边界](../skills/README.md) |
-| 分类目录、节点画布与 Pipeline 使用 | [资源库](native-library.md)、[可靠性与编排](reliability-and-pipeline-authoring.md) |
+| Skill / Method / Pipeline 定义及扩展 | [原生结构](structured-skill-methods.md)、[参考资料边界](../skills/README.md)、[参考资料整理](skill-references.md)、[专属指导整理](skill-guidance.md) |
+| 分类目录、节点画布与 Pipeline 使用 | [资源库](native-library.md)、[可靠性与编排](reliability-and-pipeline-authoring.md)、[方法参数与转换预设](pipeline-parameters-and-presets.md) |
+| 用户已发布 Pipeline 的删除与恢复 | [发布删除](published-pipeline-deletion.md) |
+| 任务管理、独立 Pipeline 任务和分支审阅 | [任务管理](task-management.md)、[审阅说明](task-management-review.md) |
 | 需求理解、候选检索与流程验证 | [检索链路](library-upgrade.md)、[需求契约](task-planning-contracts.md)、[灵活对话](flexible-dialogue.md) |
 | 方法语义与规划邀请 | [方法契约与邀请](method-contracts-and-invitations.md) |
 | 数据集、输出目录与文件授权 | [目录管理](workspaces.md) |

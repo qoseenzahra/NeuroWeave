@@ -19,7 +19,6 @@ from app.workflow_service import RevisionConflict, WorkflowService
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
 PROJECT_ROOT = BACKEND_ROOT.parent
 SKILLS_DIR = PROJECT_ROOT / "skills"
-MANIFEST = SKILLS_DIR / "dwi-skill" / "workflow.manifest.json"
 
 
 class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
@@ -58,7 +57,6 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
         chat_service.base_url = ""
         chat_service.model = ""
         self.service = WorkflowService(
-            MANIFEST,
             chat_service,
             CapabilityRegistry(SKILLS_DIR),
             self.store,
@@ -416,7 +414,6 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
         chat_service.base_url = ""
         chat_service.model = ""
         service = WorkflowService(
-            MANIFEST,
             chat_service,
             CapabilityRegistry(SKILLS_DIR),
             self.store,
@@ -510,7 +507,8 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
             registry_stats["evidence_backed_methods"], registry_stats["methods"]
         )
         self.assertGreaterEqual(registry_stats["artifact_types"], 39)
-        self.assertGreater(registry_stats["reference_commands"], 0)
+        # Old Markdown-extracted command examples no longer describe capabilities.
+        self.assertEqual(registry_stats["reference_commands"], 0)
         for method in self.service.registry.all_methods():
             self.assertIn(method.structure_level, {"evidence", "reviewed"})
             self.assertTrue(method.source_references, method.method_id)
@@ -521,7 +519,7 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(set(self.service.registry.definitions.skills), loaded)
         for skill in self.service.registry.definitions.skills.values():
             self.assertTrue(skill["description"])
-            self.assertTrue(skill["selection_rules"])
+            self.assertIsInstance(skill.get("selection_rules", []), list)
         for capability_id in self.service.registry.capabilities():
             node = tree.leaf(capability_id)
             self.assertIsNotNone(node)
@@ -1456,7 +1454,9 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(
             [s.capability for s in workflow.steps],
-            ["dwi.inspect", "dwi.fod", "dwi.report"],
+            # These methods share no typed dependency. Their requested order
+            # survives without the retired DWI manifest's positional rules.
+            ["dwi.report", "dwi.fod", "dwi.inspect"],
         )
 
     async def test_legacy_locked_order_changes_only_after_unlock(self) -> None:

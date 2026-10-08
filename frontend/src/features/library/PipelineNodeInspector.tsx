@@ -2,12 +2,8 @@ import { compatible, nodeMethod } from './artifactSemantics';
 import { ui } from '../../lib/libraryText';
 import {
   displayedInputSlots,
-  activeOutputSlots,
-  conditionMatches,
-  parameterEnabled,
-  parameterRequired
+  activeOutputSlots
 } from '../workflows/workflowConditions';
-import type { ParameterValue } from '../workflows/workflowTypes';
 import type { Draft, InputPort, Method, Node } from './libraryApi';
 import {
   linkSources,
@@ -17,6 +13,8 @@ import {
   disconnectInput
 } from './pipelineGraph';
 import { button, field } from './pipelineEditorStyles';
+import { stageCondition } from './pipelineCopy';
+import { PipelineMethodParameters } from './PipelineMethodParameters';
 
 type Props = {
   draft: Draft;
@@ -44,12 +42,6 @@ export function PipelineNodeInspector({
   onRemove
 }: Props) {
   const selectedMethod = selectedNode && definitions[selectedNode.method_id];
-  const values: Record<string, ParameterValue> = {
-    ...Object.fromEntries(
-      selectedMethod?.parameters.map((p) => [p.id, p.default]) ?? []
-    ),
-    ...selectedNode?.parameters
-  };
   return (
     <aside
       aria-label={ui('选中步骤参数')}
@@ -64,6 +56,7 @@ export function PipelineNodeInspector({
           <h3 className="break-words text-sm font-semibold">
             {selectedMethod?.label ?? selectedNode.method_id}
           </h3>
+          {!!Object.keys(selectedNode.when??{}).length&&<p className="mt-2 text-xs text-warning">{ui('执行条件：{0}',stageCondition(selectedNode,draft))}</p>}
           <button
             className={button + ' my-2'}
             onClick={() => onRemove(selectedNode.id)}
@@ -230,87 +223,10 @@ export function PipelineNodeInspector({
                   )}
                 </label>
               ))}
-              <h4 className="mt-3 text-xs font-semibold">{ui('步骤参数')}</h4>
-              {selectedMethod.parameters
-                .filter((p) => conditionMatches(p.visible_when ?? {}, values))
-                .map((p) => (
-                  <label key={p.id} className="mt-3 block text-xs">
-                    {p.label}
-                    {parameterRequired(p, values) ? ' *' : ''}
-                    {(p.options ?? []).length ? (
-                      <select
-                        className={field}
-                        disabled={!parameterEnabled(p, values)}
-                        value={JSON.stringify(values[p.id] ?? null)}
-                        onChange={(e) =>
-                          update(selectedNode.id, {
-                            parameters: {
-                              ...selectedNode.parameters,
-                              [p.id]: JSON.parse(e.target.value)
-                            }
-                          })
-                        }
-                      >
-                        <option value="null">{ui('未指定')}</option>
-                        {p.options.map((o) => (
-                          <option
-                            key={JSON.stringify(o.value)}
-                            value={JSON.stringify(o.value)}
-                          >
-                            {o.label}
-                          </option>
-                        ))}
-                      </select>
-                    ) : p.type === 'boolean' ? (
-                      <select
-                        className={field}
-                        disabled={!parameterEnabled(p, values)}
-                        value={String(values[p.id] ?? '')}
-                        onChange={(e) =>
-                          update(selectedNode.id, {
-                            parameters: {
-                              ...selectedNode.parameters,
-                              [p.id]:
-                                e.target.value === ''
-                                  ? null
-                                  : e.target.value === 'true'
-                            }
-                          })
-                        }
-                      >
-                        <option value="">{ui('未指定')}</option>
-                        <option value="true">{ui('是')}</option>
-                        <option value="false">{ui('否')}</option>
-                      </select>
-                    ) : (
-                      <input
-                        className={field}
-                        disabled={!parameterEnabled(p, values)}
-                        type={p.type === 'string' ? 'text' : 'number'}
-                        min={p.minimum ?? undefined}
-                        max={p.maximum ?? undefined}
-                        step={p.type === 'integer' ? 1 : 'any'}
-                        value={String(values[p.id] ?? '')}
-                        onChange={(e) =>
-                          update(selectedNode.id, {
-                            parameters: {
-                              ...selectedNode.parameters,
-                              [p.id]:
-                                e.target.value === ''
-                                  ? null
-                                  : p.type === 'string'
-                                    ? e.target.value
-                                    : Number(e.target.value)
-                            }
-                          })
-                        }
-                      />
-                    )}
-                    <span className="block whitespace-pre-wrap break-words text-subtle">
-                      {p.description} {p.usage} {p.condition_help}
-                    </span>
-                  </label>
-                ))}
+              <PipelineMethodParameters method={selectedMethod} node={selectedNode} disabled={busy}
+                onChange={(id, value) => update(selectedNode.id, {
+                  parameters: { ...selectedNode.parameters, [id]: value }
+                })}/>
             </>
           ) : (
             <p className="text-xs">{ui('正在加载参数定义…')}</p>

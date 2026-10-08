@@ -71,7 +71,7 @@
       "method_id": "pet-skill-guided--reference-region-extraction",
       "skill_id": "pet-skill",
       "label": "Reference region extraction",
-      "description": "Extract mean signal from anatomically defined reference region (e.g., cerebellar cortex, pons, whole cerebellum)；fsl-tool + freesurfer-tool + nibabel-skill；Reference region mean time-activity curve（来源：SKILL.md:L47）",
+      "description": "该入口为规划能力；用于讨论Reference region extraction的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -100,7 +100,7 @@
             {
               "value": "reference-region-extraction",
               "label": "Reference region extraction",
-              "description": "Extract mean signal from anatomically defined reference region (e.g., cerebellar cortex, pons, whole cerebellum)；fsl-tool + freesurfer-tool + nibabel-skill；Reference region mean time-activity curve（来源：SKILL.md:L47）"
+              "description": "规划选项：Reference region extraction；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -369,37 +369,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/pet-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/pet-skill/scripts/compute_suvr.py",
           "label": "compute_suvr.py",
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/pet-skill/SKILL.md",
-          "label": "已提取 1 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python skills/pet-skill/scripts/compute_suvr.py --pet /path/to/pet_in_t1w_space.nii.gz --target-mask /path/to/target_roi_mask.nii.gz --ref-mask /path/to/reference_region_mask.nii.gz --output /path/to/pet_output/suvr_values.csv",
-          "language": "bash",
-          "source_path": "skills/pet-skill/SKILL.md",
-          "line_start": 97,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [
         "fsl-tool",
         "freesurfer-tool",
@@ -423,7 +400,7 @@
       "method_id": "pet-skill-guided--partial-volume-correction",
       "skill_id": "pet-skill",
       "label": "Partial volume correction",
-      "description": "Apply geometric transfer matrix (GTM) or region-based PVC methods；fsl-tool + custom；PVC-corrected ROI values（来源：SKILL.md:L49）",
+      "description": "该入口为规划能力；用于讨论Partial volume correction的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -452,7 +429,7 @@
             {
               "value": "partial-volume-correction",
               "label": "Partial volume correction",
-              "description": "Apply geometric transfer matrix (GTM) or region-based PVC methods；fsl-tool + custom；PVC-corrected ROI values（来源：SKILL.md:L49）"
+              "description": "规划选项：Partial volume correction；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -721,37 +698,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/pet-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/pet-skill/scripts/compute_suvr.py",
           "label": "compute_suvr.py",
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/pet-skill/SKILL.md",
-          "label": "已提取 1 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python skills/pet-skill/scripts/compute_suvr.py --pet /path/to/pet_in_t1w_space.nii.gz --target-mask /path/to/target_roi_mask.nii.gz --ref-mask /path/to/reference_region_mask.nii.gz --output /path/to/pet_output/suvr_values.csv",
-          "language": "bash",
-          "source_path": "skills/pet-skill/SKILL.md",
-          "line_start": 97,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [
         "fsl-tool"
       ],
@@ -773,7 +727,7 @@
       "method_id": "pet-skill-guided--dynamic-pet-modeling",
       "skill_id": "pet-skill",
       "label": "Dynamic PET modeling",
-      "description": "Kinetic modeling (e.g., Logan plot, SUVR with dynamic frames)；Custom analysis；DVR or SUVR over time（来源：SKILL.md:L50）",
+      "description": "该入口为规划能力；用于讨论Dynamic PET modeling的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -802,7 +756,7 @@
             {
               "value": "dynamic-pet-modeling",
               "label": "Dynamic PET modeling",
-              "description": "Kinetic modeling (e.g., Logan plot, SUVR with dynamic frames)；Custom analysis；DVR or SUVR over time（来源：SKILL.md:L50）"
+              "description": "规划选项：Dynamic PET modeling；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1071,37 +1025,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/pet-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/pet-skill/scripts/compute_suvr.py",
           "label": "compute_suvr.py",
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/pet-skill/SKILL.md",
-          "label": "已提取 1 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python skills/pet-skill/scripts/compute_suvr.py --pet /path/to/pet_in_t1w_space.nii.gz --target-mask /path/to/target_roi_mask.nii.gz --ref-mask /path/to/reference_region_mask.nii.gz --output /path/to/pet_output/suvr_values.csv",
-          "language": "bash",
-          "source_path": "skills/pet-skill/SKILL.md",
-          "line_start": 97,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -1121,7 +1052,7 @@
       "method_id": "pet-skill-guided--tracer-specific-workflow",
       "skill_id": "pet-skill",
       "label": "Tracer-specific workflow",
-      "description": "PiB (amyloid, cerebellar cortex ref), FDG (metabolism, pons ref), tau (flortaucipir, cerebellar cortex ref)；Full pipeline；Tracer-appropriate SUVR maps（来源：SKILL.md:L51）",
+      "description": "该入口为规划能力；用于讨论Tracer-specific workflow的目标、条件与限制，尚无独立执行 Method。",
       "runner_id": "",
       "execution_mode": "planning",
       "input_types": [
@@ -1150,7 +1081,7 @@
             {
               "value": "tracer-specific-workflow",
               "label": "Tracer-specific workflow",
-              "description": "PiB (amyloid, cerebellar cortex ref), FDG (metabolism, pons ref), tau (flortaucipir, cerebellar cortex ref)；Full pipeline；Tracer-appropriate SUVR maps（来源：SKILL.md:L51）"
+              "description": "规划选项：Tracer-specific workflow；不代表已登记可执行命令。"
             }
           ],
           "minimum": null,
@@ -1419,37 +1350,14 @@
       "structure_level": "evidence",
       "source_references": [
         {
-          "path": "skills/pet-skill/SKILL.md",
-          "label": "Skill 说明与方法依据",
-          "kind": "skill",
-          "line_start": 1,
-          "line_end": null
-        },
-        {
           "path": "skills/pet-skill/scripts/compute_suvr.py",
           "label": "compute_suvr.py",
           "kind": "script",
           "line_start": 1,
           "line_end": null
-        },
-        {
-          "path": "skills/pet-skill/SKILL.md",
-          "label": "已提取 1 条参考命令",
-          "kind": "command",
-          "line_start": null,
-          "line_end": null
         }
       ],
-      "command_references": [
-        {
-          "command": "python skills/pet-skill/scripts/compute_suvr.py --pet /path/to/pet_in_t1w_space.nii.gz --target-mask /path/to/target_roi_mask.nii.gz --ref-mask /path/to/reference_region_mask.nii.gz --output /path/to/pet_output/suvr_values.csv",
-          "language": "bash",
-          "source_path": "skills/pet-skill/SKILL.md",
-          "line_start": 97,
-          "kind": "operation",
-          "executable": false
-        }
-      ],
+      "command_references": [],
       "delegate_skill_ids": [],
       "execution_recipe": null,
       "included_capabilities": [],
@@ -1466,11 +1374,7 @@
     }
   ],
   "selection_rules": [
-    "先确认目标产物、允许使用的已有输入与禁止复用的结果；仅在用户允许时复用已有数据，不默认追加上游步骤。",
-    "独立操作选择 Method；确需固定组合时选择 Pipeline，并检查每一步输入输出。",
-    "软件工具 Skill 用于选择实现，任务 Skill 用于组织需求，不因为同时匹配两类 Skill 重复添加方法。",
-    "Treat missing inputs according to the current goal: for explicitly requested steps, ask for binding or discuss alternatives; when asked to produce a target from stated inputs, add only necessary available producers allowed by the user. Never regenerate an explicitly reused result or silently broaden the scientific goal.",
-    "Select by scientific output meaning, stage conditions and spatial/data requirements. A directory, generic image or report does not certify a typed derivative. Do not equate tissue classes, anatomical atlas regions and learned clusters. Query the Method contract for exact ports and conditional parameters; use Pipelines only when their actual steps match the request."
+    "计算 SUVR 前先确定示踪剂、参考区定义与分析帧；参考 Mask 和目标 Mask 应与 PET 网格对齐。"
   ],
   "name": "pet-skill",
   "category": [
@@ -1478,20 +1382,8 @@
     "pet"
   ],
   "scope": "modality",
-  "applicability": [
-    "根据目标选择对应 Method 或 Pipeline；每个入口的输入格式、必要参数和产物以其独立契约为准。"
-  ],
   "limitations": [
-    "格式和样本数量满足仅是必要条件；空间、单位、样本标识与方法假设仍须按所选方法检查。",
-    "这里只统筹已登记入口；目录收录不代表覆盖软件全部命令或参数。",
-    "环境探测与运行证据分别显示；合成数据测试不代表真实数据的科学有效性。",
-    "尚无 Method 的规划能力只能提供说明，不能当作可执行步骤。"
-  ],
-  "examples": [
-    {
-      "request": "查看 PET SUVR 实际定量 所需的输入和参数",
-      "decision": "查询 pet.compute_suvr 的契约，绑定文件后再规划执行。"
-    }
+    "SUVR 归一化不等于部分容积校正或动态 PET 动力学建模。"
   ],
   "keywords": [
     "pet-skill",
@@ -1499,5 +1391,12 @@
     "SUVR",
     "部分容积校正",
     "FSL"
+  ],
+  "references": [
+    {
+      "id": "notes",
+      "title": "背景与注意事项",
+      "path": "references/notes.md"
+    }
   ]
 }
