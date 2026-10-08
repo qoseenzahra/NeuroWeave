@@ -39,3 +39,28 @@ def test_confirmation_rejects_other_user_and_revoked_grant(tmp_path):
         FilesystemAuthorizer.require_proposal_initiator(proposal, "u1", "p1", 4, 7)
     with pytest.raises(FilesystemAuthorizationError):
         FilesystemAuthorizer.require_proposal_initiator(proposal, "u1", "p1", 3, 8)
+
+
+def test_current_grant_provider_is_rechecked(tmp_path):
+    root = tmp_path / "project"
+    root.mkdir()
+    state = {"enabled": True}
+
+    def provider(user_id, project_id, path, scope):
+        if state["enabled"] and user_id == "u1" and project_id == "p1":
+            return DirectoryGrant("u1", "p1", root, scope, revision=2)
+        return None
+
+    auth = FilesystemAuthorizer(grant_provider=provider)
+    auth.require_read("u1", "p1", root)
+    state["enabled"] = False
+    with pytest.raises(FilesystemAuthorizationError):
+        auth.require_read("u1", "p1", root)
+
+
+def test_confirmation_rejects_revoked_resource():
+    proposal = FileProposal("op1", "u1", "p1", "delete", Path("/tmp/x"), 3, 7, "dataset-1")
+    with pytest.raises(FilesystemAuthorizationError, match="resource_access_revoked"):
+        FilesystemAuthorizer.require_proposal_initiator(
+            proposal, "u1", "p1", 3, 7, resource_authorized=False
+        )
