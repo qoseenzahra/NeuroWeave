@@ -121,7 +121,7 @@ class SQLiteResourcePolicyStore:
             if resource_type:
                 rows = db.execute(
                     "SELECT resource_type,resource_id FROM resource_policies "
-                    "WHERE creator_id='' OR manager_id='' AND resource_type=?",
+                    "WHERE (creator_id='' OR manager_id='') AND resource_type=?",
                     (resource_type,),
                 ).fetchall()
             else:
