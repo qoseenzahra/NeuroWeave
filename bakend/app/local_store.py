@@ -17,6 +17,7 @@ from .dataset_models import DatasetRecord
 from .run_store import RunStoreMixin
 from .store_schema import initialize_store
 from .workflow_models import Workflow
+from .access.resource_store import SQLiteResourcePolicyStore
 
 
 class LocalStore(RunStoreMixin):
@@ -27,6 +28,7 @@ class LocalStore(RunStoreMixin):
         self.database_path.parent.mkdir(parents=True, exist_ok=True)
         self._lock = RLock()
         initialize_store(self._connect)
+        self.resource_policies = SQLiteResourcePolicyStore(self._connect)
 
     @contextmanager
     def _connect(self):
