@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Query, Response
 
+from ..access.service import AuthorizationDenied
+
 from ..application_services import ApplicationServices
 from ..conversation_models import (
     ConversationPage,
@@ -16,12 +18,22 @@ from ..conversation_models import (
 def router_for(services: ApplicationServices) -> APIRouter:
     router = APIRouter()
 
+    def require_current_user() -> None:
+        if services.authorization_service is None:
+            return
+        try:
+            services.authorization_service.require_authenticated()
+        except AuthorizationDenied as exc:
+            raise HTTPException(status_code=401, detail=str(exc)) from exc
+
     @router.post("/api/conversations", response_model=ConversationRecord)
     def create_conversation() -> ConversationRecord:
+        require_current_user()
         return services.conversation_service.create()
 
     @router.get("/api/conversations", response_model=ConversationPage)
     def list_conversations(
+        require_current_user()
         limit: int = Query(default=20, ge=1, le=50),
         q: str = Query(default="", max_length=1000),
         archived: bool = False,
@@ -39,6 +51,7 @@ def router_for(services: ApplicationServices) -> APIRouter:
 
     @router.delete("/api/conversations/{conversation_id}", status_code=204)
     def delete_conversation(conversation_id: str) -> Response:
+        require_current_user()
         try:
             services.conversation_service.delete(conversation_id)
         except KeyError as exc:
@@ -53,6 +66,7 @@ def router_for(services: ApplicationServices) -> APIRouter:
         "/api/conversations/{conversation_id}", response_model=ConversationRecord
     )
     def update_conversation(
+        require_current_user()
         conversation_id: str,
         request: ConversationUpdateRequest,
     ) -> ConversationRecord:
@@ -79,6 +93,7 @@ def router_for(services: ApplicationServices) -> APIRouter:
         "/api/conversations/{conversation_id}", response_model=ConversationSnapshot
     )
     def get_conversation(
+        require_current_user()
         conversation_id: str,
         limit: int = Query(40, ge=1, le=100),
         before_sequence: int | None = Query(None, ge=1),
@@ -97,6 +112,7 @@ def router_for(services: ApplicationServices) -> APIRouter:
         response_model=ConversationSnapshot,
     )
     async def compact_conversation(conversation_id: str) -> ConversationSnapshot:
+        require_current_user()
         try:
             await services.conversation_service.compact_if_needed(
                 conversation_id, force=True
