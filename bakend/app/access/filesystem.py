@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
+from typing import Callable
 
 
 class GrantScope(str, Enum):
@@ -28,6 +29,7 @@ class FileProposal:
     path: Path
     grant_revision: int
     file_revision: int
+    resource_id: str | None = None
 
 
 class FilesystemAuthorizationError(PermissionError):
@@ -41,11 +43,22 @@ class FilesystemAuthorizer:
     This class never trusts a browser-supplied user id or role.
     """
 
-    def __init__(self, grants: list[DirectoryGrant]):
-        self._grants = tuple(grants)
+    def __init__(
+        self,
+        grants: list[DirectoryGrant] | None = None,
+        *,
+        grant_provider: Callable[[str, str, Path, GrantScope], DirectoryGrant | None] | None = None,
+    ):
+        self._grants = tuple(grants or ())
+        self._grant_provider = grant_provider
 
     def _grant(self, user_id: str, project_id: str, path: Path, scope: GrantScope):
         path = path.resolve()
+        if self._grant_provider is not None:
+            current = self._grant_provider(user_id, project_id, path, scope)
+            if current is not None:
+                return current
+
         matches = [
             g for g in self._grants
             if (
@@ -82,6 +95,8 @@ class FilesystemAuthorizer:
         current_project_id: str,
         grant_revision: int,
         file_revision: int,
+        *,
+        resource_authorized: bool = True,
     ):
         if proposal.initiator_id != current_user_id:
             raise FilesystemAuthorizationError("proposal_initiator_required")
@@ -91,3 +106,5 @@ class FilesystemAuthorizer:
             raise FilesystemAuthorizationError("grant_revoked_or_changed")
         if proposal.file_revision != file_revision:
             raise FilesystemAuthorizationError("file_changed_since_proposal")
+        if not resource_authorized:
+            raise FilesystemAuthorizationError("resource_access_revoked")
