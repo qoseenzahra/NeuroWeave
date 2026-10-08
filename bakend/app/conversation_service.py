@@ -10,6 +10,9 @@ from datetime import datetime, timezone
 from uuid import uuid4
 
 from .chat_service import ChatService
+from .access.conversation_policy import ConversationAuthorization
+from .access.service import AuthorizationService
+from .access.contracts import ResourceAction
 from .conversation_models import (
     ConversationListItem,
     ConversationMemoryStatus,
@@ -31,9 +34,12 @@ class ConversationService:
         *,
         compact_trigger_tokens: int | None = None,
         keep_recent_messages: int | None = None,
+        authorization_service: AuthorizationService | None = None,
     ) -> None:
         self.store = store
         self.chat_service = chat_service
+        self.authorization_service = authorization_service
+        self.conversation_policy = ConversationAuthorization(store.resource_policies)
         self.compact_trigger_tokens = max(
             256,
             compact_trigger_tokens
@@ -56,6 +62,9 @@ class ConversationService:
             updated_at=now,
         )
         self.store.create_conversation(conversation)
+        if self.authorization_service is not None:
+            identity = self.authorization_service.require_authenticated()
+            self.conversation_policy.save_owner(conversation.conversation_id, identity.user_id)
         return conversation
 
     def list(
@@ -65,11 +74,17 @@ class ConversationService:
         query: str = "",
         archived: bool = False,
     ) -> list[ConversationListItem]:
-        return self.store.list_conversations(
-            limit,
-            query=query,
-            archived=archived,
-        )
+        rows = self.store.list_conversations(max(limit * 5, 100), query=query, archived=archived)
+        if self.authorization_service is None:
+            return rows[:limit]
+        visible = []
+        for row in rows:
+            try:
+                self.authorization_service.require(self.conversation_policy.resource(row.conversation_id), ResourceAction.READ)
+                visible.append(row)
+            except (KeyError, PermissionError):
+                continue
+        return visible[:limit]
 
     def list_page(
         self,
@@ -82,12 +97,21 @@ class ConversationService:
         safe_limit = max(1, min(limit, 50))
         before_updated_at, before_conversation_id = self._decode_cursor(cursor)
         rows = self.store.list_conversations(
-            safe_limit + 1,
+            max(safe_limit * 5 + 1, 101),
             query=query,
             archived=archived,
             before_updated_at=before_updated_at,
             before_conversation_id=before_conversation_id,
         )
+        if self.authorization_service is not None:
+            visible = []
+            for row in rows:
+                try:
+                    self.authorization_service.require(self.conversation_policy.resource(row.conversation_id), ResourceAction.READ)
+                    visible.append(row)
+                except (KeyError, PermissionError):
+                    continue
+            rows = visible
         has_more = len(rows) > safe_limit
         conversations = rows[:safe_limit]
         next_cursor = None
@@ -107,6 +131,8 @@ class ConversationService:
         title: str | None = None,
         archived: bool | None = None,
     ) -> ConversationRecord:
+        if self.authorization_service is not None:
+            self.authorization_service.require(self.conversation_policy.resource(conversation_id), ResourceAction.UPDATE)
         if title is None and archived is None:
             raise ValueError("至少需要提供一个要更新的字段")
         normalized_title = None
@@ -126,6 +152,8 @@ class ConversationService:
         return conversation
 
     def delete(self, conversation_id: str) -> None:
+        if self.authorization_service is not None:
+            self.authorization_service.require(self.conversation_policy.resource(conversation_id), ResourceAction.DELETE)
         if not self.store.delete_archived_conversation(conversation_id):
             raise KeyError(conversation_id)
 
@@ -347,6 +375,8 @@ class ConversationService:
 
     def _require(self, conversation_id: str) -> ConversationRecord:
         conversation = self.store.get_conversation(conversation_id)
+        if conversation is not None and self.authorization_service is not None:
+            self.authorization_service.require(self.conversation_policy.resource(conversation_id), ResourceAction.READ)
         if conversation is None:
             raise KeyError(conversation_id)
         return conversation
