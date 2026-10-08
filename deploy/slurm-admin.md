@@ -1,10 +1,10 @@
 # NeuroWeave GPU 节点管理员配置
 
-适用已核查的 `mycluster`：`mgr` 无 GPU，`node01–03` 各一张 RTX 5060 8 GB；Slurm 21.08.5，配置路径 `/etc/slurm/slurm.conf`。脚本只登记 GPU 资源，保留现有 CPU、内存、分区、MUNGE、调度与进程跟踪设置，不安装或升级 Slurm。公共环境已在 `/opt/neuroweave/envs`，安装环境不等于计算节点已恢复调度。
+适用已核查的 `mycluster`：`mgr` 无 GPU，`node01–03` 各一张 RTX 5060 8 GB；Slurm 21.08.5，配置路径 `/etc/slurm/slurm.conf`。脚本只登记 GPU 资源，保留现有 CPU、内存、分区、MUNGE、调度与进程跟踪设置，不安装或升级 Slurm。公共环境已在 `/opt/neuroweave/envs`，2026-10-08 核实 GPU 登记已完成，节点正在承担计算任务。下面初始化/回滚步骤只适用于明确安排的管理员维护窗口；日常状态先用 `sinfo`、`squeue`、`scontrol show config` 和 `scontrol show node` 只读检查。
 
 `scripts/configure_slurm_gpu.py` 应同步到共享目录 `/opt/neuroweave/admin/configure_slurm_gpu.py`。以下命令由 `hipeson` 在 **mgr 的交互终端**执行，`sudo` 密码直接输入服务器终端。脚本每次先检查队列为空；请在维护期间暂停其他用户提交任务，避免检查后出现新作业。
 
-## 单条命令完成管理员配置
+## 维护窗口内的初始化配置
 
 将 `scripts/enable_slurm_gpu.sh` 同步到 `/opt/neuroweave/admin/enable_slurm_gpu.sh` 后，可以在 mgr 的交互终端以 `hipeson` 执行：
 
@@ -99,6 +99,6 @@ sudo python3 /opt/neuroweave/admin/configure_slurm_gpu.py --rollback /var/backup
 
 ## 当前限制
 
-本次不启用 `task/cgroup` 或更改 `ProctrackType=proctrack/linuxproc`。Slurm 21.08 与当前节点可能使用的 cgroup v2 需要独立验证和版本升级规划，不能直接套用较新 Slurm 的 cgroup v2 配置。`Gres=gpu:1` 能让 Slurm 分配和计数 GPU，并为正常 Slurm 作业设置 GPU 可见性；**本次未建立基于设备 cgroup 的强制隔离**，不能据此承诺阻止用户绕过环境变量或直接 SSH 使用显卡。
+2026-10-08 核实 `TaskPlugin=task/none`、`ProctrackType=proctrack/linuxproc`。Slurm 21.08 与当前节点可能使用的 cgroup v2 需要独立验证和版本升级规划，不能直接套用较新 Slurm 的 cgroup v2 配置。`Gres=gpu:1` 能让 Slurm 分配和计数 GPU，并为正常 Slurm 作业设置 GPU 可见性；**尚未建立基于设备 cgroup 的强制隔离**，不能据此承诺阻止用户绕过环境变量或直接 SSH 使用显卡。
 
 参考：[Slurm GRES 配置与 GPU 作业](https://slurm.schedmd.com/gres.html)、[scontrol 节点状态管理](https://slurm.schedmd.com/scontrol.html)、[Slurm cgroup v2 插件](https://slurm.schedmd.com/cgroup_v2.html)。文档可能描述新版能力，本脚本只使用已存在于当前集群的基础配置。

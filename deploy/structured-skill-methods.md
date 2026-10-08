@@ -1,6 +1,6 @@
 # Skill、Method 与 Pipeline 的原生结构
 
-当前分支采用独立方法契约；旧 Skill 别名、workflow/recipes manifest 和 Markdown 依赖图兼容接口已移除。能力顺序来自真实输入输出依赖。与旧分支混用数据库、前后端或 Worker 前必须审核格式和版本；新部署应先使用隔离数据库与输出目录验证。
+当前平台采用独立方法契约；旧 Skill 别名、workflow/recipes manifest 和 Markdown 依赖图兼容接口已移除。能力顺序来自真实输入输出依赖。与旧分支混用数据库、前后端或 Worker 前必须审核格式和版本；新部署应先使用隔离数据库与输出目录验证。
 
 | 对象 | 定义与责任 |
 | --- | --- |
@@ -52,6 +52,6 @@ PYTHONPATH=bakend python -m pytest bakend/tests -q --tb=short
 
 ## 能力边界
 
-当前注册 328 个 Method、105 个规范 Skill、28 个内置 Pipeline。画布、用户保存、持久草稿、动态接口、共享输入及有序多来源已实现；使用方式见 [资源库](native-library.md)。软件命令及全部参数组合仍未穷尽接入，`option_coverage` / 未开放选项用于说明边界。
+当前注册 328 个 Method、105 个规范 Skill、24 个内置 Pipeline。画布、用户保存、持久草稿、动态接口、共享输入及有序多来源已实现；使用方式见 [资源库](native-library.md)。软件命令及全部参数组合仍未穷尽接入，`option_coverage` / 未开放选项用于说明边界。
 
 文档完整性、软件就绪、当前执行证据和真实数据适用性分别判断。不要把某次历史探测的就绪数量当成当前服务器结果。发布包必须包含原生定义和所引用实现，旧任务使用的 Worker 目录保留至任务结束。

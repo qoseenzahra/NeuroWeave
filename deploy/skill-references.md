@@ -1,20 +1,14 @@
 # Skill 按需参考资料
 
-本次整理取消特殊 `SKILL.md` 文件。105 个规范 Skill 的加载、选择和执行仍依据 JSON；参考资料只补充背景和结果解释。
+平台从 skill.json 加载规范 Skill，参考 Markdown 通过显式登记按需读取。参考资料补充背景和结果解释，参数与执行契约由 Method 和 Runner 维护。
 
-## 内容处理
+## 内容范围
 
-- 103 份旧文档移除；其中 95 个 Skill 的背景、科学限制、方法解释、数据集特征及来源整理到 `references/notes.md`。
-- `dataset-inspector`、`table-cleaning`、`report-builder`、`image-batch-processing`、`beautiful-log`、`claw-shell`、`skill-updater`、`harness-core` 的旧说明主要重复当前目录或描述旧执行架构，使用现有 JSON 概览，不为数量补写文档。
-- 为原来没有 Markdown 的 `software-ants`、`software-mrtrix3` 补充空间变换、插值、梯度、降噪、连接组检查和能力边界说明，引用官方文档及当前方法契约。
-- DWI 已有 7 份 MRtrix3 3.0.8 原生帮助保持原字节与来源哈希，同时登记为可按主题读取的资料。方法实现、执行契约、Pipeline 和原始来源清单不改写。
-- 清除 JSON 规划能力里指向已删除文档的 568 条来源/命令引用。旧行号和哈希不重定向到新说明；规划能力仍可讨论，不因参考资料增加执行能力。
-- 没有独立实现来源的 94 个规划入口引用当前 `skill.json` 作为规划定义来源，不将其标记为执行验证。
-- 清除规划能力中的旧 `claw-shell` 委派与环境条件，保留规划入口的身份和当前能力边界。
+资料用于解释科研背景、方法前提、质量检查、数据集特点及结果限制。与当前契约重复或描述退役执行架构的文字不继续维护；无需补充知识的 Skill 使用 JSON 概览。
 
-原始说明的作者、许可和来源保留在整理后的资料及仓库归属记录中；历史来源清单记录导入快照，而不是当前文件是否存在。
+DWI 登记的 7 份 MRtrix3 3.0.8 原生帮助保留原字节和来源哈希。整理后的 notes 与原始帮助、实现脚本及执行证据分别管理，不将新说明标记为原始帮助或科学验证。
 
-未保留独立参考资料的 `beautiful-log`、`claw-shell`、`skill-updater`、`harness-core` 原说明作者均为 chengwang96，原标注许可为 MIT License；来源快照和许可记录继续保留。其余四份简短中文说明未单独署名或标注许可。
+原作者、许可和来源保留在各资料及仓库归属记录中。历史来源清单描述导入快照，不要求退役文件仍存在。已移除独立说明的 beautiful-log、claw-shell、skill-updater、harness-core 原作者为 chengwang96，原标注 MIT License；相应归属记录继续保留，来源见 [UPSTREAM](../UPSTREAM.md)。
 
 ## 登记与读取
 

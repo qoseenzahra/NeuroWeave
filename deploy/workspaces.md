@@ -5,7 +5,7 @@
 ## 使用
 
 1. 浏览允许的服务器根目录，或填写服务器绝对路径。目录仅按层读取，文件夹优先；可筛选、排序、显示隐藏项、刷新、使用面包屑和上级目录。默认一页 80 项，滚动到底自动继续加载。
-2. 选择“当前目录作为输出目录”，填写名称。已有输出目录可在下拉框定位，再点击“选择此路径”确认；浏览或取消不会切换对话关联。若当前路径已登记，直接复用记录；其他目录先登记名称后再选择。对话保存 `workspace_id`，历史对话恢复该关联。没有输出目录的旧对话继续使用原行为。根路径不可直接修改，避免把旧对话静默关联到别的目录。登记时要求服务器后端账户对目录有读取、写入和进入权限；与任何已登记数据集重叠的目录不能登记为可管理输出目录。不会自动执行 chmod/chown，也不能替用户提升 Linux 权限。
+2. 选择“当前目录作为输出目录”，填写名称。已有输出目录可从已登记列表定位，再确认选择；浏览或取消不会切换对话关联。若当前路径已登记，直接复用记录；其他目录先登记名称后再选择。对话保存 `workspace_id`，历史对话恢复该关联。没有输出目录的旧对话继续使用原行为。根路径不可直接修改，避免把旧对话静默关联到别的目录。登记时要求服务器后端账户对目录有读取、写入和进入权限；与任何已登记数据集重叠的目录不能登记为可管理输出目录。不会自动执行 chmod/chown，也不能替用户提升 Linux 权限。
 3. 选中文件查看大小、修改时间、权限和完整路径。文本预览按段读取；影像只展示元数据，内容分析继续使用现有 Skill/Runner。路径支持悬浮、横向滚动和复制。选择窗口四边和四角可拖动调整大小；文件管理面板左边缘可拖动，聚焦后也可用左右方向键调整宽度。
 4. 新建目录、复制、移动、重命名、删除先显示待确认卡片。复制/移动目标必须包含最终文件或文件夹名称。模型没有“确认”工具；只能由网页用户确认。普通对话不提供模型写工具，但用户可以在文件面板手动管理文件。
 5. 删除默认进入回收站。恢复可以使用原位置或填写另一个输出目录内目标；占用的位置不会被静默覆盖。永久删除必须显式勾选并确认。移除输出目录记录只隐藏记录，目录、文件、对话和任务输出全部保留。
@@ -18,8 +18,8 @@
 本地示例（PowerShell，在启动后端前设置；目录应已存在）：
 
 ```powershell
-$env:WORKSPACE_ALLOWED_ROOTS='D:\data;D:\reference_projects\LocalFlow\workspaces'
-$env:WORKSPACE_DEFAULT_ROOT='D:\reference_projects\LocalFlow\workspaces'
+$env:WORKSPACE_ALLOWED_ROOTS='D:\data;D:\projects\NeuroWeave\workspaces'
+$env:WORKSPACE_DEFAULT_ROOT='D:\projects\NeuroWeave\workspaces'
 $env:WORKSPACE_PAGE_SIZE='80'
 $env:WORKSPACE_TEXT_MAX_CHARS='12000'
 $env:WORKSPACE_TRASH_DIR='.neuroweave-trash'
@@ -27,7 +27,7 @@ $env:WORKSPACE_TRASH_DIR='.neuroweave-trash'
 
 未配置时只允许项目的 `workspaces` 目录；开发环境会创建这个默认目录。它被 Git 和发布复制规则排除，不打包用户文件。
 
-服务器在 `deploy/native-backend.env` 中设置：
+以下是服务器配置示例；当前两站的实际根目录及环境文件见 [服务器部署](server-deployment.md)，不要按示例覆盖现有配置：
 
 ```dotenv
 WORKSPACE_ALLOWED_ROOTS=/home/data
@@ -71,7 +71,7 @@ Slurm 输出目录和输出目录必须在目标计算节点上以相同绝对�
 | `GET /api/workspaces/{id}/trash` | 最近 500 条未恢复回收站记录 |
 | `POST /api/fs/trash/{id}/restore` | 恢复提议，可另指定 destination；仍须确认 |
 | `GET /api/workspace-tool-events?turn_id=...` | 当前对话工具进度 |
-| `PATCH /api/conversations/{id}` | 新增 workspace_id 字段，null 表示解除关联 |
+| `PATCH /api/conversations/{id}` | workspace_id，null 表示解除关联 |
 | `PATCH /api/datasets/{id}/workspace` | 可选关联，不改变数据输入目录 |
 | `PATCH /api/workflows/{id}/output` | expected_revision + 输出目录 relative_path |
 
@@ -110,42 +110,22 @@ Slurm 输出目录和输出目录必须在目标计算节点上以相同绝对�
 - 活动任务的数据集、已绑定输入及输出目录不能移动、改名、删除或覆盖。文件操作先保留路径，新的 Runner 不能占用同一路径；长时间复制不会持有 Runner 进度锁。
 - 文件确认独立于 LLM，来自不允许网页 Origin 的写请求被拒绝。当前平台沿用单一后端账户和既有网络入口，不提供用户级身份隔离；审计中的 actor 是服务器账户，conversation_id 区分会话。不要将其当作多租户沙箱。
 
-## 验证及发布
+## 验证与维护
+
+从项目根目录使用锁定开发环境：
 
 ```powershell
-cd D:\reference_projects\LocalFlow\bakend
-python -m pytest -q
-cd ..\frontend
-npx tsc -b
-npm run lint
-npm test
-npm run build
+$env:PYTHONPATH='bakend'
+$env:LOCALFLOW_SLURM_ENABLED='false'
+python -m pytest bakend/tests/test_workspaces.py bakend/tests/test_dataset_output_access.py -q
+npm --prefix frontend run lint
+npm --prefix frontend test
+npm --prefix frontend run build
 ```
 
-Linux 必须执行 `tests/test_workspaces.py`，覆盖 Windows 开发账户可能无权创建的符号链接测试。实际模型验收需要当前模型支持 OpenAI 兼容结构化 function calling；失败会显示接口错误，不会假装执行。
+Linux 回归覆盖符号链接、目录描述符和路径竞态等 Windows 无法完整验证的条件。真实模型工具验收需要当前提供商支持结构化 function calling；失败保留接口错误。纯文件回归不调用模型或提交科研任务。
 
-2026-09-10 验证记录：开发阶段完整后端回归 232 passed、609 个子检查；最终相关回归 47 passed、19 个子检查，另有会话兼容回归 23 passed、6 个子检查。Windows 无权创建符号链接的测试跳过，Linux 输出目录及 Runner 的 18 项测试、3 个子检查全部通过。前端 13 项回归、TypeScript、lint 和生产构建通过。浏览器验收覆盖新建/切换/历史恢复、写操作待确认、183 文件目录的 80→160 自动分页和 390 像素窄屏布局。
-
-真实服务器模型已按自然语言调用目录和文本工具，并将重命名留在待确认状态；测试使用独立 SQLite 和合成文本。Slurm 作业 333 在 node03 完成数据集巡检，退出码 0:0，结果保存于 `/home/data/neuroweave/smoke/workspace-20260910/86a11471/outputs/run_380b7e357bd7/dwi_inspect/dataset_profile.json`。此项验证输出目录输出和调度集成，不代表重新验证所有科学算法。
-
-发布沿用 `scripts/package_release.py`、`scripts/deploy_slurm_release.py` 和 `scripts/deploy_frontend_release.py`。先比较生产公共文件与上一个发布包的 SHA-256，保存任何服务器独有改动，再部署已提交归档。数据库采用增量加列/新表，不清理既有对话、任务或输出。
-
-服务器命令示例，`RELEASE` 指已校验解压的具体版本目录：
-
-```bash
-mkdir -p /home/data/neuroweave/workspaces/hipeson
-python3 "$RELEASE/scripts/deploy_frontend_release.py" --source "$RELEASE" --revision "$REVISION" --build-only
-python3 "$RELEASE/scripts/deploy_slurm_release.py" --source "$RELEASE" --revision "$REVISION" --enable-slurm
-python3 "$RELEASE/scripts/deploy_frontend_release.py" --source "$RELEASE" --revision "$REVISION" --activate-only
-```
-
-发布脚本先检查活动 Runner、后台检查和文件操作，并在维护标记建立后再次检查；存在活动任务时拒绝发布。不要绕过检查强制重启。仅在确认无活动任务、只是修改配置时使用：
-
-```bash
-systemctl --user restart localflow-backend.service
-```
-
-前端重新构建/切换不取消已经提交的后台任务。本地临时前后端测试结束后必须关闭。
+服务器的实际环境文件、服务名、数据库和发布前检查见 [服务器部署](server-deployment.md)。旧 `localflow-backend.service`、`deploy/native-backend.env` 及固定目标脚本不作为当前两站的操作示例。
 
 ## 操作限制与故障恢复
 
@@ -154,12 +134,8 @@ systemctl --user restart localflow-backend.service
 - 进程异常中断的文件操作保留 running 记录，不会自动重放；需检查 operation、源/目标和回收站后处理。复制的暂存路径记录为 staging_path，失败时可保留部分副本，原目标不会因复制失败被先删除。回收站 prepared 记录也保留，以支持中断后的人工核查。
 - Windows 使用原生文件权限及规范化/reparse 检查；Linux 服务器另有目录描述符防护。本功能不是针对可任意重命名挂载点、改变目录所有权或修改数据库的本机管理员的安全隔离。
 
-## 主要修改文件
+## 维护入口
 
-2026-09-17 增补：`app/filesystem_reader.py` 复用有界读取，`app/dataset_files.py` 提供数据集只读范围和输出边界检查。
+后端有界读取及目录授权位于 `bakend/app/filesystem_reader.py`、`dataset_files.py`、`workspace_paths.py`、`workspace_io.py`、`workspace_service.py` 和 `workspace_tools.py`；路由由 `bakend/app/api/` 装配，任务与文件共享的锁由应用依赖统一接线。
 
-后端新增 `app/workspace_models.py`、`workspace_paths.py`、`workspace_io.py`、`workspace_service.py`、`workspace_routes.py`、`workspace_tools.py`；更新 `main.py`、`models.py`、`chat_service.py`、`local_store.py`、`conversation_models.py`、`conversation_service.py`、`dataset_models.py`、`dataset_service.py`、`run_models.py`、`workflow_models.py`、`workflow_service.py`、`execution/run_service.py`、`execution/slurm_backend.py`、`execution/slurm_worker.py`。
-
-前端新增 `components/workspace-panel.tsx`、`components/workflow/workspace-output.tsx`；更新 `app/page.tsx`、`lib/workflow.ts`、`components/dataset/artifact-path-picker.tsx`、`components/workflow/workflow-card.tsx`、`components/workflow/run-panel.tsx`。
-
-验证和部署：`bakend/tests/test_dataset_output_access.py`、`bakend/tests/test_workspaces.py`、`bakend/tests/test_run_service.py`、`scripts/deploy_slurm_release.py`、`.gitignore`、`README.md` 和本文。
+前端目录选择和操作确认位于 `frontend/src/features/workspace/`，输入绑定位于 `frontend/src/features/workflows/`。流程输出变化及会话关联仍通过后端修订检查；详细职责见 [代码维护](code-architecture.md)。

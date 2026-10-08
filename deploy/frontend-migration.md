@@ -1,60 +1,19 @@
-# main 前端迁移记录（2026-09-21）
+# 前端发布工具与适用边界
 
-本文记录当时 main 的前端替换及发布脚本用法，不是当前原生方法分支的部署清单。该分支后来使用独立 3002 服务，API 和数据契约已扩展；发布前必须重新核对兼容性。当前指南见 [文档索引](README.md)。
+当前前端从 `frontend/` 构建，开发与检查见 [前端指南](../frontend/README.md)。现有服务器使用 nginx 挂载各站 `frontend/dist`，API 代理到对应 Unix socket；真实目标、服务和版本核对见 [服务器部署](server-deployment.md)。
 
-main 的 `frontend/` 使用 React 19、Vite、React Query 和 Zustand。后端、数据模型、Skill 和 Runner 保持原接口；流程推荐、参数审核、历史输入、节点资源、运行监控及输出目录均调用现有 API。
+## 构建与静态资源核对
 
-生产入口仍是 `http://192.10.84.6:3000`。网关继续把 `/api/` 转发到原来的 Unix socket，其余请求转发到 `frontend:3000` 的静态 nginx。3001 测试部署已于 2026-09-21 停止，且容器重启策略设为 no；当次迁移仅保留 3000 生产入口；后续原生方法分支另设 3002 测试入口。测试容器、部署目录和历史数据保留。
+从项目根目录运行 `npm --prefix frontend run lint`、`npm --prefix frontend test` 和 `npm --prefix frontend run build`。构建产物必须对应已审核源码，并保留文件清单与 SHA-256。发布先安装带哈希资源，再切换入口；保留旧资源以供已打开页面继续加载。
 
-## 开发和验证
+检查实际静态入口、资源 HTTP 返回及 API 契约，而不只检查健康接口里的 frontend_revision。该标识由后端进程环境提供，单独更新前端时可能不同于实际静态资源。
 
-```bash
-cd frontend
-npm ci
-npm test
-npm run lint
-npm run build
-npm run dev -- --host 127.0.0.1 --port 5173
-```
+## 仓库中的发布工具
 
-开发代理为 127.0.0.1:8010；生产默认同源。不要把凭据放进 VITE_* 变量。前端的模式提示和存储面板版本展示沿用测试版行为。功能验证记录见 `frontend/docs/main-parity.md`。
+`scripts/package_release.py` 按提交生成源码包并排除环境文件、数据库及用户输入输出。`scripts/deploy_frontend_release.py` 支持源码/预构建校验、服务器并发改动检查、备份和回退，但其生产目录、Compose 与网关假设属于旧部署拓扑。
 
-## 仅替换前端
+此脚本将本文列入同步文件清单，文件继续保留用于解释工具边界。现有 3000/3002 使用独立 checkout、runtime 环境文件和目录挂载，不能直接套用脚本内固定的 `/home/hipeson/LocalFlow` 目标或旧网关操作。使用前须审阅目标及切换/恢复步骤；历史固定发布命令不作为当前操作说明。
 
-1. 从已提交的源码生成版本包：`python scripts/package_release.py --output runtime/releases`，核对 SHA-256 后解压到 mgr 的 `/home/hipeson/.cache/neuroweave/releases/<完整前端提交号>`。先比较服务器 `frontend/`、compose 及将更新的文档/部署脚本；保存所涉文件的原始 SHA-256 JSON 清单，新文件用 null 表示原本不存在。传入 `--expected-files` 可在激活前再次拒绝服务器上的并发改动。
-2. 明确当前兼容的后端提交号：读取 `/api/health?include_runtime=false` 的 `release.backend_revision`。这次迁移复用 26951be1e8d9a7c691b10a9ed5e7009413924f81 后端，无需后端部署或 Worker 重启。
-3. 在 mgr 使用发布包内的新脚本构建。新前端就绪前，旧前端继续服务：
+前端发布与后端/Worker 发布分别核对。后端、数据库或 Worker 未更新时，不应以新前端提交号宣称整站升级。涉及后端契约变化时同时验证兼容性，并按目标站的维护锁、活跃任务及数据保留规则安排发布。
 
-```bash
-release=/home/hipeson/.cache/neuroweave/releases/完整前端提交号
-python3 "$release/scripts/deploy_frontend_release.py" \
-  --source "$release" --revision 完整前端提交号 --build-only
-```
-
-如果服务器无法访问 npm/Node 镜像，可使用本地完成 `npm ci && npm test && npm run lint && npm run build` 的同一提交产物。把 dist 放入发布包的 frontend/dist，`__frontend-version.json` 的 revision 必须等于该提交；frontend-dist.json 记录 dist 内每个文件的 SHA-256。附加 `--prebuilt` 使用固定 nginx 镜像构建；脚本会校验文件清单、哈希和提交标记，不接受混入其他文件的构建结果。
-
-4. 激活时指定兼容后端；不会停止 Slurm 作业或重启后端：
-
-```bash
-python3 "$release/scripts/deploy_frontend_release.py" \
-  --source "$release" --revision 完整前端提交号 \
-  --backend-revision 当前兼容后端提交号 \
-  --expected-files /已比较的/server-files.json --activate-only
-```
-
-使用预构建产物时，激活命令同样加 `--prebuilt`。没有 `--backend-revision` 时仍要求前后端同提交，保留完整应用发布的原有检查。
-
-脚本将旧 frontend 目录整体移到受限备份目录，保留其中所有本地文件和缓存；只安装新 frontend、compose 和清单内的部署文档/脚本，不删除数据库、输出或旧镜像。只有 frontend 容器被替换，gateway 仅执行 nginx 配置校验和优雅 reload，以更新上游地址。脚本检查后端 PID/启动时间没有变化。
-
-## 验证和回退
-
-验证 3000 首页、/assets 文件、缺失资源返回 404、API 健康及 /__frontend-version.json；检查后端和 Worker 的版本仍为预期。用只读操作验证对话、Skill、数据集和方案展开，不在升级验收时提交科研任务。
-
-失败会恢复旧源码/compose 和旧镜像。手动回退使用激活时打印的备份目录：
-
-```bash
-python3 "$release/scripts/deploy_frontend_release.py" \
-  --rollback /home/hipeson/.cache/neuroweave/frontend-backups/具体备份目录
-```
-
-回退同样只操作前端和网关 reload，不回滚运行数据库，不停止计算任务。新源码也会保留在备份中供检查。旧版仅镜像备份仍可使用。
+恢复应使用对应发布清单，确认未覆盖后续有效变化；恢复静态入口不回滚数据库，也不停止科研作业。

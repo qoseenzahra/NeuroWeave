@@ -1,29 +1,32 @@
-# 分支文档索引
+# 使用与维护文档
 
-这些指南描述当前仓库的使用和维护边界。任务管理开发分支的完整变更与清理范围见 [审阅说明](task-management-review.md)。当前执行定义以 Method JSON 和注册 Runner 为准，运行环境以目标服务器的实时探测和 Dry-run 为准。带日期的测试报告、版本标识及备份路径是当时的记录，不能作为另一版本的就绪证明。
+这些指南描述当前 main 的功能、配置和维护方式。执行契约以 Method JSON 与注册 Runner 为准，运行可用性以目标环境和本次 Dry-run 为准。
 
-## 使用与维护
+## 产品与开发
 
 | 主题 | 文档 |
 | --- | --- |
-| 开发环境、项目入口 | [项目说明](../README.md)、[前端开发](../frontend/README.md) |
-| Skill / Method / Pipeline 定义及扩展 | [原生结构](structured-skill-methods.md)、[参考资料边界](../skills/README.md)、[参考资料整理](skill-references.md)、[专属指导整理](skill-guidance.md) |
-| 分类目录、节点画布与 Pipeline 使用 | [资源库](native-library.md)、[可靠性与编排](reliability-and-pipeline-authoring.md)、[方法参数与转换预设](pipeline-parameters-and-presets.md) |
-| 用户已发布 Pipeline 的删除与恢复 | [发布删除](published-pipeline-deletion.md) |
-| 任务管理、独立 Pipeline 任务和分支审阅 | [任务管理](task-management.md)、[审阅说明](task-management-review.md) |
-| 需求理解、候选检索与流程验证 | [检索链路](library-upgrade.md)、[需求契约](task-planning-contracts.md)、[灵活对话](flexible-dialogue.md) |
-| 方法语义与规划邀请 | [方法契约与邀请](method-contracts-and-invitations.md) |
-| 数据集、输出目录与文件授权 | [目录管理](workspaces.md) |
-| 历史消息与旧输出复用 | [历史加载](history-and-existing-inputs.md)、[历史结果输入](historical-run-inputs.md) |
-| 运行环境、节点和资源 | [运行条件](skill-runtime/README.md)、[Slurm 执行](slurm-execution.md) |
-| 双语维护与执行证据 | [目录文案](catalog-polish.md)、[质量检查](catalog-quality.md) |
-| 模块边界及 CI | [代码维护](code-architecture.md) |
+| 项目入口与开发检查 | [项目说明](../README.md)、[前端开发](../frontend/README.md) |
+| Skill / Method / Pipeline 定义 | [原生结构](structured-skill-methods.md)、[Skill 指导](../skills/README.md)、[按需资料](skill-references.md)、[专属指导](skill-guidance.md) |
+| 目录、画布与复用 | [资源库](native-library.md)、[Pipeline 画布](pipeline-canvas-ui.md)、[编排与预检](reliability-and-pipeline-authoring.md)、[参数与转换预设](pipeline-parameters-and-presets.md) |
+| 任务创建、配置和运行历史 | [任务管理](task-management.md)、[流程裁剪](workflow-scope-editing.md) |
+| 用户 Pipeline 生命周期 | [发布删除与恢复](published-pipeline-deletion.md) |
+| 模型意图、检索和规划校验 | [多轮对话](flexible-dialogue.md)、[检索链路](library-upgrade.md)、[需求契约](task-planning-contracts.md)、[输出语义与规划邀请](method-contracts-and-invitations.md) |
+| 文件访问与权限 | [数据集和输出目录](workspaces.md) |
+| 历史加载与输入复用 | [历史加载](history-and-existing-inputs.md)、[历史结果输入](historical-run-inputs.md) |
+| 模块职责与 CI | [代码维护](code-architecture.md) |
 
-## 配置与部署记录
+## 服务器与运行维护
 
-- [公共 Python 环境](python-environments/README.md) 记录环境安装方式和初始验证；[Slurm 管理](slurm-admin.md) 与 [记账及备份](reliability-upgrade.md) 记录集群维护。
-- [3002 可靠性发布](reliability-and-pipeline-authoring.md)、[编辑器发布](pipeline-editor-ui.md) 和 [画布发布](pipeline-canvas-ui.md) 保留各自的发布范围、备份及回退信息。不能把其中某次前端发布理解为同时更新了后端。
-- [main 前端迁移](frontend-migration.md) 与 [当时的功能对齐验收](../frontend/docs/main-parity.md) 是旧迁移记录，不是本分支 3002 的部署清单。
-- `method-verification/`、`software-contracts/`、`skill-runtime/*.json` 保存方法验证、软件帮助或历史探测证据；只有与当前方法和执行依赖匹配的证据才计入当前验证状态。
+| 主题 | 文档 |
+| --- | --- |
+| 当前服务拓扑、版本核对与发布边界 | [服务器部署](server-deployment.md)、[前端发布工具](frontend-migration.md) |
+| 软件与 Python 环境 | [软件路径](SERVER_SOFTWARE_PATHS.md)、[公共 Python 环境](python-environments/README.md) |
+| 运行条件与科学证据 | [方法运行条件](skill-runtime/README.md)、[质量检查](catalog-quality.md)、[双语维护](catalog-polish.md) |
+| Slurm 调度、共享 Worker 和资源 | [Slurm 执行](slurm-execution.md)、[GPU 管理](slurm-admin.md) |
+| 监控、重试、记账和备份 | [运行与备份维护](reliability-upgrade.md) |
+| FreeSurfer 特定验证误报恢复 | [恢复接口](freesurfer-recovery.md) |
 
-发布前比较本地与服务器差异，不覆盖服务器有效改动。不要清理活跃任务引用的代码、数据库、输出或运行记录；服务器文件删除需要先核对精确清单及使用情况。本文不授权执行历史报告里的集群重启或清理命令。
+`method-verification/`、`software-contracts/`、`skill-runtime/*.json`、`slurm-test-results.json` 和 `python-environments/locks/` 保留原始帮助、依赖锁及带版本的验证证据。历史证据不等于当前环境或所有算法已验证。旧迁移、单次发布和分支审阅过程通过 Git 历史追溯，不作为当前操作步骤。
+
+服务器更新前比较本地与远端有效改动；保留数据库、科研输入输出、旧资源和被任务引用的 Worker。版本、端口及路径的实时核对集中在服务器部署指南。本文档不触发部署、配置变更或计算任务。

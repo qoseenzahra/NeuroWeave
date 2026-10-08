@@ -14,4 +14,4 @@ Pipeline 编排器在方法目录和步骤参数面板标题旁提供收起按�
 
 `GET /api/workflow-index` 保留原有字段，增加 `source`、`dataset_label`、`workspace_path`。可选查询参数 `source=pipeline|conversation`、`status=draft|active|succeeded|failed|cancelled`，空值表示全部。更新时间同时考虑任务修改和运行更新。
 
-开发版本使用独立端口、数据库、输出根目录及 worker 版本；生产实例继续使用原配置。数据库快照仅用于初始化，不与生产数据库双向同步。
+主站已包含上述任务管理与 Pipeline 行为。开发部署使用独立端口、数据库、输出根及 worker，不与主站同步数据库。现有两站版本和路径见 [服务器部署](server-deployment.md)。

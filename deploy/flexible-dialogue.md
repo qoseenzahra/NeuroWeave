@@ -1,10 +1,8 @@
 # 多轮对话与流程规划的职责边界
 
-## 问题与改动
+## 本轮意图与流程校验
 
-原来的追问策略既受 Prompt 影响，也受路由代码限制：缺少前置输入容易被直接理解为补齐前置步骤，关键词和 Skill 候选可能把解释性对话提升为任务，规划校验失败后只返回错误。
-
-现将“本轮想得到什么回答”与“哪些方法能组成经过校验的流程”分开。
+平台分别判断“本轮需要什么回答”和“哪些注册方法能组成有效流程”。
 
 1. 意图模型返回 `response_policy`：`answer`、`explore`、`inspect`、`plan`、`revise`、`clarify`。
 2. `relation` 表示继续当前上下文、切换目标或独立问题，`focus` 解析“换一种”“第二种”“先只做这一步”等指代；这不是固定对话阶段。
@@ -37,18 +35,12 @@
 - 意图调用/结构验证最多尝试两次。失败保留低置信度，不把关键词候选当成已确认目标。
 - 图校验与建议解释分离。建议模型调用失败时返回原来的准确阻断原因；不能伪造流程。
 - 方法 ID 及图连接可结构验证；自然语言解释和科学建议仍需要用户审阅，不能保证模型每次分类或表达都正确。
-- 本次没有新建科学算法接口；`parcellation_image` 等方法输出契约缺口依然需要单独补全，不能通过放宽 Prompt 绕过。
+- 已登记输出语义以当前 Method 为准。例如 FreeSurfer all/autorecon3 已提供 parcellation_image 端口；完整空间转换链仍须经过实际契约和输入检查，不能通过放宽 Prompt 绕过。
 
 ## 实现与验证
 
-核心文件：`bakend/app/response_policy.py`、`chat_service.py`、`workflow_service.py`、`workspace_tools.py`、`conversation_service.py`、`main.py`、`models.py`。
+模型传输及意图、需求、候选和图规划位于 `bakend/app/chat_service.py` 与 `llm/`；`chat_coordinator.py` 恢复可信会话上下文，`workflows/routing.py`、`workflows/planning.py` 协调规划。`response_policy.py` 管理回答策略，`workspace_tools.py` 限制工具暴露和分发。
 
-本地首轮后端完整回归：376 passed、3 skipped、694 subtests passed。最后补充纯讨论无需输出契约的逻辑后，受影响的回归测试 42 passed、3 subtests passed。目录翻译完整性检查通过。
+`bakend/tests/test_response_policy.py` 覆盖讨论不进入规划、关键词不提升意图、矛盾意图重试、普通对话保护、目标切换、未暴露写工具、文件确认、预算/失败退出和虚构方法拒绝。相关契约与入口见 [需求契约](task-planning-contracts.md)、[输出语义与规划邀请](method-contracts-and-invitations.md)、[代码维护](code-architecture.md)。
 
-服务器最终隔离回归：126 passed、121 subtests passed。使用临时源码和临时数据库，测试替身提供模型响应，没有调用外部模型、修改原会话或提交计算任务。真实模型及最近会话回放仍待用户授权，不能把这些测试结果当成模型语义准确率。
-
-新增 `bakend/tests/test_response_policy.py` 覆盖非规划对话、关键词不提升意图、意图矛盾重试、普通对话保护、目标切换、未暴露写工具防御、文件管理确认、查询预算/失败退出、失败解释和虚构方法拒绝。
-
-服务器发布采用与当前 3002 源码逐文件比较的最小补丁，保留主部署与其他差异。发布前检查活跃运行和 Slurm 队列；有活跃任务时不得重启。维护锁、源文件/配置/数据库备份、不可变 Worker 副本和回滚机制沿用现有部署方式。本次无需前端变更或端口变更。
-
-2026-09-26 已发布到 3002，版本 flexible-dialogue-4038a5ea055c，Prompt 版本 planner-v6-conversation-policy。HTTP 健康检查通过，维护锁已解除；3 条历史运行、26 条会话消息保留，3000 与前端静态资源未变。备份：/home/hipeson/.cache/neuroweave/flexible-dialogue-20260926/backup-n2qged_i。
+离线替身验证路由和 Prompt 行为，不表示真实模型语义准确率。模型、提示词或工具权限变化后，应分别运行定向回归和经授权的真实模型评估；测试不提交科研任务或改写原会话。

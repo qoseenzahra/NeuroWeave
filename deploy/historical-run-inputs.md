@@ -28,7 +28,7 @@
 
 `bakend/app/historical_inputs.py` 管理来源和身份核对；`bakend/app/sample_scope.py` 统一计算审核、Dry-run 和调度使用的样本交集。输入仍沿用 `existing_path` 并附加历史引用元数据。SQLite 不需要新表或迁移。原 Skill、科学脚本及算法参数没有变化。
 
-自动化回归：`bakend/tests/test_historical_inputs.py` 覆盖 API、修订号冲突、样本顺序、缺失和重复输出、旧存储记录、重试来源、文件替换和输入目录边界。前端回归通过 `cd frontend && npm test` 运行，浏览器验收记录见 `frontend/docs/main-parity.md`。
+自动化回归：`bakend/tests/test_historical_inputs.py` 覆盖 API、修订号冲突、样本顺序、缺失和重复输出、旧存储记录、重试来源、文件替换和输入目录边界。前端回归通过 `npm --prefix frontend test` 运行，操作与 API 回归和浏览器交互验收分别确认。
 
 服务器集成验证使用 `scripts/smoke_historical_inputs.py --root /home/data/neuroweave/smoke/<新的测试目录>`。需要显式提供已部署的共享 Worker 和 Python 配置；脚本只创建合成影像和隔离数据库，不读取生产数据库或 `.env`。它调用现有 Nilearn 方法执行两轮、每轮两个样本，在第二轮倒置样本顺序，并验证实际 Slurm Worker 读取正确的旧输出且未复制到原数据目录。证据保留在测试目录的 `evidence.json`。
 
@@ -36,6 +36,4 @@
 
 添加 `--single` 可验证原数据集仅有一个样本的情形：使用普通单文件输入在 node03 运行，再从该运行选择历史输出并再次按样本运行。两轮都应保留原样本标识；此选项与 `--partial` 互斥。
 
-2026-09-08 验证结果：后端 198 项测试及 496 项子测试通过，前端 8 项回归、类型检查、lint 和 Linux 构建通过。浏览器实测 775px / 390px 宽度下的 63 样本预览、翻页、应用和缺失样本禁用状态正常。
-
-真实 Slurm 作业 276–279 全部 `COMPLETED / 0:0`。第一轮 subject-A 在 node01、subject-B 在 node02 生成结果；第二轮交换顺序及节点，分别从旧运行自己的输出路径读取。原输出 SHA-256 不变，原始目录仍只有两份合成输入。运行记录位于隔离目录 `/home/data/neuroweave/smoke/history-d2abff1-20260908T0650/evidence.json`；此验证证明历史输入的身份绑定与跨节点复用，不替代具体研究数据的科学质量检查。
+集成脚本会提交真实 Slurm 测试作业，应在明确授权和资源可用时运行。证据写入新测试目录的 `evidence.json`，用于验证身份绑定与跨节点复用，不替代科研数据的质量检查。

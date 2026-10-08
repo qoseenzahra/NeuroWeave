@@ -13,7 +13,7 @@ NeuroWeave 保留原来的本地执行，并为已经接入可信 Runner 的流�
 - 单个样本失败时停止其下游步骤，其他样本继续。取消会传递给所有正在执行的节点；服务重启或监控中断保留各个 Job ID 并恢复监控，不重复提交已记录的作业。
 - 整个数据集级别的输入不能自动当成各样本输入；需要有效、完整的样本清单及路径模板。共享参考文件可复用，指向某一样本的单文件绑定需要改为各样本匹配，避免重复处理同一份数据。
 
-资源上限同时受平台和实际节点容量约束。平台支持最多 128 核、512 GB 内存、1 张 GPU、1440 分钟；实际节点不足时拒绝提交。当前 node01–03 的 Slurm 配置为 245000 MB，可申请的整 GB 内存上限为 239 GB，mgr 为 478 GB。方法中已有的线程参数保持不变，申请核数必须不少于线程参数；资源按每个步骤申请，忙碌时排队。
+资源上限同时受平台和实际节点容量约束。平台支持最多 128 核、512 GB 内存、1 张 GPU、1440 分钟；实际节点不足时拒绝提交。2026-10-08 核实 node01–03 的 Slurm 配置为 245000 MB，可申请的整 GB 内存上限为 239 GB，mgr 为 478 GB；具体提交仍读取当前节点容量。方法中已有的线程参数保持不变，申请核数必须不少于线程参数；资源按每个步骤申请，忙碌时排队。
 
 多节点请求使用原运行接口，例如：
 
@@ -44,22 +44,22 @@ mgr 上的 API 只负责 `sbatch` 提交、状态查询、结果登记和 `scanc
 
 ## 共享路径和部署配置
 
-计算节点的 `/opt` 来自 mgr 的 NFS，`/home/data` 来自公共存储。`/home/hipeson/LocalFlow` 只在 mgr 存在，因此远端 Worker 使用发布版本目录，输入和输出使用共享路径。
+计算节点的 `/opt` 来自 mgr 的 NFS，`/home/data` 来自公共存储。源码目录位于 mgr 的账户目录；计算节点使用 `/home/data/neuroweave/worker/<部署提交>` 中的固定代码，输入和输出也使用共享路径。
 
-在 mgr 的 `deploy/native-backend.env` 设置以下非密钥变量，保留原数据库、API 密钥和本地输出设置：
+配置由各站 runtime 环境文件加载，实际文件及输出根见 [服务器部署](server-deployment.md)。以下为非密钥模板，路径须按目标部署设置：
 
 ```dotenv
 LOCALFLOW_SLURM_ENABLED=true
-LOCALFLOW_SLURM_WORKER_ROOT=/opt/neuroweave/worker/<发布版本>
+LOCALFLOW_SLURM_WORKER_ROOT=/home/data/neuroweave/worker/<发布提交>
 LOCALFLOW_SLURM_PYTHON=/opt/neuroweave/envs/scientific-py311/bin/python
-LOCALFLOW_SLURM_OUTPUT_ROOT=/home/data/neuroweave/runs/hipeson
+LOCALFLOW_SLURM_OUTPUT_ROOT=/home/data/your-project/results
 LOCALFLOW_SKILL_PYTHON=/opt/neuroweave/envs/scientific-py311/bin/python
 LOCALFLOW_DIPY_PYTHON=/opt/neuroweave/envs/scientific-py311/bin/python
 ```
 
 Worker 发布目录包含 `bakend/app`、`bakend/resources`、`skills`、`methods`、`pipelines` 及被方法引用的实现，不包含 `.env`、数据库或应用运行目录。已提交作业引用固定发布路径；旧版本在相关作业全部结束之前必须保留。公共 Python 环境对用户可读可执行，作业目录与结果默认仅 hipeson 可访问。环境变量使用显式白名单，提交脚本清理登录环境，模型 API 密钥不会复制到作业文件。
 
-当前使用一个 FastAPI 进程、一个 SQLite 数据库，进程内锁防止重复提交和取消时覆盖 Job ID。不要直接增加 Uvicorn workers 或启动第二个 API 实例访问同一数据库；多进程部署需要数据库层的任务领取与唯一约束改造。
+每个站点使用一个 FastAPI 进程和自己的 SQLite 数据库，进程内锁防止重复提交和取消时覆盖 Job ID。不要直接增加 Uvicorn workers 或启动第二个 API 实例访问同一数据库；多进程部署需要数据库层的任务领取与唯一约束改造。
 
 ## 状态、取消和恢复
 
@@ -85,7 +85,7 @@ Worker 发布目录包含 `bakend/app`、`bakend/resources`、`skills`、`method
 
 成功必须同时具备 Slurm 的 COMPLETED/ExitCode=0:0、Worker 原子结果文件，以及经过路径和完整性验证的非空产物。调度器失败、超时、OOM 或 Worker 失败均不能登记成功。
 
-本集群已在 2026-09-08 配置 SlurmDBD 持久记账并通过 `sacct` 检查，见 [记账记录](reliability-upgrade.md)。后端也持久保存查询到的终态；若某次运行缺少可靠调度终态，则保留待核查状态，不依据单独结果文件推断成功。启用记账之前没有存储的历史不能补造。提交中断后只有提交标记而没有 Job ID 时，也禁止自动重提；按日志中的 `nw-<标记>` 核查队列及作业文件。
+本集群已在 2026-09-08 配置 SlurmDBD 持久记账并通过 `sacct` 检查，见 [记账与运行维护](reliability-upgrade.md)。后端也持久保存查询到的终态；若某次运行缺少可靠调度终态，则保留待核查状态，不依据单独结果文件推断成功。启用记账之前没有存储的历史不能补造。提交中断后只有提交标记而没有 Job ID 时，也禁止自动重提；按日志中的 `nw-<标记>` 核查队列及作业文件。
 
 ## 深度学习脚本与规划型 Skill
 

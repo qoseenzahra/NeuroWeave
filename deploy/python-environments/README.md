@@ -1,131 +1,44 @@
-# NeuroWeave 公共 Python 环境与 Slurm 接入
+# 公共 Python 环境
 
-**初始安装记录（2026-09-07）：两个公共环境已安装，Python Runner 已接入；Slurm 提交已启用。** 本文的作业编号和环境验证属于该日期；当前方法就绪状态以目标节点探测与 Dry-run 为准。
-`all` 分区的 node01–03 均已登记 `gpu:1`，作业 12、13、14 分别在三个节点通过实际 CUDA 运算。
-平台提交、失败、取消、重启恢复及 GPU 请求也通过了真实测试。见 [验证记录](../slurm-verification.md)。
+现有科学与 PyTorch 环境已安装并通过共享路径接入 Runner/Slurm。此文描述环境职责和维护步骤，当前软件及服务路径见 [软件路径](../SERVER_SOFTWARE_PATHS.md)和[服务器部署](../server-deployment.md)。
 
-## 环境安装
+## 环境职责
 
-目标目录由管理员创建一次，然后由 `hipeson` 维护，其他用户仅可读取/执行：
-
-```bash
-sudo install -d -o hipeson -g hipeson -m 0755 /opt/neuroweave /opt/neuroweave/envs
-```
-
-在 `mgr` 上运行（不会修改现有 base、FSL、sp、midcc 或 FastAPI 环境）：
-
-```bash
-cd /home/hipeson/LocalFlow
-bash scripts/install_shared_python.sh scientific
-bash scripts/install_shared_python.sh torch
-```
-
-| 环境 | Python 入口 | 主要用途 |
+| 环境 | Python | 用途 |
 | --- | --- | --- |
-| scientific | `/opt/neuroweave/envs/scientific-py311/bin/python` | NumPy/SciPy/Pandas、统计学习、生存分析、Nilearn/DIPY、MNE/EEG、影像格式和可视化 |
+| scientific | `/opt/neuroweave/envs/scientific-py311/bin/python` | NumPy/SciPy/Pandas、统计学习、生存分析、Nilearn/DIPY、MNE、影像格式和可视化 |
 | torch | `/opt/neuroweave/envs/torch-cu128-py311/bin/python` | PyTorch CUDA 12.8、MONAI、TorchIO、Lightning、Transformers |
 
-两个环境均使用 Python 3.11。安装完成时执行 `pip check`，并在各自环境根目录
-保存 `requirements.lock.txt` 和 `conda-explicit.txt`。安装器拒绝覆盖已有前缀；
-中断后的环境需要先查明失败原因再定向续装，不应直接删除或反复重建。
-安装器只调整新环境自身的读/执行权限，不开放已有私人 Conda 父目录。
+两者使用 Python 3.11，与 API 的 `/home/hipeson/NeuroWeave/.venv` 分离。`/opt` 通过 NFS 对计算节点可见；环境由 hipeson 维护，其他用户仅可读/执行。`locks/` 保存安装时的 pip 与 Conda 清单，版本变化后重新核对和更新。
 
-CPU 与导入验证：
+NiBabel 等科学检查由 `LOCALFLOW_SKILL_PYTHON` 指定；Slurm Worker 使用 `LOCALFLOW_SLURM_PYTHON`。安装库不自动创建可执行方法，方法还需要真实入口、Runner、输入输出及资源检查。模板、图谱、预训练权重和许可证须按具体方法准备；TensorFlow 不混装进 PyTorch 环境。
+
+## 日常探测
+
+从当前项目根目录运行：
 
 ```bash
 PYTHONNOUSERSITE=1 MPLBACKEND=Agg /opt/neuroweave/envs/scientific-py311/bin/python scripts/probe_shared_python.py --profile scientific
 PYTHONNOUSERSITE=1 MPLBACKEND=Agg /opt/neuroweave/envs/torch-cu128-py311/bin/python scripts/probe_shared_python.py --profile torch
 ```
 
-GPU 验证必须在分配到 GPU 的计算节点上执行 `--profile torch --require-cuda`。
-主节点没有 GPU，因此主节点返回 `cuda_available=false` 不代表环境安装失败。
-模板、图谱、预训练权重和用户数据不在依赖安装过程中自动下载；需要按具体方法准备。
-TensorFlow 不混装进 PyTorch 环境，避免不同 CUDA 依赖互相替换。
+主节点没有 GPU，CPU 探测的 `cuda_available=false` 不表示环境损坏。GPU 计算验证必须在已分配 GPU 的 Slurm 作业中运行 `--profile torch --require-cuda`；`gpu-probe.sbatch.example` 是模板，提交前核对脚本、共享工作目录和输出路径。
 
-### 首次安装验证记录（2026-09-07，Slurm 接入前）
+`sbatch` 传送作业文本，不传送 Python 脚本、模型或数据。node01–03 各有约 8 GB 显存的 RTX 5060；申请的 `--mem` 是主机内存。提交获得 Job ID 后继续检查状态、退出码与产物，不能把提交成功当作计算成功。
 
-- 两个环境安装完成并通过 `pip check`；科学环境约 2.6GB，PyTorch 环境约 7.8GB。
-- 科学环境主要库导入通过，合成回归、NIfTI 读写、MNE 数据对象检查通过。
-- 深度学习环境主要库导入通过，PyTorch `2.11.0+cu128`，CPU 矩阵检查通过。
-- Slurm 作业 `8`（科学环境）和 `9`（PyTorch CPU）在 `mgr` 上完成，
-  均为 `COMPLETED`，`ExitCode=0:0`；这些不是计算节点 GPU 作业。
-- 三个计算节点通过共享环境的只读设备检查均返回 `cuda_available=true`，
-  识别 RTX 5060，设备能力 `(12, 0)`。未绕过 Slurm 运行 GPU 计算任务。
-- 新环境的文件公共读取、目录公共遍历检查通过；其他用户没有环境修改权限。
-- GPU `sbatch --test-only --gres=gpu:1` 返回
-  `Invalid generic resource (gres) specification`；该阶段 GPU 调度尚未通过，后续已完成配置与实际作业验证。
-- 锁定清单保存在本目录 `locks/`；详细安装/验证日志位于服务器
-  `/home/hipeson/LocalFlow/runtime/environment-install/`，Slurm 测试日志位于
-  `/opt/neuroweave/jobs/hipeson/gpu-probe/`。
+集群已启用 GPU 资源登记和 SlurmDBD 持久记账；cgroup 设备强制隔离尚未启用。调度、共享目录和恢复监控见 [Slurm 执行](../slurm-execution.md)，记账与备份见 [运行维护](../reliability-upgrade.md)。
 
-以上为首次环境安装时的状态。后续 Slurm 接入和运行说明见
-[Slurm 执行文档](../slurm-execution.md)，管理员 GPU 配置见
-[管理员步骤](../slurm-admin.md)。科学环境还补齐了 Worker 使用的 Pydantic 与
-python-dotenv，并同步更新 `locks/scientific-py311-pip.txt`。
+## 安装与依赖变更
 
-## 2026-09-07 初次集群检查（接入前的历史记录）
-
-- 主节点：`mgr`；Slurm 21.08.5，`all` 为唯一分区，`mgr` 为 IDLE。
-- `node01`、`node02`、`node03` 的系统均可通过 SSH 访问。
-- 每个计算节点有 1 张 RTX 5060，显存 8151 MiB，驱动 580.173.02。
-- 三个计算节点在 Slurm 中均为 DOWN，原因是未预期重启；未在本次检查中恢复节点。
-- `GresTypes=(null)`，所有节点 `Gres=(null)`，GPU 尚未纳入 Slurm 资源登记。
-- `SelectType=select/cons_tres`，`SelectTypeParameters=CR_CORE_MEMORY`。
-- `AccountingStorageType=accounting_storage/none`，`JobAcctGatherType=jobacct_gather/none`；
-  不能假设 `sacct` 可以提供持久作业历史。
-- 计算节点的 `/opt` 为 `mgr:/opt` NFS 挂载，可以共享新环境。
-- 计算节点的 `/home/data` 为 `storage:/home/data` NFS 挂载。
-- `/home/hipeson/LocalFlow` 在计算节点不存在，不能直接作为远程工作目录或脚本路径。
-
-以上是安装阶段的历史状态；GPU 配置和节点恢复现已完成，当前结果见本文开头的验证记录。
-
-## 调度条件与当前实现
-
-1. 核查各节点 slurmd、MUNGE、配置一致性、时间同步及重启原因，然后恢复可调度状态。
-2. 在 Slurm 主配置登记 `GresTypes=gpu` 和对应节点的 `Gres=gpu:1`；
-   各计算节点通过 `gres.conf` 绑定本机设备（例如经实际确认的 `/dev/nvidia0`）。
-   可使用原 `all` 分区，或由管理员建立专用 GPU 分区；没有配置前不可假设存在 `gpu` 分区。
-3. 核验 GPU 设备隔离和 `CUDA_VISIBLE_DEVICES`；必须通过 Slurm 申请资源，
-   不能仅用 `--nodelist` 代替 GPU 资源申请。
-4. 为作业准备所有计算节点可见的脚本、输入、输出和日志目录，检查 UID/权限一致性。
-5. 建议配置作业记账；如果继续没有 `sacct`，平台必须保存终态和退出码，
-   不能把作业从 `squeue` 消失当作成功。
-
-GPU 资源登记、节点恢复和共享目录已完成，操作由独立管理员脚本执行。
-平台持久保存终态和退出码；2026-09-08 已启用 SlurmDBD/MariaDB 记账，作业 266、267、268 在三个节点通过 CUDA 实测并保留完成记录。设备 cgroup 强制隔离仍未启用。见 [可靠性改进](../reliability-upgrade.md)。
-
-## GPU 提交示例
-
-将验证脚本复制到共享目录后再提交，保持绝对路径。以下只创建自己的验证目录：
+现有部署优先复用环境。确需在新服务器安装时，由管理员创建 `/opt/neuroweave/envs` 并授予指定维护账户权限，再从项目根目录执行：
 
 ```bash
-mkdir -p /opt/neuroweave/jobs/hipeson/gpu-probe
-cp /home/hipeson/LocalFlow/scripts/probe_shared_python.py /opt/neuroweave/jobs/hipeson/gpu-probe/
-cd /opt/neuroweave/jobs/hipeson/gpu-probe
-sbatch --parsable /home/hipeson/LocalFlow/deploy/python-environments/gpu-probe.sbatch.example
+bash scripts/install_shared_python.sh scientific
+bash scripts/install_shared_python.sh torch
 ```
 
-`sbatch` 会传送作业脚本文本，但不会自动传送 Python 脚本、数据或模型权重。
-成功提交仅表示获得 Job ID，需继续查看状态、退出码、日志和实际产物。
-示例为 `all` 分区申请 1 GPU、4 CPU、16GB 内存；16GB 是主机内存，不是显存。
-RTX 5060 的约 8GB 显存对较大 3D 模型可能需要较小 batch、混合精度或滑窗推理。
+安装器拒绝覆盖已有前缀，结束时运行 `pip check` 并写入 `requirements.lock.txt`、`conda-explicit.txt`。中断后先诊断原因，不能反复删除重建或扩大私人 Conda 父目录权限。环境变更前检查活跃作业的依赖，变更后分别做导入、CPU 合成测试、Slurm GPU 验证及受影响方法的执行回归。
 
-## NeuroWeave 接入位置
+初始 GPU/调度验证的结构化记录保存在 `../slurm-test-results.json`，软件与方法证据保存在 `../method-verification/`。这些记录绑定当时版本，不是当前所有方法/参数组合已验证的证明。
 
-`RunService` 根据提交时的执行选项选择本地或 Slurm；Slurm Worker 在分配的计算节点调用可信 Runner。
-FSL eddy 的 Dry-run 可以识别集群 GPU，实际执行时仍会在节点重新检查。
-planning 方法仍需接入可信 Runner，才能由网页执行。现有 Slurm 后端包含：
-
-1. 由可信 Runner 生成参数数组和资源请求，将步骤快照及所需代码放入共享工作区。
-2. 用 `sbatch --parsable` 提交并将 Job ID 写入运行审计。
-3. 使用 `squeue`/`scontrol` 跟踪 PENDING/RUNNING 等状态；有记账时使用 `sacct`
-   核对最终 State 和 ExitCode，无记账时使用受控包装器写入原子终态文件并交叉检查。
-4. 日志留在共享文件系统；收到取消请求时调用 `scancel` 并确认远程作业停止。
-5. 作业成功退出后，仍由 Runner 验证实际输出，再登记制品和触发下游步骤。
-6. 后端重启时用持久 Job ID 重新关联作业，避免重跑或把仍在运行的远程任务直接判失败。
-
-官方参考：
-- [Slurm sbatch](https://slurm.schedmd.com/sbatch.html)
-- [Slurm GRES/GPU 资源](https://slurm.schedmd.com/gres.html)
-- [PyTorch 版本及 CUDA 安装命令](https://pytorch.org/get-started/previous-versions/)
-- [PyTorch Blackwell 支持](https://pytorch.org/blog/pytorch-2-7/)
+官方参考：[Slurm sbatch](https://slurm.schedmd.com/sbatch.html)、[Slurm GRES](https://slurm.schedmd.com/gres.html)、[PyTorch 版本](https://pytorch.org/get-started/previous-versions/)。
