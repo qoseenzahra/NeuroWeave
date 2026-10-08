@@ -44,7 +44,7 @@ def build_services(settings: Settings, *, identity_reader=None) -> ApplicationSe
     local_store = LocalStore(settings.database_path)
     operation_service = OperationService(local_store)
     dataset_service = DatasetService(settings.project_root, local_store)
-    conversation_service = ConversationService(local_store, chat_service)
+    conversation_service = ConversationService(local_store, chat_service, authorization_service=authorization_service)
     workspace_service = WorkspaceService(
         local_store, settings.project_root / "workspaces"
     )
