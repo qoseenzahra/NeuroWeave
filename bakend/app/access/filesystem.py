@@ -48,15 +48,11 @@ class FilesystemAuthorizer:
         path = path.resolve()
         matches = [
             g for g in self._grants
-            if g.user_id == user_id
-            and g.project_id == project_id
-            and g.scope is scope
-            and path == g.root.resolve()
-            or (
+            if (
                 g.user_id == user_id
                 and g.project_id == project_id
                 and g.scope is scope
-                and g.root.resolve() in path.parents
+                and (path == g.root.resolve() or g.root.resolve() in path.parents)
             )
         ]
         if not matches:
