@@ -9,6 +9,8 @@ from __future__ import annotations
 from pathlib import Path
 
 from .application_services import ApplicationServices
+from .access.identity_adapter import UnauthenticatedIdentityReader
+from .access.service import AuthorizationService
 from .capability_registry import CapabilityRegistry
 from .capability_tree import CapabilityTree
 from .chat_coordinator import ChatCoordinator
@@ -32,7 +34,9 @@ from .workspace_service import WorkspaceService
 from .workspace_tools import WorkspaceTools
 
 
-def build_services(settings: Settings) -> ApplicationServices:
+def build_services(settings: Settings, *, identity_reader=None) -> ApplicationServices:
+    identity_reader = identity_reader or UnauthenticatedIdentityReader()
+    authorization_service = AuthorizationService(identity_reader)
     skill_loader = SkillLoader(settings.skills_dir)
     chat_service = ChatService()
     capability_registry = CapabilityRegistry(settings.skills_dir)
@@ -130,4 +134,5 @@ def build_services(settings: Settings) -> ApplicationServices:
         pipeline_library=pipeline_library,
         chat_turns=chat_turns,
         chat_coordinator=chat_coordinator,
+        authorization_service=authorization_service,
     )
