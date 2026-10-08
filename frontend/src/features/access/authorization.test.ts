@@ -1,22 +1,19 @@
-import assert from "node:assert/strict";
-import test from "node:test";
 import { can, scopeKey } from "./authorization";
 
-test("business authorization uses server-provided allowed actions", () => {
-  const resource = {
-    id: "task-1",
-    scope: "private" as const,
-    allowedActions: ["read", "cancel"] as const,
-  };
-  assert.equal(can(resource, "cancel"), true);
-  assert.equal(can(resource, "retry"), false);
-});
+function assert(condition: boolean): void {
+  if (!condition) {
+    throw new Error("Task B authorization assertion failed");
+  }
+}
 
-test("business scope is isolated by user and project", () => {
-  assert.notEqual(scopeKey("u1", "p1"), scopeKey("u2", "p1"));
-  assert.notEqual(scopeKey("u1", "p1"), scopeKey("u1", "p2"));
-});
+const resource = {
+  id: "task-1",
+  scope: "private" as const,
+  allowedActions: ["read", "cancel"] as const,
+};
 
-test("missing resource never receives an invented permission", () => {
-  assert.equal(can(undefined, "read"), false);
-});
+assert(can(resource, "cancel") === true);
+assert(can(resource, "retry") === false);
+assert(scopeKey("u1", "p1") !== scopeKey("u2", "p1"));
+assert(scopeKey("u1", "p1") !== scopeKey("u1", "p2"));
+assert(can(undefined, "read") === false);
