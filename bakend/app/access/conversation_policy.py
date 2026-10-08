@@ -40,7 +40,7 @@ class ConversationAuthorization:
                 creator_id=user_id,
                 manager_id=user_id,
                 project_id=project_id,
-                scope=scope.value,
+                scope=scope,
                 permission_revision=0,
             )
         )
