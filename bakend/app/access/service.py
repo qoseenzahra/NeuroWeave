@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from .contracts import (
     AuditSink, AuthorizationContext, AuthorizationDecision,
-    AuthorizationDenied, IdentityReader, ResourceAction, ResourceRef,
+    AuthorizationDenied, Identity, IdentityReader, ResourceAction, ResourceRef,
 )
 from .policies import allowed_actions, decide
 
