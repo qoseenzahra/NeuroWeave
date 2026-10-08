@@ -1,23 +1,22 @@
-import { describe, expect, it } from "vitest";
+import assert from "node:assert/strict";
+import test from "node:test";
 import { can, scopeKey } from "./authorization";
 
-describe("business authorization", () => {
-  it("uses server-provided allowed actions", () => {
-    const resource = {
-      id: "task-1",
-      scope: "private" as const,
-      allowedActions: ["read", "cancel"] as const,
-    };
-    expect(can(resource, "cancel")).toBe(true);
-    expect(can(resource, "retry")).toBe(false);
-  });
+test("business authorization uses server-provided allowed actions", () => {
+  const resource = {
+    id: "task-1",
+    scope: "private" as const,
+    allowedActions: ["read", "cancel"] as const,
+  };
+  assert.equal(can(resource, "cancel"), true);
+  assert.equal(can(resource, "retry"), false);
+});
 
-  it("isolates cached business scope by user and project", () => {
-    expect(scopeKey("u1", "p1")).not.toBe(scopeKey("u2", "p1"));
-    expect(scopeKey("u1", "p1")).not.toBe(scopeKey("u1", "p2"));
-  });
+test("business scope is isolated by user and project", () => {
+  assert.notEqual(scopeKey("u1", "p1"), scopeKey("u2", "p1"));
+  assert.notEqual(scopeKey("u1", "p1"), scopeKey("u1", "p2"));
+});
 
-  it("never invents permission when resource is absent", () => {
-    expect(can(undefined, "read")).toBe(false);
-  });
+test("missing resource never receives an invented permission", () => {
+  assert.equal(can(undefined, "read"), false);
 });
