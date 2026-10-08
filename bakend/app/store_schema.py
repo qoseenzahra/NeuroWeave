@@ -8,6 +8,22 @@ are preserved; schema initialization never deletes data or starts workers.
 def initialize_store(connect) -> None:
     statements = [
         """
+            CREATE TABLE IF NOT EXISTS resource_policies (
+                resource_type TEXT NOT NULL,
+                resource_id TEXT NOT NULL,
+                creator_id TEXT NOT NULL,
+                manager_id TEXT NOT NULL,
+                project_id TEXT,
+                scope TEXT NOT NULL CHECK(scope IN ('private','project')),
+                permission_revision INTEGER NOT NULL DEFAULT 0,
+                PRIMARY KEY(resource_type, resource_id)
+            )
+            """,
+        """
+            CREATE INDEX IF NOT EXISTS idx_resource_policies_project_scope
+            ON resource_policies(project_id, scope, resource_type)
+            """,
+        """
             CREATE TABLE IF NOT EXISTS conversations (
                 conversation_id TEXT PRIMARY KEY,
                 title TEXT NOT NULL,
