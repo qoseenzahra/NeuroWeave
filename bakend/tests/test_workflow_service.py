@@ -2054,6 +2054,14 @@ class WorkflowServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(workflow.can_review_parameters)
 
     async def test_chat_mode_answers_without_a_workflow(self) -> None:
+        # This unit test invokes the coordinator directly; provide a test-only actor
+        # rather than weakening the fail-closed production identity boundary.
+        from app.access.contracts import Identity
+        from app.access.identity_adapter import TestIdentityReader
+        import app.main as main_module
+        main_module.app.state.services.authorization_service.identity_reader = TestIdentityReader(
+            Identity("workflow-service-test-user")
+        )
         from app import main as main_module
 
         expected = ChatResponse(
