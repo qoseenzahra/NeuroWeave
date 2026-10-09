@@ -120,6 +120,9 @@ def router_for(services: ApplicationServices) -> APIRouter:
     async def compact_conversation(conversation_id: str) -> ConversationSnapshot:
         require_current_user()
         try:
+            services.conversation_service.require_action(
+                conversation_id, ResourceAction.UPDATE
+            )
             await services.conversation_service.compact_if_needed(
                 conversation_id, force=True
             )
