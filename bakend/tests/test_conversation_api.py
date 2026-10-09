@@ -41,13 +41,17 @@ class ConversationApiTests(unittest.IsolatedAsyncioTestCase):
                 # production app assembly remains fail-closed for anonymous requests.
                 from app.access.contracts import Identity
                 from app.access.identity_adapter import TestIdentityReader
-                main.app.state.services.authorization_service.identity_reader = TestIdentityReader(
-                    Identity("conversation-api-test-user")
-                )
                 async with httpx.AsyncClient(
                     transport=httpx.ASGITransport(app=main.app),
                     base_url="http://test",
                 ) as client:
+                    # Real HTTP boundary must reject anonymous protected requests.
+                    self.assertEqual((await client.get("/api/conversations")).status_code, 401)
+                    self.assertEqual((await client.post("/api/conversations")).status_code, 401)
+                    # The remaining contract tests intentionally run as a test actor.
+                    main.app.state.services.authorization_service.identity_reader = TestIdentityReader(
+                        Identity("conversation-api-test-user")
+                    )
                     for index in range(23):
                         main.app.state.services.conversation_service.create(
                             f"API 测试 {index}"
