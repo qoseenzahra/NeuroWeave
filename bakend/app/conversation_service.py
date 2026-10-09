@@ -130,6 +130,14 @@ class ConversationService:
             has_more=has_more,
         )
 
+    def require_action(self, conversation_id: str, action: ResourceAction) -> None:
+        if self.authorization_service is not None:
+            self.authorization_service.require(
+                self.conversation_policy.resource(conversation_id), action
+            )
+        elif self.store.get_conversation(conversation_id) is None:
+            raise KeyError(conversation_id)
+
     def update(
         self,
         conversation_id: str,
@@ -137,8 +145,7 @@ class ConversationService:
         title: str | None = None,
         archived: bool | None = None,
     ) -> ConversationRecord:
-        if self.authorization_service is not None:
-            self.authorization_service.require(self.conversation_policy.resource(conversation_id), ResourceAction.UPDATE)
+        self.require_action(conversation_id, ResourceAction.UPDATE)
         if title is None and archived is None:
             raise ValueError("至少需要提供一个要更新的字段")
         normalized_title = None
