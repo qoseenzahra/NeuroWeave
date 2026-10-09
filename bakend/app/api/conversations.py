@@ -5,6 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException, Query, Response
 
 from ..access.service import AuthorizationDenied
+from ..access.contracts import ResourceAction
 
 from ..application_services import ApplicationServices
 from ..conversation_models import (
@@ -72,6 +73,11 @@ def router_for(services: ApplicationServices) -> APIRouter:
         require_current_user()
         try:
             if "workspace_id" in request.model_fields_set:
+                # Workspace binding mutates business state too; authorize it before
+                # touching the workspace service, not after the title/archive path.
+                services.conversation_service.require_action(
+                    conversation_id, ResourceAction.UPDATE
+                )
                 services.workspace_service.bind_conversation(
                     conversation_id, request.workspace_id
                 )
