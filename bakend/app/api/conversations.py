@@ -54,7 +54,7 @@ def router_for(services: ApplicationServices) -> APIRouter:
         require_current_user()
         try:
             services.conversation_service.delete(conversation_id)
-        except KeyError as exc:
+        except (KeyError, AuthorizationDenied) as exc:
             raise HTTPException(
                 status_code=404, detail="Conversation not found"
             ) from exc
@@ -82,7 +82,7 @@ def router_for(services: ApplicationServices) -> APIRouter:
                 title=request.title,
                 archived=request.archived,
             )
-        except KeyError as exc:
+        except (KeyError, AuthorizationDenied) as exc:
             raise HTTPException(
                 status_code=404, detail="Conversation not found"
             ) from exc
@@ -102,7 +102,7 @@ def router_for(services: ApplicationServices) -> APIRouter:
             return services.conversation_service.snapshot(
                 conversation_id, limit=limit, before_sequence=before_sequence
             )
-        except KeyError as exc:
+        except (KeyError, AuthorizationDenied) as exc:
             raise HTTPException(
                 status_code=404, detail="Conversation not found"
             ) from exc
@@ -118,7 +118,7 @@ def router_for(services: ApplicationServices) -> APIRouter:
                 conversation_id, force=True
             )
             return services.conversation_service.snapshot(conversation_id, limit=40)
-        except KeyError as exc:
+        except (KeyError, AuthorizationDenied) as exc:
             raise HTTPException(
                 status_code=404, detail="Conversation not found"
             ) from exc
