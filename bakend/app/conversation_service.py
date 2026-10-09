@@ -178,6 +178,9 @@ class ConversationService:
         )
         if request.conversation_id and conversation is None:
             raise KeyError("Conversation not found")
+        if request.conversation_id and conversation is not None:
+            # Appending a user turn is a mutation, not a read-only history fetch.
+            self.require_action(request.conversation_id, ResourceAction.UPDATE)
         if conversation is None:
             conversation = self.create(self._title_from_message(request.message))
             self._import_legacy_history(conversation, request.history)
