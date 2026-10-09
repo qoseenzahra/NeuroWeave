@@ -54,6 +54,13 @@ class ConversationService:
         )
 
     def create(self, title: str = "新数据处理对话") -> ConversationRecord:
+        # Resolve the trusted actor before writing anything, so an anonymous
+        # request cannot leave an orphaned conversation in persistent storage.
+        identity = (
+            self.authorization_service.require_authenticated()
+            if self.authorization_service is not None
+            else None
+        )
         now = self._now()
         conversation = ConversationRecord(
             conversation_id=f"conv_{uuid4().hex[:16]}",
@@ -62,8 +69,7 @@ class ConversationService:
             updated_at=now,
         )
         self.store.create_conversation(conversation)
-        if self.authorization_service is not None:
-            identity = self.authorization_service.require_authenticated()
+        if identity is not None:
             self.conversation_policy.save_owner(conversation.conversation_id, identity.user_id)
         return conversation
 
