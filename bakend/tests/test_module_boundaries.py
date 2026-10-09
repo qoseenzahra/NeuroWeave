@@ -220,6 +220,12 @@ def test_output_adapter_keeps_revision_and_conversation_binding_consistent(
     application, tmp_path
 ):
     _, client, services = application
+    # This test exercises the output adapter, not anonymous-access behavior.
+    from app.access.contracts import Identity
+    from app.access.identity_adapter import TestIdentityReader
+    services.authorization_service.identity_reader = TestIdentityReader(
+        Identity("output-adapter-test-user")
+    )
     target = tmp_path / "managed"
     target.mkdir()
     workspace = services.workspace_service.create(
