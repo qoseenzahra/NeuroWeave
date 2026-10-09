@@ -37,6 +37,13 @@ class ConversationApiTests(unittest.IsolatedAsyncioTestCase):
                     else importlib.import_module("app.main")
                 )
             try:
+                # These service-level HTTP contract tests use an explicit test identity;
+                # production app assembly remains fail-closed for anonymous requests.
+                from app.access.contracts import Identity
+                from app.access.identity_adapter import TestIdentityReader
+                main.app.state.services.authorization_service.identity_reader = TestIdentityReader(
+                    Identity("conversation-api-test-user")
+                )
                 async with httpx.AsyncClient(
                     transport=httpx.ASGITransport(app=main.app),
                     base_url="http://test",
