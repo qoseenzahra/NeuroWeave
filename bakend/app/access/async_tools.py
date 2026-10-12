@@ -43,6 +43,11 @@ class BackgroundOperationGuard:
         ):
             raise BackgroundAuthorizationError("membership_revoked")
 
+        # An explicit denial is authoritative even when the caller omitted
+        # the resource object; omission must never turn a denial into approval.
+        if resource_authorized is False:
+            raise BackgroundAuthorizationError("resource_access_revoked")
+
         if operation.resource_id is not None:
             if resource is None:
                 raise BackgroundAuthorizationError("resource_context_required")
