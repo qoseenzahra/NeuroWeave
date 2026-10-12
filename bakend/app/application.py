@@ -61,7 +61,7 @@ def create_app(services: ApplicationServices | None = None) -> FastAPI:
         )
 
     app.include_router(
-        workspace_router(services.workspace_service, services.dataset_files)
+        workspace_router(services.workspace_service, services.dataset_files, services.authorization_service)
     )
     app.include_router(
         library_router(
