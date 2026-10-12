@@ -60,6 +60,16 @@ def create_app(services: ApplicationServices | None = None) -> FastAPI:
             status_code=error.status_code, content={"detail": error.detail}
         )
 
+    def require_authenticated_request() -> None:
+        # Business/resource APIs must fail closed when authoritative identity is
+        # not configured; endpoint-specific policy checks still apply as well.
+        if services.authorization_service is None:
+            raise HTTPException(status_code=401, detail="Authentication required")
+        try:
+            services.authorization_service.require_authenticated()
+        except PermissionError as exc:
+            raise HTTPException(status_code=401, detail="Authentication required") from exc
+
     app.include_router(
         workspace_router(services.workspace_service, services.dataset_files, services.authorization_service)
     )
@@ -73,16 +83,6 @@ def create_app(services: ApplicationServices | None = None) -> FastAPI:
         ),
         dependencies=[Depends(require_authenticated_request)],
     )
-    def require_authenticated_request() -> None:
-        # Business/resource APIs must fail closed when authoritative identity is
-        # not configured; endpoint-specific policy checks still apply as well.
-        if services.authorization_service is None:
-            raise HTTPException(status_code=401, detail="Authentication required")
-        try:
-            services.authorization_service.require_authenticated()
-        except PermissionError as exc:
-            raise HTTPException(status_code=401, detail="Authentication required") from exc
-
     for group in (health, catalog):
         app.include_router(group.router_for(services))
 
