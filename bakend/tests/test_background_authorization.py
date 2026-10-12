@@ -5,7 +5,10 @@ import pytest
 from app.access.async_tools import (
     BackgroundAuthorizationError, BackgroundOperationGuard, PendingOperation,
 )
-from app.access.contracts import Identity, ProjectMembership, ProjectRole
+from app.access.contracts import (
+    Identity, ProjectMembership, ProjectRole, ResourceOwner, ResourceRef,
+    ResourceType, SharingScope,
+)
 
 
 @dataclass
@@ -37,3 +40,24 @@ def test_revoked_membership_blocks_pending_operation():
     guard = BackgroundOperationGuard(Reader(Identity("u1"), member=False))
     with pytest.raises(BackgroundAuthorizationError, match="membership_revoked"):
         guard.require_current(PendingOperation("op1", "u1", "p1", 1))
+
+
+
+def _resource(resource_id="dataset-1"):
+    return ResourceRef(
+        ResourceType.DATASET,
+        resource_id,
+        ResourceOwner("u1", "u1", "p1", SharingScope.PROJECT, permission_revision=4),
+    )
+
+
+def test_resource_bound_background_operation_requires_target_and_positive_auth():
+    guard = BackgroundOperationGuard(Reader(Identity("u1")))
+    operation = PendingOperation("op1", "u1", "p1", 4, resource_id="dataset-1")
+    with pytest.raises(BackgroundAuthorizationError, match="resource_context_required"):
+        guard.require_current(operation)
+    with pytest.raises(BackgroundAuthorizationError, match="resource_access_revoked"):
+        guard.require_current(operation, resource=_resource(), resource_authorized=False)
+    with pytest.raises(BackgroundAuthorizationError, match="resource_target_mismatch"):
+        guard.require_current(operation, resource=_resource("dataset-2"), resource_authorized=True)
+    guard.require_current(operation, resource=_resource(), resource_authorized=True)
