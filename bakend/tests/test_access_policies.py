@@ -101,3 +101,18 @@ def test_shared_pipeline_member_can_submit_own_task():
         ref(SharingScope.PROJECT, creator="u1", manager="u1"),
         ResourceAction.SUBMIT,
     )
+
+
+
+def test_former_creator_loses_management_rights_after_handover():
+    former_creator = svc("u1")
+    handed_over = ref(
+        SharingScope.PROJECT, creator="u1", manager="u2", project="p1"
+    )
+    # Historical attribution remains intact, but no longer grants owner powers.
+    former_creator.require(handed_over, ResourceAction.READ)
+    with pytest.raises(AuthorizationDenied):
+        former_creator.require(handed_over, ResourceAction.UPDATE)
+    with pytest.raises(AuthorizationDenied):
+        former_creator.require(handed_over, ResourceAction.DELETE)
+    svc("u2").require(handed_over, ResourceAction.UPDATE)
