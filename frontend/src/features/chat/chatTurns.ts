@@ -103,6 +103,9 @@ export async function submitTurn(
     method: 'POST',
     body: JSON.stringify(payload),
   });
+  // Do not emit even the initial response if the authenticated scope changed
+  // while the submit request was in flight.
+  await requireCurrentScope(scope);
   progress(turn);
   return waitForTurn(turn.turn_id, scope);
 }
