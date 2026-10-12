@@ -35,13 +35,27 @@ class BackgroundOperationGuard:
         if not identity.enabled or identity.user_id != operation.user_id:
             raise BackgroundAuthorizationError("stale_or_revoked_identity")
         membership = self.identity_reader.project_membership(operation.project_id)
-        if membership is None or not membership.active:
+        if (
+            membership is None
+            or not membership.active
+            or membership.project_id != operation.project_id
+            or membership.user_id != identity.user_id
+        ):
             raise BackgroundAuthorizationError("membership_revoked")
-        if resource is not None:
+
+        if operation.resource_id is not None:
+            if resource is None:
+                raise BackgroundAuthorizationError("resource_context_required")
+            if resource.resource_id != operation.resource_id:
+                raise BackgroundAuthorizationError("resource_target_mismatch")
+            if resource.owner.project_id != operation.project_id:
+                raise BackgroundAuthorizationError("wrong_project")
             if resource.owner.permission_revision != operation.permission_revision:
                 raise BackgroundAuthorizationError("resource_permission_revoked")
-            if resource_authorized is False:
+            if resource_authorized is not True:
                 raise BackgroundAuthorizationError("resource_access_revoked")
+        elif resource is not None and resource_authorized is not True:
+            raise BackgroundAuthorizationError("resource_access_revoked")
 
     @staticmethod
     def recipient_may_receive(*, current_user_id: str, recipient_id: str) -> None:
