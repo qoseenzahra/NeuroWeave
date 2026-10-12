@@ -80,17 +80,43 @@ class ConversationService:
         query: str = "",
         archived: bool = False,
     ) -> list[ConversationListItem]:
-        rows = self.store.list_conversations(max(limit * 5, 100), query=query, archived=archived)
-        if self.authorization_service is None:
-            return rows[:limit]
-        visible = []
-        for row in rows:
-            try:
-                self.authorization_service.require(self.conversation_policy.resource(row.conversation_id), ResourceAction.READ)
-                visible.append(row)
-            except (KeyError, PermissionError):
-                continue
-        return visible[:limit]
+        safe_limit = max(1, min(limit, 200))
+        visible: list[ConversationListItem] = []
+        before_updated_at = None
+        before_conversation_id = None
+        batch_size = 200
+
+        while len(visible) < safe_limit:
+            rows = self.store.list_conversations(
+                batch_size,
+                query=query,
+                archived=archived,
+                before_updated_at=before_updated_at,
+                before_conversation_id=before_conversation_id,
+            )
+            if not rows:
+                break
+            if self.authorization_service is None:
+                visible.extend(rows)
+            else:
+                for row in rows:
+                    try:
+                        self.authorization_service.require(
+                            self.conversation_policy.resource(row.conversation_id),
+                            ResourceAction.READ,
+                        )
+                        visible.append(row)
+                    except (KeyError, PermissionError):
+                        continue
+                    if len(visible) >= safe_limit:
+                        break
+
+            last_scanned = rows[-1]
+            before_updated_at = last_scanned.updated_at
+            before_conversation_id = last_scanned.conversation_id
+            if len(rows) < batch_size:
+                break
+        return visible[:safe_limit]
 
     def list_page(
         self,
