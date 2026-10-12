@@ -10,6 +10,9 @@ from app.artifact_semantics import compatible, specialize
 from app.capability_registry import CapabilityRegistry
 from app.execution.recipe_compiler import RecipeCompiler
 from app.local_store import LocalStore
+from app.access.contracts import Identity
+from app.access.identity_adapter import TestIdentityReader
+from app.access.service import AuthorizationService
 from app.pipeline_description import PipelineDescriber
 from app.pipeline_library import PipelineLibrary
 from app.pipeline_models import ComposeRequest, DraftSave
@@ -383,7 +386,7 @@ def test_durable_chat_is_idempotent_survives_waiter_disconnect_and_retries_once(
     from app.models import ChatRequest, ChatResponse
 
     store = LocalStore(tmp_path / "chat.db")
-    conversations = ConversationService(store, ChatService())
+    conversations = ConversationService(store, ChatService(), authorization_service=AuthorizationService(TestIdentityReader(Identity("test-user"))))
     calls = []
     gate = asyncio.Event()
 
