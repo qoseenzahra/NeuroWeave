@@ -4,6 +4,7 @@ import { RunHistory } from '../runs/RunHistory';
 import { ui } from '../../lib/libraryText';
 import { IconButton } from '../../ui/IconButton';
 import type { TaskEntry } from './taskIndex';
+import { ResourceAccessCard } from '../access/ResourceAccessCard';
 
 export function TaskDetails({task, sidebarOpen, onOpenSidebar, onOpenPipelines}: {
   task: TaskEntry | null; sidebarOpen: boolean; onOpenSidebar: () => void; onOpenPipelines: () => void;
@@ -19,6 +20,7 @@ export function TaskDetails({task, sidebarOpen, onOpenSidebar, onOpenPipelines}:
     <div className="min-h-0 flex-1 overflow-auto p-4 sm:p-6">
       {task ? <div className="mx-auto max-w-6xl space-y-4">
         <p className="text-meta text-subtle">{ui('任务来源')}：{task.source==='pipeline'?'Pipeline':ui('对话')}</p>
+        <ResourceAccessCard key={'access:'+task.workflow_id} resourceType="task" resourceId={task.workflow_id}/>
         <WorkflowCard defaultExpanded key={task.workflow_id} workflowId={task.workflow_id}/>
         <RunHistory key={'runs:'+task.workflow_id} workflowId={task.workflow_id}/>
       </div> : <div className="mx-auto mt-12 max-w-xl space-y-3 text-sm text-muted">

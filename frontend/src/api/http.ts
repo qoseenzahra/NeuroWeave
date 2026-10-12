@@ -7,6 +7,12 @@
  */
 
 import { useLanguageStore } from '../stores/languageStore';
+import {
+  assertCurrentEpoch,
+  currentEpoch,
+  scopeHeaders,
+  withScopeSignal,
+} from '../features/access/businessScope';
 
 export type ApiErrorDetail = {
   code?: string;
@@ -90,20 +96,30 @@ export function errorText(error: unknown, fallback = ''): string {
 }
 
 export async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  // Task B: every request belongs to the user/project epoch it started in.
+  // A scope change aborts it, and a response that still arrives late is
+  // discarded instead of being delivered to the new account or project.
+  const epoch = currentEpoch();
   const response = await fetch(`${apiBase()}${path}`, {
     ...init,
+    credentials: init.credentials ?? 'same-origin',
+    signal: withScopeSignal(init.signal),
     headers: {
       'Accept-Language': useLanguageStore.getState().language,
       'X-NeuroWeave-Contract': '2',
+      ...scopeHeaders(),
       ...(init.body ? { 'Content-Type': 'application/json' } : {}),
       ...init.headers
     }
   });
+  assertCurrentEpoch(epoch);
   if (!response.ok) {
     throw await parseError(response);
   }
   if (response.status === 204) {
     return undefined as T;
   }
-  return (await response.json()) as T;
+  const payload = (await response.json()) as T;
+  assertCurrentEpoch(epoch);
+  return payload;
 }

@@ -1,4 +1,5 @@
 import { request } from '../../api/http';
+import { scopedStorageKey, scopedStoragePrefix } from '../access/businessScope';
 import { executionDraft } from './pipelineGraph';
 import { rememberLayout, restoreLayout } from './pipelineLayout';
 import { mergeDraftRecovery } from './pipelineDraftRecovery';
@@ -35,8 +36,10 @@ export type DeletedDraft=SavedDraft&{deleted_at:string};
 export const drafts=async()=>{
   const server=await request<{items:SavedDraft[];deleted_ids:string[];deleted_items:DeletedDraft[]}>('/api/library/drafts');
   const recovered:SavedDraft[]=[];
-  try{for(let i=0;i<localStorage.length;i++){
-    const key=localStorage.key(i);if(!key?.startsWith('neuroweave:pipeline-draft:'))continue;
+  // Only this user's recovery copies for this scope; others are never shown.
+  const prefix=scopedStoragePrefix('pipeline-draft');
+  try{for(let i=0;prefix&&i<localStorage.length;i++){
+    const key=localStorage.key(i);if(!key?.startsWith(prefix))continue;
     try{const value=JSON.parse(localStorage.getItem(key)??'null') as SavedDraft|null;if(value)recovered.push(value);}catch{/* Ignore one damaged browser copy. */}
   }}catch{/* Server drafts remain visible. */}
   return {items:mergeDraftRecovery(server.items,recovered,server.deleted_ids??[]),deleted_items:server.deleted_items??[]};
@@ -44,7 +47,7 @@ export const drafts=async()=>{
 export const deleteDraft=async(draft:SavedDraft)=>{
   await request(`/api/library/drafts/${encodeURIComponent(draft.id)}`,{method:'DELETE',body:JSON.stringify({
     expected_revision:draft.server_revision??draft.revision,editor:draft.editor,pipeline_id:draft.pipeline_id,pipeline_version:draft.pipeline_version})});
-  try{localStorage.removeItem('neuroweave:pipeline-draft:'+draft.id);}catch{/* The server tombstone also hides recovery copies. */}
+  try{const key=scopedStorageKey('pipeline-draft',draft.id);if(key)localStorage.removeItem(key);}catch{/* The server tombstone also hides recovery copies. */}
 };
 export const restoreDraft=(draft:DeletedDraft)=>request(`/api/library/drafts/${encodeURIComponent(draft.id)}/restore`,
   {method:'POST',body:JSON.stringify({expected_revision:draft.revision})});

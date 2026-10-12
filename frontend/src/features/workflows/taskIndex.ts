@@ -1,4 +1,5 @@
 import type { Workflow } from './workflowTypes';
+import type { AccessInfo } from '../access/authorization';
 
 export type TaskEntry = {
   workflow_id: string;
@@ -10,7 +11,13 @@ export type TaskEntry = {
   source: 'pipeline' | 'conversation';
   dataset_label: string | null;
   workspace_path: string | null;
+  /** Server hints for buttons and author/scope labels (Task B). */
+  allowed_actions?: string[];
+  access?: AccessInfo;
 };
+
+/** "My tasks" (managed by me) or "Project tasks" (current project); '' = all visible. */
+export type TaskView = '' | 'mine' | 'project';
 export function taskFromWorkflow(workflow: Workflow): TaskEntry {
   return {
     workflow_id: workflow.workflow_id, title: workflow.title, status: workflow.status,
@@ -20,6 +27,8 @@ export function taskFromWorkflow(workflow: Workflow): TaskEntry {
     workspace_path: workflow.workspace_root_path ?? null
   };
 }
-export function taskIndexUrl(offset: number, q: string, source: string, status: string) {
-  return `/api/workflow-index?${new URLSearchParams({offset: String(offset), q, source, status})}`;
+export function taskIndexUrl(offset: number, q: string, source: string, status: string, view: TaskView = '') {
+  const params = new URLSearchParams({offset: String(offset), q, source, status});
+  if (view) params.set('view', view);
+  return `/api/workflow-index?${params}`;
 }

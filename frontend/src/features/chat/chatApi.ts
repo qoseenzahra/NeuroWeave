@@ -36,6 +36,7 @@ export type ChatResponse = {
   workflow?: Workflow | null;
 };
 
-export function sendChat(payload: ChatRequest, scope: TurnScope): Promise<ChatResponse> {
+/** Submit a chat turn; the trusted scope is resolved when not supplied. */
+export function sendChat(payload: ChatRequest, scope?: TurnScope): Promise<ChatResponse> {
   return submitTurn(payload, scope);
 }

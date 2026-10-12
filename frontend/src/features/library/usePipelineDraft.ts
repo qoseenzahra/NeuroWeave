@@ -11,6 +11,12 @@ import { createNodeId } from './pipelineGraph';
 import { ui, useLibraryText } from '../../lib/libraryText';
 import { errorText } from '../../api/http';
 import type { LibraryMessage } from '../../lib/libraryText';
+import { scopedStorageKey } from '../access/businessScope';
+
+/** Browser recovery copies are bound to the signed-in user and scope. */
+function writeRecovery(key: string, value: string): void {
+  if (key) localStorage.setItem(key, value);
+}
 
 /** Local recovery survives unload; versioned server drafts survive browser changes. */
 export function usePipelineDraft(
@@ -19,10 +25,10 @@ export function usePipelineDraft(
   pipelineVersion?: number
 ) {
   const [id] = useState(() => initial?.draft_id ?? createNodeId());
-  const key = `neuroweave:pipeline-draft:${id}`;
+  const key = scopedStorageKey('pipeline-draft', id) ?? '';
   const [recovery] = useState(() => {
     try {
-      const value = JSON.parse(localStorage.getItem(key) ?? 'null');
+      const value = JSON.parse((key && localStorage.getItem(key)) || 'null');
       return value?.editor && value.revision >= (initial?.draft_revision ?? 0)
         ? value
         : null;
@@ -122,7 +128,7 @@ export function usePipelineDraft(
           revision.current = result.revision;
           saved.current = signature;
           try {
-            localStorage.setItem(
+            writeRecovery(
               key,
               JSON.stringify({
                 id,
@@ -155,7 +161,7 @@ export function usePipelineDraft(
   );
   useEffect(() => {
     try {
-      localStorage.setItem(
+      writeRecovery(
         key,
         JSON.stringify({
           id,
@@ -175,7 +181,7 @@ export function usePipelineDraft(
   useEffect(() => {
     const save = () => {
       try {
-        localStorage.setItem(
+        writeRecovery(
           key,
           JSON.stringify({
             id,

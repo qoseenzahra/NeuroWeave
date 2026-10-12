@@ -54,7 +54,8 @@ import { useWorkspaceToolEvents } from './features/workspace/useWorkspaceToolEve
 import { DatasetContextPanel } from './features/datasets/DatasetContextPanel';
 import { StorageContextPanel } from './features/storage/StorageContextPanel';
 import { WorkspaceContextPanel } from './features/workspace/WorkspaceContextPanel';
-import { ApiError, request } from './api/http';
+import { ApiError } from './api/http';
+import { useBusinessScopeSync } from './features/access/useScopeCleanup';
 import type { TurnScope } from './features/chat/chatTurns';
 import { Button } from './ui/Button';
 
@@ -129,20 +130,12 @@ function App() {
       void queryClient.invalidateQueries({ queryKey: ['conversations'] });
     }
   });
-  const [chatTurnScope, setChatTurnScope] = useState<TurnScope | undefined>(undefined);
-  useEffect(() => {
-    let cancelled = false;
-    const loadScope = async () => {
-      try {
-        const next = await request<TurnScope>('/api/chat/scope');
-        if (!cancelled) setChatTurnScope(next.userId ? next : undefined);
-      } catch {
-        if (!cancelled) setChatTurnScope(undefined);
-      }
-    };
-    void loadScope();
-    return () => { cancelled = true; };
-  }, []);
+  // Task B: verified user/project scope. A change bumps the request epoch,
+  // cancels and removes cached business queries and clears pending turns.
+  const businessScope = useBusinessScopeSync(queryClient);
+  const chatTurnScope: TurnScope | undefined = businessScope
+    ? { userId: businessScope.userId, projectId: businessScope.projectId }
+    : undefined;
   const [activeTurn, setActiveTurn] = useState<string | null>(null);
   const { events: liveWorkspaceEvents } = useWorkspaceToolEvents(activeTurn);
   const [storageOpen, setStorageOpen] = useState(false);

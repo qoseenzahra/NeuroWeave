@@ -1,4 +1,12 @@
 import { request } from '../../api/http';
+import {
+  assertCurrentEpoch,
+  currentEpoch,
+  currentScope,
+  isCurrentEpoch,
+  setBusinessScope,
+  StaleScopeError,
+} from '../access/businessScope';
 import type { ChatRequest, ChatResponse } from './chatApi';
 
 export type Turn = {
@@ -59,27 +67,45 @@ export function clearAllPendingTurnScopes(): void {
   }
 }
 
-function progress(turn: Turn): void {
+/** Progress events belong to the epoch that started the turn. */
+function progress(turn: Turn, epoch: number): void {
+  if (!isCurrentEpoch(epoch) || typeof window === 'undefined') return;
   window.dispatchEvent(new CustomEvent('neuroweave:chat-progress', { detail: turn }));
 }
 
-async function requireCurrentScope(scope: TurnScope): Promise<void> {
+function sameScope(a: TurnScope | null | undefined, b: TurnScope): boolean {
+  return Boolean(a?.userId) && a?.userId === b.userId && (a?.projectId ?? null) === (b.projectId ?? null);
+}
+
+async function requireCurrentScope(scope: TurnScope, epoch: number): Promise<void> {
+  assertCurrentEpoch(epoch);
+  const local = currentScope();
+  if (local && !sameScope(local, scope)) throw new StaleScopeError();
   const current = await request<TurnScope>('/api/chat/scope');
-  if (
-    !current.userId ||
-    current.userId !== scope.userId ||
-    (current.projectId ?? null) !== (scope.projectId ?? null)
-  ) {
-    throw new Error('Chat scope changed; discard the stale response.');
+  if (!sameScope(current, scope)) {
+    throw new StaleScopeError();
   }
 }
 
-export async function waitForTurn(id: string, scope: TurnScope): Promise<ChatResponse> {
+/**
+ * The authenticated scope for a chat submission: the verified business scope
+ * when present, otherwise the server's answer (which then becomes current).
+ */
+export async function resolveChatScope(): Promise<TurnScope> {
+  const local = currentScope();
+  if (local?.userId) return { userId: local.userId, projectId: local.projectId ?? null };
+  const scope = await request<TurnScope>('/api/chat/scope');
+  if (!scope.userId) throw new Error('Authentication required');
+  setBusinessScope(scope);
+  return { userId: scope.userId, projectId: scope.projectId ?? null };
+}
+
+export async function waitForTurn(id: string, scope: TurnScope, epoch = currentEpoch()): Promise<ChatResponse> {
   for (;;) {
-    await requireCurrentScope(scope);
+    await requireCurrentScope(scope, epoch);
     const turn = await request<Turn>(`/api/chat/turns/${encodeURIComponent(id)}`);
-    await requireCurrentScope(scope);
-    progress(turn);
+    await requireCurrentScope(scope, epoch);
+    progress(turn, epoch);
     if (turn.status === 'succeeded' && turn.result) {
       remember(scope.userId, scope.projectId, id, false);
       return turn.result;
@@ -95,27 +121,29 @@ export async function submitTurn(
   payload: ChatRequest,
   scope?: TurnScope,
 ): Promise<ChatResponse> {
-  if (!scope?.userId) {
-    throw new Error('An authenticated user scope is required for chat turns.');
-  }
-  remember(scope.userId, scope.projectId, payload.client_turn_id, true);
+  // Normal submission resolves the trusted scope itself, so a caller that has
+  // not loaded it yet no longer fails before sending the request (issue 03).
+  const effective = scope?.userId ? scope : await resolveChatScope();
+  const epoch = currentEpoch();
+  remember(effective.userId, effective.projectId, payload.client_turn_id, true);
   const turn = await request<Turn>('/api/chat/turns', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
   // Do not emit even the initial response if the authenticated scope changed
   // while the submit request was in flight.
-  await requireCurrentScope(scope);
-  progress(turn);
-  return waitForTurn(turn.turn_id, scope);
+  await requireCurrentScope(effective, epoch);
+  progress(turn, epoch);
+  return waitForTurn(turn.turn_id, effective, epoch);
 }
 
 export async function retryTurn(
   id: string,
   scope: TurnScope,
 ): Promise<ChatResponse> {
+  const epoch = currentEpoch();
   await request(`/api/chat/turns/${encodeURIComponent(id)}/retry`, { method: 'POST' });
-  return waitForTurn(id, scope);
+  return waitForTurn(id, scope, epoch);
 }
 
 export function forgetTurn(id: string, scope: TurnScope): void {

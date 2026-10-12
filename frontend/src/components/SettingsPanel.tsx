@@ -6,6 +6,8 @@ import { Tabs } from '../ui/Tabs';
 import type { TabItem } from '../ui/Tabs';
 import { cx } from '../ui/cx';
 import type { TranslationKeys } from '../types/i18n';
+import { AccessSettingsSection } from '../features/access/AccessSettingsSection';
+import { ui } from '../lib/libraryText';
 
 /** Kept in sync with package.json; shown in the About section. */
 const APP_VERSION = '0.0.0';
@@ -71,6 +73,12 @@ export function SettingsPanel({ t }: { t: TranslationKeys }) {
       <section aria-label={t.settingsLanguage} className="space-y-1.5">
         <SectionLabel>{t.settingsLanguage}</SectionLabel>
         <Tabs items={languageItems} value={language} onChange={setLanguage} label={t.settingsLanguage} />
+      </section>
+
+      {/* Task B: directory scope, output write grants and execution limits. */}
+      <section aria-label={ui('访问与资源')} className="space-y-1.5 border-t border-line pt-3">
+        <SectionLabel>{ui('访问与资源')}</SectionLabel>
+        <AccessSettingsSection />
       </section>
 
       <section aria-label={t.settingsAccentColor} className="space-y-1.5">

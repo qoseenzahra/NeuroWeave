@@ -1,49 +1,56 @@
+/**
+ * UI helpers for server-provided `allowed_actions`. Buttons follow these
+ * hints, but every operation is still re-authorized by the server.
+ */
 export type ResourceAction =
-  | "read" | "create" | "update" | "delete" | "restore"
-  | "publish" | "share" | "handover" | "takeover"
-  | "submit" | "retry" | "cancel" | "confirm" | "export";
+  | 'read' | 'create' | 'update' | 'delete' | 'restore'
+  | 'publish' | 'share' | 'handover' | 'takeover'
+  | 'submit' | 'retry' | 'cancel' | 'confirm' | 'export';
 
-export type ResourceScope = "private" | "project";
+export type ResourceScope = 'private' | 'project';
 
-export interface AuthorizedResource {
-  id: string;
-  projectId?: string;
+export type AccessInfo = {
+  creator_id: string;
+  manager_id: string;
+  project_id: string | null;
   scope: ResourceScope;
-  allowedActions: readonly ResourceAction[];
+  permission_revision: number;
+};
+
+/** Shape returned by business list/detail endpoints (`annotate` on the server). */
+export type AuthorizedPayload = {
+  allowed_actions?: readonly string[];
+  access?: AccessInfo;
+};
+
+export function can(resource: AuthorizedPayload | undefined | null, action: ResourceAction): boolean {
+  return Boolean(resource?.allowed_actions?.includes(action));
 }
 
-export function can(resource: AuthorizedResource | undefined, action: ResourceAction): boolean {
-  return Boolean(resource?.allowedActions.includes(action));
+export type ScopeLabel = { scope: ResourceScope; owner: 'mine' | 'other'; managerId: string; creatorId: string };
+
+/** Author/scope label for list rows; undefined when the server sent no access info. */
+export function scopeLabel(resource: AuthorizedPayload | undefined | null, currentUserId: string | undefined): ScopeLabel | undefined {
+  const access = resource?.access;
+  if (!access) return undefined;
+  return {
+    scope: access.scope,
+    owner: currentUserId && access.manager_id === currentUserId ? 'mine' : 'other',
+    managerId: access.manager_id,
+    creatorId: access.creator_id,
+  };
 }
 
-/** Clear stale business-resource state when the authenticated user/scope changes. */
-export function scopeKey(userId: string | undefined, projectId: string | undefined): string {
-  return [userId ?? "", projectId ?? ""].join(":");
-}
-
-
-export function scopedStorageKey(
-  userId: string,
-  projectId: string | undefined,
-  resource: string,
-): string {
-  return `neuroweave:${resource}:${scopeKey(userId, projectId)}`;
-}
-
-export function clearScopeStorage(
-  userId: string,
-  projectId: string | undefined,
-  prefixes: readonly string[] = ["neuroweave:"],
-): void {
-  const scope = scopeKey(userId, projectId);
-  try {
-    for (let i = localStorage.length - 1; i >= 0; i -= 1) {
-      const key = localStorage.key(i);
-      if (key && prefixes.some((prefix) => key.startsWith(prefix)) && key.includes(scope)) {
-        localStorage.removeItem(key);
-      }
-    }
-  } catch {
-    /* storage cleanup is best effort; server authorization remains authoritative */
-  }
+/**
+ * Management actions the policy panel may offer, in display order. Takeover is
+ * never part of an object's allowed actions: it is an explicit, audited
+ * platform-administrator operation, so it is offered only to them.
+ */
+export function managementActions(
+  resource: AuthorizedPayload | undefined | null,
+  options: { platformAdmin?: boolean } = {},
+): ResourceAction[] {
+  const actions: ResourceAction[] = (['share', 'handover'] as const).filter((action) => can(resource, action));
+  if (options.platformAdmin && resource?.access) actions.push('takeover');
+  return actions;
 }

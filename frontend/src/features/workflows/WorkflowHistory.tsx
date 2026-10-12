@@ -5,21 +5,29 @@ import { request, errorText } from '../../api/http';
 import { stateText } from '../../lib/stateText';
 import { ui } from '../../lib/libraryText';
 import { taskIndexUrl } from './taskIndex';
-import type { TaskEntry } from './taskIndex';
+import type { TaskEntry, TaskView } from './taskIndex';
+import { scopeLabel } from '../access/authorization';
+import { useBusinessScope } from '../access/useScopeCleanup';
 import { TaskStatusBadge } from './TaskStatusBadge';
 
 export function WorkflowHistory({selectedId,onSelect}:{selectedId:string|null;onSelect:(task:TaskEntry)=>void}) {
   const [offset,setOffset]=useState(0),[q,setQ]=useState(''),[source,setSource]=useState(''),[status,setStatus]=useState('');
-  const list=useQuery({queryKey:['workflow-index',offset,q,source,status],
-    queryFn:()=>request<{items:TaskEntry[];has_more:boolean}>(taskIndexUrl(offset,q,source,status)),refetchInterval:5000});
+  const [view,setView]=useState<TaskView>('');
+  const scope=useBusinessScope();
+  const list=useQuery({queryKey:['workflow-index',offset,q,source,status,view],
+    queryFn:()=>request<{items:TaskEntry[];has_more:boolean}>(taskIndexUrl(offset,q,source,status,view)),refetchInterval:5000});
   const field='w-full min-w-0 rounded-control border border-line bg-raised p-2';
-  const hasFilters=!!(q||source||status);
-  const reset=()=>{setQ('');setSource('');setStatus('');setOffset(0);};
+  const hasFilters=!!(q||source||status||view);
+  const reset=()=>{setQ('');setSource('');setStatus('');setView('');setOffset(0);};
   const date=(value:string)=>new Date(value).toLocaleString(undefined,{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
   return <div className="min-h-0 flex-1 overflow-auto p-3 text-xs">
     <div className="sticky top-0 z-10 space-y-2 bg-panel pb-3">
       <label className="relative block"><Search className="absolute left-2.5 top-2.5 size-4 text-subtle" aria-hidden="true"/>
         <input aria-label={ui('搜索任务')} placeholder={ui('搜索任务名称')} value={q} onChange={e=>{setQ(e.target.value);setOffset(0);}} className={`${field} pl-8`}/></label>
+      <select aria-label={ui('任务范围')} className={field} value={view} onChange={e=>{setView(e.target.value as TaskView);setOffset(0);}}>
+        <option value="">{ui('全部可见任务')}</option><option value="mine">{ui('我的任务')}</option>
+        {scope?.projectId&&<option value="project">{ui('项目任务')}</option>}
+      </select>
       <div className="grid grid-cols-2 gap-2">
         <select aria-label={ui('任务来源')} className={field} value={source} onChange={e=>{setSource(e.target.value);setOffset(0);}}>
           <option value="">{ui('全部来源')}</option><option value="conversation">{ui('对话')}</option><option value="pipeline">Pipeline</option>
@@ -40,6 +48,7 @@ export function WorkflowHistory({selectedId,onSelect}:{selectedId:string|null;on
         onClick={()=>onSelect(task)}>
         <span className="mb-2 flex items-center justify-between gap-2"><span className="inline-flex items-center gap-1.5 rounded px-1.5 py-0.5 text-micro text-subtle">{task.source==='pipeline'?<Network className="size-3" aria-hidden="true"/>:<MessageSquare className="size-3" aria-hidden="true"/>}{task.source==='pipeline'?'Pipeline':ui('对话')}</span><TaskStatusBadge task={task}/></span>
         <span className="flex items-start gap-2"><strong className="line-clamp-2 min-w-0 flex-1 break-words text-xs leading-5" title={task.title}>{task.title}</strong><ArrowRight className="mt-1 size-3 shrink-0 text-subtle group-hover:text-accent" aria-hidden="true"/></span>
+        <TaskScopeLabel task={task} userId={scope?.userId}/>
         {task.dataset_label&&<span className="mt-2 flex items-center gap-1.5 text-micro text-muted"><Database className="size-3 shrink-0" aria-hidden="true"/><span className="truncate">{task.dataset_label}</span></span>}
         {task.workspace_path&&<span className="mt-1 flex items-center gap-1.5 text-micro text-subtle" title={task.workspace_path}><FolderOpen className="size-3 shrink-0" aria-hidden="true"/><span className="truncate">{task.workspace_path}</span></span>}
         <span className="mt-2 flex items-center justify-between gap-2 border-t border-line/60 pt-2 text-micro text-subtle"><span>{ui('{0} 次运行',task.run_count)}</span><time dateTime={task.updated_at} title={new Date(task.updated_at).toLocaleString()}>{date(task.updated_at)}</time></span>
@@ -51,4 +60,13 @@ export function WorkflowHistory({selectedId,onSelect}:{selectedId:string|null;on
       <button className="rounded-control border border-line px-2 py-1.5 disabled:opacity-40" disabled={!list.data?.has_more||list.isFetching} onClick={()=>setOffset(v=>v+30)}>{ui('下一页')}</button>
     </div>
   </div>;
+}
+
+/** Author and sharing scope of a task row (from the server's access info). */
+function TaskScopeLabel({task,userId}:{task:TaskEntry;userId?:string}) {
+  const label=scopeLabel(task,userId);
+  if(!label)return null;
+  return <span className="mt-1 block text-micro text-subtle" data-scope={label.scope}>
+    {label.scope==='project'?ui('项目共享'):ui('私有')}{' · '}{label.owner==='mine'?ui('由我管理'):ui('管理者：{0}',label.managerId)}
+  </span>;
 }

@@ -42,13 +42,27 @@ export function fetchRunEventsBefore(
   );
 }
 
+/**
+ * Idempotency key for one submission. The server stores it with the durable
+ * quota reservation, so a repeated request (network retry, double delivery)
+ * returns the already accepted run instead of reserving capacity twice.
+ */
+export function submissionKey(): string {
+  const random = typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+  return `submit-${random}`;
+}
+
 export function startRun(
   workflowId: string,
   expectedRevision: number,
-  execution: ExecutionOptions
+  execution: ExecutionOptions,
+  idempotencyKey: string = submissionKey()
 ): Promise<WorkflowRun> {
   return request<WorkflowRun>(`/api/workflows/${encodeURIComponent(workflowId)}/runs`, {
     method: 'POST',
+    headers: { 'Idempotency-Key': idempotencyKey },
     body: JSON.stringify({
       expected_revision: expectedRevision,
       execution: execution.backend === 'local' ? { backend: 'local' } : execution
@@ -56,9 +70,10 @@ export function startRun(
   });
 }
 
-export function retryRun(runId: string, stepIds: string[]): Promise<WorkflowRun> {
+export function retryRun(runId: string, stepIds: string[], idempotencyKey: string = submissionKey()): Promise<WorkflowRun> {
   return request<WorkflowRun>(`/api/runs/${encodeURIComponent(runId)}/retry`, {
     method: 'POST',
+    headers: { 'Idempotency-Key': idempotencyKey },
     body: JSON.stringify({ step_ids: stepIds })
   });
 }

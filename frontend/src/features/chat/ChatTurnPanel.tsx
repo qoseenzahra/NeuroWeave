@@ -4,13 +4,18 @@ import { request, errorText } from '../../api/http';
 import { pendingTurns, retryTurn, forgetTurn } from './chatTurns';
 import type { Turn, TurnScope } from './chatTurns';
 import { ui } from '../../lib/libraryText';
+import { useBusinessScope } from '../access/useScopeCleanup';
 
 type ChatTurnPanelProps = {
   onOpen: (id: string) => void;
   scope?: TurnScope;
 };
 
-export function ChatTurnPanel({ onOpen, scope }: ChatTurnPanelProps) {
+export function ChatTurnPanel({ onOpen, scope: explicitScope }: ChatTurnPanelProps) {
+  const businessScope = useBusinessScope();
+  const scope: TurnScope | undefined = explicitScope ?? (businessScope
+    ? { userId: businessScope.userId, projectId: businessScope.projectId }
+    : undefined);
   const scopeKey = scope?.userId ? `${scope.userId}:${scope.projectId ?? 'personal'}` : 'anonymous';
   const [ids, setIds] = useState<string[]>(() => pendingTurns(scope));
   const client = useQueryClient();
@@ -81,9 +86,9 @@ export function ChatTurnPanel({ onOpen, scope }: ChatTurnPanelProps) {
                 className="rounded border border-line px-2 py-1"
                 onClick={() => {
                   void retryTurn(ids[i], scope)
-                    .then(() => client.invalidateQueries({ queryKey: ['chat-turn', ids[i]] }))
+                    .then(() => client.invalidateQueries({ queryKey: ['chat-turn', scopeKey, ids[i]] }))
                     .catch((e) => setError(errorText(e, ui('重试失败'))));
-                  void client.invalidateQueries({ queryKey: ['chat-turn', ids[i]] });
+                  void client.invalidateQueries({ queryKey: ['chat-turn', scopeKey, ids[i]] });
                 }}
               >
                 {ui('重试同一请求')}
