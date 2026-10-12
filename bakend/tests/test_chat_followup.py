@@ -1,5 +1,6 @@
 """Regression for a second-turn prerequisite question that stopped at tool budget."""
 
+from identity_factories import authorization
 import asyncio
 import json
 from pathlib import Path
@@ -143,7 +144,7 @@ def test_bilingual_synonyms_recall_real_method_without_requiring_both_languages(
 
 def test_followup_context_uses_persisted_selection_and_cannot_cross_datasets(tmp_path):
     store = LocalStore(tmp_path / "test.db")
-    service = ConversationService(store, Mock())
+    service = ConversationService(store, Mock(), authorization_service=authorization())
     conversation = service.create("structural connectome")
     store.append_conversation_message(
         conversation.conversation_id,

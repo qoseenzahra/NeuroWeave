@@ -22,21 +22,35 @@ class AuthorizationService:
         identity = self.identity_reader.current_identity()
         if not identity.enabled:
             raise AuthorizationDenied("account_disabled")
+        if not identity.user_id:
+            raise AuthorizationDenied("authentication_required")
         return identity
 
     def context_for(self, resource: ResourceRef) -> AuthorizationContext:
         identity = self.identity_reader.current_identity()
         membership = (
             self.identity_reader.project_membership(resource.owner.project_id)
-            if resource.owner.project_id else None
+            if resource.owner.project_id and identity.user_id else None
         )
+        if membership is not None and membership.user_id != identity.user_id:
+            # A membership row for somebody else must never authorize this actor.
+            membership = None
         return AuthorizationContext(identity, membership, resource)
+
+    def evaluate(self, resource: ResourceRef, action: ResourceAction) -> AuthorizationDecision:
+        """Side-effect free decision used for list filtering and allowed_actions."""
+        identity = self.identity_reader.current_identity()
+        if not identity.enabled or not identity.user_id:
+            return AuthorizationDecision(False, "authentication_required")
+        return decide(self.context_for(resource), action)
 
     def check(self, resource: ResourceRef, action: ResourceAction) -> AuthorizationDecision:
         self.require_authenticated()
         ctx = self.context_for(resource)
         decision = decide(ctx, action)
-        if self.audit:
+        # Denials and every non-read decision are business audit events. Reads
+        # that succeed are high-volume list traffic and are not individually logged.
+        if self.audit and (not decision.allowed or action is not ResourceAction.READ):
             self.audit.record(
                 "authorization.check",
                 user_id=ctx.identity.user_id,
@@ -44,7 +58,7 @@ class AuthorizationService:
                 resource_type=resource.resource_type.value,
                 resource_id=resource.resource_id,
                 action=action.value,
-                reason=decision.reason,
+                reason=decision.reason if decision.allowed else f"denied:{decision.reason}",
             )
         return decision
 
@@ -54,8 +68,11 @@ class AuthorizationService:
             raise AuthorizationDenied(decision.reason)
 
     def actions(self, resource: ResourceRef) -> set[str]:
+        identity = self.identity_reader.current_identity()
+        if not identity.enabled or not identity.user_id:
+            return set()
         return {action.value for action in allowed_actions(self.context_for(resource))}
 
     def filter_visible(self, resources: list[ResourceRef], action: ResourceAction) -> list[ResourceRef]:
         # Authorization filtering occurs before pagination/counting.
-        return [r for r in resources if self.check(r, action).allowed]
+        return [r for r in resources if self.evaluate(r, action).allowed]

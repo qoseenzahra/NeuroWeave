@@ -7,6 +7,7 @@ from typing import Any, Literal
 import httpx
 from fastapi import APIRouter, HTTPException, Query
 
+from ..access.contracts import ResourceAction
 from ..application_services import ApplicationServices
 from ..models import ChatRequest
 from ..task_contract import PlanNotMatched
@@ -19,6 +20,9 @@ from ..workflow_models import (
 )
 from ..workflow_service import RevisionConflict
 from .errors import revision_http_error
+from .guards import TASK, access, require_inputs, require_task, visible_tasks
+
+READ, UPDATE = ResourceAction.READ, ResourceAction.UPDATE
 
 
 def router_for(services: ApplicationServices) -> APIRouter:
@@ -26,6 +30,13 @@ def router_for(services: ApplicationServices) -> APIRouter:
 
     @router.post("/api/workflows/draft", response_model=Workflow)
     async def draft_workflow(request: WorkflowDraftRequest) -> Workflow:
+        payload = request.model_dump()
+        require_inputs(
+            services,
+            dataset_id=payload.get("dataset_id"),
+            workspace_id=payload.get("workspace_id"),
+            conversation_id=payload.get("conversation_id"),
+        )
         try:
             workflow, _content = await services.workflow_service.draft(
                 services.chat_coordinator.resolve_context(
@@ -63,13 +74,21 @@ def router_for(services: ApplicationServices) -> APIRouter:
         q: str = Query("", max_length=200),
         source: Literal["", "pipeline", "conversation"] = "",
         status: Literal["", "draft", "active", "succeeded", "failed", "cancelled"] = "",
+        view: Literal["", "mine", "project"] = "",
     ):
-        return services.local_store.workflow_index(
-            offset=offset, limit=limit, query=q, source=source, status=status
+        # Filter by permission (and "My tasks / Project tasks") before paging.
+        result = services.local_store.workflow_index(
+            offset=offset, limit=limit, query=q, source=source, status=status,
+            visible_ids=visible_tasks(services, view),
         )
+        result["items"] = [
+            access(services).annotate(TASK, item["workflow_id"], item) for item in result["items"]
+        ]
+        return result
 
     @router.get("/api/workflows/{workflow_id}", response_model=Workflow)
     def get_workflow(workflow_id: str) -> Workflow:
+        require_task(services, workflow_id, READ)
         try:
             return services.workflow_service.get(workflow_id)
         except KeyError as exc:
@@ -77,10 +96,11 @@ def router_for(services: ApplicationServices) -> APIRouter:
 
     @router.get("/api/workflows")
     def list_workflows(limit: int = 50) -> dict[str, list[Workflow]]:
-        return {"workflows": services.workflow_service.list(limit)}
+        return {"workflows": services.workflow_service.list(limit, visible_ids=visible_tasks(services))}
 
     @router.get("/api/workflows/{workflow_id}/events")
     def workflow_events(workflow_id: str) -> dict[str, Any]:
+        require_task(services, workflow_id, READ)
         try:
             return {"events": services.workflow_service.events(workflow_id)}
         except KeyError as exc:
@@ -94,6 +114,7 @@ def router_for(services: ApplicationServices) -> APIRouter:
         step_id: str,
         request: MethodSelectionRequest,
     ) -> Workflow:
+        require_task(services, workflow_id, UPDATE)
         try:
             return services.workflow_service.select_method(
                 workflow_id,
@@ -110,6 +131,7 @@ def router_for(services: ApplicationServices) -> APIRouter:
 
     @router.post("/api/workflows/{workflow_id}/lock", response_model=Workflow)
     def lock_workflow(workflow_id: str, request: WorkflowMutationRequest) -> Workflow:
+        require_task(services, workflow_id, UPDATE)
         try:
             return services.workflow_service.lock_chain(
                 workflow_id, request.expected_revision
@@ -125,6 +147,8 @@ def router_for(services: ApplicationServices) -> APIRouter:
     def change_workflow_dataset(
         workflow_id: str, request: WorkflowDatasetRequest
     ) -> Workflow:
+        require_task(services, workflow_id, UPDATE)
+        require_inputs(services, dataset_id=request.dataset_id)
         try:
             return services.workflow_service.change_dataset(
                 workflow_id,
@@ -142,6 +166,7 @@ def router_for(services: ApplicationServices) -> APIRouter:
 
     @router.post("/api/workflows/{workflow_id}/unlock", response_model=Workflow)
     def unlock_workflow(workflow_id: str, request: WorkflowMutationRequest) -> Workflow:
+        require_task(services, workflow_id, UPDATE)
         try:
             return services.workflow_service.unlock_chain(
                 workflow_id, request.expected_revision
@@ -159,6 +184,7 @@ def router_for(services: ApplicationServices) -> APIRouter:
     def remove_workflow_step(
         workflow_id: str, step_id: str, request: WorkflowMutationRequest
     ) -> Workflow:
+        require_task(services, workflow_id, UPDATE)
         try:
             return services.workflow_service.remove_step(
                 workflow_id, step_id, request.expected_revision
@@ -176,6 +202,7 @@ def router_for(services: ApplicationServices) -> APIRouter:
     async def replan_workflow(
         workflow_id: str, request: WorkflowMutationRequest
     ) -> Workflow:
+        require_task(services, workflow_id, UPDATE)
         try:
             workflow, _content = await services.workflow_service.replan(
                 workflow_id,
@@ -196,6 +223,7 @@ def router_for(services: ApplicationServices) -> APIRouter:
         workflow_id: str,
         request: WorkflowMutationRequest,
     ) -> Workflow:
+        require_task(services, workflow_id, UPDATE)
         try:
             return await services.workflow_service.complete_dependencies(
                 workflow_id,

@@ -86,10 +86,9 @@ def test_http_save_version_instantiate_and_export(library):
         library.store,
         DatasetService(ROOT, library.store),
     )
-    app = FastAPI()
-    app.include_router(
-        library_router(library, service, SimpleNamespace(), SimpleNamespace())
-    )
+    from identity_factories import library_app
+
+    app = library_app(library, service, SimpleNamespace(), SimpleNamespace())
 
     async def check():
         async with httpx.AsyncClient(

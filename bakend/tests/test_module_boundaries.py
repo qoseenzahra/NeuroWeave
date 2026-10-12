@@ -136,6 +136,10 @@ def application(tmp_path, monkeypatch):
     )
     services = build_services(settings)
     app = create_app(services)
+    from identity_factories import grant, sign_in
+
+    sign_in(services)
+    grant(services, tmp_path, "write")
     with TestClient(app) as client:
         yield app, client, services
 
@@ -221,11 +225,10 @@ def test_output_adapter_keeps_revision_and_conversation_binding_consistent(
 ):
     _, client, services = application
     # This test exercises the output adapter, not anonymous-access behavior.
-    from app.access.contracts import Identity
-    from app.access.identity_adapter import TestIdentityReader
-    services.authorization_service.identity_reader = TestIdentityReader(
-        Identity("output-adapter-test-user")
-    )
+    from identity_factories import grant, sign_in
+
+    sign_in(services, "output-adapter-test-user")
+    grant(services, tmp_path, "write", user_id="output-adapter-test-user")
     target = tmp_path / "managed"
     target.mkdir()
     workspace = services.workspace_service.create(

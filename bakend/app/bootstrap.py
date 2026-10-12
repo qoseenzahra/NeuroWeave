@@ -9,7 +9,11 @@ from __future__ import annotations
 from pathlib import Path
 
 from .application_services import ApplicationServices
+from .access.audit import SQLiteBusinessAuditSink
+from .access.directory_grants import DirectoryAccess, DirectoryGrantStore
+from .access.execution_control import ExecutionControl
 from .access.identity_adapter import UnauthenticatedIdentityReader
+from .access.resources import ResourceAccess
 from .access.service import AuthorizationService
 from .capability_registry import CapabilityRegistry
 from .capability_tree import CapabilityTree
@@ -34,21 +38,44 @@ from .workspace_service import WorkspaceService
 from .workspace_tools import WorkspaceTools
 
 
-def build_services(settings: Settings, *, identity_reader=None) -> ApplicationServices:
+def build_services(settings: Settings, *, identity_reader=None, audit_sink=None) -> ApplicationServices:
+    """Assemble one service graph.
+
+    ``identity_reader`` is A's production reader (normally
+    ``access.request_context.RequestIdentityReader`` around A's identity
+    authority). Without it the application fails closed: every business API
+    answers 401. ``audit_sink`` is A's common audit; B's business events are
+    also kept locally until that sink is wired.
+    """
     identity_reader = identity_reader or UnauthenticatedIdentityReader()
-    authorization_service = AuthorizationService(identity_reader)
     skill_loader = SkillLoader(settings.skills_dir)
     chat_service = ChatService()
     capability_registry = CapabilityRegistry(settings.skills_dir)
     capability_tree = CapabilityTree(settings.skills_dir / "capability.tree.json")
     local_store = LocalStore(settings.database_path)
+    business_audit = SQLiteBusinessAuditSink(local_store._connect, forward=audit_sink)
+    authorization_service = AuthorizationService(identity_reader, business_audit)
+    resource_access = ResourceAccess(local_store, authorization_service)
+    directory_access = DirectoryAccess(DirectoryGrantStore(local_store), resource_access)
+    execution_control = ExecutionControl(local_store)
+    # Historical results (runs reused as inputs) inherit their task permission.
+    local_store.historical_visibility = lambda: resource_access.visible_ids("task")
+    # Ownership of new business records commits in the creating transaction.
+    local_store.ownership_recorder = (
+        lambda resource_type, resource_id, connection: resource_access.record_creation(
+            resource_type, resource_id, connection=connection
+        )
+    )
     operation_service = OperationService(local_store)
     dataset_service = DatasetService(settings.project_root, local_store)
     conversation_service = ConversationService(local_store, chat_service, authorization_service=authorization_service)
     workspace_service = WorkspaceService(
         local_store, settings.project_root / "workspaces"
     )
+    workspace_service.access = resource_access
+    workspace_service.directories = directory_access
     dataset_files = DatasetFiles(dataset_service)
+    dataset_files.access = resource_access
     workspace_tools = WorkspaceTools(workspace_service, chat_service, dataset_files)
     runner_registry = RunnerRegistry()
     skill_catalog = SkillCatalog(skill_loader, capability_registry, runner_registry)
@@ -103,6 +130,7 @@ def build_services(settings: Settings, *, identity_reader=None) -> ApplicationSe
     dataset_service.registration_lock = run_service.mutation_lock
     dataset_service.registration_guard = workspace_service.guard_dataset_registration
     pipeline_library = PipelineLibrary(local_store, capability_registry)
+    pipeline_library.access = resource_access
     capability_registry.library_provider = pipeline_library.bindings
     chat_coordinator = ChatCoordinator(
         conversation_service,
@@ -113,7 +141,9 @@ def build_services(settings: Settings, *, identity_reader=None) -> ApplicationSe
         workflow_service,
         chat_service,
     )
-    chat_turns = ChatTurns(local_store, conversation_service, chat_coordinator.reply)
+    chat_turns = ChatTurns(
+        local_store, conversation_service, chat_coordinator.reply, resource_access=resource_access
+    )
     return ApplicationServices(
         settings=settings,
         skill_loader=skill_loader,
@@ -135,4 +165,8 @@ def build_services(settings: Settings, *, identity_reader=None) -> ApplicationSe
         chat_turns=chat_turns,
         chat_coordinator=chat_coordinator,
         authorization_service=authorization_service,
+        resource_access=resource_access,
+        directory_access=directory_access,
+        execution_control=execution_control,
+        business_audit=business_audit,
     )

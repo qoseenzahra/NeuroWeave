@@ -10,13 +10,9 @@ import sqlite3
 import sys
 from pathlib import Path
 
-
-RESOURCE_TABLES = {
-    "conversation": ("conversations", "conversation_id"),
-    "dataset": ("datasets", "dataset_id"),
-    "pipeline": ("workflows", "workflow_id"),
-    "run": ("runs", "run_id"),
-}
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "bakend"))
+# Imports only the pure mapping/report module: no LocalStore, no schema setup.
+from app.access.ownership_migration import unassigned_report  # noqa: E402
 
 
 def main() -> int:
@@ -34,40 +30,7 @@ def main() -> int:
     try:
         with sqlite3.connect(uri, uri=True) as db:
             db.row_factory = sqlite3.Row
-            existing = {
-                row["name"]
-                for row in db.execute(
-                    "SELECT name FROM sqlite_master WHERE type='table'"
-                )
-            }
-            has_policies = "resource_policies" in existing
-            report: list[dict[str, str]] = []
-            for resource_type, (table, id_column) in RESOURCE_TABLES.items():
-                if table not in existing:
-                    continue
-                if has_policies:
-                    query = f"""
-                        SELECT r.{id_column} AS resource_id
-                        FROM {table} AS r
-                        WHERE NOT EXISTS (
-                            SELECT 1 FROM resource_policies AS p
-                            WHERE p.resource_type = ?
-                              AND p.resource_id = r.{id_column}
-                        )
-                    """
-                    rows = db.execute(query, (resource_type,)).fetchall()
-                else:
-                    rows = db.execute(
-                        f"SELECT {id_column} AS resource_id FROM {table}"
-                    ).fetchall()
-                report.extend(
-                    {
-                        "resource_type": resource_type,
-                        "resource_id": str(row["resource_id"]),
-                        "status": "unassigned",
-                    }
-                    for row in rows
-                )
+            report = unassigned_report(db)
     except sqlite3.Error as exc:
         print(json.dumps({"error": "database_read_failed", "detail": str(exc)}))
         return 2
@@ -76,6 +39,7 @@ def main() -> int:
         "count": len(report),
         "resources": report,
         "action": "assign_explicit_creator_manager_project_scope_before_release",
+        "next_step": "python scripts/task_b_assign_ownership.py <sqlite-db> <mapping.json> [--apply]",
     }, indent=2))
     return 0
 

@@ -49,9 +49,11 @@ class ConversationApiTests(unittest.IsolatedAsyncioTestCase):
                     self.assertEqual((await client.get("/api/conversations")).status_code, 401)
                     self.assertEqual((await client.post("/api/conversations")).status_code, 401)
                     # The remaining contract tests intentionally run as a test actor.
-                    main.app.state.services.authorization_service.identity_reader = TestIdentityReader(
-                        Identity("conversation-api-test-user")
-                    )
+                    from identity_factories import grant, sign_in
+
+                    sign_in(main.app.state.services, "conversation-api-test-user")
+                    # Typed input paths are only accepted inside a read grant.
+                    grant(main.app.state.services, root, "read", user_id="conversation-api-test-user")
                     for index in range(23):
                         main.app.state.services.conversation_service.create(
                             f"API 测试 {index}"
@@ -433,6 +435,10 @@ class ConversationApiTests(unittest.IsolatedAsyncioTestCase):
                         checkpoint()
                         return {"done": True}
 
+                    # The mocked scan stands in for a dataset this user owns.
+                    main.app.state.services.resource_access.record_creation(
+                        "dataset", "synthetic"
+                    )
                     with patch.object(
                         main.app.state.services.dataset_service,
                         "inspect",

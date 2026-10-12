@@ -10,12 +10,36 @@ from .operation_context import OperationContext, current_operation, OperationCan
 
 
 class ChatTurns:
-    def __init__(self,store,conversations,handler):
+    def __init__(self,store,conversations,handler,*,resource_access=None):
         self.store,self.conversations,self.handler=store,conversations,handler
+        # Validates the dataset/output a turn will read or write at submission.
+        self.resource_access=resource_access
         self.tasks={};self.events={}
         with store._connect() as db:
             db.execute('CREATE TABLE IF NOT EXISTS chat_turns(id TEXT PRIMARY KEY,fingerprint TEXT NOT NULL,conversation_id TEXT NOT NULL,status TEXT NOT NULL,message TEXT NOT NULL,request_json TEXT NOT NULL,result_json TEXT,error_json TEXT,updated_at TEXT NOT NULL)')
             db.execute("UPDATE chat_turns SET status='interrupted',message='服务已重启；请检查已返回的内容，再明确重试。' WHERE status IN ('queued','running')")
+            from .access.schema import add_owner_columns
+            add_owner_columns(db)
+
+    def _actor_id(self):
+        """Trusted current user; turns are private to the user who submitted them."""
+        service=getattr(self.conversations,'authorization_service',None)
+        if service is None:
+            raise PermissionError('Conversation authorization is not configured')
+        return service.require_authenticated().user_id
+
+    def owner_of(self,identity):
+        with self.store._connect() as db:
+            row=db.execute('SELECT owner_id FROM chat_turns WHERE id=?',(identity,)).fetchone()
+        return row['owner_id'] if row else None
+
+    def _require_recipient(self,row):
+        from .access.contracts import ResourceNotFound
+        # Recipient authorization: a private result is only delivered to the
+        # user who submitted the turn, even if the conversation is later
+        # reassigned or another account replays the request id.
+        if row['owner_id'] is None or row['owner_id']!=self._actor_id():
+            raise ResourceNotFound(row['id'])
 
     async def shutdown(self):
         # Only planning tasks belong here; Runner jobs have their own lifetime.
@@ -24,30 +48,46 @@ class ChatTurns:
         if pending:await asyncio.gather(*pending,return_exceptions=True)
 
     def _require_turn_action(self, identity, action):
-        """Authorize access using the turn's server-stored conversation scope."""
+        """Authorize access using the turn's server-stored owner and conversation."""
         with self.store._connect() as db:
             row = db.execute(
-                'SELECT conversation_id FROM chat_turns WHERE id=?', (identity,)
+                'SELECT id,owner_id,conversation_id FROM chat_turns WHERE id=?', (identity,)
             ).fetchone()
         if row is None:
             raise KeyError(identity)
+        self._require_recipient(row)
         self.conversations.require_action(row["conversation_id"], action)
 
     def get(self,identity):
         from .access.contracts import ResourceAction
         with self.store._connect() as db:row=db.execute('SELECT * FROM chat_turns WHERE id=?',(identity,)).fetchone()
         if row is None:raise KeyError(identity)
+        self._require_recipient(row)
         self.conversations.require_action(row["conversation_id"], ResourceAction.READ)
         return dict(turn_id=identity,conversation_id=row['conversation_id'],status=row['status'],message=row['message'],
                     result=json.loads(row['result_json']) if row['result_json'] else None,error=json.loads(row['error_json']) if row['error_json'] else None)
 
+    def _require_inputs(self,request):
+        if self.resource_access is None:
+            return
+        from .access.contracts import ResourceAction, ResourceType
+        if request.dataset_id:
+            self.resource_access.require(ResourceType.DATASET,request.dataset_id,ResourceAction.READ)
+        if request.workspace_id:
+            self.resource_access.require(ResourceType.OUTPUT,request.workspace_id,ResourceAction.READ)
+
     def submit(self,request):
+        owner_id=self._actor_id()
         identity=request.client_turn_id or 'turn-'+uuid4().hex
         payload=request.model_dump(mode='json');payload['client_turn_id']=identity
         signature=hashlib.sha256(json.dumps(payload,sort_keys=True,ensure_ascii=False).encode()).hexdigest()
+        self._require_inputs(request)
         with self.store._lock,self.store._connect() as db:
-            row=db.execute('SELECT fingerprint FROM chat_turns WHERE id=?',(identity,)).fetchone()
+            row=db.execute('SELECT fingerprint,owner_id FROM chat_turns WHERE id=?',(identity,)).fetchone()
             if row:
+                # Replaying somebody else's request id never reveals or reuses
+                # their turn; ownership is checked before the fingerprint.
+                if row['owner_id']!=owner_id:raise HTTPException(409,'请求 ID 不可用，请重新发送')
                 if row['fingerprint']!=signature:raise HTTPException(409,'同一请求 ID 不能用于不同的消息或上下文')
                 return self.get(identity)
             if db.execute("SELECT COUNT(*) FROM chat_turns WHERE status IN ('queued','running')").fetchone()[0]>=8:raise HTTPException(429,'对话处理队列已满，请稍后重试')
@@ -60,7 +100,7 @@ class ChatTurns:
             else:
                 conversation_id=self.conversations.create(request.message[:80]).conversation_id
             payload['conversation_id']=conversation_id
-            db.execute('INSERT INTO chat_turns VALUES(?,?,?,?,?,?,NULL,NULL,?)',(identity,signature,conversation_id,'queued','等待处理',json.dumps(payload,ensure_ascii=False),datetime.now(timezone.utc).isoformat()))
+            db.execute('INSERT INTO chat_turns(id,fingerprint,conversation_id,status,message,request_json,result_json,error_json,updated_at,owner_id) VALUES(?,?,?,?,?,?,NULL,NULL,?,?)',(identity,signature,conversation_id,'queued','等待处理',json.dumps(payload,ensure_ascii=False),datetime.now(timezone.utc).isoformat(),owner_id))
         self._start(identity,request.model_copy(update={'client_turn_id':identity,'conversation_id':conversation_id}))
         return self.get(identity)
 
@@ -74,13 +114,17 @@ class ChatTurns:
             with self.store._connect() as db:db.execute("UPDATE chat_turns SET message=?,updated_at=? WHERE id=?",(message,datetime.now(timezone.utc).isoformat(),identity))
         token=current_operation.set(OperationContext(event,report))
         try:
+            from .access.contracts import ResourceAction
+            # Queued work re-checks identity when it actually starts: a turn
+            # queued before logout/disabling/revocation must not execute.
+            self._require_turn_action(identity, ResourceAction.UPDATE)
+            self._require_inputs(request)
             with self.store._connect() as db:db.execute("UPDATE chat_turns SET status='running',message='解析需求' WHERE id=?",(identity,))
             result=await self.handler(request)
-            # Re-check the live resource permission after asynchronous planning and
-            # before persisting a result. A revoked conversation must not receive
-            # a late result even if authorization was valid at submission time.
-            from .access.contracts import ResourceAction
-            self.conversations.require_action(request.conversation_id, ResourceAction.UPDATE)
+            # Re-check the live owner and conversation permission after
+            # asynchronous planning and before persisting a result. A revoked
+            # conversation or switched account must not receive a late result.
+            self._require_turn_action(identity, ResourceAction.UPDATE)
             with self.store._connect() as db:db.execute("UPDATE chat_turns SET status='succeeded',message='处理完成',result_json=? WHERE id=?",(result.model_dump_json(),identity))
         except (Exception,asyncio.CancelledError) as exc:
             status='cancelled' if isinstance(exc,OperationCancelled) else 'interrupted' if isinstance(exc,asyncio.CancelledError) else 'failed'

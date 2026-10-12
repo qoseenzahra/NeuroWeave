@@ -99,6 +99,11 @@ class HistoricalInputs:
         run = run if run is not None else self.store.get_run(run_id)
         if run is None:
             raise KeyError(run_id)
+        provider = getattr(self.store, "historical_visibility", None)
+        if provider is not None and run.workflow_id not in provider():
+            # Historical results inherit their task's permission; an
+            # unauthorized run is indistinguishable from a missing one.
+            raise KeyError(run_id)
         if run.status not in {"succeeded", "failed", "cancelled"}:
             raise ValueError("历史运行尚未结束，不能绑定仍可能变化的输出")
         source = run.plan_snapshot.get("dataset") or {}

@@ -85,36 +85,10 @@ class SQLiteResourcePolicyStore:
         """Report existing business records that have no ownership assignment.
         The report is read-only so migration cannot accidentally expose records.
         """
-        tables = {
-            "conversation": "conversations",
-            "dataset": "datasets",
-            "pipeline": "workflows",
-            "run": "runs",
-        }
-        report: list[dict[str, object]] = []
+        from .ownership_migration import unassigned_report
+
         with self._connect() as db:
-            for resource_type, table in tables.items():
-                id_column = {
-                    "conversation": "conversation_id",
-                    "dataset": "dataset_id",
-                    "pipeline": "workflow_id",
-                    "run": "run_id",
-                }[resource_type]
-                rows = db.execute(
-                    f"""SELECT {id_column} AS resource_id FROM {table}
-                        WHERE NOT EXISTS (
-                          SELECT 1 FROM resource_policies p
-                          WHERE p.resource_type=? AND p.resource_id={table}.{id_column}
-                        )""",
-                    (resource_type,),
-                ).fetchall()
-                for row in rows:
-                    report.append({
-                        "resource_type": resource_type,
-                        "resource_id": row["resource_id"],
-                        "status": "unassigned",
-                    })
-        return report
+            return unassigned_report(db)
 
     def unassigned(self, resource_type: str | None = None) -> list[tuple[str, str]]:
         with self._connect() as db:

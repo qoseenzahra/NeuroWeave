@@ -87,8 +87,20 @@ def router_for(services: ApplicationServices) -> APIRouter:
         ]
         return backups, roots
 
+    def require_platform_admin() -> str:
+        # Storage paths and output inventories are deployment data, not liveness.
+        from ..access.contracts import AuthorizationDenied, PlatformRole
+
+        if services.authorization_service is None:
+            raise AuthorizationDenied("authentication_required")
+        identity = services.authorization_service.require_authenticated()
+        if identity.platform_role is not PlatformRole.ADMIN:
+            raise AuthorizationDenied("platform_administrator_required")
+        return identity.user_id
+
     @router.get("/api/maintenance/storage")
     def maintenance_storage() -> dict[str, Any]:
+        require_platform_admin()
         backups, roots = _storage_paths()
         return {
             **storage_status(services.settings.database_path, backups, roots),
@@ -97,12 +109,14 @@ def router_for(services: ApplicationServices) -> APIRouter:
 
     @router.post("/api/maintenance/inventory-jobs", status_code=202)
     def maintenance_inventory() -> dict[str, Any]:
+        owner_id = require_platform_admin()
         _, roots = _storage_paths()
         try:
             return services.operation_service.submit(
                 "storage_inventory",
                 "outputs",
                 lambda: inventory_outputs(services.settings.database_path, roots),
+                owner_id=owner_id,
             )
         except ValueError as exc:
             raise HTTPException(status_code=429, detail=str(exc)) from exc

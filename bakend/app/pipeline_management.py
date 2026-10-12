@@ -112,6 +112,9 @@ class PipelineAuthoring:
                 "SELECT revision FROM pipeline_drafts WHERE id=?", (identity,)
             ).fetchone()
             current = row[0] if row else 0
+            if row is None:
+                # First save creates a private draft owned by the current user.
+                self.store._record_ownership(db, "pipeline_draft", identity, "pipeline_drafts", "id")
             if current != request.expected_revision:
                 raise ValueError(
                     "草稿已在其他窗口更新，请重新打开后比较；当前修改仍保存在浏览器。"

@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from identity_factories import library_app
 from app.capability_registry import CapabilityRegistry
 from app.library_routes import library_router
 from app.local_store import LocalStore
@@ -79,8 +80,7 @@ def test_copy_keeps_conditional_stages_and_shared_files(library):
 
 
 def test_http_source_is_read_only_and_builtin_update_is_rejected(library):
-    app = FastAPI()
-    app.include_router(library_router(library, None, None, None))
+    app = library_app(library, None, None, None)
     identity = next(iter(library.registry.definitions.pipelines))
     before = library.get(identity)
     with TestClient(app) as client:

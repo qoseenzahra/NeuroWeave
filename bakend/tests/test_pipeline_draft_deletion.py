@@ -4,6 +4,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from identity_factories import library_app
 from app.capability_registry import CapabilityRegistry
 from app.library_routes import library_router
 from app.local_store import LocalStore
@@ -64,8 +65,7 @@ def test_local_only_recovery_can_be_deleted_and_restored(library):
 
 
 def test_http_conflicts_validation_and_restore(library):
-    app = FastAPI()
-    app.include_router(library_router(library, None, None, None))
+    app = library_app(library, None, None, None)
     with TestClient(app) as client:
         body = draft().model_dump()
         assert client.put("/api/library/drafts/owned", json=body).status_code == 200

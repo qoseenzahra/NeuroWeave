@@ -5,6 +5,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from identity_factories import library_app
 from app.capability_registry import CapabilityRegistry
 from app.execution.recipe_compiler import RecipeCompiler
 from app.library_routes import library_router
@@ -100,9 +101,8 @@ def test_deletion_is_durable_and_preserves_archived_latest_state(library):
 
 
 def test_http_delete_restore_conflicts_and_builtin_protection(library):
+    app = library_app(library, None, None, None)
     p = publish(library)
-    app = FastAPI()
-    app.include_router(library_router(library, None, None, None))
     endpoint = '/api/library/pipelines/' + p['id']
     with TestClient(app) as client:
         body = {'expected_version': 1, 'expected_deletion_revision': 0}

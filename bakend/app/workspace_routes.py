@@ -1,4 +1,6 @@
 """HTTP-only confirmation endpoints are intentionally absent from model tools."""
+from pathlib import Path
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.routing import APIRoute
 
@@ -21,7 +23,12 @@ class FilesystemRoute(APIRoute):
         return guarded
 
 
-def workspace_router(service, dataset_files=None, authorization_service=None):
+def workspace_router(service, dataset_files=None, authorization_service=None, *, turn_owner=None):
+    """Filesystem and output-directory routes.
+
+    ``turn_owner`` maps a chat turn id to its owner so tool-event streams are
+    only readable by the user who started the turn.
+    """
     def require_authenticated():
         # Sensitive filesystem routes must fail closed if identity wiring is absent.
         if authorization_service is None:
@@ -36,20 +43,31 @@ def workspace_router(service, dataset_files=None, authorization_service=None):
         dependencies=[Depends(require_authenticated)],
     )
 
+    def annotate(record):
+        payload = record.model_dump(mode="json") if hasattr(record, "model_dump") else dict(record)
+        access = getattr(service, "access", None)
+        return access.annotate("output", payload["id"], payload) if access is not None else payload
+
     @router.get("/api/fs/roots")
     def roots():
-        return {"roots": [str(p) for p in service.paths.roots], "default_root": str(service.paths.default),
+        # Only granted subtrees are offered; nothing is inherited from the old
+        # global browse roots for users without directory grants.
+        visible = service.visible_roots()
+        default = str(service.paths.default)
+        if not any(Path(default).resolve() == root or root in Path(default).resolve().parents for root in visible):
+            default = str(visible[0]) if visible else None
+        return {"roots": [str(p) for p in visible], "default_root": default,
                 "page_size": service.paths.page_size, "text_max_chars": service.paths.text_max}
 
     @router.get("/api/workspaces")
     @router.get("/api/output-directories")
     def workspaces():
-        return service.list()
+        return [annotate(record) for record in service.list()]
 
     @router.post("/api/workspaces")
     @router.post("/api/output-directories")
     def create(request: WorkspaceCreate):
-        return service.create(request)
+        return annotate(service.create(request))
 
     @router.patch("/api/workspaces/{workspace_id}")
     @router.patch("/api/output-directories/{workspace_id}")
@@ -112,6 +130,10 @@ def workspace_router(service, dataset_files=None, authorization_service=None):
 
     @router.get("/api/workspace-tool-events")
     def events(turn_id: str = Query(min_length=16, max_length=100)):
+        if authorization_service is not None:
+            user_id = authorization_service.require_authenticated().user_id
+            if turn_owner is None or turn_owner(turn_id) != user_id:
+                return []
         return service.events(turn_id)
 
     if dataset_files is not None:

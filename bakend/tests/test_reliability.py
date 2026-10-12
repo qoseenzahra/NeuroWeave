@@ -8,6 +8,7 @@ import time
 
 import pytest
 
+from identity_factories import authorization
 from app.local_store import LocalStore
 from app.run_models import RunExecutionOptions, RunStep, WorkflowRun
 from app.operation_service import OperationService
@@ -160,7 +161,7 @@ def test_check_restart_marks_only_unfinished_records_and_expiry_keeps_active_aud
     service.shutdown()
     with store._connect() as connection:
         connection.execute("UPDATE operations SET updated_at='2000-01-01T00:00:00+00:00'")
-        connection.execute("INSERT INTO operations VALUES('unfinished','inspect','two','running','waiting',NULL,NULL,?,?)",(NOW,NOW))
+        connection.execute("INSERT INTO operations(operation_id,kind,entity_key,status,message,result_json,error_json,created_at,updated_at) VALUES('unfinished','inspect','two','running','waiting',NULL,NULL,?,?)",(NOW,NOW))
     next_service = OperationService(store)
     try:
         assert next_service.get("unfinished")["status"] == "failed"
@@ -171,7 +172,7 @@ def test_check_restart_marks_only_unfinished_records_and_expiry_keeps_active_aud
 
 
 def test_paged_conversations_keep_order_and_context_outside_visible_page(store):
-    service = ConversationService(store,ChatService())
+    service = ConversationService(store,ChatService(), authorization_service=authorization())
     conversation = service.create("synthetic")
     for index in range(105):
         metadata = {"workflow_id":"wf","dataset_id":"old"} if index == 0 else {"dataset_id":None} if index == 100 else {"workflow_id":None}

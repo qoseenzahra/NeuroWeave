@@ -25,6 +25,10 @@ if TYPE_CHECKING:
     from .workspace_service import WorkspaceService
     from .workspace_tools import WorkspaceTools
     from .access.service import AuthorizationService
+    from .access.resources import ResourceAccess
+    from .access.directory_grants import DirectoryAccess
+    from .access.execution_control import ExecutionControl
+    from .access.audit import SQLiteBusinessAuditSink
 
 
 @dataclass
@@ -49,3 +53,7 @@ class ApplicationServices:
     chat_turns: ChatTurns
     chat_coordinator: ChatCoordinator
     authorization_service: AuthorizationService | None = None
+    resource_access: ResourceAccess | None = None
+    directory_access: DirectoryAccess | None = None
+    execution_control: ExecutionControl | None = None
+    business_audit: SQLiteBusinessAuditSink | None = None

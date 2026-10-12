@@ -441,6 +441,15 @@ def test_http_history_preview_bind_and_revision_contract(
 
     store, _, workflow, source, slot, service = history_case
     monkeypatch.setattr(main.app.state.services, "workflow_service", service)
+    from identity_factories import sign_in, wire_access
+
+    reader = sign_in(main.app.state.services)
+    access = wire_access(store, reader=reader)
+    access.record_creation("task", "target")
+    if source.workflow_id != "target":
+        access.record_creation("task", source.workflow_id)
+    monkeypatch.setattr(main.app.state.services, "resource_access", access)
+    monkeypatch.setattr(main.app.state.services, "local_store", store)
     base = f"/api/workflows/target/steps/track/inputs/{slot.id}/history"
     with TestClient(main.app) as client:
         choices = client.get(base).json()["candidates"]

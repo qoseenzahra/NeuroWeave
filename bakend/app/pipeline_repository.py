@@ -146,6 +146,10 @@ class PipelineRepository:
                     raise ValueError("Pipeline 版本已变化，请刷新后保存")
                 version = row[0] + 1
             p = self.compiler.compile(request, identity, version)
+            if version == 1:
+                # Copies and new Pipelines are owned by the trusted creator;
+                # copying never grants access to data or historical artifacts.
+                self.store._record_ownership(db, "pipeline", identity, "pipeline_library", "id")
             db.execute(
                 "INSERT INTO pipeline_library VALUES (?,?,?)",
                 (identity, version, json.dumps(p, ensure_ascii=False)),

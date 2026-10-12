@@ -35,8 +35,14 @@ class DatasetReader(FilesystemReader):
 class DatasetFiles:
     def __init__(self, datasets):
         self.datasets = datasets
+        # Set by application assembly; HTTP browsing and model tools share it.
+        self.access = None
 
     def reader(self, dataset_id: str) -> DatasetReader:
+        if self.access is not None:
+            from .access.contracts import ResourceAction, ResourceType
+
+            self.access.require(ResourceType.DATASET, dataset_id, ResourceAction.READ)
         dataset = self.datasets.get(dataset_id)
         _, resolved, _ = self.datasets._resolve(dataset.root_id, dataset.relative_path)
         if resolved != Path(dataset.absolute_path):

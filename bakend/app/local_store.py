@@ -18,6 +18,7 @@ from .run_store import RunStoreMixin
 from .store_schema import initialize_store
 from .workflow_models import Workflow
 from .access.resource_store import SQLiteResourcePolicyStore
+from .access.schema import initialize_access_schema
 
 
 class LocalStore(RunStoreMixin):
@@ -28,7 +29,23 @@ class LocalStore(RunStoreMixin):
         self.database_path.parent.mkdir(parents=True, exist_ok=True)
         self._lock = RLock()
         initialize_store(self._connect)
+        # Shared initialization order: identity/projects (A), then resource
+        # authorization (B). B's schema is additive and assigns no ownership.
+        initialize_access_schema(self._connect)
         self.resource_policies = SQLiteResourcePolicyStore(self._connect)
+        # Set by application assembly. Called in the same transaction as the
+        # first insert of an owned business record so creation and ownership
+        # commit (or roll back) together. ``None`` keeps library/test use simple.
+        self.ownership_recorder = None
+
+    def _record_ownership(self, connection, resource_type: str, resource_id: str, table: str, column: str) -> None:
+        if self.ownership_recorder is None:
+            return
+        exists = connection.execute(
+            f"SELECT 1 FROM {table} WHERE {column}=?", (resource_id,)
+        ).fetchone()
+        if exists is None:
+            self.ownership_recorder(resource_type, resource_id, connection)
 
     @contextmanager
     def _connect(self):
@@ -428,6 +445,7 @@ class LocalStore(RunStoreMixin):
 
     def save_dataset(self, dataset: DatasetRecord) -> None:
         with self._lock, self._connect() as connection:
+            self._record_ownership(connection, "dataset", dataset.dataset_id, "datasets", "dataset_id")
             connection.execute(
                 """
                 INSERT INTO datasets (
@@ -486,6 +504,7 @@ class LocalStore(RunStoreMixin):
         created_at = workflow.created_at
         updated_at = workflow.updated_at
         with self._lock, self._connect() as connection:
+            self._record_ownership(connection, "task", workflow.workflow_id, "workflows", "workflow_id")
             connection.execute(
                 """
                 INSERT INTO workflows (
@@ -532,12 +551,14 @@ class LocalStore(RunStoreMixin):
             ).fetchone()
         return Workflow.model_validate_json(row["payload_json"]) if row else None
 
-    def list_workflows(self, limit: int = 50) -> list[Workflow]:
+    def list_workflows(self, limit: int = 50, *, visible_ids: set[str] | None = None) -> list[Workflow]:
         safe_limit = max(1, min(limit, 200))
+        visible_json = json.dumps(sorted(visible_ids)) if visible_ids is not None else None
         with self._connect() as connection:
             rows = connection.execute(
-                "SELECT payload_json FROM workflows ORDER BY updated_at DESC LIMIT ?",
-                (safe_limit,),
+                "SELECT payload_json FROM workflows WHERE (? IS NULL OR workflow_id IN "
+                "(SELECT value FROM json_each(?))) ORDER BY updated_at DESC LIMIT ?",
+                (visible_json, visible_json, safe_limit),
             ).fetchall()
         return [Workflow.model_validate_json(row["payload_json"]) for row in rows]
 
@@ -627,8 +648,11 @@ class LocalStore(RunStoreMixin):
 
     def workflow_index(
         self, *, offset: int = 0, limit: int = 30, query: str = "",
-        source: str = "", status: str = "",
+        source: str = "", status: str = "", visible_ids: set[str] | None = None,
     ) -> dict:
+        # ``visible_ids`` is the caller's authorized task set. It is applied in
+        # SQL before LIMIT/OFFSET so authorized older tasks are never truncated.
+        visible_json = json.dumps(sorted(visible_ids)) if visible_ids is not None else None
         with self._connect() as db:
             rows = db.execute(
                 """WITH tasks AS (
@@ -645,12 +669,13 @@ class LocalStore(RunStoreMixin):
                         ORDER BY created_at DESC,run_id DESC LIMIT 1) AS latest_run_status
                     FROM workflows w
                 ) SELECT * FROM tasks
-                WHERE instr(lower(COALESCE(title,'')),lower(?))>0
+                WHERE (? IS NULL OR workflow_id IN (SELECT value FROM json_each(?)))
+                  AND instr(lower(COALESCE(title,'')),lower(?))>0
                   AND (?='' OR source=?)
                   AND (?='' OR (?='draft' AND latest_run_status IS NULL)
                     OR (?='active' AND latest_run_status IN ('queued','running','cancel_requested'))
                     OR latest_run_status=?)
                 ORDER BY updated_at DESC,workflow_id LIMIT ? OFFSET ?""",
-                (query, source, source, status, status, status, status, limit + 1, offset),
+                (visible_json, visible_json, query, source, source, status, status, status, status, limit + 1, offset),
             ).fetchall()
         return {"items": [dict(r) for r in rows[:limit]], "has_more": len(rows) > limit}

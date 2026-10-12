@@ -6,6 +6,7 @@ from pathlib import Path
 from threading import Event
 
 import pytest
+from identity_factories import authorization
 from app.artifact_semantics import compatible, specialize
 from app.capability_registry import CapabilityRegistry
 from app.execution.recipe_compiler import RecipeCompiler
@@ -490,7 +491,7 @@ def test_committed_answer_survives_compaction_failure(tmp_path, monkeypatch):
     from app.models import ChatRequest, ChatResponse
 
     store = LocalStore(tmp_path / "atomic.db")
-    conversations = ConversationService(store, ChatService())
+    conversations = ConversationService(store, ChatService(), authorization_service=authorization())
 
     async def failed_compaction(*args, **kwargs):
         raise RuntimeError("synthetic post-commit failure")
@@ -588,7 +589,9 @@ def test_chat_turn_does_not_persist_result_after_conversation_access_is_revoked(
         await started.wait()
         reader.identity = Identity("user-2")
         release.set()
-        with pytest.raises(PermissionError):
+        # After the account switch the other user cannot even see the turn,
+        # so the late private result is neither delivered nor persisted.
+        with pytest.raises(KeyError):
             await turns.wait(turn["turn_id"])
         with store._connect() as db:
             row = db.execute(

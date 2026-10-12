@@ -20,6 +20,10 @@ from .workspace_paths import WorkspacePaths, within
 from . import workspace_io as secure_io
 from .filesystem_reader import FilesystemReader, fingerprint
 from .dataset_files import protect_datasets
+from .access.contracts import ResourceAction, ResourceNotFound, ResourceType
+from .access.filesystem import FilesystemAuthorizationError, FilesystemAuthorizer, GrantScope
+
+OUTPUT = ResourceType.OUTPUT
 
 
 def now() -> str:
@@ -35,6 +39,10 @@ class WorkspaceService(FilesystemReader):
         self.lock = threading.RLock()
         self.run_lock = threading.RLock()
         self.protected_paths = lambda: [Path(store.database_path)]
+        # Task B authorization (set by application assembly). When unset the
+        # service behaves as a single-user library, which only tests use.
+        self.access = None
+        self.directories = None
         with store._lock, store._connect() as db:
             db.executescript("""
                 CREATE TABLE IF NOT EXISTS workspaces (id TEXT PRIMARY KEY, payload TEXT NOT NULL);
@@ -53,7 +61,33 @@ class WorkspaceService(FilesystemReader):
             if "workspace_id" not in columns:
                 db.execute("ALTER TABLE conversations ADD COLUMN workspace_id TEXT")
 
+    # ------------------------------------------------------------ authorization
+    def _require_output(self, workspace_id: str, action: ResourceAction):
+        if self.access is None:
+            return None
+        return self.access.require(OUTPUT, workspace_id, action)
+
+    def _authorize_path(self, target: Path, workspace_id, *, write: bool = False) -> None:
+        """Workspace paths inherit the output object; raw paths need a live grant."""
+        if self.access is None:
+            return
+        if workspace_id:
+            self._require_output(workspace_id, ResourceAction.UPDATE if write else ResourceAction.READ)
+            return
+        scope = GrantScope.WRITE if write else GrantScope.READ
+        kind = self.directories.classify(target, scope)
+        if kind is None or (write and kind != "granted"):
+            raise PermissionError("directory_grant_required")
+        if kind == "ancestor" and Path(target).resolve().is_file():
+            raise PermissionError("directory_grant_required")
+
+    def _actor_scope(self):
+        if self.access is None:
+            return None, None
+        return self.access.actor().user_id, self.access.current_project()
+
     def get(self, workspace_id: str, *, active: bool = True) -> Workspace:
+        self._require_output(workspace_id, ResourceAction.READ)
         with self.store._connect() as db:
             row = db.execute("SELECT payload FROM workspaces WHERE id=?", (workspace_id,)).fetchone()
         if not row:
@@ -64,10 +98,17 @@ class WorkspaceService(FilesystemReader):
         return self._with_access(result)
 
     def list(self) -> list[Workspace]:
+        visible = self.access.visible_ids(OUTPUT) if self.access is not None else None
         with self.store._connect() as db:
-            rows = db.execute("SELECT payload FROM workspaces ORDER BY id DESC").fetchall()
-        return [self._with_access(Workspace.model_validate_json(row[0])) for row in rows
-                if json.loads(row[0])["status"] != "deleted"]
+            rows = db.execute("SELECT id,payload FROM workspaces ORDER BY id DESC").fetchall()
+        return [self._with_access(Workspace.model_validate_json(row[1])) for row in rows
+                if json.loads(row[1])["status"] != "deleted" and (visible is None or row[0] in visible)]
+
+    def all_records(self) -> list[Workspace]:
+        """Every registered output record, for overlap checks only (never returned)."""
+        with self.store._connect() as db:
+            rows = db.execute("SELECT payload FROM workspaces").fetchall()
+        return [Workspace.model_validate_json(row[0]) for row in rows]
 
     def validate_output_directory(self, root: Path):
         root = self.paths.browse_root(str(root))
@@ -86,27 +127,55 @@ class WorkspaceService(FilesystemReader):
 
     def _save(self, record: Workspace):
         with self.store._lock, self.store._connect() as db:
+            self.store._record_ownership(db, "output", record.id, "workspaces", "id")
             db.execute("INSERT INTO workspaces VALUES (?,?) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload",
                        (record.id, record.model_dump_json()))
         return record
 
+    def _guard_registration(self, root: Path) -> None:
+        """Output registration needs a live write grant and must not overlap.
+
+        Repeated or nested registration of a physical directory would let a
+        second record (possibly in another project) bypass the first one's
+        permissions, so every overlap with an existing active record is refused.
+        """
+        if self.access is None:
+            return
+        self.directories.require(root, GrantScope.WRITE)
+        existing = [Path(w.root_path) for w in self.all_records() if w.status != "deleted"]
+        try:
+            FilesystemAuthorizer.ensure_no_parent_child_overlap(existing, root)
+        except FilesystemAuthorizationError as exc:
+            raise ValueError(str(exc)) from exc
+
     def create(self, request: WorkspaceCreate) -> Workspace:
         root = self.validate_output_directory(Path(request.root_path))
+        if self.access is not None:
+            self.access.actor()
+        with self.lock:
+            self._guard_registration(root)
+            return self._create_record(request, root)
+
+    def _create_record(self, request: WorkspaceCreate, root: Path) -> Workspace:
         return self._with_access(self._save(Workspace(id=f"ws_{uuid4().hex}", name=request.name.strip(), root_path=str(root),
                                     description=request.description, created_at=now(), updated_at=now())))
 
     def update(self, workspace_id: str, request: WorkspaceUpdate):
+        self._require_output(workspace_id, ResourceAction.UPDATE)
         record = self.get(workspace_id, active=False)
         changes = request.model_dump(exclude_none=True)
         return self._save(record.model_copy(update={**changes, "updated_at": now()}))
 
     def remove(self, workspace_id: str):
+        self._require_output(workspace_id, ResourceAction.DELETE)
         record = self.get(workspace_id, active=False)
         self._save(record.model_copy(update={"status": "deleted", "updated_at": now()}))
         return {"removed": True, "disk_preserved": True, "root_path": record.root_path}
 
     def bind_conversation(self, conversation_id: str, workspace_id: str | None):
         if workspace_id:
+            # Binding lets the conversation's tools propose changes there.
+            self._require_output(workspace_id, ResourceAction.UPDATE)
             self.get(workspace_id)
         with self.store._lock, self.store._connect() as db:
             if db.execute("UPDATE conversations SET workspace_id=?, updated_at=? WHERE conversation_id=?",
@@ -121,6 +190,34 @@ class WorkspaceService(FilesystemReader):
                 raise PermissionError("工作区根目录被重定向，请重新检查并登记")
             return resolved
         return self.paths.browse_root(root_path)
+
+    def _target(self, path, workspace_id, root_path, *, sensitive=False) -> Path:
+        root = self.root(workspace_id, root_path)
+        return self.paths.resolve(root, path, sensitive=sensitive)
+
+    def inspect(self, path=".", workspace_id=None, root_path=None, *, sensitive=False):
+        self._authorize_path(self._target(path, workspace_id, root_path, sensitive=sensitive), workspace_id)
+        return super().inspect(path, workspace_id, root_path, sensitive=sensitive)
+
+    def list_directory(self, path=".", workspace_id=None, root_path=None, cursor=None, limit=None,
+                       sort="name", filter="", show_hidden=False):
+        # Rows outside the caller's grant fail inspect() with PermissionError
+        # and are skipped, so an ancestor listing only shows the path to grants.
+        self._authorize_path(self._target(path, workspace_id, root_path), workspace_id)
+        return super().list_directory(path, workspace_id, root_path, cursor, limit, sort, filter, show_hidden)
+
+    def read_text(self, path, workspace_id=None, root_path=None, offset=0, max_chars=None, *, sensitive=False):
+        self._authorize_path(self._target(path, workspace_id, root_path, sensitive=sensitive), workspace_id)
+        return super().read_text(path, workspace_id, root_path, offset, max_chars, sensitive=sensitive)
+
+    def search(self, path=".", workspace_id=None, root_path=None, pattern="*", max_depth=2, max_results=100):
+        self._authorize_path(self._target(path, workspace_id, root_path), workspace_id)
+        return super().search(path, workspace_id, root_path, pattern, max_depth, max_results)
+
+    def visible_roots(self) -> list[Path]:
+        if self.access is None:
+            return list(self.paths.roots)
+        return self.directories.visible_roots(list(self.paths.roots))
 
     def _protect(self, *paths: Path):
         for candidate in paths:
@@ -207,6 +304,47 @@ class WorkspaceService(FilesystemReader):
                 raise ValueError("目标已存在；覆盖必须另行明确确认")
         return source, target
 
+    def _proposal_binding(self, action: str, request) -> dict:
+        """Bind a proposal to its initiator, project, target object and grant."""
+        if self.access is None:
+            return {}
+        user_id, project_id = self._actor_scope()
+        binding = {"initiator_id": user_id, "project_id": project_id, "output_revision": None, "grant": None}
+        if request.conversation_id:
+            self.access.require(ResourceType.CONVERSATION, request.conversation_id, ResourceAction.UPDATE)
+        if request.workspace_id:
+            needed = ResourceAction.READ if action == "read-sensitive" else ResourceAction.UPDATE
+            ref = self._require_output(request.workspace_id, needed)
+            binding["output_revision"] = ref.owner.permission_revision
+            if action != "read-sensitive":
+                binding["grant"] = self.directories.grant_token(self.root(request.workspace_id), GrantScope.WRITE)
+        else:
+            root = self.root(root_path=getattr(request, "root_path", None))
+            binding["grant"] = self.directories.grant_token(root, GrantScope.WRITE)
+        return binding
+
+    def _recheck_binding(self, operation: dict, conversation_id) -> None:
+        """Confirmation re-validates identity, project, object and grant revisions."""
+        if self.access is None:
+            return
+        user_id, project_id = self._actor_scope()
+        if operation.get("initiator_id") != user_id:
+            raise PermissionError("proposal_initiator_required")
+        if operation.get("project_id") != project_id:
+            raise PermissionError("wrong_project")
+        if conversation_id:
+            self.access.require(ResourceType.CONVERSATION, conversation_id, ResourceAction.UPDATE)
+        workspace_id = operation.get("workspace_id")
+        if workspace_id:
+            needed = ResourceAction.READ if operation["action"] == "read-sensitive" else ResourceAction.UPDATE
+            ref = self._require_output(workspace_id, needed)
+            if ref.owner.permission_revision != operation.get("output_revision"):
+                raise PermissionError("resource_access_revoked")
+        if operation.get("grant"):
+            self.directories.require_token(operation["grant"])
+        elif operation["action"] != "read-sensitive":
+            raise PermissionError("grant_revoked_or_changed")
+
     def propose(self, action: str, request: FileOperationRequest):
         if action not in {"mkdir", "copy", "move", "rename", "delete", "read-sensitive"}:
             raise ValueError("不支持的文件操作")
@@ -216,8 +354,9 @@ class WorkspaceService(FilesystemReader):
             conversation = self.store.get_conversation(request.conversation_id)
             if not conversation or (request.workspace_id and conversation.workspace_id != request.workspace_id):
                 raise ValueError("操作工作区与当前对话不匹配")
+        binding = self._proposal_binding(action, request)
         source, target = self._operation_paths(action, request)
-        operation = {"id": uuid4().hex, "workspace_id": request.workspace_id, "action": action,
+        operation = {**binding, "id": uuid4().hex, "workspace_id": request.workspace_id, "action": action,
                      "source": str(source), "target": str(target) if target else None,
                      "conversation_id": request.conversation_id, "request": request.model_dump(),
                      "source_fingerprint": fingerprint(source), "target_fingerprint": fingerprint(target) if target else None,
@@ -234,13 +373,27 @@ class WorkspaceService(FilesystemReader):
             row = db.execute("SELECT payload,status FROM workspace_operations WHERE id=?", (operation_id,)).fetchone()
         if not row:
             raise KeyError("操作不存在")
-        return {**json.loads(row[0]), "status": row[1]}
+        payload = json.loads(row[0])
+        if self.access is not None and payload.get("initiator_id") != self.access.actor().user_id:
+            # Only the initiator can see (and therefore confirm) a proposal.
+            raise KeyError("操作不存在")
+        return {**payload, "status": row[1]}
 
     def _audit(self, operation, result, error=None):
         entry = {key: operation.get(key) for key in ("id", "workspace_id", "conversation_id", "action", "source", "target", "confirmed")}
-        entry.update(actor=f"backend-account:{getpass.getuser()}", time=now(), result=result, error=error)
+        entry.update(actor=f"backend-account:{getpass.getuser()}", initiator_id=operation.get("initiator_id"),
+                     project_id=operation.get("project_id"), time=now(), result=result, error=error)
         with self.store._lock, self.store._connect() as db:
             db.execute("INSERT INTO workspace_audit(payload) VALUES(?)", (json.dumps(entry),))
+        if self.access is not None:
+            # Business audit event: paths and outcome only, never file contents.
+            self.access._audit(
+                f"file.{operation.get('action')}.{result}", resource_type="file",
+                resource_id=operation.get("id"), action=str(operation.get("action")),
+                reason=result, project_id=operation.get("project_id"),
+                summary={"workspace_id": operation.get("workspace_id"), "source": operation.get("source"),
+                         "target": operation.get("target"), "error": error},
+            )
 
     def _trash(self, workspace_id, source, target=None, conversation_id=None):
         trash_id = uuid4().hex
@@ -283,6 +436,7 @@ class WorkspaceService(FilesystemReader):
             operation = self.operation(operation_id)
             if operation["conversation_id"] != conversation_id:
                 raise PermissionError("确认会话与操作会话不匹配")
+            self._recheck_binding(operation, conversation_id)
             if operation["status"] != "pending" or operation["expires_at"] < time.time():
                 raise ValueError("操作已执行、过期或正在执行；请重新检查路径")
             # Reserve the paths atomically against new Runner submissions, but
@@ -384,7 +538,8 @@ class WorkspaceService(FilesystemReader):
         if not source.exists() or target.exists() or not target.parent.is_dir():
             raise ValueError("回收站内容不存在、原位置被占用或父目录不存在；请选择新的目标路径")
         request = FileOperationRequest(workspace_id=workspace_id, path=str(target), conversation_id=conversation_id)
-        operation = {"id": uuid4().hex, "workspace_id": workspace_id, "action": "restore", "source": str(source),
+        binding = self._proposal_binding("restore", request)
+        operation = {**binding, "id": uuid4().hex, "workspace_id": workspace_id, "action": "restore", "source": str(source),
                      "target": str(target), "trash_id": trash_id, "conversation_id": conversation_id,
                      "request": request.model_dump(), "source_fingerprint": fingerprint(source), "target_fingerprint": None,
                      "root_fingerprint": fingerprint(self.root(workspace_id))[:2], "created_at": now(),

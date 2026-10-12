@@ -1,6 +1,7 @@
 """Bounded, persistent background scans and dry-runs. Never executes workflow jobs."""
 from __future__ import annotations
 
+import contextvars
 import json
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -24,11 +25,17 @@ class OperationService:
                 created_at TEXT NOT NULL, updated_at TEXT NOT NULL)""")
             connection.execute("""UPDATE operations SET status='failed',message='后端重启，请重新发起检查'
                 WHERE status IN ('queued','running','cancel_requested')""")
+            from .access.schema import add_owner_columns
+            add_owner_columns(connection)
 
-    def get(self, operation_id):
+    def get(self, operation_id, *, owner_id=None):
         with self.store._connect() as connection:
             row = connection.execute("SELECT * FROM operations WHERE operation_id=?", (operation_id,)).fetchone()
         if row is None:
+            raise KeyError(operation_id)
+        # Background checks belong to their initiator; another user's operation
+        # is reported as nonexistent rather than forbidden.
+        if owner_id is not None and row["owner_id"] != owner_id:
             raise KeyError(operation_id)
         value = dict(row)
         value["result"] = json.loads(value.pop("result_json")) if value["result_json"] else None
@@ -37,22 +44,27 @@ class OperationService:
         value.pop("error_json", None)
         return value
 
-    def submit(self, kind, entity_key, action):
+    def submit(self, kind, entity_key, action, *, owner_id=None):
         with self._lock, self.store._connect() as connection:
             active = connection.execute("SELECT * FROM operations WHERE status IN ('queued','running','cancel_requested')").fetchall()
-            same = next((row for row in active if row["kind"] == kind and row["entity_key"] == entity_key), None)
+            same = next((row for row in active if row["kind"] == kind and row["entity_key"] == entity_key
+                         and row["owner_id"] == owner_id), None)
             if same:
                 return dict(operation_id=same["operation_id"],status=same["status"],message=same["message"])
             if len(active) >= 16:
                 raise ValueError("后台检查队列已满，请稍后重试")
             identifier = "op_" + uuid4().hex[:16]
             now = datetime.now(timezone.utc).isoformat()
-            connection.execute("INSERT INTO operations VALUES(?,?,?,?,?,NULL,NULL,?,?)",
-                               (identifier,kind,entity_key,"queued","等待后台检查",now,now))
+            connection.execute("""INSERT INTO operations(operation_id,kind,entity_key,status,message,result_json,
+                               error_json,created_at,updated_at,owner_id) VALUES(?,?,?,?,?,NULL,NULL,?,?,?)""",
+                               (identifier,kind,entity_key,"queued","等待后台检查",now,now,owner_id))
             # Register the cancellation token before exposing the committed job.
             event = Event()
             self._events[identifier] = event
-        self._executor.submit(self._run, identifier, event, action)
+        # Carry the request context (identity session, project scope, request id)
+        # so the background job re-checks the *current* identity before committing.
+        context = contextvars.copy_context()
+        self._executor.submit(context.run, self._run, identifier, event, action)
         return dict(operation_id=identifier,status="queued",message="等待后台检查")
 
     def _run(self, identifier, event, action):
@@ -92,9 +104,9 @@ class OperationService:
                 WHERE operation_id=?""", (status,message,json.dumps(result,ensure_ascii=False),
                 json.dumps(error,ensure_ascii=False),datetime.now(timezone.utc).isoformat(),identifier))
 
-    def cancel(self, identifier):
+    def cancel(self, identifier, *, owner_id=None):
         with self._lock:
-            record = self.get(identifier)
+            record = self.get(identifier, owner_id=owner_id)
             if record["status"] in {"queued","running","cancel_requested"}:
                 event = self._events.get(identifier)
                 if event:
@@ -102,7 +114,7 @@ class OperationService:
                 with self.store._connect() as connection:
                     connection.execute("""UPDATE operations SET status='cancel_requested',
                         message='正在取消，等待当前检查退出' WHERE operation_id=? AND status IN ('queued','running')""",(identifier,))
-        return self.get(identifier)
+        return self.get(identifier, owner_id=owner_id)
 
     def shutdown(self, *, wait=False):
         for event in list(self._events.values()):

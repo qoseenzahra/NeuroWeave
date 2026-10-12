@@ -6,7 +6,11 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from .access.contracts import AuthorizationDenied, ResourceNotFound
+from .access.execution_control import QuotaExceeded
+from .access.request_context import install_request_context
 from .api import (
+    access,
     catalog,
     chat,
     conversations,
@@ -25,6 +29,32 @@ from .errors import ServiceError
 from .library_routes import library_router
 from .settings import Settings
 from .workspace_routes import workspace_router
+
+
+def install_access_error_handlers(app: FastAPI) -> None:
+    """Uniform 401/403/404/429 translation for Task B authorization errors."""
+
+    @app.exception_handler(ResourceNotFound)
+    async def resource_not_found(request: Request, error: ResourceNotFound):
+        # Invisible objects are indistinguishable from missing ones.
+        return JSONResponse(status_code=404, content={"detail": "Not found"})
+
+    @app.exception_handler(AuthorizationDenied)
+    async def authorization_denied(request: Request, error: AuthorizationDenied):
+        reason = str(error)
+        if reason in {"authentication_required", "account_disabled"}:
+            return JSONResponse(status_code=401, content={"detail": "Authentication required"})
+        return JSONResponse(
+            status_code=403,
+            content={"detail": {"code": reason or "forbidden", "message": "Not permitted"}},
+        )
+
+    @app.exception_handler(QuotaExceeded)
+    async def quota_exceeded(request: Request, error: QuotaExceeded):
+        return JSONResponse(
+            status_code=429,
+            content={"detail": {"code": str(error), "message": "Execution quota exceeded"}},
+        )
 
 
 def create_app(services: ApplicationServices | None = None) -> FastAPI:
@@ -53,12 +83,21 @@ def create_app(services: ApplicationServices | None = None) -> FastAPI:
         allow_headers=["*"],
     )
     install_maintenance(app, services)
+    # Outermost: bind the session handle, requested project and request id
+    # before any route or background task reads the current identity.
+    install_request_context(
+        app,
+        lambda: services.authorization_service.identity_reader
+        if services.authorization_service is not None else None,
+    )
 
     @app.exception_handler(ServiceError)
     async def application_error(request: Request, error: ServiceError):
         return JSONResponse(
             status_code=error.status_code, content={"detail": error.detail}
         )
+
+    install_access_error_handlers(app)
 
     def require_authenticated_request() -> None:
         # Business/resource APIs must fail closed when authoritative identity is
@@ -71,7 +110,12 @@ def create_app(services: ApplicationServices | None = None) -> FastAPI:
             raise HTTPException(status_code=401, detail="Authentication required") from exc
 
     app.include_router(
-        workspace_router(services.workspace_service, services.dataset_files, services.authorization_service)
+        workspace_router(
+            services.workspace_service,
+            services.dataset_files,
+            services.authorization_service,
+            turn_owner=services.chat_turns.owner_of,
+        )
     )
     app.include_router(
         library_router(
@@ -80,13 +124,17 @@ def create_app(services: ApplicationServices | None = None) -> FastAPI:
             services.workspace_service,
             services.runner_registry,
             services.chat_service,
+            access=services.resource_access,
         ),
         dependencies=[Depends(require_authenticated_request)],
     )
-    for group in (health, catalog):
-        app.include_router(group.router_for(services))
+    # Minimal liveness stays anonymous; maintenance endpoints inside the health
+    # router require identity themselves.
+    app.include_router(health.router_for(services))
 
     for group in (
+        catalog,
+        access,
         datasets,
         operations,
         conversations,

@@ -11,6 +11,7 @@ from app.chat_service import ChatService
 from app.conversation_service import ConversationService
 from app.local_store import LocalStore
 from app.models import ChatRequest
+from identity_factories import authorization
 
 
 class ConversationServiceTests(unittest.IsolatedAsyncioTestCase):
@@ -25,6 +26,7 @@ class ConversationServiceTests(unittest.IsolatedAsyncioTestCase):
             self.chat_service,
             compact_trigger_tokens=256,
             keep_recent_messages=4,
+            authorization_service=authorization(),
         )
 
     def tearDown(self) -> None:

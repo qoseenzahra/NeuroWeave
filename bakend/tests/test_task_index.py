@@ -64,7 +64,16 @@ def test_filtering_precedes_pagination_and_query_remains_literal(store):
 
 def test_http_task_filters_reject_unknown_values(store):
     app = FastAPI()
-    app.include_router(router_for(SimpleNamespace(local_store=store)))
+    from identity_factories import wire_access
+
+    access = wire_access(store)
+    # Rows created before ownership existed stay invisible until assigned.
+    assert access.visible_ids("task") == set()
+    with store._connect() as db:
+        task_ids = [row[0] for row in db.execute("SELECT workflow_id FROM workflows")]
+    for task_id in task_ids:
+        access.record_creation("task", task_id)
+    app.include_router(router_for(SimpleNamespace(local_store=store, resource_access=access)))
     with TestClient(app) as client:
         response = client.get("/api/workflow-index?source=pipeline&status=active&limit=1")
         assert response.status_code == 200

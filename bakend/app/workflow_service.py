@@ -254,8 +254,8 @@ class WorkflowService:
             warnings.refresh_execution_summary(workflow)
             return workflow.model_copy(deep=True)
 
-    def list(self, limit: int = 50) -> list[Workflow]:
-        workflows = self.store.list_workflows(limit)
+    def list(self, limit: int = 50, *, visible_ids: set[str] | None = None) -> list[Workflow]:
+        workflows = self.store.list_workflows(limit, visible_ids=visible_ids)
         for workflow in workflows:
             if workflow.locked_at is None and workflow.status != "confirmed":
                 self.state.revalidate_chain(workflow, check_runtime=False)

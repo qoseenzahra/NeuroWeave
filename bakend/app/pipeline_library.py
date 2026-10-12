@@ -23,6 +23,14 @@ class PipelineLibrary:
         self.compiler = PipelineCompiler(registry)
         self.repository = PipelineRepository(store, registry, self.compiler)
         self.authoring = PipelineAuthoring(self.repository, self.compiler)
+        # Task B: user Pipelines and drafts are owned resources. Built-in
+        # Pipelines stay visible to every logged-in user and remain read-only.
+        self.access = None
+
+    def _visible(self, resource_type):
+        if self.access is None:
+            return None
+        return self.access.visible_ids(resource_type)
 
     def compile(self, request: ComposeRequest, identity="preview", version=1):
         return self.compiler.compile(request, identity, version)
@@ -30,7 +38,11 @@ class PipelineLibrary:
     as_method = staticmethod(PipelineCompiler.as_method)
 
     def records(self):
-        return self.repository.records()
+        # Filtered before catalog search/pagination and before model retrieval
+        # (bindings), so unauthorized user Pipelines never reach either.
+        visible = self._visible("pipeline")
+        records = self.repository.records()
+        return records if visible is None else [p for p in records if p["id"] in visible]
 
     def get(self, identity, version=None):
         return self.repository.get(identity, version)
@@ -39,7 +51,9 @@ class PipelineLibrary:
         return self.repository.save(request, identity)
 
     def trash(self):
-        return self.repository.trash()
+        visible = self._visible("pipeline")
+        items = self.repository.trash()
+        return items if visible is None else [p for p in items if p["id"] in visible]
 
     def delete(self, identity, expected_version, expected_deletion_revision):
         return self.repository.delete(identity, expected_version, expected_deletion_revision)
@@ -53,13 +67,22 @@ class PipelineLibrary:
         return {"editor": pipeline_source(pipeline, self.registry.definitions)}
 
     def drafts(self):
-        return self.authoring.drafts()
+        visible = self._visible("pipeline_draft")
+        items = self.authoring.drafts()
+        return items if visible is None else [d for d in items if d["id"] in visible]
 
     def save_draft(self, identity, request):
         return self.authoring.save_draft(identity, request)
 
     def draft_trash(self):
-        return self.authoring.draft_trash()
+        visible = self._visible("pipeline_draft")
+        trash = self.authoring.draft_trash()
+        if visible is None:
+            return trash
+        return {
+            "deleted_ids": [i for i in trash["deleted_ids"] if i in visible],
+            "deleted_items": [d for d in trash["deleted_items"] if d["id"] in visible],
+        }
 
     def delete_draft(self, identity, request):
         return self.authoring.delete_draft(identity, request)

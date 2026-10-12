@@ -7,6 +7,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from identity_factories import authorization
 from app.dataset_service import DatasetService
 from app.dataset_files import DatasetFiles
 from app.local_store import LocalStore
@@ -84,7 +85,7 @@ def test_dataset_http_read_limits_and_no_write_endpoint(scopes):
     fs, files, dataset, ws, data, output = scopes
     (data / 'image.nii').write_text('not text despite its bytes')
     (data / '.env').write_text('synthetic secret')
-    app = FastAPI(); app.include_router(workspace_router(fs, files))
+    app = FastAPI(); app.include_router(workspace_router(fs, files, authorization()))
     with TestClient(app) as client:
         base = f'/api/datasets/{dataset.dataset_id}/files'
         listed = client.get(base + '/list', params={'limit': 1}).json()
@@ -129,7 +130,7 @@ def test_mkdir_in_output_chooser_requires_confirmation_without_registering_paren
     fs.paths.roots = (tmp_path,)
     fs.store.create_conversation(ConversationRecord(conversation_id='chooser', workspace_id=ws.id,
         title='Existing output binding', created_at='2026-09-17', updated_at='2026-09-17'))
-    app = FastAPI(); app.include_router(workspace_router(fs, files))
+    app = FastAPI(); app.include_router(workspace_router(fs, files, authorization()))
     with TestClient(app) as client:
         body = {'root_path': str(tmp_path), 'path': 'new-output', 'conversation_id': 'chooser'}
         proposed = client.post('/api/fs/mkdir', json=body)
@@ -155,7 +156,7 @@ def test_mkdir_in_output_chooser_requires_confirmation_without_registering_paren
 
 def test_output_chooser_mkdir_keeps_dataset_and_path_boundaries(scopes, tmp_path):
     fs, files, dataset, ws, data, output = scopes
-    app = FastAPI(); app.include_router(workspace_router(fs, files))
+    app = FastAPI(); app.include_router(workspace_router(fs, files, authorization()))
     with TestClient(app) as client:
         assert client.post('/api/fs/mkdir', json={'root_path': str(tmp_path), 'path': 'outside'}).status_code == 403
         fs.paths.roots = (tmp_path,)
@@ -178,7 +179,7 @@ def test_output_chooser_mkdir_keeps_dataset_and_path_boundaries(scopes, tmp_path
 
 def test_output_chooser_mkdir_rechecks_permissions_and_dataset_registration(scopes, monkeypatch):
     fs, files, dataset, ws, data, output = scopes
-    app = FastAPI(); app.include_router(workspace_router(fs, files))
+    app = FastAPI(); app.include_router(workspace_router(fs, files, authorization()))
     with TestClient(app) as client:
         denied = client.post('/api/fs/mkdir', json={'root_path': str(output), 'path': 'permission-test'}).json()
         original = os.access

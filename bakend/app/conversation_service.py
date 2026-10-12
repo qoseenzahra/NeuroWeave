@@ -12,7 +12,8 @@ from uuid import uuid4
 from .chat_service import ChatService
 from .access.conversation_policy import ConversationAuthorization
 from .access.service import AuthorizationService
-from .access.contracts import ResourceAction
+from .access.contracts import AuthorizationDenied, ResourceAction
+from .access.request_context import requested_project
 from .conversation_models import (
     ConversationListItem,
     ConversationMemoryStatus,
@@ -66,9 +67,15 @@ class ConversationService:
             created_at=now,
             updated_at=now,
         )
+        project_id = requested_project()
+        if project_id is not None:
+            membership = self.authorization_service.identity_reader.project_membership(project_id)
+            if membership is None or not membership.active or membership.project_id != project_id:
+                raise AuthorizationDenied("project_membership_required")
         self.store.create_conversation(conversation)
-        if identity is not None:
-            self.conversation_policy.save_owner(conversation.conversation_id, identity.user_id)
+        self.conversation_policy.save_owner(
+            conversation.conversation_id, identity.user_id, project_id=project_id
+        )
         return conversation
 
     def list(
@@ -97,14 +104,9 @@ class ConversationService:
             if self.authorization_service is None:
                 raise PermissionError("Conversation authorization is not configured")
             for row in rows:
-                try:
-                    self.authorization_service.require(
-                        self.conversation_policy.resource(row.conversation_id),
-                        ResourceAction.READ,
-                    )
-                    visible.append(row)
-                except (KeyError, PermissionError):
+                if not self._visible(row.conversation_id):
                     continue
+                visible.append(row)
                 if len(visible) >= safe_limit:
                     break
 
@@ -144,14 +146,8 @@ class ConversationService:
             if self.authorization_service is None:
                 raise PermissionError("Conversation authorization is not configured")
             for row in rows:
-                try:
-                    self.authorization_service.require(
-                        self.conversation_policy.resource(row.conversation_id),
-                        ResourceAction.READ,
-                    )
+                if self._visible(row.conversation_id):
                     visible.append(row)
-                except (KeyError, PermissionError):
-                    continue
 
             last_scanned = rows[-1]
             before_updated_at = last_scanned.updated_at
@@ -171,6 +167,20 @@ class ConversationService:
             next_cursor=next_cursor,
             has_more=has_more,
         )
+
+    def _visible(self, conversation_id: str) -> bool:
+        """Readable *and* in the caller's current personal/project scope.
+
+        Uses the side-effect-free decision so list scans do not flood the
+        audit log; filtering happens before the page is cut.
+        """
+        try:
+            resource = self.conversation_policy.resource(conversation_id)
+        except KeyError:
+            return False
+        if resource.owner.project_id != requested_project():
+            return False
+        return self.authorization_service.evaluate(resource, ResourceAction.READ).allowed
 
     def require_action(self, conversation_id: str, action: ResourceAction) -> None:
         if self.authorization_service is None:

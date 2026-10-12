@@ -6,6 +6,8 @@ from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Query
 
+from ..access.contracts import AuthorizationDenied, ResourceAction, ResourceType
+from ..access.filesystem import GrantScope
 from ..application_services import ApplicationServices
 from ..dataset_files import protect_datasets
 from ..dataset_models import (
@@ -23,10 +25,26 @@ from ..workflow_service import RevisionConflict
 from ..workflows import contracts
 from ..workspace_models import WorkflowOutputRequest
 from .errors import revision_http_error
+from .guards import access, require_task
 
 
 def router_for(services: ApplicationServices) -> APIRouter:
     router = APIRouter()
+
+    def require_input_path(root_id: str, relative_path: str) -> None:
+        """Typed or selected input paths use the same live directory scope."""
+        try:
+            _root, candidate, _normalized = services.dataset_service.resolve_artifact_path(
+                root_id, relative_path
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        if services.directory_access is None:
+            raise AuthorizationDenied("authentication_required")
+        try:
+            services.directory_access.require(candidate, GrantScope.READ)
+        except PermissionError as exc:
+            raise AuthorizationDenied(str(exc)) from exc
 
     @router.patch(
         "/api/workflows/{workflow_id}/steps/{step_id}/inputs/{slot_id}",
@@ -38,6 +56,8 @@ def router_for(services: ApplicationServices) -> APIRouter:
         slot_id: str,
         request: InputBindingRequest,
     ) -> Workflow:
+        require_task(services, workflow_id, ResourceAction.UPDATE)
+        require_input_path(request.root_id, request.relative_path)
         try:
             return services.workflow_service.bind_input(
                 workflow_id,
@@ -64,6 +84,8 @@ def router_for(services: ApplicationServices) -> APIRouter:
         slot_id: str,
         request: InputPreviewRequest,
     ) -> DatasetPathPreview:
+        require_task(services, workflow_id, ResourceAction.READ)
+        require_input_path(request.root_id, request.relative_path)
         try:
             return services.workflow_service.preview_input_mapping(
                 workflow_id,
@@ -86,6 +108,7 @@ def router_for(services: ApplicationServices) -> APIRouter:
         slot_id: str,
         offset: int = Query(0, ge=0, le=1000000),
     ):
+        require_task(services, workflow_id, ResourceAction.READ)
         try:
             return services.workflow_service.historical_input_candidates(
                 workflow_id, step_id, slot_id, offset
@@ -104,6 +127,7 @@ def router_for(services: ApplicationServices) -> APIRouter:
         slot_id: str,
         request: HistoricalSelectionRequest,
     ):
+        require_task(services, workflow_id, ResourceAction.READ)
         try:
             return services.workflow_service.preview_historical_input(
                 workflow_id, step_id, slot_id, request
@@ -127,6 +151,7 @@ def router_for(services: ApplicationServices) -> APIRouter:
         slot_id: str,
         request: HistoricalSelectionRequest,
     ):
+        require_task(services, workflow_id, ResourceAction.UPDATE)
         try:
             return services.workflow_service.bind_historical_input(
                 workflow_id, step_id, slot_id, request
@@ -149,6 +174,7 @@ def router_for(services: ApplicationServices) -> APIRouter:
         step_id: str,
         request: ParameterUpdateRequest,
     ) -> Workflow:
+        require_task(services, workflow_id, ResourceAction.UPDATE)
         try:
             return services.workflow_service.update_parameters(
                 workflow_id,
@@ -170,6 +196,7 @@ def router_for(services: ApplicationServices) -> APIRouter:
         workflow_id: str,
         request: WorkflowMutationRequest,
     ) -> Workflow:
+        require_task(services, workflow_id, ResourceAction.UPDATE)
         try:
             return services.workflow_service.review_parameters(
                 workflow_id, request.expected_revision
@@ -183,6 +210,13 @@ def router_for(services: ApplicationServices) -> APIRouter:
 
     @router.patch("/api/workflows/{workflow_id}/output", response_model=Workflow)
     def set_workspace_output(workflow_id: str, request: WorkflowOutputRequest):
+        require_task(services, workflow_id, ResourceAction.UPDATE)
+        if request.workspace_id:
+            # Selecting an output is a write intent: object permission now, and
+            # the live write grant is rechecked again at run submission.
+            access(services).require(ResourceType.OUTPUT, request.workspace_id, ResourceAction.UPDATE)
+        if request.conversation_id:
+            access(services).require(ResourceType.CONVERSATION, request.conversation_id, ResourceAction.UPDATE)
         try:
             with (
                 services.run_service.mutation_lock,

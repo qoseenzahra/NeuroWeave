@@ -78,10 +78,18 @@ class RunStoreMixin:
             row = connection.execute("SELECT * FROM runs WHERE run_id=?", (run_id,)).fetchone()
             return self._hydrate_run(connection, row) if row else None
 
-    def list_runs(self, *, workflow_id=None, limit=50, summary=False, offset=0):
+    def list_runs(self, *, workflow_id=None, limit=50, summary=False, offset=0, visible_task_ids=None):
         with self._connect() as connection:
-            condition = "WHERE workflow_id=?" if workflow_id else ""
-            args = ([workflow_id] if workflow_id else []) + [max(1, min(limit, 200)),max(0,offset)]
+            clauses, args = [], []
+            if workflow_id:
+                clauses.append("workflow_id=?")
+                args.append(workflow_id)
+            if visible_task_ids is not None:
+                # Runs inherit their task's permission; filter before paging.
+                clauses.append("workflow_id IN (SELECT value FROM json_each(?))")
+                args.append(json.dumps(sorted(visible_task_ids)))
+            condition = ("WHERE " + " AND ".join(clauses)) if clauses else ""
+            args += [max(1, min(limit, 200)), max(0, offset)]
             rows = connection.execute(f"SELECT * FROM runs {condition} ORDER BY created_at DESC,run_id DESC LIMIT ? OFFSET ?", args).fetchall()
             if summary:
                 return [dict(json.loads(row["payload_json"]), plan_snapshot={}, steps=[], artifacts=[],
@@ -95,17 +103,26 @@ class RunStoreMixin:
             return self._hydrate_run(connection, row) if row else None
 
     def historical_runs(self, dataset_id: str, *, offset=0, limit=10):
-        """Page by immutable original dataset, including legacy run snapshots."""
+        """Page by immutable original dataset, including legacy run snapshots.
+
+        Historical results inherit the permission of their task. When the
+        application wires ``historical_visibility`` only authorized runs are
+        offered, filtered before paging.
+        """
         limit = max(1, min(limit, 20))
+        provider = getattr(self, "historical_visibility", None)
+        visible = provider() if provider is not None else None
+        visible_json = json.dumps(sorted(visible)) if visible is not None else None
         with self._connect() as connection:
             rows = connection.execute("""
                 SELECT r.* FROM runs r LEFT JOIN run_plans p ON p.run_id=r.run_id
                 WHERE r.status IN ('succeeded','failed','cancelled')
+                  AND (? IS NULL OR r.workflow_id IN (SELECT value FROM json_each(?)))
                   AND CASE WHEN r.storage_version=1
                       THEN json_extract(p.payload_json,'$.dataset_id')
                       ELSE json_extract(r.payload_json,'$.plan_snapshot.dataset_id') END = ?
                 ORDER BY r.created_at DESC,r.run_id DESC LIMIT ? OFFSET ?
-            """, (dataset_id, limit + 1, max(0, offset))).fetchall()
+            """, (visible_json, visible_json, dataset_id, limit + 1, max(0, offset))).fetchall()
             return [self._hydrate_run(connection, row) for row in rows[:limit]], len(rows) > limit
 
     def incomplete_runs(self):

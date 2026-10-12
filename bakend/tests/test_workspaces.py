@@ -7,6 +7,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from identity_factories import authorization
 from app.local_store import LocalStore
 from app.conversation_service import ConversationService
 from app.chat_service import ChatService
@@ -33,7 +34,7 @@ def setup(tmp_path, monkeypatch):
 
 def test_workspaces_history_migration_and_disk_preserved(setup):
     fs, ws, root = setup
-    conversations = ConversationService(fs.store, ChatService())
+    conversations = ConversationService(fs.store, ChatService(), authorization_service=authorization())
     old = conversations.create('legacy')
     assert fs.store.get_conversation(old.conversation_id).workspace_id is None
     fs.bind_conversation(old.conversation_id, ws.id)
@@ -185,7 +186,7 @@ def test_bounded_search_and_real_function_dispatch(setup):
 def test_http_requires_explicit_confirmation(setup):
     fs, ws, root = setup
     app = FastAPI()
-    app.include_router(workspace_router(fs))
+    app.include_router(workspace_router(fs, authorization_service=authorization()))
     with TestClient(app) as client:
         assert client.get('/api/fs/list', params={'workspace_id': ws.id}).status_code == 200
         assert client.get('/api/fs/list', params={'workspace_id': ws.id, 'path': '..'}).status_code == 403

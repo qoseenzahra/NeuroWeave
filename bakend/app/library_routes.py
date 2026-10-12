@@ -3,6 +3,7 @@
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from .access.contracts import AuthorizationDenied, ResourceAction, ResourceType
 from .pipeline_models import ComposeRequest, UsePipeline, DeletePipeline, RestorePipeline
 from .pipeline_management import DraftDeletedError
 from .pipeline_repository import PipelineDeletedError
@@ -17,12 +18,40 @@ class RestoreDraft(BaseModel):
     expected_revision: int = Field(ge=0)
 
 
-def library_router(library, workflows, workspaces, runners, chat=None):
+PIPELINE = ResourceType.PIPELINE
+DRAFT = ResourceType.PIPELINE_DRAFT
+
+
+def library_router(library, workflows, workspaces, runners, chat=None, *, access=None):
     router = APIRouter()
     from .pipeline_description import PipelineDescriber
     from .pipeline_models import DraftSave
 
     describer = PipelineDescriber(library, chat)
+
+    def resource_access():
+        if access is None:
+            raise AuthorizationDenied("authentication_required")
+        return access
+
+    def require_pipeline(identity, action):
+        """User Pipelines are owned; built-in ones are readable by all users."""
+        if identity.startswith("user-"):
+            resource_access().require(PIPELINE, identity, action)
+        else:
+            # Built-ins are visible to every logged-in user; the library itself
+            # rejects any attempt to modify them (read-only trust rule).
+            resource_access().actor()
+
+    def require_draft(identity, action, *, creating=False):
+        policy = resource_access().policy(DRAFT, identity)
+        if policy is None:
+            if creating:
+                # A brand-new draft id: ownership is recorded on first save.
+                resource_access().actor()
+                return
+            raise HTTPException(404, "Draft not found")
+        resource_access().require(DRAFT, identity, action)
 
     @router.get("/api/library/drafts")
     def drafts():
@@ -36,6 +65,7 @@ def library_router(library, workflows, workspaces, runners, chat=None):
     @router.delete("/api/library/drafts/{identity}")
     def delete_draft(identity: str, request: DraftSave):
         validate_draft_id(identity)
+        require_draft(identity, ResourceAction.DELETE)
         try:
             return library.delete_draft(identity, request)
         except ValueError as exc:
@@ -44,6 +74,7 @@ def library_router(library, workflows, workspaces, runners, chat=None):
     @router.post("/api/library/drafts/{identity}/restore")
     def restore_draft(identity: str, request: RestoreDraft):
         validate_draft_id(identity)
+        require_draft(identity, ResourceAction.RESTORE)
         try:
             return library.restore_draft(identity, request.expected_revision)
         except KeyError as exc:
@@ -54,6 +85,8 @@ def library_router(library, workflows, workspaces, runners, chat=None):
     @router.put("/api/library/drafts/{identity}")
     def save_draft(identity: str, request: DraftSave):
         validate_draft_id(identity)
+        # Covers explicit saves and the editor's background autosave.
+        require_draft(identity, ResourceAction.UPDATE, creating=True)
         try:
             return library.save_draft(identity, request)
         except DraftDeletedError as exc:
@@ -72,6 +105,7 @@ def library_router(library, workflows, workspaces, runners, chat=None):
 
     @router.get("/api/library/pipelines/{identity}/versions")
     def versions(identity: str):
+        require_pipeline(identity, ResourceAction.READ)
         return {"items": [p for p in library.records() if p["id"] == identity]}
 
     @router.get("/api/library/pipelines/trash")
@@ -82,6 +116,7 @@ def library_router(library, workflows, workspaces, runners, chat=None):
     def delete_pipeline(identity: str, request: DeletePipeline):
         if not identity.startswith("user-"):
             raise HTTPException(422, "内置 Pipeline 只读，不能删除。")
+        require_pipeline(identity, ResourceAction.DELETE)
         try:
             return library.delete(identity, request.expected_version, request.expected_deletion_revision)
         except KeyError as exc:
@@ -91,6 +126,7 @@ def library_router(library, workflows, workspaces, runners, chat=None):
 
     @router.post("/api/library/pipelines/{identity}/restore")
     def restore_pipeline(identity: str, request: RestorePipeline):
+        require_pipeline(identity, ResourceAction.RESTORE)
         try:
             return library.restore(identity, request.expected_deletion_revision)
         except KeyError as exc:
@@ -100,6 +136,7 @@ def library_router(library, workflows, workspaces, runners, chat=None):
 
     @router.get("/api/library/pipelines/{identity}/source")
     def source(identity: str, version: int | None = None):
+        require_pipeline(identity, ResourceAction.READ)
         try:
             return library.source(identity, version)
         except KeyError as exc:
@@ -109,6 +146,8 @@ def library_router(library, workflows, workspaces, runners, chat=None):
 
     @router.get("/api/library/pipelines/{identity}/migration")
     def migration(identity: str, version: int | None = None):
+        # Migration review is a less visible read path; it still needs READ.
+        require_pipeline(identity, ResourceAction.READ)
         try:
             return library.migration(identity, version)
         except (ValueError, KeyError) as exc:
@@ -120,6 +159,7 @@ def library_router(library, workflows, workspaces, runners, chat=None):
         version: int,
         status: str = Query(pattern="^(published|archived)$"),
     ):
+        require_pipeline(identity, ResourceAction.PUBLISH)
         try:
             return library.lifecycle(identity, version, status)
         except (ValueError, KeyError) as exc:
@@ -163,8 +203,12 @@ def library_router(library, workflows, workspaces, runners, chat=None):
 
     @router.get("/api/library/pipelines/{identity}")
     def pipeline(identity: str, version: int | None = None):
+        require_pipeline(identity, ResourceAction.READ)
         try:
-            return library.get(identity, version)
+            value = library.get(identity, version)
+            if identity.startswith("user-") and isinstance(value, dict):
+                return resource_access().annotate(PIPELINE, identity, value)
+            return value
         except KeyError as exc:
             raise HTTPException(404, str(exc)) from exc
 
@@ -184,6 +228,7 @@ def library_router(library, workflows, workspaces, runners, chat=None):
 
     @router.put("/api/library/pipelines/{identity}")
     def update(identity: str, request: ComposeRequest):
+        require_pipeline(identity, ResourceAction.UPDATE)
         try:
             return library.save(request, identity)
         except PipelineDeletedError as exc:
@@ -193,6 +238,15 @@ def library_router(library, workflows, workspaces, runners, chat=None):
 
     @router.post("/api/library/pipelines/{identity}/workflows")
     def use(identity: str, request: UsePipeline):
+        # Using a (shared) Pipeline creates the caller's own task. The data,
+        # output and conversation it binds are checked separately.
+        require_pipeline(identity, ResourceAction.SUBMIT)
+        if request.dataset_id:
+            resource_access().require(ResourceType.DATASET, request.dataset_id, ResourceAction.READ)
+        if request.workspace_id:
+            resource_access().require(ResourceType.OUTPUT, request.workspace_id, ResourceAction.READ)
+        if request.conversation_id:
+            resource_access().require(ResourceType.CONVERSATION, request.conversation_id, ResourceAction.UPDATE)
         try:
             return library.workflow(identity, request, workflows, workspaces)
         except (ValueError, KeyError, OSError) as exc:
@@ -200,6 +254,7 @@ def library_router(library, workflows, workspaces, runners, chat=None):
 
     @router.post("/api/library/from-workflow/{workflow_id}")
     def from_workflow(workflow_id: str, request: SaveWorkflowPipeline):
+        resource_access().require(ResourceType.TASK, workflow_id, ResourceAction.READ)
         try:
             with workflows.mutation_lock:
                 workflow = workflows.get(workflow_id)

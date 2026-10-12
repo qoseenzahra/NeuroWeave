@@ -22,6 +22,8 @@ class ResourceType(str, Enum):
     HISTORICAL_RESULT = "historical_result"
     FILE = "file"
     DIRECTORY = "directory"
+    PIPELINE_DRAFT = "pipeline_draft"
+    OPERATION = "operation"
 
 
 class ResourceAction(str, Enum):
@@ -46,10 +48,26 @@ class SharingScope(str, Enum):
     PROJECT = "project"
 
 
+class PlatformRole(str, Enum):
+    ADMIN = "admin"
+    USER = "user"
+
+
 @dataclass(frozen=True)
 class Identity:
+    """Trusted backend identity supplied by A's authentication component.
+
+    ``platform_role`` is a compatible extension: it defaults to a standard user,
+    and a platform role alone never grants access to private resources.
+    """
+
     user_id: str
     enabled: bool = True
+    platform_role: PlatformRole = PlatformRole.USER
+
+    @property
+    def authenticated(self) -> bool:
+        return self.enabled and bool(self.user_id)
 
 
 @dataclass(frozen=True)
@@ -88,6 +106,12 @@ class IdentityReader(Protocol):
     def project_membership(self, project_id: str) -> ProjectMembership | None: ...
 
 
+class MembershipDirectory(Protocol):
+    """Optional A-side lookup used only by handover to validate the recipient."""
+
+    def membership_of(self, user_id: str, project_id: str) -> ProjectMembership | None: ...
+
+
 class AuditSink(Protocol):
     def record(
         self, event: str, *, user_id: str, project_id: str | None,
@@ -105,3 +129,7 @@ class AuthorizationDecision:
 
 class AuthorizationDenied(PermissionError):
     pass
+
+
+class ResourceNotFound(KeyError):
+    """Raised for missing *and* invisible resources so existence is not leaked."""
