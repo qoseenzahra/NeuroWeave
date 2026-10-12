@@ -588,7 +588,7 @@ def test_chat_turn_does_not_persist_result_after_conversation_access_is_revoked(
         await started.wait()
         reader.identity = Identity("user-2")
         release.set()
-        with pytest.raises(HTTPException):
+        with pytest.raises(PermissionError):
             await turns.wait(turn["turn_id"])
         with store._connect() as db:
             row = db.execute(
