@@ -2,7 +2,7 @@
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -72,9 +72,20 @@ def create_app(services: ApplicationServices | None = None) -> FastAPI:
             services.chat_service,
         )
     )
+    def require_authenticated_request() -> None:
+        # Business/resource APIs must fail closed when authoritative identity is
+        # not configured; endpoint-specific policy checks still apply as well.
+        if services.authorization_service is None:
+            raise HTTPException(status_code=401, detail="Authentication required")
+        try:
+            services.authorization_service.require_authenticated()
+        except PermissionError as exc:
+            raise HTTPException(status_code=401, detail="Authentication required") from exc
+
+    for group in (health, catalog):
+        app.include_router(group.router_for(services))
+
     for group in (
-        health,
-        catalog,
         datasets,
         operations,
         conversations,
@@ -83,5 +94,8 @@ def create_app(services: ApplicationServices | None = None) -> FastAPI:
         workflow_inputs,
         execution,
     ):
-        app.include_router(group.router_for(services))
+        app.include_router(
+            group.router_for(services),
+            dependencies=[Depends(require_authenticated_request)],
+        )
     return app
