@@ -633,3 +633,122 @@ def test_report_database_stays_unchanged(world):
                    capture_output=True, text=True, check=True)
     after = sqlite3.connect(database).execute("SELECT count(*) FROM sqlite_master").fetchone()
     assert before == after
+
+
+# ------------------------------------------------------------------- B5 models
+def test_external_model_file_text_policy_and_usage_records(world, monkeypatch):
+    from app.access.model_governance import WITHHELD, is_external_endpoint
+    from app.access.request_context import request_scope
+
+    assert is_external_endpoint("https://api.deepseek.com/v1")
+    assert not is_external_endpoint("http://127.0.0.1:8000/v1")
+    assert not is_external_endpoint("http://10.1.2.3/v1")
+    governance = world.services.model_governance
+    as_user(world, "alice")
+    file_result = {"path": "/data/notes.txt", "text": "patient notes"}
+    with request_scope(project_id="p1"):
+        assert governance.redact_tool_result(file_result, "https://api.deepseek.com")["text"] == "patient notes"
+        governance.set_policy("project:p1", False)
+        withheld = governance.redact_tool_result(file_result, "https://api.deepseek.com")
+        assert withheld["text"] == WITHHELD and withheld["withheld_by_policy"]
+        # A local model may still read the file.
+        assert governance.redact_tool_result(file_result, "http://localhost:11434")["text"] == "patient notes"
+    # A research member cannot change the project policy.
+    with request_scope(project_id="p1"):
+        as_user(world, "bob")
+        with pytest.raises(PermissionError):
+            governance.set_policy("project:p1", True)
+
+    class Response:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"choices": [{"message": {"content": "ok"}}],
+                    "usage": {"prompt_tokens": 7, "completion_tokens": 3, "total_tokens": 10}}
+
+    class Client:
+        def __init__(self, *a, **k):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *a):
+            return False
+
+        async def post(self, *a, **k):
+            return Response()
+
+    import asyncio
+
+    import app.chat_service as chat_module
+
+    monkeypatch.setattr(chat_module.httpx, "AsyncClient", Client)
+    chat = world.services.chat_service
+    monkeypatch.setattr(chat, "base_url", "https://api.deepseek.com")
+    monkeypatch.setattr(chat, "model", "deepseek-chat")
+    as_user(world, "alice")
+    with request_scope(project_id="p1"):
+        assert asyncio.run(chat.complete([{"role": "user", "content": "hi"}])) == "ok"
+    alice = world.client
+    usage = alice.get("/api/access/model-usage/mine", headers={PROJECT: "p1"}).json()
+    assert usage["user"]["calls"] == 1 and usage["user"]["total_tokens"] == 10
+    assert usage["project"]["total_tokens"] == 10
+    assert as_user(world, "bob").get("/api/access/model-usage/mine").json()["user"]["calls"] == 0
+    with world.services.local_store._connect() as db:
+        rows = [dict(r) for r in db.execute("SELECT * FROM business_audit_events WHERE event LIKE 'model.%'")]
+    assert {"model.call", "model.file_text.withheld", "model.policy.updated"} <= {r["event"] for r in rows}
+    assert all("patient notes" not in json.dumps(r) and "hi" != r.get("reason") for r in rows)
+
+
+def test_model_policy_api_permissions(world):
+    alice = as_user(world, "alice")
+    assert alice.get("/api/access/model-policy").json()["subject"] == "personal:alice"
+    assert alice.put("/api/access/model-policy/personal:alice", json={"allow_external_file_text": False}).status_code == 200
+    assert alice.get("/api/access/model-policy").json()["allow_external_file_text"] is False
+    assert alice.put("/api/access/model-policy/personal:bob", json={"allow_external_file_text": True}).status_code == 403
+    assert alice.put("/api/access/model-policy/default", json={"allow_external_file_text": True}).status_code == 403
+    member = as_user(world, "bob")
+    assert member.put("/api/access/model-policy/project:p1", headers={PROJECT: "p1"},
+                      json={"allow_external_file_text": False}).status_code == 403
+
+
+# ------------------------------------------------------------------- §5 cleanup
+def test_cleanup_removes_only_unassigned_unused_records(world, tmp_path):
+    from app.run_models import WorkflowRun
+    from app.workflow_models import Workflow
+
+    store = world.services.local_store
+    store.ownership_recorder, recorder = None, store.ownership_recorder
+    try:
+        for workflow_id in ("wf_obsolete", "wf_with_results"):
+            store.save_workflow(Workflow(workflow_id=workflow_id, template_id="t", title=workflow_id, summary="",
+                                         original_request="x", status="awaiting_method_choice", steps=[],
+                                         created_at="2025", updated_at="2025"), event_type="workflow_created")
+        store.save_run(WorkflowRun(run_id="run_kept", workflow_id="wf_with_results", workflow_revision=1,
+                                   status="succeeded", output_directory=str(tmp_path), created_at="2025", updated_at="2025"))
+    finally:
+        store.ownership_recorder = recorder
+    save_task(world, "alice", "wf_owned")
+    script = ROOT / "scripts" / "task_b_cleanup_records.py"
+    database = str(store.database_path)
+
+    def run(items, *flags):
+        path = tmp_path / "cleanup.json"
+        path.write_text(json.dumps({"remove": [{"resource_type": "task", "resource_id": i} for i in items]}))
+        return subprocess.run([sys.executable, str(script), database, str(path), *flags], capture_output=True, text=True)
+
+    assert "has run records" in run(["wf_with_results"]).stdout
+    assert "has an owner" in run(["wf_owned"]).stdout
+    dry = run(["wf_obsolete"])
+    assert dry.returncode == 0 and json.loads(dry.stdout)["dry_run"]
+    assert store.get_workflow("wf_obsolete") is not None
+    # A list with one blocked entry removes nothing at all.
+    assert run(["wf_obsolete", "wf_with_results"], "--apply").returncode == 1
+    assert store.get_workflow("wf_obsolete") is not None
+    applied = run(["wf_obsolete"], "--apply")
+    assert applied.returncode == 0, applied.stdout
+    assert store.get_workflow("wf_obsolete") is None
+    assert store.get_workflow("wf_with_results") is not None and store.get_workflow("wf_owned") is not None
+    assert tmp_path.exists()

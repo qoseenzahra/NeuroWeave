@@ -220,6 +220,21 @@ class ChatService:
 
     _fallback_working_summary = staticmethod(memory._fallback_working_summary)
 
+    # Task B: set by application assembly; records every call and its usage.
+    governance = None
+
+    def _record(self, stage: str, payload) -> None:
+        if self.governance is None:
+            return
+        usage = payload.get("usage") if isinstance(payload, dict) else None
+        try:
+            self.governance.record_call(
+                stage=stage, provider=self.provider_name, model=self.model,
+                base_url=self.base_url, usage=usage,
+            )
+        except Exception:  # usage accounting must never break a scientific answer
+            pass
+
     async def workspace_completion(self, messages, tools, *, required=False):
         """Use the same configured provider with genuine structured function calls."""
         headers = {"Content-Type": "application/json"}
@@ -241,7 +256,9 @@ class ChatService:
                 },
             )
             response.raise_for_status()
-            return response.json()["choices"][0]["message"]
+            payload = response.json()
+        self._record("workspace_tools", payload)
+        return payload["choices"][0]["message"]
 
     async def complete(
         self,
@@ -267,6 +284,7 @@ class ChatService:
             )
             response.raise_for_status()
             payload = response.json()
+        self._record("completion", payload)
         content = payload["choices"][0]["message"].get("content")
         if not isinstance(content, str) or not content.strip():
             raise RuntimeError(

@@ -70,3 +70,22 @@ export const handoverResource = (type: string, id: string, newManagerId: string,
 
 export const takeoverResource = (type: string, id: string, reason: string, expectedRevision: number) =>
   request<ResourceView>(`${resourcePath(type, id)}/takeover`, json({ reason, expected_revision: expectedRevision }));
+
+export type ModelPolicy = {
+  subject: string;
+  allow_external_file_text: boolean;
+  source: 'default' | 'configured';
+  can_manage: boolean;
+};
+
+export type UsageSummary = { calls: number; prompt_tokens: number; completion_tokens: number; total_tokens: number };
+
+export const modelPolicy = () => request<ModelPolicy>('/api/access/model-policy');
+
+export const saveModelPolicy = (subject: string, allow: boolean) =>
+  request<ModelPolicy>(`/api/access/model-policy/${encodeURIComponent(subject)}`, {
+    method: 'PUT',
+    body: JSON.stringify({ allow_external_file_text: allow }),
+  });
+
+export const myModelUsage = () => request<{ user: UsageSummary; project?: UsageSummary }>('/api/access/model-usage/mine');

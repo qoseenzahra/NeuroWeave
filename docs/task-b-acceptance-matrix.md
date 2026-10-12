@@ -19,6 +19,15 @@
 | 13 | Migration tooling | read-only report fixed; explicit, atomic assignment tool (dry run by default) | `test_task_b_scope_report.py`, `test_ownership_tool_is_dry_run_by_default_and_applies_atomically` |
 | 14 | Tests duplicate helpers | frontend tests load the real modules; backend tests drive the real app | both suites |
 
+## Additional brief items
+
+| Brief item | Implementation | Tests |
+|---|---|---|
+| B5 external-model file-text policy | `ModelGovernance.redact_tool_result`, settings switch | `test_external_model_file_text_policy_and_usage_records`, `test_model_policy_api_permissions` |
+| B5 call and token usage records | `model_usage` table, `model.call` audit | same |
+| B6 sharing/handover/takeover for data, outputs, Pipelines | `ResourceAccessCard` | frontend Task B test |
+| §5 cleanup of obsolete records | `scripts/task_b_cleanup_records.py` (dry run by default, unassigned records only, database rows only) | `test_cleanup_removes_only_unassigned_unused_records` |
+
 ## Wiring checklist for Developer A
 
 B supplies everything below; A only connects its own implementation.
@@ -34,8 +43,9 @@ B supplies everything below; A only connects its own implementation.
 6. **Identity/scope changes.** A's project selector calls `selectProject(projectId)`; logout/login should dispatch `neuroweave:identity-changed` (or call `refreshBusinessScope()`). `useBusinessScopeSync` (mounted in `App.tsx`) then runs `cleanupBusinessContext` in this order: epoch bump (aborts old requests) → cancel + remove cached queries → clear pending chat turns → `neuroweave:business-scope-changed` event.
 7. **Management pages.** `AccessSettingsSection` (directory scope, output write grants, execution limits) is mounted in the Settings dialog; A may move it into its administration pages. `ResourceAccessCard` provides share/handover/takeover for one resource.
 8. **Existing records.** Before release run `scripts/task_b_resource_scope_report.py <db>`, produce a mapping (`task_b_assign_ownership.py <db> --template`), review it, dry-run it, then `--apply`. Unassigned records stay invisible.
-9. **Default quotas** for new users come from `NEUROWEAVE_DEFAULT_CONCURRENT_UNITS`, `..._MAX_CPUS_PER_UNIT`, `..._MAX_MEMORY_GB_PER_UNIT`, `..._MAX_GPUS_PER_UNIT` (restricted defaults 2 / 8 / 32 / 0).
-10. **CI.** No new dependencies. Backend: `pytest bakend/tests`. Frontend: `npm test` (the Task B test uses Vite's SSR loader like the other tests).
+9. **External models.** `NEUROWEAVE_ALLOW_FILE_TEXT_TO_EXTERNAL_MODEL` (default `true`, the previous behavior) sets the default; personal and project policies override it.
+10. **Default quotas** for new users come from `NEUROWEAVE_DEFAULT_CONCURRENT_UNITS`, `..._MAX_CPUS_PER_UNIT`, `..._MAX_MEMORY_GB_PER_UNIT`, `..._MAX_GPUS_PER_UNIT` (restricted defaults 2 / 8 / 32 / 0).
+11. **CI.** No new dependencies. Backend: `pytest bakend/tests`. Frontend: `npm test` (the Task B test uses Vite's SSR loader like the other tests).
 
 Files that are A-owned but were touched to make B's behavior reachable (please review): `application.py`, `bootstrap.py`, `application_services.py`, `local_store.py` (schema hook and ownership hook), `store_schema.py` (unchanged), `App.tsx`, `main.tsx`, `api/http.ts`, `components/SettingsPanel.tsx`.
 

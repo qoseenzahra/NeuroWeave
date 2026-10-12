@@ -12,6 +12,7 @@ from .application_services import ApplicationServices
 from .access.audit import SQLiteBusinessAuditSink
 from .access.directory_grants import DirectoryAccess, DirectoryGrantStore
 from .access.execution_control import ExecutionControl
+from .access.model_governance import ModelGovernance
 from .access.identity_adapter import UnauthenticatedIdentityReader
 from .access.resources import ResourceAccess
 from .access.service import AuthorizationService
@@ -80,6 +81,9 @@ def build_services(settings: Settings, *, identity_reader=None, audit_sink=None)
     runner_registry = RunnerRegistry()
     skill_catalog = SkillCatalog(skill_loader, capability_registry, runner_registry)
     workspace_tools.skill_catalog = skill_catalog
+    model_governance = ModelGovernance(local_store, resource_access)
+    chat_service.governance = model_governance
+    workspace_tools.governance = model_governance
     workflow_service = WorkflowService(
         chat_service,
         capability_registry,
@@ -169,4 +173,5 @@ def build_services(settings: Settings, *, identity_reader=None, audit_sink=None)
         directory_access=directory_access,
         execution_control=execution_control,
         business_audit=business_audit,
+        model_governance=model_governance,
     )

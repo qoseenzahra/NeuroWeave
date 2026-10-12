@@ -43,6 +43,10 @@ class GrantRequest(BaseModel):
     scope: Literal["read", "write"]
 
 
+class ModelPolicyRequest(BaseModel):
+    allow_external_file_text: bool
+
+
 class QuotaRequest(BaseModel):
     max_concurrent_units: int = Field(ge=1, le=4096)
     max_cpus_per_unit: int = Field(ge=1, le=1024)
@@ -194,6 +198,35 @@ def router_for(services: ApplicationServices) -> APIRouter:
             action="update", reason="quota_changed",
             project_id=subject.split(":", 1)[1] if subject.startswith("project:") else requested_project(),
         )
+        return result
+
+    # ---------------------------------------------------------- model policy
+    def governance():
+        if services.model_governance is None:
+            raise AuthorizationDenied("authentication_required")
+        access().actor()
+        return services.model_governance
+
+    @router.get("/api/access/model-policy")
+    def model_policy():
+        policy = governance().current_policy()
+        return {**policy, "can_manage": governance().can_manage(policy["subject"])}
+
+    @router.put("/api/access/model-policy/{subject}")
+    def put_model_policy(subject: str, request: ModelPolicyRequest):
+        if subject != "default" and not subject.startswith(("personal:", "project:")):
+            raise HTTPException(422, "Policy subject must be personal:<user> or project:<id>")
+        if subject == "default" and access().actor().platform_role is not PlatformRole.ADMIN:
+            raise AuthorizationDenied("model_policy_management_denied")
+        return governance().set_policy(subject, request.allow_external_file_text)
+
+    @router.get("/api/access/model-usage/mine")
+    def my_model_usage():
+        identity = access().actor()
+        project = access().current_project()
+        result = {"user": governance().usage_summary(user_id=identity.user_id)}
+        if project:
+            result["project"] = governance().usage_summary(project_id=project)
         return result
 
     return router

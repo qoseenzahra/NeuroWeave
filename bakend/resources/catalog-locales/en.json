@@ -3988,5 +3988,8 @@
   "输出根目录": "Output root",
   "项目 {0}": "Project {0}",
   "项目任务": "Project tasks",
-  "项目共享": "Shared with project"
+  "项目共享": "Shared with project",
+  "外部模型策略": "External model policy",
+  "允许把文件内容发送给外部模型": "Allow sending file contents to external models",
+  "已记录 {0} 次模型调用，共 {1} 个 token": "{0} model calls recorded, {1} tokens in total"
 }

@@ -7,6 +7,7 @@ import { useDatasetStore } from '../../stores/datasetStore';
 import { useRegisteredDatasets, useSelectedDataset } from './useDatasets';
 import type { Dataset } from './datasetsApi';
 import { Button } from '../../ui/Button';
+import { ResourceAccessCard } from '../access/ResourceAccessCard';
 
 type DatasetContextProps = {
   /** Opens the full Datasets surface (navbar/main-workspace behaviour). */
@@ -57,6 +58,7 @@ export function DatasetContextPanel({ onOpenFull, onChoose, disabled, notice, on
           </p>
         </section>
       )}
+      {selected && <ResourceAccessCard key={'access:' + selected.dataset_id} resourceType="dataset" resourceId={selected.dataset_id} />}
 
       {datasetsQuery.isPending && <p className="text-meta text-muted">{t.datasetLoading}</p>}
       {datasetsQuery.isError && (

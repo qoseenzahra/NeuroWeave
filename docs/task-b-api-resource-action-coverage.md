@@ -43,6 +43,9 @@ Shared entry point: `app/access/resources.py::ResourceAccess` (ownership, visibi
 | Pipeline drafts: list, save, autosave, delete, restore | private to owner; another user's draft id → 404 | `library_routes.py`, `pipeline_management.save_draft` |
 | Built-in skills / methods / Pipelines / catalog | any logged-in user; read-only | `api/catalog.py` (mounted behind identity) |
 | Model retrieval of user Pipelines | visible set only | `pipeline_library.bindings` → `records` |
+| File text sent to an external model by tools | project/personal policy; local models always allowed; withheld text is audited | `access/model_governance.py`, `workspace_tools._govern` |
+| Every model call | usage (prompt/completion/total tokens) recorded per user, project and request; `model.call` audit event | `chat_service._record` |
+| Model policy: read / update; usage: mine | own personal policy, project administrator for `project:<id>`, platform administrator for `default` | `api/access.py` |
 | Share / withdraw sharing | SHARE; dependencies must be shared to the same project; revision bump | `api/access.py` |
 | Handover | HANDOVER; recipient must be an active project member; former creator keeps attribution only | `api/access.py` |
 | Platform takeover | platform administrator + reason (≥ 8 chars) + audit; a platform role alone gives no read access | `api/access.py` |
@@ -60,6 +63,7 @@ Shared entry point: `app/access/resources.py::ResourceAccess` (ownership, visibi
 | Query cache | hash includes user and scope; switch cancels and removes all cached queries and pending turns | `main.tsx`, `access/useScopeCleanup.ts` — same test |
 | Draft recovery copies | bound to user and scope | `library/usePipelineDraft.ts`, `library/libraryApi.ts` — same test |
 | Buttons and labels | server `allowed_actions`; takeover only for platform administrators | `access/authorization.ts`, `ResourcePolicyPanel.tsx` — same test |
+| Sharing / handover / takeover UI | tasks, datasets, outputs and user Pipelines | `ResourceAccessCard` in `TaskDetails`, `DatasetContextPanel`, `WorkspaceContextPanel`, `PipelineDetails` |
 
 ## Non-negotiable rules
 

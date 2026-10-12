@@ -5,6 +5,7 @@ import { useLanguageStore } from '../../stores/languageStore';
 import { listWorkspaces } from './workspaceApi';
 import type { Workspace } from './workspaceTypes';
 import { Button } from '../../ui/Button';
+import { ResourceAccessCard } from '../access/ResourceAccessCard';
 
 type WorkspaceContextProps = {
   workspaceId: string | null;
@@ -48,6 +49,7 @@ export function WorkspaceContextPanel({ workspaceId, onOpenFull }: WorkspaceCont
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-4 py-3">
       {loading && <p className="text-meta text-muted">{t.workspaceLoadingDir}</p>}
+      {workspaceId && <ResourceAccessCard key={'access:' + workspaceId} resourceType="output" resourceId={workspaceId} />}
       {error && <p role="alert" className="text-meta text-danger">{error}</p>}
       {!loading && !error && (
         <ul className="min-w-0 space-y-1">

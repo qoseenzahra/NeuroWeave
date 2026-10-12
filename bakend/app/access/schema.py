@@ -9,6 +9,7 @@ from __future__ import annotations
 from .audit import initialize_audit_schema
 from .directory_grants import initialize_grant_schema
 from .execution_control import initialize_execution_schema
+from .model_governance import initialize_model_schema
 
 
 def _add_column(connection, table: str, column: str, ddl: str) -> None:
@@ -27,6 +28,7 @@ def initialize_access_schema(connect) -> None:
         initialize_audit_schema(connection)
         initialize_grant_schema(connection)
         initialize_execution_schema(connection)
+        initialize_model_schema(connection)
 
 
 def add_owner_columns(connection) -> None:

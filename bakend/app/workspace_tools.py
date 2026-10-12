@@ -167,6 +167,13 @@ class WorkspaceTools:
         return self.service.propose(WRITE_ACTIONS[name], FileOperationRequest(
             **arguments, workspace_id=request.workspace_id, conversation_id=request.conversation_id))
 
+    def _govern(self, result):
+        """Apply the external-model file-text policy before results reach the model."""
+        governance = getattr(self, "governance", None)
+        if governance is None:
+            return result
+        return governance.redact_tool_result(result, getattr(self.chat, "base_url", ""))
+
     async def inspect_for_plan(self, request, decision, registry):
         """Bounded read-only input discovery AFTER semantic capability routing.
 
@@ -221,7 +228,7 @@ class WorkspaceTools:
                             raise ValueError("相同查询已执行，请使用已有结果或进入规划")
                         seen.add(signature)
                         self.service.event(request.client_turn_id, {"tool": name, "status": "running", "arguments": args})
-                        result = await asyncio.to_thread(self.execute, name, args, request)
+                        result = self._govern(await asyncio.to_thread(self.execute, name, args, request))
                         self.service.event(request.client_turn_id, {"tool": name, "status": "succeeded",
                             "arguments": args, "count": len(result.get("items", [])) if "items" in result else None})
                     except (ValueError, OSError, TypeError, KeyError) as exc:
@@ -345,7 +352,7 @@ class WorkspaceTools:
                         raise ValueError("相同查询已执行，请使用已有结果或交回规划")
                     seen.add(signature)
                     self.service.event(turn_id, {"tool": name, "status": "running", "arguments": args})
-                    result = await asyncio.to_thread(self.execute, name, args, request)
+                    result = self._govern(await asyncio.to_thread(self.execute, name, args, request))
                     event = {"tool": name, "status": "pending" if name in WRITE_ACTIONS else "succeeded", "arguments": args,
                              "count": len(result.get("items", [])) if "items" in result else None}
                     if name in WRITE_ACTIONS:

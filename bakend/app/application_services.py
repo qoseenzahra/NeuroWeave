@@ -57,3 +57,4 @@ class ApplicationServices:
     directory_access: DirectoryAccess | None = None
     execution_control: ExecutionControl | None = None
     business_audit: SQLiteBusinessAuditSink | None = None
+    model_governance: object | None = None

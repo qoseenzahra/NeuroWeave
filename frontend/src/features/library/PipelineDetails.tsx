@@ -14,6 +14,7 @@ import { PipelineMethodParameters } from './PipelineMethodParameters';
 import { PipelineDeleteAction } from './PipelineDeleteAction';
 import { methodQuery } from './libraryQueries';
 import { button } from './pipelineEditorStyles';
+import { ResourceAccessCard } from '../access/ResourceAccessCard';
 
 /** Viewing an immutable version has no draft hook or graph mutation callbacks. */
 export function PipelineDetails({pipeline, taskPicker=false, onClose, onSelectVersion, onEdit, onLaunch}: {
@@ -47,6 +48,7 @@ export function PipelineDetails({pipeline, taskPicker=false, onClose, onSelectVe
       <span className="min-w-0 flex-1">{ui('可查看节点、参数和连线；创建独立副本后编辑。')}</span>
       <button className={button} onClick={()=>setShowInspector(v=>!v)}>{ui(showInspector?'收起详情':'展开详情')}</button>
     </div>
+    {pipeline.id.startsWith('user-')&&!taskPicker&&<ResourceAccessCard key={'access:'+pipeline.id} resourceType="pipeline" resourceId={pipeline.id}/>}
     {loading&&<p role="status" className="p-3 text-sm">{ui('正在读取 Pipeline 画布…')}</p>}
     {error&&<p role="alert" className="p-3 text-sm text-danger">{errorText(error,ui('读取详情失败'))}</p>}
     {editor&&<div className="grid min-h-0 flex-1 gap-2" style={{gridTemplateColumns:showInspector?'minmax(0,1fr) minmax(220px,320px)':'minmax(0,1fr)'}}>

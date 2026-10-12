@@ -1,11 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, errorText } from '../../api/http';
 import { ui } from '../../lib/libraryText';
-import { createGrant, myGrants, myQuota, projectGrants, revokeGrant, saveQuota } from './accessApi';
+import { createGrant, modelPolicy, myGrants, myModelUsage, myQuota, projectGrants, revokeGrant, saveModelPolicy, saveQuota } from './accessApi';
 import type { QuotaPolicy } from './accessApi';
 import { DirectoryScopeSettings } from './DirectoryScopeSettings';
 import { OutputWriteGrantSettings } from './OutputWriteGrantSettings';
 import { ResourceLimitsSettings } from './ResourceLimitsSettings';
+import { ModelPolicySettings } from './ModelPolicySettings';
 import { useBusinessScope } from './useScopeCleanup';
 
 /**
@@ -26,6 +27,8 @@ export function AccessSettingsSection() {
     retry: false,
   });
   const quota = useQuery({ queryKey: ['access', 'quota', 'mine'], queryFn: myQuota, enabled: Boolean(scope) });
+  const policy = useQuery({ queryKey: ['access', 'model-policy'], queryFn: modelPolicy, enabled: Boolean(scope) });
+  const usage = useQuery({ queryKey: ['access', 'model-usage'], queryFn: myModelUsage, enabled: Boolean(scope) });
   const canManage = managed.isSuccess || platformAdmin;
   const forbidden = managed.error instanceof ApiError && managed.error.status === 403;
   const refresh = () => void client.invalidateQueries({ queryKey: ['access'] });
@@ -35,6 +38,10 @@ export function AccessSettingsSection() {
     onSuccess: refresh,
   });
   const revoke = useMutation({ mutationFn: revokeGrant, onSuccess: refresh });
+  const savePolicy = useMutation({
+    mutationFn: (allow: boolean) => saveModelPolicy(policy.data?.subject ?? '', allow),
+    onSuccess: refresh,
+  });
   const limits = useMutation({
     mutationFn: (policy: QuotaPolicy) => saveQuota(projectId ? `project:${projectId}` : `user:${scope?.userId ?? ''}`, policy),
     onSuccess: refresh,
@@ -61,6 +68,10 @@ export function AccessSettingsSection() {
           policy={quotaPolicy} reservedUnits={reserved}
           canManage={platformAdmin || (Boolean(projectId) && canManage && !forbidden)}
           onSave={(policy) => limits.mutate(policy)} busy={busy} />
+      )}
+      {policy.data && (
+        <ModelPolicySettings policy={policy.data} usage={projectId ? usage.data?.project ?? usage.data?.user : usage.data?.user}
+          onChange={(allow) => savePolicy.mutate(allow)} busy={savePolicy.isPending} />
       )}
     </div>
   );
