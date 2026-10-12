@@ -23,9 +23,21 @@ class ChatTurns:
         for task in pending:task.cancel()
         if pending:await asyncio.gather(*pending,return_exceptions=True)
 
+    def _require_turn_action(self, identity, action):
+        """Authorize access using the turn's server-stored conversation scope."""
+        with self.store._connect() as db:
+            row = db.execute(
+                'SELECT conversation_id FROM chat_turns WHERE id=?', (identity,)
+            ).fetchone()
+        if row is None:
+            raise KeyError(identity)
+        self.conversations.require_action(row["conversation_id"], action)
+
     def get(self,identity):
+        from .access.contracts import ResourceAction
         with self.store._connect() as db:row=db.execute('SELECT * FROM chat_turns WHERE id=?',(identity,)).fetchone()
         if row is None:raise KeyError(identity)
+        self.conversations.require_action(row["conversation_id"], ResourceAction.READ)
         return dict(turn_id=identity,conversation_id=row['conversation_id'],status=row['status'],message=row['message'],
                     result=json.loads(row['result_json']) if row['result_json'] else None,error=json.loads(row['error_json']) if row['error_json'] else None)
 
@@ -42,6 +54,8 @@ class ChatTurns:
             conversation_id=request.conversation_id
             if conversation_id:
                 if not self.store.get_conversation(conversation_id):raise HTTPException(404,'Conversation not found')
+                from .access.contracts import ResourceAction
+                self.conversations.require_action(conversation_id, ResourceAction.UPDATE)
                 if db.execute("SELECT 1 FROM chat_turns WHERE conversation_id=? AND status IN ('queued','running')",(conversation_id,)).fetchone():raise HTTPException(409,'当前会话仍在处理上一条消息')
             else:
                 conversation_id=self.conversations.create(request.message[:80]).conversation_id
@@ -72,6 +86,8 @@ class ChatTurns:
 
     def retry(self,identity):
         from .models import ChatRequest
+        from .access.contracts import ResourceAction
+        self._require_turn_action(identity, ResourceAction.RETRY)
         with self.store._lock,self.store._connect() as db:
             row=db.execute('SELECT * FROM chat_turns WHERE id=?',(identity,)).fetchone()
             if row is None:raise KeyError(identity)
@@ -82,6 +98,8 @@ class ChatTurns:
         return self.get(identity)
 
     def cancel(self,identity):
+        from .access.contracts import ResourceAction
+        self._require_turn_action(identity, ResourceAction.CANCEL)
         if identity in self.events:
             self.events[identity].set()
             with self.store._connect() as db:db.execute("UPDATE chat_turns SET message='已请求停止规划，等待当前调用结束' WHERE id=? AND status='running'",(identity,))
