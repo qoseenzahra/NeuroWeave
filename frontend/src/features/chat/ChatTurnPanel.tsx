@@ -11,9 +11,14 @@ type ChatTurnPanelProps = {
 };
 
 export function ChatTurnPanel({ onOpen, scope }: ChatTurnPanelProps) {
+  const scopeKey = scope?.userId ? `${scope.userId}:${scope.projectId ?? 'personal'}` : 'anonymous';
   const [ids, setIds] = useState<string[]>(() => pendingTurns(scope));
   const client = useQueryClient();
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    setIds(pendingTurns(scope));
+  }, [scope?.userId, scope?.projectId]);
 
   useEffect(() => {
     const refresh = () => setIds(pendingTurns(scope));
@@ -23,7 +28,7 @@ export function ChatTurnPanel({ onOpen, scope }: ChatTurnPanelProps) {
 
   const turns = useQueries({
     queries: ids.map((id) => ({
-      queryKey: ['chat-turn', id],
+      queryKey: ['chat-turn', scopeKey, id],
       queryFn: () => request<Turn>(`/api/chat/turns/${encodeURIComponent(id)}`),
       refetchInterval: (query: { state: { data?: Turn } }) =>
         !query.state.data || ['queued', 'running'].includes(query.state.data.status) ? 1000 : false,
