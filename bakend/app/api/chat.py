@@ -6,10 +6,14 @@ from fastapi import APIRouter, HTTPException
 
 from ..application_services import ApplicationServices
 from ..models import ChatRequest, ChatResponse
+from ..access.service import AuthorizationDenied
 
 
 def router_for(services: ApplicationServices) -> APIRouter:
     router = APIRouter()
+
+    def authorization_error(exc: AuthorizationDenied) -> HTTPException:
+        return HTTPException(status_code=403, detail=str(exc))
 
     @router.post("/api/chat/turns")
     async def submit_chat_turn(request: ChatRequest):
@@ -21,6 +25,8 @@ def router_for(services: ApplicationServices) -> APIRouter:
             return services.chat_turns.get(identity)
         except KeyError as exc:
             raise HTTPException(404, "Turn not found") from exc
+        except AuthorizationDenied as exc:
+            raise authorization_error(exc) from exc
 
     @router.post("/api/chat/turns/{identity}/retry")
     async def retry_chat_turn(identity: str):
