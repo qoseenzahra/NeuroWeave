@@ -1,0 +1,26 @@
+name: Temporary lint report
+on:
+  push:
+    branches: [tmp-lint-report]
+permissions:
+  contents: read
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm ci
+      - run: npx eslint . -f json -o /tmp/lint.json || true
+      - run: |
+          node -e "
+          const r=require('/tmp/lint.json');let n=0;
+          for(const f of r)for(const m of f.messages){if(m.severity<2)continue;n++;
+          const p=f.filePath.replace(process.cwd()+'/','frontend/');
+          console.log('::error file='+p+',line='+m.line+'::'+(m.ruleId||'')+' '+m.message.replace(/\n/g,' '));}
+          console.log('errors',n);"
