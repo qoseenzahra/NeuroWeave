@@ -76,6 +76,11 @@ class ChatTurns:
         try:
             with self.store._connect() as db:db.execute("UPDATE chat_turns SET status='running',message='解析需求' WHERE id=?",(identity,))
             result=await self.handler(request)
+            # Re-check the live resource permission after asynchronous planning and
+            # before persisting a result. A revoked conversation must not receive
+            # a late result even if authorization was valid at submission time.
+            from .access.contracts import ResourceAction
+            self.conversations.require_action(request.conversation_id, ResourceAction.UPDATE)
             with self.store._connect() as db:db.execute("UPDATE chat_turns SET status='succeeded',message='处理完成',result_json=? WHERE id=?",(result.model_dump_json(),identity))
         except (Exception,asyncio.CancelledError) as exc:
             status='cancelled' if isinstance(exc,OperationCancelled) else 'interrupted' if isinstance(exc,asyncio.CancelledError) else 'failed'
