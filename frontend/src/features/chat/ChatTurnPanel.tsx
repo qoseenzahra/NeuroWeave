@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQueries, useQueryClient } from '@tanstack/react-query';
 import { request, errorText } from '../../api/http';
 import { pendingTurns, retryTurn, forgetTurn } from './chatTurns';
@@ -13,23 +13,26 @@ type ChatTurnPanelProps = {
 
 export function ChatTurnPanel({ onOpen, scope: explicitScope }: ChatTurnPanelProps) {
   const businessScope = useBusinessScope();
-  const scope: TurnScope | undefined = explicitScope ?? (businessScope
-    ? { userId: businessScope.userId, projectId: businessScope.projectId }
-    : undefined);
+  const userId = explicitScope?.userId ?? businessScope?.userId;
+  const projectId = explicitScope ? explicitScope.projectId : businessScope?.projectId ?? null;
+  const scope = useMemo<TurnScope | undefined>(
+    () => (userId ? { userId, projectId: projectId ?? null } : undefined),
+    [userId, projectId],
+  );
   const scopeKey = scope?.userId ? `${scope.userId}:${scope.projectId ?? 'personal'}` : 'anonymous';
-  const [ids, setIds] = useState<string[]>(() => pendingTurns(scope));
+  // Pending ids are remembered per scope; a scope change reads that scope's
+  // list during render instead of resetting state inside an effect.
+  const [stored, setStored] = useState(() => ({ key: scopeKey, ids: pendingTurns(scope) }));
+  const ids = stored.key === scopeKey ? stored.ids : pendingTurns(scope);
+  const setIds = (next: string[]) => setStored({ key: scopeKey, ids: next });
   const client = useQueryClient();
   const [error, setError] = useState('');
 
   useEffect(() => {
-    setIds(pendingTurns(scope));
-  }, [scope?.userId, scope?.projectId]);
-
-  useEffect(() => {
-    const refresh = () => setIds(pendingTurns(scope));
+    const refresh = () => setStored({ key: scopeKey, ids: pendingTurns(scope) });
     window.addEventListener('neuroweave:chat-progress', refresh);
     return () => window.removeEventListener('neuroweave:chat-progress', refresh);
-  }, [scope]);
+  }, [scope, scopeKey]);
 
   const turns = useQueries({
     queries: ids.map((id) => ({
