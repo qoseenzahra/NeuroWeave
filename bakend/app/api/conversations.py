@@ -21,7 +21,7 @@ def router_for(services: ApplicationServices) -> APIRouter:
 
     def require_current_user() -> None:
         if services.authorization_service is None:
-            return
+            raise HTTPException(status_code=401, detail="Authentication required")
         try:
             services.authorization_service.require_authenticated()
         except AuthorizationDenied as exc:
