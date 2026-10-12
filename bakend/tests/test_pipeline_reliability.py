@@ -548,3 +548,54 @@ def test_fingerprint_tracks_execution_dependencies_not_presentation(library, tmp
         encoding="utf-8",
     )
     assert execution_fingerprint(method, tmp_path) != first
+
+
+def test_chat_turn_does_not_persist_result_after_conversation_access_is_revoked(tmp_path):
+    from app.chat_service import ChatService
+    from app.chat_turns import ChatTurns
+    from app.conversation_service import ConversationService
+    from app.models import ChatRequest, ChatResponse
+    from app.access.contracts import Identity
+    from app.access.identity_adapter import TestIdentityReader
+    from app.access.service import AuthorizationService
+
+    store = LocalStore(tmp_path / "revoked-result.db")
+    reader = TestIdentityReader(Identity("user-1"))
+    conversations = ConversationService(
+        store, ChatService(), authorization_service=AuthorizationService(reader)
+    )
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def handler(request):
+        _, conversation_id = conversations.begin_turn(request)
+        started.set()
+        await release.wait()
+        return ChatResponse(
+            content="must not be persisted",
+            provider_used="test",
+            model_used="test",
+            mode="demo",
+            selected_skills=[],
+            conversation_id=conversation_id,
+        )
+
+    async def run():
+        turns = ChatTurns(store, conversations, handler)
+        turn = turns.submit(
+            ChatRequest(message="permission revocation test", client_turn_id="revoked_turn_123")
+        )
+        await started.wait()
+        reader.identity = Identity("user-2")
+        release.set()
+        with pytest.raises(HTTPException):
+            await turns.wait(turn["turn_id"])
+        with store._connect() as db:
+            row = db.execute(
+                "SELECT status, result_json FROM chat_turns WHERE id=?",
+                (turn["turn_id"],),
+            ).fetchone()
+        assert row["status"] == "failed"
+        assert row["result_json"] is None
+
+    asyncio.run(run())
