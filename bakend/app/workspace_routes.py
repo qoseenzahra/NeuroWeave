@@ -1,5 +1,5 @@
 """HTTP-only confirmation endpoints are intentionally absent from model tools."""
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.routing import APIRoute
 
 from .workspace_models import WorkspaceCreate, WorkspaceUpdate, FileOperationRequest, DirectoryCreationRequest, ConfirmationRequest, RestoreRequest
@@ -21,8 +21,20 @@ class FilesystemRoute(APIRoute):
         return guarded
 
 
-def workspace_router(service, dataset_files=None):
-    router = APIRouter(route_class=FilesystemRoute)
+def workspace_router(service, dataset_files=None, authorization_service=None):
+    def require_authenticated():
+        # Sensitive filesystem routes must fail closed if identity wiring is absent.
+        if authorization_service is None:
+            raise HTTPException(status_code=401, detail="Authentication required")
+        try:
+            authorization_service.require_authenticated()
+        except PermissionError as exc:
+            raise HTTPException(status_code=401, detail="Authentication required") from exc
+
+    router = APIRouter(
+        route_class=FilesystemRoute,
+        dependencies=[Depends(require_authenticated)],
+    )
 
     @router.get("/api/fs/roots")
     def roots():
