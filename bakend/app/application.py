@@ -70,7 +70,8 @@ def create_app(services: ApplicationServices | None = None) -> FastAPI:
             services.workspace_service,
             services.runner_registry,
             services.chat_service,
-        )
+        ),
+        dependencies=[Depends(require_authenticated_request)],
     )
     def require_authenticated_request() -> None:
         # Business/resource APIs must fail closed when authoritative identity is
