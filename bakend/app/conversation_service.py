@@ -56,11 +56,9 @@ class ConversationService:
     def create(self, title: str = "新数据处理对话") -> ConversationRecord:
         # Resolve the trusted actor before writing anything, so an anonymous
         # request cannot leave an orphaned conversation in persistent storage.
-        identity = (
-            self.authorization_service.require_authenticated()
-            if self.authorization_service is not None
-            else None
-        )
+        if self.authorization_service is None:
+            raise PermissionError("Conversation authorization is not configured")
+        identity = self.authorization_service.require_authenticated()
         now = self._now()
         conversation = ConversationRecord(
             conversation_id=f"conv_{uuid4().hex[:16]}",
@@ -97,19 +95,18 @@ class ConversationService:
             if not rows:
                 break
             if self.authorization_service is None:
-                visible.extend(rows)
-            else:
-                for row in rows:
-                    try:
-                        self.authorization_service.require(
-                            self.conversation_policy.resource(row.conversation_id),
-                            ResourceAction.READ,
-                        )
-                        visible.append(row)
-                    except (KeyError, PermissionError):
-                        continue
-                    if len(visible) >= safe_limit:
-                        break
+                raise PermissionError("Conversation authorization is not configured")
+            for row in rows:
+                try:
+                    self.authorization_service.require(
+                        self.conversation_policy.resource(row.conversation_id),
+                        ResourceAction.READ,
+                    )
+                    visible.append(row)
+                except (KeyError, PermissionError):
+                    continue
+                if len(visible) >= safe_limit:
+                    break
 
             last_scanned = rows[-1]
             before_updated_at = last_scanned.updated_at
@@ -145,17 +142,16 @@ class ConversationService:
                 break
 
             if self.authorization_service is None:
-                visible.extend(rows)
-            else:
-                for row in rows:
-                    try:
-                        self.authorization_service.require(
-                            self.conversation_policy.resource(row.conversation_id),
-                            ResourceAction.READ,
-                        )
-                        visible.append(row)
-                    except (KeyError, PermissionError):
-                        continue
+                raise PermissionError("Conversation authorization is not configured")
+            for row in rows:
+                try:
+                    self.authorization_service.require(
+                        self.conversation_policy.resource(row.conversation_id),
+                        ResourceAction.READ,
+                    )
+                    visible.append(row)
+                except (KeyError, PermissionError):
+                    continue
 
             last_scanned = rows[-1]
             before_updated_at = last_scanned.updated_at
@@ -177,12 +173,11 @@ class ConversationService:
         )
 
     def require_action(self, conversation_id: str, action: ResourceAction) -> None:
-        if self.authorization_service is not None:
-            self.authorization_service.require(
-                self.conversation_policy.resource(conversation_id), action
-            )
-        elif self.store.get_conversation(conversation_id) is None:
-            raise KeyError(conversation_id)
+        if self.authorization_service is None:
+            raise PermissionError("Conversation authorization is not configured")
+        self.authorization_service.require(
+            self.conversation_policy.resource(conversation_id), action
+        )
 
     def update(
         self,
@@ -211,8 +206,7 @@ class ConversationService:
         return conversation
 
     def delete(self, conversation_id: str) -> None:
-        if self.authorization_service is not None:
-            self.authorization_service.require(self.conversation_policy.resource(conversation_id), ResourceAction.DELETE)
+        self.require_action(conversation_id, ResourceAction.DELETE)
         if not self.store.delete_archived_conversation(conversation_id):
             raise KeyError(conversation_id)
 
