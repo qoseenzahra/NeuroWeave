@@ -63,9 +63,22 @@ function progress(turn: Turn): void {
   window.dispatchEvent(new CustomEvent('neuroweave:chat-progress', { detail: turn }));
 }
 
+async function requireCurrentScope(scope: TurnScope): Promise<void> {
+  const current = await request<TurnScope>('/api/chat/scope');
+  if (
+    !current.userId ||
+    current.userId !== scope.userId ||
+    (current.projectId ?? null) !== (scope.projectId ?? null)
+  ) {
+    throw new Error('Chat scope changed; discard the stale response.');
+  }
+}
+
 export async function waitForTurn(id: string, scope: TurnScope): Promise<ChatResponse> {
   for (;;) {
+    await requireCurrentScope(scope);
     const turn = await request<Turn>(`/api/chat/turns/${encodeURIComponent(id)}`);
+    await requireCurrentScope(scope);
     progress(turn);
     if (turn.status === 'succeeded' && turn.result) {
       remember(scope.userId, scope.projectId, id, false);
