@@ -55,9 +55,19 @@ class FilesystemAuthorizer:
     def _grant(self, user_id: str, project_id: str, path: Path, scope: GrantScope):
         path = path.resolve()
         if self._grant_provider is not None:
+            # The live provider is authoritative. A missing grant means revoked
+            # or absent access; never resurrect it from a startup-time cache.
             current = self._grant_provider(user_id, project_id, path, scope)
-            if current is not None:
-                return current
+            if current is None:
+                raise FilesystemAuthorizationError("directory_grant_required")
+            if (
+                current.user_id != user_id
+                or current.project_id != project_id
+                or current.scope is not scope
+                or not (path == current.root.resolve() or current.root.resolve() in path.parents)
+            ):
+                raise FilesystemAuthorizationError("directory_grant_mismatch")
+            return current
 
         matches = [
             g for g in self._grants
