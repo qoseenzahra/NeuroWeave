@@ -1,4 +1,5 @@
 import { submitTurn } from './chatTurns';
+import type { TurnScope } from './chatTurns';
 import type { CapabilityRecommendation, CapabilityRoutingTrace } from './chatMessages';
 import type { InteractionMode } from '../conversations/conversationTypes';
 import type { Workflow } from '../workflows/workflowTypes';
@@ -35,6 +36,6 @@ export type ChatResponse = {
   workflow?: Workflow | null;
 };
 
-export function sendChat(payload: ChatRequest): Promise<ChatResponse> {
-  return submitTurn(payload);
+export function sendChat(payload: ChatRequest, scope: TurnScope): Promise<ChatResponse> {
+  return submitTurn(payload, scope);
 }
