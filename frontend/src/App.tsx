@@ -54,7 +54,8 @@ import { useWorkspaceToolEvents } from './features/workspace/useWorkspaceToolEve
 import { DatasetContextPanel } from './features/datasets/DatasetContextPanel';
 import { StorageContextPanel } from './features/storage/StorageContextPanel';
 import { WorkspaceContextPanel } from './features/workspace/WorkspaceContextPanel';
-import { ApiError } from './api/http';
+import { ApiError, request } from './api/http';
+import type { TurnScope } from './features/chat/chatTurns';
 import { Button } from './ui/Button';
 
 function App() {
@@ -128,6 +129,20 @@ function App() {
       void queryClient.invalidateQueries({ queryKey: ['conversations'] });
     }
   });
+  const [chatTurnScope, setChatTurnScope] = useState<TurnScope | undefined>(undefined);
+  useEffect(() => {
+    let cancelled = false;
+    const loadScope = async () => {
+      try {
+        const next = await request<TurnScope>('/api/chat/scope');
+        if (!cancelled) setChatTurnScope(next.userId ? next : undefined);
+      } catch {
+        if (!cancelled) setChatTurnScope(undefined);
+      }
+    };
+    void loadScope();
+    return () => { cancelled = true; };
+  }, []);
   const [activeTurn, setActiveTurn] = useState<string | null>(null);
   const { events: liveWorkspaceEvents } = useWorkspaceToolEvents(activeTurn);
   const [storageOpen, setStorageOpen] = useState(false);
@@ -569,7 +584,7 @@ function App() {
             <div role="alert" className="px-4 py-2 text-meta text-danger">{t.conversationsLoadError}
               <Button size="sm" onClick={() => { void detailQuery.refetch(); if (activeWorkflowId) void workflowQuery.refetch(); }}>{t.retry}</Button>
             </div>}
-          <ChatTurnPanel onOpen={id=>ui.selectConversation(id)}/>
+          <ChatTurnPanel scope={chatTurnScope} onOpen={id=>ui.selectConversation(id)}/>
           <MessageArea onPlanningOffer={text=>{setInteractionMode('task');setInput(text);}}
             key={scrollScope}
             activeWorkflowId={activeWorkflowId}
