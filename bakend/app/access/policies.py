@@ -42,7 +42,8 @@ def decide(ctx: AuthorizationContext, action: ResourceAction) -> AuthorizationDe
         if membership.project_id != owner.project_id:
             return AuthorizationDecision(False, "wrong_project")
 
-    is_owner = identity.user_id in {owner.creator_id, owner.manager_id}
+    # creator_id is historical attribution; only the current manager owns management rights.
+    is_owner = identity.user_id == owner.manager_id
     in_project_scope = (
         owner.scope is SharingScope.PROJECT
         and membership is not None
