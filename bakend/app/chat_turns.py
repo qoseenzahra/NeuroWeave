@@ -46,10 +46,6 @@ class ChatTurns:
         payload=request.model_dump(mode='json');payload['client_turn_id']=identity
         signature=hashlib.sha256(json.dumps(payload,sort_keys=True,ensure_ascii=False).encode()).hexdigest()
         with self.store._lock,self.store._connect() as db:
-            # Acquire SQLite's write reservation before checking the quota and
-            # inserting, so separate worker processes cannot both reserve the
-            # final queue slot based on the same stale count.
-            db.execute("BEGIN IMMEDIATE")
             row=db.execute('SELECT fingerprint FROM chat_turns WHERE id=?',(identity,)).fetchone()
             if row:
                 if row['fingerprint']!=signature:raise HTTPException(409,'同一请求 ID 不能用于不同的消息或上下文')
