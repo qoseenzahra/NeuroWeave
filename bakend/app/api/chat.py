@@ -23,6 +23,16 @@ def router_for(services: ApplicationServices) -> APIRouter:
     def authorization_error(exc: AuthorizationDenied) -> HTTPException:
         return HTTPException(status_code=403, detail=str(exc))
 
+    @router.get("/api/chat/scope")
+    def chat_scope():
+        if services.authorization_service is None:
+            raise HTTPException(status_code=401, detail="Authentication required")
+        try:
+            identity = services.authorization_service.require_authenticated()
+        except AuthorizationDenied as exc:
+            raise HTTPException(status_code=401, detail="Authentication required") from exc
+        return {"userId": identity.user_id, "projectId": None}
+
     @router.post("/api/chat/turns")
     async def submit_chat_turn(request: ChatRequest):
         require_current_user()
