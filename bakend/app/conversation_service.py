@@ -102,24 +102,44 @@ class ConversationService:
     ) -> ConversationPage:
         safe_limit = max(1, min(limit, 50))
         before_updated_at, before_conversation_id = self._decode_cursor(cursor)
-        rows = self.store.list_conversations(
-            max(safe_limit * 5 + 1, 101),
-            query=query,
-            archived=archived,
-            before_updated_at=before_updated_at,
-            before_conversation_id=before_conversation_id,
-        )
-        if self.authorization_service is not None:
-            visible = []
-            for row in rows:
-                try:
-                    self.authorization_service.require(self.conversation_policy.resource(row.conversation_id), ResourceAction.READ)
-                    visible.append(row)
-                except (KeyError, PermissionError):
-                    continue
-            rows = visible
-        has_more = len(rows) > safe_limit
-        conversations = rows[:safe_limit]
+        visible: list[ConversationListItem] = []
+        batch_size = 200
+
+        # Scan in stable keyset batches until the visible page plus lookahead is
+        # complete. Filtering only a fixed overfetch window can hide valid rows.
+        while True:
+            rows = self.store.list_conversations(
+                batch_size,
+                query=query,
+                archived=archived,
+                before_updated_at=before_updated_at,
+                before_conversation_id=before_conversation_id,
+            )
+            if not rows:
+                break
+
+            if self.authorization_service is None:
+                visible.extend(rows)
+            else:
+                for row in rows:
+                    try:
+                        self.authorization_service.require(
+                            self.conversation_policy.resource(row.conversation_id),
+                            ResourceAction.READ,
+                        )
+                        visible.append(row)
+                    except (KeyError, PermissionError):
+                        continue
+
+            last_scanned = rows[-1]
+            before_updated_at = last_scanned.updated_at
+            before_conversation_id = last_scanned.conversation_id
+
+            if len(visible) > safe_limit or len(rows) < batch_size:
+                break
+
+        has_more = len(visible) > safe_limit
+        conversations = visible[:safe_limit]
         next_cursor = None
         if has_more and conversations:
             last = conversations[-1]
