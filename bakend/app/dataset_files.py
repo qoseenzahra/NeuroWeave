@@ -37,6 +37,7 @@ class DatasetFiles:
         self.datasets = datasets
         # Set by application assembly; HTTP browsing and model tools share it.
         self.access = None
+        self.directories = None
 
     def reader(self, dataset_id: str) -> DatasetReader:
         if self.access is not None:
@@ -47,4 +48,10 @@ class DatasetFiles:
         _, resolved, _ = self.datasets._resolve(dataset.root_id, dataset.relative_path)
         if resolved != Path(dataset.absolute_path):
             raise PermissionError("已登记的数据集路径发生变化，请重新选择数据集")
+        if self.directories is not None:
+            # Object permission alone is not enough: a revoked directory grant
+            # immediately blocks browsing, previews and model tools.
+            from .access.filesystem import GrantScope
+
+            self.directories.require(resolved, GrantScope.READ)
         return DatasetReader(resolved)

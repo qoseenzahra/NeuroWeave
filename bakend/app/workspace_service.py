@@ -71,10 +71,14 @@ class WorkspaceService(FilesystemReader):
         """Workspace paths inherit the output object; raw paths need a live grant."""
         if self.access is None:
             return
+        scope = GrantScope.WRITE if write else GrantScope.READ
         if workspace_id:
             self._require_output(workspace_id, ResourceAction.UPDATE if write else ResourceAction.READ)
+            # The output object and a live directory grant are both required;
+            # revoking the grant blocks reads and writes at once.
+            if self.directories.classify(target, scope) != "granted":
+                raise PermissionError("directory_grant_required")
             return
-        scope = GrantScope.WRITE if write else GrantScope.READ
         kind = self.directories.classify(target, scope)
         if kind is None or (write and kind != "granted"):
             raise PermissionError("directory_grant_required")
@@ -309,19 +313,28 @@ class WorkspaceService(FilesystemReader):
         if self.access is None:
             return {}
         user_id, project_id = self._actor_scope()
-        binding = {"initiator_id": user_id, "project_id": project_id, "output_revision": None, "grant": None}
+        binding = {"initiator_id": user_id, "project_id": project_id, "output_revision": None, "grant": None,
+                   **self._identity_revisions()}
         if request.conversation_id:
             self.access.require(ResourceType.CONVERSATION, request.conversation_id, ResourceAction.UPDATE)
         if request.workspace_id:
             needed = ResourceAction.READ if action == "read-sensitive" else ResourceAction.UPDATE
             ref = self._require_output(request.workspace_id, needed)
             binding["output_revision"] = ref.owner.permission_revision
-            if action != "read-sensitive":
-                binding["grant"] = self.directories.grant_token(self.root(request.workspace_id), GrantScope.WRITE)
+            scope = GrantScope.READ if action == "read-sensitive" else GrantScope.WRITE
+            binding["grant"] = self.directories.grant_token(self.root(request.workspace_id), scope)
         else:
             root = self.root(root_path=getattr(request, "root_path", None))
             binding["grant"] = self.directories.grant_token(root, GrantScope.WRITE)
         return binding
+
+    def _identity_revisions(self) -> dict:
+        identity = self.access.actor()
+        membership = self.access.current_membership()
+        return {
+            "identity_revision": identity.identity_revision,
+            "membership_revision": membership.membership_revision if membership is not None else None,
+        }
 
     def _recheck_binding(self, operation: dict, conversation_id) -> None:
         """Confirmation re-validates identity, project, object and grant revisions."""
@@ -332,6 +345,15 @@ class WorkspaceService(FilesystemReader):
             raise PermissionError("proposal_initiator_required")
         if operation.get("project_id") != project_id:
             raise PermissionError("wrong_project")
+        current = self._identity_revisions()
+        for key in ("identity_revision", "membership_revision"):
+            # A role change, membership change or identity change means the
+            # unconfirmed proposal no longer reflects current permissions.
+            if key in operation and operation.get(key) != current[key]:
+                raise PermissionError("permissions_changed_since_proposal")
+        membership = self.access.current_membership()
+        if membership is not None and membership.archived and operation["action"] != "read-sensitive":
+            raise PermissionError("project_archived")
         if conversation_id:
             self.access.require(ResourceType.CONVERSATION, conversation_id, ResourceAction.UPDATE)
         workspace_id = operation.get("workspace_id")
@@ -340,10 +362,9 @@ class WorkspaceService(FilesystemReader):
             ref = self._require_output(workspace_id, needed)
             if ref.owner.permission_revision != operation.get("output_revision"):
                 raise PermissionError("resource_access_revoked")
-        if operation.get("grant"):
-            self.directories.require_token(operation["grant"])
-        elif operation["action"] != "read-sensitive":
+        if not operation.get("grant"):
             raise PermissionError("grant_revoked_or_changed")
+        self.directories.require_token(operation["grant"])
 
     def propose(self, action: str, request: FileOperationRequest):
         if action not in {"mkdir", "copy", "move", "rename", "delete", "read-sensitive"}:

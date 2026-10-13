@@ -49,6 +49,24 @@ def router_for(services: ApplicationServices) -> APIRouter:
             raise AuthorizationDenied("wrong_project")
         if workflow.dataset_id:
             resource_access.require(ResourceType.DATASET, workflow.dataset_id, READ)
+        # Every input path the plan will read needs a *live* read grant now:
+        # a revoked directory grant blocks new submissions and retries.
+        input_paths = set()
+        if workflow.dataset and workflow.dataset.absolute_path:
+            input_paths.add(workflow.dataset.absolute_path)
+        for step in workflow.steps:
+            for binding in step.input_bindings.values():
+                if binding.source == "upstream_output":
+                    continue
+                input_paths.update(p for p in (binding.absolute_paths or []) if p)
+                if binding.absolute_path:
+                    input_paths.add(binding.absolute_path)
+                input_paths.update(m.absolute_path for m in binding.sample_matches if m.absolute_path)
+        for path in sorted(input_paths):
+            try:
+                services.directory_access.require(Path(path), GrantScope.READ)
+            except PermissionError as exc:
+                raise AuthorizationDenied("input_access_denied") from exc
         history_runs = sorted({
             binding.history.run_id
             for step in workflow.steps
@@ -76,6 +94,12 @@ def router_for(services: ApplicationServices) -> APIRouter:
             "output_root": workflow.workspace_root_path,
             "output_permission_revision": output_ref.owner.permission_revision,
             "output_grant": grant,
+            "input_paths": sorted(input_paths),
+            "identity_revision": identity.identity_revision,
+            "membership_revision": (
+                resource_access.current_membership().membership_revision
+                if project_id else None
+            ),
         }
 
     def reserve(workflow_id: str, scope: dict, execution, idempotency_key: str | None) -> dict:

@@ -42,12 +42,16 @@ from .workspace_tools import WorkspaceTools
 def build_services(settings: Settings, *, identity_reader=None, audit_sink=None) -> ApplicationServices:
     """Assemble one service graph.
 
-    ``identity_reader`` is A's production reader (normally
-    ``access.request_context.RequestIdentityReader`` around A's identity
-    authority). Without it the application fails closed: every business API
+    ``identity_reader`` is A's ``identity.contracts.IdentityReader`` (adapted
+    by ``ContractIdentityReader``). Without it the application fails closed: every business API
     answers 401. ``audit_sink`` is A's common audit; B's business events are
     also kept locally until that sink is wired.
     """
+    if identity_reader is not None and hasattr(identity_reader, "current_actor"):
+        # Developer A's identity.contracts.IdentityReader: adapt, never copy.
+        from .access.identity_adapter import ContractIdentityReader
+
+        identity_reader = ContractIdentityReader(identity_reader)
     identity_reader = identity_reader or UnauthenticatedIdentityReader()
     skill_loader = SkillLoader(settings.skills_dir)
     chat_service = ChatService()
@@ -77,6 +81,7 @@ def build_services(settings: Settings, *, identity_reader=None, audit_sink=None)
     workspace_service.directories = directory_access
     dataset_files = DatasetFiles(dataset_service)
     dataset_files.access = resource_access
+    dataset_files.directories = directory_access
     workspace_tools = WorkspaceTools(workspace_service, chat_service, dataset_files)
     runner_registry = RunnerRegistry()
     skill_catalog = SkillCatalog(skill_loader, capability_registry, runner_registry)
@@ -148,6 +153,17 @@ def build_services(settings: Settings, *, identity_reader=None, audit_sink=None)
     chat_turns = ChatTurns(
         local_store, conversation_service, chat_coordinator.reply, resource_access=resource_access
     )
+
+    def _chat_input_guard(request):
+        from .access.filesystem import GrantScope
+
+        if request.dataset_id:
+            dataset_files.reader(request.dataset_id)
+        if request.workspace_id:
+            workspace = workspace_service.get(request.workspace_id)
+            directory_access.require(Path(workspace.root_path), GrantScope.READ)
+
+    chat_turns.input_guard = _chat_input_guard
     return ApplicationServices(
         settings=settings,
         skill_loader=skill_loader,

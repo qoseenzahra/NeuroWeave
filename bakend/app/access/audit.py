@@ -27,7 +27,8 @@ CREATE TABLE IF NOT EXISTS business_audit_events (
     outcome TEXT NOT NULL,
     reason TEXT,
     request_id TEXT,
-    summary_json TEXT NOT NULL DEFAULT '{}'
+    summary_json TEXT NOT NULL DEFAULT '{}',
+    execution_identity TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_business_audit_resource
     ON business_audit_events(resource_type, resource_id, created_at);
@@ -38,6 +39,19 @@ _FORBIDDEN_SUMMARY_KEYS = {"text", "content", "password", "token", "secret", "ap
 
 def initialize_audit_schema(connection) -> None:
     connection.executescript(SCHEMA)
+    columns = {row[1] for row in connection.execute("PRAGMA table_info(business_audit_events)")}
+    if "execution_identity" not in columns:
+        connection.execute("ALTER TABLE business_audit_events ADD COLUMN execution_identity TEXT")
+
+
+def _execution_identity() -> str:
+    """Server (Linux/Slurm) account that performs work for the web actor (check 19)."""
+    import getpass
+
+    try:
+        return getpass.getuser()
+    except Exception:  # pragma: no cover - platform without a login name
+        return "unknown"
 
 
 class SQLiteBusinessAuditSink:
@@ -62,22 +76,35 @@ class SQLiteBusinessAuditSink:
             key: value for key, value in (summary or {}).items()
             if key.lower() not in _FORBIDDEN_SUMMARY_KEYS
         }
+        event_id, timestamp, execution = uuid4().hex, datetime.now(timezone.utc).isoformat(), _execution_identity()
         values = (
-            uuid4().hex, datetime.now(timezone.utc).isoformat(), event,
+            event_id, timestamp, event,
             user_id or "", project_id, resource_type, resource_id, action,
-            outcome, reason, request_id(), json.dumps(clean, ensure_ascii=False),
+            outcome, reason, request_id(), json.dumps(clean, ensure_ascii=False), execution,
         )
-        sql = "INSERT INTO business_audit_events VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
+        sql = (
+            "INSERT INTO business_audit_events(event_id,created_at,event,user_id,project_id,resource_type,"
+            "resource_id,action,outcome,reason,request_id,summary_json,execution_identity) "
+            "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"
+        )
         if connection is not None:
             connection.execute(sql, values)
         else:
             with self._connect() as db:
                 db.execute(sql, values)
         if self.forward is not None:
+            # A's common AuditSink receives the agreed AuditEvent shape, in the
+            # same transaction when the caller supplied one.
+            from ..identity.contracts import AuditEvent
+
             self.forward.record(
-                event, user_id=user_id, project_id=project_id,
-                resource_type=resource_type, resource_id=resource_id,
-                action=action, reason=reason,
+                AuditEvent(
+                    event_id=event_id, timestamp=timestamp, actor_id=user_id or "",
+                    project_id=project_id, resource_type=resource_type, resource_id=resource_id,
+                    action=f"{event}:{action}", outcome=outcome, reason=reason,
+                    request_id=request_id(), execution_identity=execution, changes=clean,
+                ),
+                connection=connection,
             )
 
     def events(self, resource_type: str | None = None, resource_id: str | None = None) -> list[dict]:

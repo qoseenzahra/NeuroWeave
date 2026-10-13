@@ -5,9 +5,9 @@ from enum import Enum
 from typing import Protocol, FrozenSet
 
 
-class ProjectRole(str, Enum):
-    ADMINISTRATOR = "project_administrator"
-    MEMBER = "research_member"
+# Roles are Task A's fixed enums (identity/contracts.py); B never defines
+# its own role table. ``ProjectRole.ADMINISTRATOR`` is an alias of MANAGER.
+from ..identity.contracts import PlatformRole, ProjectRole  # noqa: E402,F401
 
 
 class ResourceType(str, Enum):
@@ -48,11 +48,6 @@ class SharingScope(str, Enum):
     PROJECT = "project"
 
 
-class PlatformRole(str, Enum):
-    ADMIN = "admin"
-    USER = "user"
-
-
 @dataclass(frozen=True)
 class Identity:
     """Trusted backend identity supplied by A's authentication component.
@@ -64,6 +59,7 @@ class Identity:
     user_id: str
     enabled: bool = True
     platform_role: PlatformRole = PlatformRole.USER
+    identity_revision: int = 0
 
     @property
     def authenticated(self) -> bool:
@@ -76,6 +72,10 @@ class ProjectMembership:
     user_id: str
     role: ProjectRole
     active: bool = True
+    # Archived projects allow historical viewing only (requirements §6.1).
+    archived: bool = False
+    membership_revision: int = 0
+    project_revision: int = 0
 
 
 @dataclass(frozen=True)

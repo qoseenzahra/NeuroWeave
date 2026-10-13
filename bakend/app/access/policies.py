@@ -41,6 +41,10 @@ def decide(ctx: AuthorizationContext, action: ResourceAction) -> AuthorizationDe
             return AuthorizationDecision(False, "project_membership_required")
         if membership.project_id != owner.project_id:
             return AuthorizationDecision(False, "wrong_project")
+        if membership.archived and action not in {ResourceAction.READ, ResourceAction.EXPORT}:
+            # Archived projects allow historical viewing only; no new
+            # modifications or submissions (requirements §6.1, §10).
+            return AuthorizationDecision(False, "project_archived")
 
     # creator_id is historical attribution; only the current manager owns management rights.
     is_owner = identity.user_id == owner.manager_id

@@ -26,12 +26,14 @@ from uuid import uuid4
 from .contracts import Identity, IdentityReader, ProjectMembership
 
 PROJECT_HEADER = "x-neuroweave-project"
+REASON_HEADER = "x-neuroweave-reason"
 REQUEST_ID_HEADER = "x-request-id"
 _PROJECT_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$")
 
 _session: ContextVar[Any | None] = ContextVar("neuroweave_session", default=None)
 _project: ContextVar[str | None] = ContextVar("neuroweave_project", default=None)
 _request_id: ContextVar[str | None] = ContextVar("neuroweave_request_id", default=None)
+_reason: ContextVar[str | None] = ContextVar("neuroweave_reason", default=None)
 
 ANONYMOUS = Identity(user_id="", enabled=False)
 
@@ -48,6 +50,11 @@ def request_id() -> str | None:
     return _request_id.get()
 
 
+def administrative_reason() -> str | None:
+    """Reason given for managing another member's shared resource (audited)."""
+    return _reason.get()
+
+
 def parse_project_header(value: str | None) -> str | None:
     if value is None:
         return None
@@ -61,16 +68,19 @@ def parse_project_header(value: str | None) -> str | None:
 
 @contextmanager
 def request_scope(
-    *, session: Any | None = None, project_id: str | None = None, request_identifier: str | None = None
+    *, session: Any | None = None, project_id: str | None = None, request_identifier: str | None = None,
+    reason: str | None = None,
 ) -> Iterator[None]:
     tokens = (
         _session.set(session),
         _project.set(project_id),
         _request_id.set(request_identifier or uuid4().hex),
+        _reason.set(reason),
     )
     try:
         yield
     finally:
+        _reason.reset(tokens[3])
         _request_id.reset(tokens[2])
         _project.reset(tokens[1])
         _session.reset(tokens[0])
@@ -134,5 +144,8 @@ def install_request_context(app, identity_reader_provider) -> None:
         resolver = getattr(reader, "resolve_session", None)
         session = resolver(request) if callable(resolver) else None
         identifier = (request.headers.get(REQUEST_ID_HEADER) or "")[:100] or None
-        with request_scope(session=session, project_id=project_id, request_identifier=identifier):
+        from urllib.parse import unquote
+
+        reason = unquote(request.headers.get(REASON_HEADER) or "").strip()[:500] or None
+        with request_scope(session=session, project_id=project_id, request_identifier=identifier, reason=reason):
             return await call_next(request)

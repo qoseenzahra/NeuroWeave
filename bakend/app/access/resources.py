@@ -31,7 +31,7 @@ from .contracts import (
     ResourceType,
     SharingScope,
 )
-from .request_context import requested_project
+from .request_context import administrative_reason, requested_project
 from .resource_store import ResourceScope, StoredResourcePolicy
 from .service import AuthorizationService
 
@@ -92,6 +92,21 @@ class ResourceAccess:
         membership = self.identity_reader.project_membership(project_id)
         if membership is None or not membership.active or membership.project_id != project_id:
             raise AuthorizationDenied("project_membership_required")
+        return project_id
+
+    def current_membership(self):
+        project_id = requested_project()
+        if project_id is None:
+            return None
+        self.current_project()
+        return self.identity_reader.project_membership(project_id)
+
+    def require_writable_project(self) -> str | None:
+        """New resources and new work cannot be created in an archived project."""
+        project_id = self.current_project()
+        membership = self.current_membership()
+        if membership is not None and membership.archived:
+            raise AuthorizationDenied("project_archived")
         return project_id
 
     def _audit(self, event, *, resource_type, resource_id, action, reason, project_id=None,
@@ -160,7 +175,7 @@ class ResourceAccess:
         """Assign ownership of a newly created resource to the trusted actor."""
         rtype = self._type(resource_type)
         identity = self.actor()
-        project = self.current_project() if project_id is _UNSET else project_id
+        project = self.require_writable_project() if project_id is _UNSET else project_id
         if scope is SharingScope.PROJECT and project is None:
             raise AuthorizationDenied("project_scope_requires_project")
         policy = StoredResourcePolicy(
@@ -237,8 +252,27 @@ class ResourceAccess:
                 action=action.value, reason="denied:not_visible", project_id=ref.owner.project_id,
             )
             raise ResourceNotFound(resource_id)
-        self.authorization.require(ref, action)
+        decision = self.authorization.check(ref, action)
+        if not decision.allowed:
+            raise AuthorizationDenied(decision.reason)
+        self._require_administrative_reason(ref, action, decision)
         return ref
+
+    def _require_administrative_reason(self, ref: ResourceRef, action: ResourceAction, decision) -> None:
+        """Managing another member's shared resource needs a recorded reason (§7)."""
+        if action in {ResourceAction.READ, ResourceAction.EXPORT}:
+            return
+        identity = self.identity_reader.current_identity()
+        if decision.reason != "project_administrator" or identity.user_id == ref.owner.manager_id:
+            return
+        reason = administrative_reason()
+        if not reason or len(reason) < 4:
+            raise AuthorizationDenied("administrative_reason_required")
+        self._audit(
+            "resource.administrative_action", resource_type=ref.resource_type.value,
+            resource_id=ref.resource_id, action=action.value, reason=reason,
+            project_id=ref.owner.project_id, summary={"manager_id": ref.owner.manager_id},
+        )
 
     def visible_ids(
         self, resource_type, action: ResourceAction = ResourceAction.READ, *, current_scope: bool = True

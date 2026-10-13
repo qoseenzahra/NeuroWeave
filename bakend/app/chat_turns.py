@@ -14,6 +14,7 @@ class ChatTurns:
         self.store,self.conversations,self.handler=store,conversations,handler
         # Validates the dataset/output a turn will read or write at submission.
         self.resource_access=resource_access
+        self.input_guard=None
         self.tasks={};self.events={}
         with store._connect() as db:
             db.execute('CREATE TABLE IF NOT EXISTS chat_turns(id TEXT PRIMARY KEY,fingerprint TEXT NOT NULL,conversation_id TEXT NOT NULL,status TEXT NOT NULL,message TEXT NOT NULL,request_json TEXT NOT NULL,result_json TEXT,error_json TEXT,updated_at TEXT NOT NULL)')
@@ -75,6 +76,9 @@ class ChatTurns:
             self.resource_access.require(ResourceType.DATASET,request.dataset_id,ResourceAction.READ)
         if request.workspace_id:
             self.resource_access.require(ResourceType.OUTPUT,request.workspace_id,ResourceAction.READ)
+        # Live directory grants too, so a revoked grant blocks queued turns.
+        if self.input_guard is not None:
+            self.input_guard(request)
 
     def submit(self,request):
         owner_id=self._actor_id()
