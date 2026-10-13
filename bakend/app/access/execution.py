@@ -93,7 +93,7 @@ class ExecutionAuthorizer:
             raise ExecutionAuthorizationError("project_membership_required")
         if membership.project_id != request.project_id:
             raise ExecutionAuthorizationError("wrong_project")
-        if membership.role not in {ProjectRole.ADMINISTRATOR, ProjectRole.MEMBER}:
+        if membership.role not in {ProjectRole.MANAGER, ProjectRole.MEMBER}:
             raise ExecutionAuthorizationError("invalid_project_role")
         if not can_read_inputs:
             raise ExecutionAuthorizationError("input_access_denied")
@@ -130,5 +130,5 @@ class ExecutionAuthorizer:
         if action not in {"retry", "cancel"}:
             raise ExecutionAuthorizationError("unsupported_execution_action")
         if current_user_id != grant.submitter_id:
-            if membership.role is not ProjectRole.ADMINISTRATOR or not target_is_project_shared:
+            if membership.role is not ProjectRole.MANAGER or not target_is_project_shared:
                 raise ExecutionAuthorizationError("task_management_denied")

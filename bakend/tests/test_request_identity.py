@@ -79,7 +79,7 @@ def test_revocation_is_seen_by_work_started_before_it():
 
 def test_membership_for_another_user_is_ignored():
     authority = Authority()
-    authority.members[("alice", "p2")] = ProjectMembership("p2", "mallory", ProjectRole.ADMINISTRATOR)
+    authority.members[("alice", "p2")] = ProjectMembership("p2", "mallory", ProjectRole.MANAGER)
     reader = RequestIdentityReader(authority)
     with request_scope(session="s-alice"):
         assert reader.project_membership("p2") is None

@@ -127,28 +127,58 @@ def test_handover_requires_recipient_access_to_dependencies(world):
 
 # ------------------------------------------------- 4. Task A contract shapes
 def test_contract_identity_reader_maps_task_a_types():
+    from app.access.contracts import AuthorizationDenied
     from app.access.identity_adapter import ContractIdentityReader
     from app.identity.contracts import (
-        AccountStatus, ActorContext, PlatformRole, ProjectAccess, ProjectRole, ProjectState,
+        ActorContext, IdentityUnavailable, PlatformRole, ProjectAccess, ProjectRole, ProjectStatus,
     )
 
+    actor = ActorContext("u1", PlatformRole.ADMIN, 7, session_id="s1")
+
     class Reader:
-        def current_actor(self, *, connection=None):
-            return ActorContext("u1", PlatformRole.ADMIN, AccountStatus.ACTIVE, identity_revision=7)
+        def current_identity(self, *, connection=None):
+            return actor
 
-        def project_access(self, project_id, *, connection=None):
-            return ProjectAccess(project_id, "u1", ProjectRole.MANAGER, ProjectState.ARCHIVED, 3, 4)
+        def revalidate(self, actor, *, connection=None):
+            return actor
 
-        def project_access_for(self, user_id, project_id, *, connection=None):
-            return None
+        def project_access(self, actor, project_id, *, connection=None):
+            return ProjectAccess(actor.user_id, project_id, ProjectRole.MANAGER, ProjectStatus.ARCHIVED, 3, 4)
 
     adapter = ContractIdentityReader(Reader())
     identity = adapter.current_identity()
     assert identity.user_id == "u1" and identity.enabled and identity.identity_revision == 7
+    assert identity.platform_role is PlatformRole.ADMIN
     membership = adapter.project_membership("p9")
-    assert membership.archived and membership.membership_revision == 3
+    assert membership.archived and membership.membership_revision == 3 and membership.project_revision == 4
     assert membership.role is ProjectRole.MANAGER
-    assert adapter.membership_of("someone", "p9") is None
+    assert adapter.membership_of("u1", "p9").user_id == "u1"
+    with pytest.raises(AuthorizationDenied):
+        adapter.membership_of("someone", "p9")
+
+    lookups = []
+
+    def lookup(user_id, project_id, *, connection=None):
+        lookups.append((user_id, project_id))
+        return ProjectAccess(user_id, project_id, ProjectRole.MEMBER, ProjectStatus.ACTIVE, 1, 1)
+
+    with_lookup = ContractIdentityReader(Reader(), membership_lookup=lookup)
+    assert with_lookup.membership_of("bob", "p9").role is ProjectRole.MEMBER
+    assert lookups == [("bob", "p9")]
+
+    class Revoked:
+        def current_identity(self, *, connection=None):
+            raise IdentityUnavailable("revoked")
+
+        def revalidate(self, actor, *, connection=None):
+            raise IdentityUnavailable("revoked")
+
+        def project_access(self, actor, project_id, *, connection=None):
+            raise IdentityUnavailable("revoked")
+
+    closed = ContractIdentityReader(Revoked())
+    assert not closed.current_identity().authenticated
+    assert closed.project_membership("p9") is None
 
 
 def test_archived_project_is_read_only(world):

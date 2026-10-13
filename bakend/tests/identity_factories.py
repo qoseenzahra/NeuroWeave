@@ -14,7 +14,7 @@ from app.access.filesystem import GrantScope
 from app.access.identity_adapter import TestIdentityReader
 from app.access.service import AuthorizationService
 
-ADMIN = ProjectRole.ADMINISTRATOR
+ADMIN = ProjectRole.MANAGER
 MEMBER = ProjectRole.MEMBER
 
 

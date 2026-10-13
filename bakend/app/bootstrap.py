@@ -39,19 +39,22 @@ from .workspace_service import WorkspaceService
 from .workspace_tools import WorkspaceTools
 
 
-def build_services(settings: Settings, *, identity_reader=None, audit_sink=None) -> ApplicationServices:
+def build_services(
+    settings: Settings, *, identity_reader=None, audit_sink=None, membership_lookup=None,
+) -> ApplicationServices:
     """Assemble one service graph.
 
     ``identity_reader`` is A's ``identity.contracts.IdentityReader`` (adapted
-    by ``ContractIdentityReader``). Without it the application fails closed: every business API
+    by ``ContractIdentityReader``; ``membership_lookup`` is A's optional
+    other-user membership read used by handover). Without it the application fails closed: every business API
     answers 401. ``audit_sink`` is A's common audit; B's business events are
     also kept locally until that sink is wired.
     """
-    if identity_reader is not None and hasattr(identity_reader, "current_actor"):
+    if identity_reader is not None and hasattr(identity_reader, "revalidate"):
         # Developer A's identity.contracts.IdentityReader: adapt, never copy.
         from .access.identity_adapter import ContractIdentityReader
 
-        identity_reader = ContractIdentityReader(identity_reader)
+        identity_reader = ContractIdentityReader(identity_reader, membership_lookup=membership_lookup)
     identity_reader = identity_reader or UnauthenticatedIdentityReader()
     skill_loader = SkillLoader(settings.skills_dir)
     chat_service = ChatService()

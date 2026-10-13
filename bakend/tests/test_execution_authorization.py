@@ -94,6 +94,6 @@ def test_project_admin_can_manage_shared_execution():
     )
     ExecutionAuthorizer.require_retry_or_cancel(
         current_user_id="u2", current_project_id="p1",
-        membership=member("u2", ProjectRole.ADMINISTRATOR),
+        membership=member("u2", ProjectRole.MANAGER),
         grant=grant, action="cancel", target_is_project_shared=True,
     )

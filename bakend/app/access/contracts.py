@@ -6,7 +6,7 @@ from typing import Protocol, FrozenSet
 
 
 # Roles are Task A's fixed enums (identity/contracts.py); B never defines
-# its own role table. ``ProjectRole.ADMINISTRATOR`` is an alias of MANAGER.
+# its own role table. ``ProjectRole.MANAGER`` is an alias of MANAGER.
 from ..identity.contracts import PlatformRole, ProjectRole  # noqa: E402,F401
 
 

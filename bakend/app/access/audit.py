@@ -99,10 +99,12 @@ class SQLiteBusinessAuditSink:
 
             self.forward.record(
                 AuditEvent(
-                    event_id=event_id, timestamp=timestamp, actor_id=user_id or "",
+                    event_id=event_id, timestamp=datetime.fromisoformat(timestamp), actor_id=user_id or "",
                     project_id=project_id, resource_type=resource_type, resource_id=resource_id,
                     action=f"{event}:{action}", outcome=outcome, reason=reason,
-                    request_id=request_id(), execution_identity=execution, changes=clean,
+                    request_id=request_id() or event_id, execution_identity=execution,
+                    changes={key: value for key, value in clean.items()
+                             if value is None or isinstance(value, (str, int, float, bool))},
                 ),
                 connection=connection,
             )

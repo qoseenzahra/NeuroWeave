@@ -223,7 +223,7 @@ class DirectoryAccess:
         membership = self.resources.identity_reader.project_membership(project_id)
         return bool(
             membership and membership.active and membership.project_id == project_id
-            and membership.role is ProjectRole.ADMINISTRATOR
+            and membership.role is ProjectRole.MANAGER
         )
 
     def require_manage(self, project_id: str) -> None:

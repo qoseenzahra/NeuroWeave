@@ -45,7 +45,7 @@ def test_owner_can_update_private_resource():
 
 
 def test_project_admin_can_manage_project_resource():
-    svc("u2", ProjectRole.ADMINISTRATOR).require(
+    svc("u2", ProjectRole.MANAGER).require(
         ref(SharingScope.PROJECT, creator="u1", manager="u1"),
         ResourceAction.UPDATE,
     )
@@ -67,7 +67,7 @@ def test_project_member_can_read_shared_resource_but_not_modify():
 def test_wrong_project_is_denied():
     service = AuthorizationService(FakeIdentityReader(
         Identity("u2"),
-        {"p2": ProjectMembership("p2", "u2", ProjectRole.ADMINISTRATOR)},
+        {"p2": ProjectMembership("p2", "u2", ProjectRole.MANAGER)},
     ))
     with pytest.raises(AuthorizationDenied):
         service.require(

@@ -105,7 +105,7 @@ class ModelGovernance:
         if subject.startswith("project:"):
             project_id = subject.split(":", 1)[1]
             membership = self.resources.identity_reader.project_membership(project_id)
-            return bool(membership and membership.active and membership.role is ProjectRole.ADMINISTRATOR)
+            return bool(membership and membership.active and membership.role is ProjectRole.MANAGER)
         return False
 
     def set_policy(self, subject: str, allow: bool) -> dict:

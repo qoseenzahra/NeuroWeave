@@ -58,7 +58,7 @@ def decide(ctx: AuthorizationContext, action: ResourceAction) -> AuthorizationDe
     if owner.scope is SharingScope.PRIVATE and not is_owner:
         return AuthorizationDecision(False, "private_resource")
 
-    if membership and membership.role is ProjectRole.ADMINISTRATOR and in_project_scope:
+    if membership and membership.role is ProjectRole.MANAGER and in_project_scope:
         if action is ResourceAction.TAKEOVER:
             return AuthorizationDecision(False, "private_takeover_requires_explicit_operation")
         return AuthorizationDecision(True, "project_administrator", ADMIN_ACTIONS)
