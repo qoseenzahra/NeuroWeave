@@ -62,6 +62,16 @@ def router_for(services: ApplicationServices) -> APIRouter:
             ):
                 raise HTTPException(409, "This directory overlaps a dataset registered in another scope")
 
+    def _registration_guard(request: DatasetRegisterRequest):
+        base = access().background_guard()
+
+        def authorize() -> None:
+            base()
+            # The directory grant is re-checked live before the dataset commit.
+            require_registration_scope(request.root_id, request.relative_path)
+
+        return authorize
+
     @router.get("/api/datasets/roots")
     def dataset_roots() -> dict[str, Any]:
         visible = []
@@ -107,6 +117,7 @@ def router_for(services: ApplicationServices) -> APIRouter:
                 request.root_id, request.relative_path, request.display_name
             ),
             owner_id=access().actor().user_id,
+            authorize=_registration_guard(request),
         )
 
     @router.post("/api/datasets/{dataset_id}/inspect-jobs", status_code=202)
@@ -118,6 +129,7 @@ def router_for(services: ApplicationServices) -> APIRouter:
             dataset_id,
             lambda: services.dataset_service.inspect(dataset_id),
             owner_id=access().actor().user_id,
+            authorize=access().background_guard((DATASET, dataset_id, ResourceAction.UPDATE)),
         )
 
     @router.get("/api/datasets")

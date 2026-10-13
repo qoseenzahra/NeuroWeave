@@ -25,14 +25,14 @@ Shared entry point: `app/access/resources.py::ResourceAccess` (ownership, visibi
 | Workspace path list / inspect / read / search (HTTP and model tools) | READ output | same |
 | File proposals: mkdir, copy, move, rename, delete, read-sensitive, restore | UPDATE output (READ for sensitive read) + WRITE grant; bound to initiator, project, output revision, grant revision | `workspace_service._proposal_binding` |
 | Proposal read / confirm | initiator only; same project; output revision and grant revision unchanged; file fingerprints unchanged | `workspace_service._recheck_binding` |
-| Background operations (`/api/operations/*`) | owner only; run with the initiator's request context | `operation_service.py` |
+| Background operations (`/api/operations/*`) | owner only; run with the initiator's request context; live re-check of the initiator and target at start, checkpoints, before each commit and before delivering the result | `operation_service.py`, `operation_context.py` |
 | Task index / list (My tasks, Project tasks) | visible set applied in SQL before LIMIT/OFFSET | `api/workflows.py`, `local_store.workflow_index` |
 | Task read / events / execution-draft read | READ task | `api/workflows.py`, `api/execution.py` |
 | Task draft creation | identity; READ dataset/output, UPDATE conversation; owner recorded on first save | `api/workflows.py`, `local_store.save_workflow` |
 | Task edits: method, lock/unlock, dataset, step removal, replan, dependencies, parameters, review, inputs, output, execution-draft autosave, dry-run, confirm | UPDATE task (+ READ dataset / READ grant for typed paths / UPDATE output) | `api/workflows.py`, `api/workflow_inputs.py`, `api/execution.py` |
 | Historical results (candidates, preview, bind, validation at submit) | READ on the source run's task; filtered before paging | `historical_inputs.py`, `run_store.historical_runs` |
-| Run submission | SUBMIT task; current project = task project; READ dataset and historical runs; UPDATE output + live WRITE grant; durable quota reservation (`BEGIN IMMEDIATE`); idempotency key; frozen scope stored | `api/execution.py`, `access/execution_control.py` |
-| Run retry | RETRY task; same checks against the original snapshot; new reservation | `api/execution.py` |
+| Run submission | SUBMIT task; current project = task project (not archived); READ dataset and historical runs; live READ grant on every input path; UPDATE output + live WRITE grant; durable quota reservation (`BEGIN IMMEDIATE`) with identity/membership/permission re-validation inside the transaction; per-unit CPU/memory/GPU/time/node/partition limits; idempotency key; frozen scope bound to the run before the worker starts; worker refuses runs without a matching frozen grant | `api/execution.py`, `access/execution_control.py`, `execution/run_service.py` |
+| Run retry | RETRY task; same checks against the original snapshot; new reservation bound before start | `api/execution.py` |
 | Run cancel | CANCEL task; cancellation actor recorded | `api/execution.py` |
 | Run read / events / monitor / authorization record | READ task | `api/execution.py` |
 | FreeSurfer recovery / resume monitoring | READ (dry run) or RETRY / UPDATE | `api/execution.py` |
@@ -74,3 +74,13 @@ Shared entry point: `app/access/resources.py::ResourceAccess` (ownership, visibi
 5. Accepted execution snapshots retain their frozen scope; revocation blocks new work but does not cancel accepted jobs.
 6. Built-in catalogs remain read-only/trusted, while execution still checks inputs, outputs and quota.
 7. The production identity reader remains fail-closed until Developer A injects the authoritative session, account, membership and archival contracts. Test doubles are used only in tests.
+
+## Sharing dependencies (B6)
+
+| Operation | Rule | Code |
+|---|---|---|
+| Share task with project | dataset, output directory and historical-run tasks already shared with the same project | `access/dependencies.py`, `ResourceAccess._check_dependencies` |
+| Unshare dataset / output / task | refused while a project-shared task depends on it | same |
+| Handover | new manager must be able to read every dependency | `ResourceAccess._check_handover_dependencies` |
+| Project Administrator acting on a member's shared resource | allowed only with an audited reason (`X-NeuroWeave-Reason`) | `ResourceAccess._require_administrative_reason` |
+| Archived project | read/export only; no new resources or work | `access/policies.py`, `ResourceAccess.require_writable_project` |

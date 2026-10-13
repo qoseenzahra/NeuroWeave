@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import getpass
 import json
+from pathlib import Path
 import os
 import sqlite3
 from dataclasses import dataclass
@@ -61,6 +62,11 @@ UNBOUND_RESERVATION_TTL = timedelta(minutes=10)
 
 def initialize_execution_schema(connection) -> None:
     connection.executescript(SCHEMA)
+    columns = {row[1] for row in connection.execute("PRAGMA table_info(execution_quotas)")}
+    if "max_time_minutes" not in columns:
+        connection.execute("ALTER TABLE execution_quotas ADD COLUMN max_time_minutes INTEGER")
+    if "allowed_partitions_json" not in columns:
+        connection.execute("ALTER TABLE execution_quotas ADD COLUMN allowed_partitions_json TEXT")
 
 
 class QuotaExceeded(PermissionError):
@@ -74,6 +80,8 @@ class QuotaPolicy:
     max_memory_gb_per_unit: int
     max_gpus_per_unit: int
     allowed_nodes: tuple[str, ...] | None = None
+    max_time_minutes: int | None = None
+    allowed_partitions: tuple[str, ...] | None = None
 
     def as_dict(self) -> dict:
         return {
@@ -82,6 +90,8 @@ class QuotaPolicy:
             "max_memory_gb_per_unit": self.max_memory_gb_per_unit,
             "max_gpus_per_unit": self.max_gpus_per_unit,
             "allowed_nodes": list(self.allowed_nodes) if self.allowed_nodes is not None else None,
+            "max_time_minutes": self.max_time_minutes,
+            "allowed_partitions": list(self.allowed_partitions) if self.allowed_partitions is not None else None,
         }
 
 
@@ -92,14 +102,23 @@ def default_quota() -> QuotaPolicy:
         max_cpus_per_unit=max(1, int(os.getenv("NEUROWEAVE_DEFAULT_MAX_CPUS_PER_UNIT", "8"))),
         max_memory_gb_per_unit=max(1, int(os.getenv("NEUROWEAVE_DEFAULT_MAX_MEMORY_GB_PER_UNIT", "32"))),
         max_gpus_per_unit=max(0, int(os.getenv("NEUROWEAVE_DEFAULT_MAX_GPUS_PER_UNIT", "0"))),
+        max_time_minutes=(
+            max(1, int(os.environ["NEUROWEAVE_DEFAULT_MAX_TIME_MINUTES"]))
+            if os.getenv("NEUROWEAVE_DEFAULT_MAX_TIME_MINUTES") else None
+        ),
     )
 
 
 def execution_units(execution) -> list[dict]:
     """Expand execution options into the actual concurrently running units."""
+    common = {
+        "backend": getattr(execution, "backend", "local"),
+        "partition": getattr(execution, "partition", None),
+    }
     base = {
         "cpus": execution.cpus, "memory_gb": execution.memory_gb,
         "gpus": execution.gpus, "node": execution.node,
+        "time_minutes": getattr(execution, "time_minutes", None), **common,
     }
     if not execution.nodes:
         return [base]
@@ -110,6 +129,7 @@ def execution_units(execution) -> list[dict]:
             {
                 "cpus": allocation.cpus, "memory_gb": allocation.memory_gb,
                 "gpus": allocation.gpus, "node": allocation.node,
+                "time_minutes": getattr(allocation, "time_minutes", None), **common,
             }
             for _ in range(parallel)
         )
@@ -135,10 +155,17 @@ class ExecutionControl:
         if row is None:
             return default_quota()
         nodes = json.loads(row["allowed_nodes_json"]) if row["allowed_nodes_json"] else None
+        keys = row.keys()
+        partitions = (
+            json.loads(row["allowed_partitions_json"])
+            if "allowed_partitions_json" in keys and row["allowed_partitions_json"] else None
+        )
         return QuotaPolicy(
             row["max_concurrent_units"], row["max_cpus_per_unit"],
             row["max_memory_gb_per_unit"], row["max_gpus_per_unit"],
             tuple(nodes) if nodes is not None else None,
+            row["max_time_minutes"] if "max_time_minutes" in keys else None,
+            tuple(partitions) if partitions is not None else None,
         )
 
     def set_quota(self, subject: str, policy: QuotaPolicy, *, updated_by: str) -> dict:
@@ -146,21 +173,28 @@ class ExecutionControl:
             raise ValueError("quota_values_must_be_positive")
         if policy.max_gpus_per_unit < 0:
             raise ValueError("quota_values_must_be_positive")
+        if policy.max_time_minutes is not None and policy.max_time_minutes < 1:
+            raise ValueError("quota_values_must_be_positive")
         with self.store._lock, self.store._connect() as db:
             db.execute(
-                """INSERT INTO execution_quotas VALUES(?,?,?,?,?,?,?,?)
+                """INSERT INTO execution_quotas(subject,max_concurrent_units,max_cpus_per_unit,
+                   max_memory_gb_per_unit,max_gpus_per_unit,allowed_nodes_json,updated_by,updated_at,
+                   max_time_minutes,allowed_partitions_json) VALUES(?,?,?,?,?,?,?,?,?,?)
                    ON CONFLICT(subject) DO UPDATE SET
                    max_concurrent_units=excluded.max_concurrent_units,
                    max_cpus_per_unit=excluded.max_cpus_per_unit,
                    max_memory_gb_per_unit=excluded.max_memory_gb_per_unit,
                    max_gpus_per_unit=excluded.max_gpus_per_unit,
                    allowed_nodes_json=excluded.allowed_nodes_json,
+                   max_time_minutes=excluded.max_time_minutes,
+                   allowed_partitions_json=excluded.allowed_partitions_json,
                    updated_by=excluded.updated_by, updated_at=excluded.updated_at""",
                 (
                     subject, policy.max_concurrent_units, policy.max_cpus_per_unit,
                     policy.max_memory_gb_per_unit, policy.max_gpus_per_unit,
                     json.dumps(list(policy.allowed_nodes)) if policy.allowed_nodes is not None else None,
-                    updated_by, self._now(),
+                    updated_by, self._now(), policy.max_time_minutes,
+                    json.dumps(list(policy.allowed_partitions)) if policy.allowed_partitions is not None else None,
                 ),
             )
         return {"subject": subject, **policy.as_dict()}
@@ -176,6 +210,16 @@ class ExecutionControl:
                 raise QuotaExceeded(f"{label}_per_unit_gpu_limit_exceeded")
             if policy.allowed_nodes is not None and unit["node"] and unit["node"] not in policy.allowed_nodes:
                 raise QuotaExceeded(f"{label}_node_not_allowed")
+            if (
+                policy.max_time_minutes is not None and unit.get("time_minutes")
+                and unit["time_minutes"] > policy.max_time_minutes
+            ):
+                raise QuotaExceeded(f"{label}_time_limit_exceeded")
+            if (
+                policy.allowed_partitions is not None and unit.get("backend") == "slurm"
+                and unit.get("partition") not in policy.allowed_partitions
+            ):
+                raise QuotaExceeded(f"{label}_partition_not_allowed")
 
     # ---------------------------------------------------------- reservations
     @staticmethod
@@ -205,6 +249,7 @@ class ExecutionControl:
     def reserve(
         self, *, workflow_id: str, submitter_id: str, project_id: str | None,
         idempotency_key: str, execution, frozen_scope: dict,
+        verify=None,
     ) -> dict:
         """Atomically check quotas and reserve units across processes.
 
@@ -227,6 +272,10 @@ class ExecutionControl:
                 if existing["workflow_id"] != workflow_id:
                     raise ValueError("idempotency_key_reused_for_different_task")
                 return {**dict(existing), "replayed": True}
+            # Identity, membership and permissions are re-validated inside the
+            # same write transaction that consumes quota (atomic validation).
+            if verify is not None:
+                verify(connection)
             self._release_finished(connection)
             user_policy = self.quota_for(f"user:{submitter_id}", connection)
             self._check_unit_limits(units, user_policy, "user")
@@ -273,10 +322,28 @@ class ExecutionControl:
 
     def bind_run(self, reservation_id: str, run_id: str) -> None:
         with self.store._lock, self.store._connect() as db:
-            db.execute(
-                "UPDATE run_authorizations SET run_id=? WHERE reservation_id=? AND run_id IS NULL",
+            cursor = db.execute(
+                "UPDATE run_authorizations SET run_id=? WHERE reservation_id=? AND run_id IS NULL "
+                "AND status='reserved'",
                 (run_id, reservation_id),
             )
+            if cursor.rowcount != 1:
+                raise AuthorizationDenied("execution_reservation_unavailable")
+
+    def require_launchable(self, run) -> None:
+        """Worker-side check: the run carries a live, matching frozen grant."""
+        record = self.for_run(run.run_id)
+        if record is None:
+            raise AuthorizationDenied("execution_grant_missing")
+        if record["status"] != "reserved":
+            raise AuthorizationDenied("execution_grant_released")
+        frozen = record["frozen_scope"]
+        require_not_expanded(frozen, workflow_id=run.workflow_id, workflow_revision=run.workflow_revision)
+        if frozen.get("execution_identity") not in (None, getpass.getuser()):
+            raise AuthorizationDenied("execution_identity_changed")
+        root = frozen.get("output_root")
+        if root and run.workspace_root_path and Path(root).resolve() != Path(run.workspace_root_path).resolve():
+            raise AuthorizationDenied("execution_grant_does_not_cover_output")
 
     def release(self, reservation_id: str) -> None:
         with self.store._lock, self.store._connect() as db:

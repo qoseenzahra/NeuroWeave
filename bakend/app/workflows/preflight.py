@@ -209,7 +209,7 @@ class WorkflowPreflight:
             checked_at=contracts.now(),
         )
         with self.session.lock:
-            checkpoint()
+            checkpoint(commit=True)
             contracts.check_revision(
                 self.session.require(workflow_id), expected_revision
             )

@@ -7,7 +7,7 @@ from concurrent.futures import Future, ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
 from threading import Event, RLock
-from typing import Any
+from typing import Callable, Any
 from uuid import uuid4
 
 from ..artifact_semantics import compatible
@@ -91,11 +91,13 @@ class RunService:
         workflow_id: str,
         expected_revision: int,
         execution: RunExecutionOptions | None = None,
+        *,
+        on_created: Callable[[str], None] | None = None,
     ) -> WorkflowRun:
         # The deployment uses one API process. Serialize check-and-insert and
         # all run writes with cancel so a stale snapshot cannot erase a Job ID.
         with self._lock:
-            return self._create(workflow_id, expected_revision, execution)
+            return self._create(workflow_id, expected_revision, execution, on_created)
 
     def _save_run(self, run: WorkflowRun, **kwargs: Any) -> None:
         progress_only = kwargs.pop("progress_only", False)
@@ -119,6 +121,7 @@ class RunService:
         workflow_id: str,
         expected_revision: int,
         execution: RunExecutionOptions | None = None,
+        on_created: Callable[[str], None] | None = None,
     ) -> WorkflowRun:
         execution = execution or RunExecutionOptions()
         if execution.backend == "slurm":
@@ -265,11 +268,12 @@ class RunService:
             if execution.backend == "slurm"
             else "任务已进入本地执行队列",
         )
+        self._bind_before_start(run, on_created)
         cancel_event = Event()
         with self._lock:
             self._cancel_events[run_id] = cancel_event
             self._futures[run_id] = self._executor.submit(
-                self._execute,
+                self._guarded_execute,
                 run_id,
                 workflow,
                 resolved,
@@ -345,7 +349,10 @@ class RunService:
             raise KeyError(run_id)
         return run
 
-    def retry(self, run_id: str, step_ids=None, sample_ids=None) -> WorkflowRun:
+    def retry(
+        self, run_id: str, step_ids=None, sample_ids=None, *,
+        on_created: Callable[[str], None] | None = None,
+    ) -> WorkflowRun:
         original = self.get(run_id)
         if original.status not in {"failed", "cancelled"}:
             raise RunConflict("只能重试已经结束的失败或取消任务")
@@ -515,9 +522,10 @@ class RunService:
                     "reused_steps": run.reused_step_ids,
                 },
             )
+            self._bind_before_start(run, on_created)
             self._cancel_events[new_id] = event
             self._futures[new_id] = self._executor.submit(
-                self._execute, new_id, workflow, units, event
+                self._guarded_execute, new_id, workflow, units, event
             )
             return self.get(new_id)
 
@@ -699,6 +707,49 @@ class RunService:
                 if self.get(run_id).execution.backend != "slurm":
                     event.set()
         self._executor.shutdown(wait=False, cancel_futures=True)
+
+    def _bind_before_start(self, run: WorkflowRun, on_created) -> None:
+        """Bind the accepted execution grant to the run before any worker starts.
+
+        If binding fails the run never starts; it is recorded as failed so the
+        task state machine stays consistent and no quota is used.
+        """
+        if on_created is None:
+            return
+        try:
+            on_created(run.run_id)
+        except BaseException as exc:
+            self._fail_unstarted(run, "execution_not_authorized", str(exc) or "执行授权登记失败")
+            raise
+
+    def _fail_unstarted(self, run: WorkflowRun, code: str, message: str) -> None:
+        run.status = "failed"
+        run.error_code = code
+        run.error_message = message
+        run.finished_at = self._now()
+        run.updated_at = run.finished_at
+        self._save_run(run, event_type="run_failed", event_message=message, level="error")
+
+    def _guarded_execute(self, run_id: str, workflow: Workflow, resolved, cancel_event: Event, start_index: int = 0) -> None:
+        """Worker-side check of the frozen execution grant before new work starts.
+
+        ``launch_guard`` (wired by Task B) verifies the run has a reserved grant
+        whose frozen plan, output root and execution identity match. Recovery of
+        already-submitted Slurm jobs does not pass through here, so existing
+        computation is never stopped.
+        """
+        guard = getattr(self, "launch_guard", None)
+        if guard is not None:
+            run = self.get(run_id)
+            try:
+                guard(run)
+            except Exception as exc:  # noqa: BLE001 - persisted as structured state
+                with self._lock:
+                    self._cancel_events.pop(run_id, None)
+                    self._futures.pop(run_id, None)
+                self._fail_unstarted(run, "execution_not_authorized", str(exc) or "执行授权无效")
+                return
+        self._execute(run_id, workflow, resolved, cancel_event, start_index)
 
     def _execute(
         self,

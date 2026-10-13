@@ -26,6 +26,7 @@ import { useLanguageStore } from '../../stores/languageStore';
 import { getTranslations } from '../../lib/i18n';
 import type { TranslationKeys } from '../../types/i18n';
 import { RunPanel } from '../runs/RunPanel';
+import { useResourceActions } from '../access/useResourceActions';
 import { cancelRun, resumeRunMonitor, retryRun, startRun } from '../runs/runsApi';
 import { useWorkflowRunMonitoring } from '../runs/useRunMonitoring';
 import { runStatusActive } from '../runs/runMonitor';
@@ -171,6 +172,12 @@ function WorkflowCardBody({
   const queryClient = useQueryClient();
   const backendsQuery = useExecutionBackends(workflow?.status === 'confirmed');
   const monitoring = useWorkflowRunMonitoring(workflowId);
+  // Task B: controls follow the server's allowed actions for this task.
+  const permissions = useResourceActions('task', workflowId);
+  const mayUpdate = permissions.allows('update');
+  const maySubmit = permissions.allows('submit');
+  const mayRetry = permissions.allows('retry');
+  const mayCancel = permissions.allows('cancel');
   const startRunMutation = useMutation({
     mutationKey: ['workflow-change', workflowId],
     // Keep the start mutation pending during draft persistence as well as the
@@ -222,7 +229,7 @@ function WorkflowCardBody({
   const locked = Boolean(workflow?.locked_at);
   const configuredCount = workflow?.steps.filter((step) => step.selected_method_id).length ?? 0;
   const controlsDisabled =
-    disabled || query.isFetching || action.isPending || datasetPatch.isPending || dryRun.isPending || workflow?.status === 'confirmed';
+    disabled || !mayUpdate || query.isFetching || action.isPending || datasetPatch.isPending || dryRun.isPending || workflow?.status === 'confirmed';
   const backends = backendsQuery.data ?? null;
   const slurmReady = Boolean(
     backends &&
@@ -280,7 +287,7 @@ function WorkflowCardBody({
   const runnable = workflow?.status === 'confirmed' &&
     Boolean(dryRunReport?.valid && dryRunReport.execution_enabled);
   const startRunDisabled =
-    disabled || !workflow?.workspace_id || !workflow?.workspace_root_path ||
+    disabled || !maySubmit || !workflow?.workspace_id || !workflow?.workspace_root_path ||
     !runnable || runActive || !draft.ready || draft.saving ||
     query.isFetching || monitoring.loading ||
     startRunMutation.isPending || retryMutation.isPending || cancelRunMutation.isPending ||
@@ -534,7 +541,7 @@ function WorkflowCardBody({
             <select
               id={`execution-${workflow.workflow_id}`}
               value={draft.execution.backend}
-              disabled={disabled || !draft.ready || startRunMutation.isPending}
+              disabled={disabled || !mayUpdate || !draft.ready || startRunMutation.isPending}
               onChange={(event) =>
                 setExecution((previous) => ({
                   ...previous,
@@ -568,7 +575,7 @@ function WorkflowCardBody({
               value={draft.execution}
               backends={backends}
               workflow={workflow}
-              disabled={disabled || !draft.ready || draft.saving || startRunMutation.isPending}
+              disabled={disabled || !mayUpdate || !draft.ready || draft.saving || startRunMutation.isPending}
               onChange={setExecution}
             />
           )}
@@ -592,27 +599,27 @@ function WorkflowCardBody({
       <WorkspaceOutput
         workflow={workflow}
         onChange={(next) => queryClient.setQueryData(workflowQueryKey(next.workflow_id), next)}
-        disabled={disabled}
+        disabled={disabled || !mayUpdate}
       />
       {monitoring.run && (
         <RunPanel
           events={monitoring.runEvents}
           run={monitoring.run}
-          onRetry={(stepIds) =>
+          onRetry={!mayRetry ? undefined : (stepIds) =>
             monitoring.run &&
             retryMutation.mutate(
               { runId: monitoring.run.run_id, stepIds },
               { onSuccess: (run) => monitoring.setRun(run), onError: (failure) => fail(failure, 'workflowErrorGeneric') }
             )
           }
-          onCancel={() =>
+          onCancel={!mayCancel ? undefined : () =>
             monitoring.run &&
             cancelRunMutation.mutate(monitoring.run.run_id, {
               onSuccess: (run) => monitoring.setRun(run),
               onError: (failure) => fail(failure, 'workflowErrorGeneric')
             })
           }
-          onResume={() => {
+          onResume={!mayRetry ? undefined : () => {
             if (monitoring.run) resumeMutation.mutate(monitoring.run.run_id, {
               onSuccess: (run) => monitoring.setRun(run),
               onError: (failure) => fail(failure, 'workflowErrorGeneric')

@@ -95,7 +95,52 @@ export function errorText(error: unknown, fallback = ''): string {
   return fallback;
 }
 
+/** Header carrying the audited reason for managing another member's resource. */
+export const REASON_HEADER = 'X-NeuroWeave-Reason';
+
+type ReasonPrompt = (path: string) => Promise<string | null> | string | null;
+
+let reasonPrompt: ReasonPrompt = () =>
+  typeof window !== 'undefined' && typeof window.prompt === 'function'
+    ? window.prompt('Reason for managing this member\'s resource (recorded in the audit log):')
+    : null;
+
+/** A's administration UI may replace the default prompt with its own dialog. */
+export function setAdministrativeReasonPrompt(prompt: ReasonPrompt): void {
+  reasonPrompt = prompt;
+}
+
+let lastIdentityNotice = 0;
+
+/** A 401 means the session ended or the account was disabled: re-verify scope. */
+function notifyIdentityChanged(): void {
+  if (typeof window === 'undefined') return;
+  const now = Date.now();
+  if (now - lastIdentityNotice < 2000) return;
+  lastIdentityNotice = now;
+  window.dispatchEvent(new CustomEvent('neuroweave:identity-changed'));
+}
+
 export async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  try {
+    return await send<T>(path, init);
+  } catch (error) {
+    const headers = new Headers(init.headers ?? {});
+    if (
+      error instanceof ApiError && error.status === 403 &&
+      error.code === 'administrative_reason_required' && !headers.has(REASON_HEADER)
+    ) {
+      const reason = (await reasonPrompt(path))?.trim();
+      if (reason && reason.length >= 4) {
+        headers.set(REASON_HEADER, encodeURIComponent(reason.slice(0, 500)));
+        return send<T>(path, { ...init, headers });
+      }
+    }
+    throw error;
+  }
+}
+
+async function send<T>(path: string, init: RequestInit = {}): Promise<T> {
   // Task B: every request belongs to the user/project epoch it started in.
   // A scope change aborts it, and a response that still arrives late is
   // discarded instead of being delivered to the new account or project.
@@ -109,11 +154,12 @@ export async function request<T>(path: string, init: RequestInit = {}): Promise<
       'X-NeuroWeave-Contract': '2',
       ...scopeHeaders(),
       ...(init.body ? { 'Content-Type': 'application/json' } : {}),
-      ...init.headers
+      ...Object.fromEntries(new Headers(init.headers ?? {}).entries())
     }
   });
   assertCurrentEpoch(epoch);
   if (!response.ok) {
+    if (response.status === 401 && !path.startsWith('/api/access/scope')) notifyIdentityChanged();
     throw await parseError(response);
   }
   if (response.status === 204) {

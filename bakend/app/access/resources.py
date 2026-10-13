@@ -75,6 +75,8 @@ class ResourceAccess:
         self.store = store
         self.authorization = authorization
         self.dependencies: dict[ResourceType, Callable[[str], list[tuple[ResourceType, str]]]] = {}
+        # Reverse edges: which resources use this one (see access/dependencies.py).
+        self.dependents: dict[ResourceType, Callable[[str], list[tuple[ResourceType, str]]]] = {}
 
     # ------------------------------------------------------------------ identity
     @property
@@ -108,6 +110,28 @@ class ResourceAccess:
         if membership is not None and membership.archived:
             raise AuthorizationDenied("project_archived")
         return project_id
+
+    def background_guard(self, *checks: tuple, user_id: str | None = None) -> Callable[[], None]:
+        """Live re-check for background work started by the current user.
+
+        The returned callback runs later (in the worker) with the copied request
+        context: the session is looked up again, so a disabled account, revoked
+        session, removed membership or revoked resource permission stops the
+        work before its next commit. ``checks`` are ``(type, id, action)``.
+        """
+        initiator = user_id or self.actor().user_id
+        project_id = requested_project()
+
+        def authorize() -> None:
+            identity = self.actor()
+            if identity.user_id != initiator:
+                raise AuthorizationDenied("actor_changed")
+            if project_id is not None:
+                self.current_project()
+            for resource_type, resource_id, action in checks:
+                self.require(resource_type, resource_id, action)
+
+        return authorize
 
     def _audit(self, event, *, resource_type, resource_id, action, reason, project_id=None,
                summary=None, connection=None):
@@ -368,12 +392,28 @@ class ResourceAccess:
         return policy
 
     def _check_dependencies(self, rtype: ResourceType, resource_id: str, target_scope: SharingScope, project_id: str | None):
-        if target_scope is not SharingScope.PROJECT:
+        if target_scope is SharingScope.PROJECT:
+            # Everything a shared task needs must already be visible to the project.
+            for dep_type, dep_id in self.dependencies.get(rtype, lambda _id: [])(resource_id):
+                policy = self.policy(dep_type, dep_id)
+                if policy is None or policy.scope is not ResourceScope.PROJECT or policy.project_id != project_id:
+                    raise ValueError(f"dependency_not_shared:{dep_type.value}:{dep_id}")
             return
+        # Unsharing: refuse while a project-shared resource still depends on it.
+        for dep_type, dep_id in self.dependents.get(rtype, lambda _id: [])(resource_id):
+            policy = self.policy(dep_type, dep_id)
+            if policy is not None and policy.scope is ResourceScope.PROJECT and policy.project_id == project_id:
+                raise ValueError(f"resource_in_use_by_shared:{dep_type.value}:{dep_id}")
+
+    def _check_handover_dependencies(self, rtype: ResourceType, resource_id: str, new_manager_id: str, project_id: str):
+        """The new manager must be able to read everything the resource uses."""
         for dep_type, dep_id in self.dependencies.get(rtype, lambda _id: [])(resource_id):
             policy = self.policy(dep_type, dep_id)
-            if policy is None or policy.scope is not ResourceScope.PROJECT or policy.project_id != project_id:
-                raise ValueError(f"dependency_not_shared:{dep_type.value}:{dep_id}")
+            if policy is None:
+                raise ValueError(f"dependency_unavailable:{dep_type.value}:{dep_id}")
+            shared = policy.scope is ResourceScope.PROJECT and policy.project_id == project_id
+            if not shared and policy.manager_id != new_manager_id:
+                raise ValueError(f"dependency_not_accessible_to_recipient:{dep_type.value}:{dep_id}")
 
     def share(self, resource_type, resource_id: str, scope: SharingScope, *, expected_revision: int) -> ResourceView:
         rtype = self._type(resource_type)
@@ -403,6 +443,7 @@ class ResourceAccess:
         membership = lookup(new_manager_id, project_id)
         if membership is None or not membership.active or membership.project_id != project_id:
             raise AuthorizationDenied("recipient_not_project_member")
+        self._check_handover_dependencies(rtype, resource_id, new_manager_id, project_id)
         # The historical creator keeps attribution only; management moves.
         self._update_policy(rtype, resource_id, expected_revision, manager_id=new_manager_id)
         self._audit(

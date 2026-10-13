@@ -98,6 +98,12 @@ def router_for(services: ApplicationServices) -> APIRouter:
             raise AuthorizationDenied("platform_administrator_required")
         return identity.user_id
 
+    def _same_admin(owner_id: str) -> None:
+        from ..access.contracts import AuthorizationDenied
+
+        if require_platform_admin() != owner_id:
+            raise AuthorizationDenied("actor_changed")
+
     @router.get("/api/maintenance/storage")
     def maintenance_storage() -> dict[str, Any]:
         require_platform_admin()
@@ -117,6 +123,7 @@ def router_for(services: ApplicationServices) -> APIRouter:
                 "outputs",
                 lambda: inventory_outputs(services.settings.database_path, roots),
                 owner_id=owner_id,
+                authorize=lambda: _same_admin(owner_id),
             )
         except ValueError as exc:
             raise HTTPException(status_code=429, detail=str(exc)) from exc

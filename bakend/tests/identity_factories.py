@@ -33,8 +33,10 @@ class IdentityDouble(TestIdentityReader):
             if user == self.identity.user_id
         }
 
-    def become(self, user_id: str, *, platform_role=PlatformRole.USER, enabled: bool = True):
-        self.identity = Identity(user_id, enabled=enabled, platform_role=platform_role)
+    def become(self, user_id: str, *, platform_role=PlatformRole.USER, enabled: bool = True,
+               identity_revision: int = 0):
+        self.identity = Identity(user_id, enabled=enabled, platform_role=platform_role,
+                                 identity_revision=identity_revision)
         self._refresh()
         return self
 
@@ -43,8 +45,11 @@ class IdentityDouble(TestIdentityReader):
         self._refresh()
         return self
 
-    def add_member(self, user_id: str, project_id: str, role: ProjectRole = MEMBER, active: bool = True):
-        self.directory[(user_id, project_id)] = ProjectMembership(project_id, user_id, role, active)
+    def add_member(self, user_id: str, project_id: str, role: ProjectRole = MEMBER, active: bool = True,
+                   *, archived: bool = False, membership_revision: int = 0):
+        self.directory[(user_id, project_id)] = ProjectMembership(
+            project_id, user_id, role, active, archived=archived, membership_revision=membership_revision,
+        )
         self._refresh()
         return self
 

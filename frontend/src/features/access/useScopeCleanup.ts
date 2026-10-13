@@ -9,7 +9,7 @@ import {
   subscribeScope,
 } from './businessScope';
 import type { BusinessScope } from './businessScope';
-import { clearAllPendingTurnScopes } from '../chat/chatTurns';
+import { clearPendingTurnsForUser } from '../chat/chatTurns';
 
 /**
  * Business-context cleanup for an identity or scope switch.
@@ -19,11 +19,20 @@ import { clearAllPendingTurnScopes } from '../chat/chatTurns';
  *     and making late responses throw `StaleScopeError` in `request()`.
  *  2. Cancel in-flight queries, then remove every cached query so no private
  *     data from the previous user/project can be rendered again.
- *  3. Forget pending chat turns and confirmation state of the old scope.
+ *  3. Forget the previous user's pending chat turns on sign-out or account
+ *     switch (project switches keep each scope's own recovery list).
  *  4. Notify feature modules (`neuroweave:business-scope-changed`) so they
  *     drop local state such as open proposals or draft editors.
  * Server authorization remains authoritative; this only protects the browser.
  */
+let lastVerifiedUser: string | null = null;
+
+/** The server confirmed nobody is signed in: forget the last user's turns. */
+function signedOut(): void {
+  if (lastVerifiedUser) clearPendingTurnsForUser(lastVerifiedUser);
+  lastVerifiedUser = null;
+}
+
 export function cleanupBusinessContext(
   queryClient: Pick<QueryClient, 'cancelQueries' | 'removeQueries'>,
   previous: BusinessScope | null,
@@ -31,7 +40,19 @@ export function cleanupBusinessContext(
 ): void {
   void queryClient.cancelQueries();
   queryClient.removeQueries();
-  clearAllPendingTurnScopes();
+  // Pending chat turns are stored per user *and* project, so switching
+  // projects keeps each scope's recovery list. Only a sign-out or a different
+  // account forgets the previous user's turns.
+  // (A project switch passes through a short "unverified" null scope, which
+  // must not count as a sign-out.)
+  if (next?.userId) {
+    for (const user of new Set([lastVerifiedUser, previous?.userId])) {
+      if (user && user !== next.userId) clearPendingTurnsForUser(user);
+    }
+    lastVerifiedUser = next.userId;
+  } else if (previous?.userId) {
+    lastVerifiedUser = previous.userId;
+  }
   if (typeof window !== 'undefined') {
     window.dispatchEvent(
       new CustomEvent('neuroweave:business-scope-changed', {
@@ -56,9 +77,11 @@ type ScopeResponse = { userId: string; projectId: string | null; platformRole?: 
 export async function refreshBusinessScope(): Promise<BusinessScope | null> {
   try {
     const scope = await request<ScopeResponse>('/api/access/scope');
+    if (!scope.userId) signedOut();
     setBusinessScope(scope.userId ? scope : null);
   } catch (error) {
     if (error instanceof StaleScopeError) return currentScope();
+    if ((error as { status?: number })?.status === 401) signedOut();
     // 401/403 or network failure: nothing from the old scope may stay visible.
     setBusinessScope(null);
   }

@@ -31,7 +31,8 @@ const server = await createServer({
 try {
   const load = (path) => server.ssrLoadModule('/src/' + path);
   const scope = await load('features/access/businessScope.ts');
-  const { request } = await load('api/http.ts');
+  const http = await load('api/http.ts');
+  const { request } = http;
   const chat = await load('features/chat/chatApi.ts');
   const turns = await load('features/chat/chatTurns.ts');
   const auth = await load('features/access/authorization.ts');
@@ -160,6 +161,51 @@ try {
     assert.ok(viewer.includes('/data/a') && !viewer.includes('<form') && !viewer.includes('<button'));
     const admin = renderToStaticMarkup(createElement(DirectoryScopeSettings, { projectId: 'p1', grants, canManage: true, onCreate() {}, onRevoke() {} }));
     assert.ok(admin.includes('<form') && admin.includes('<button'));
+  });
+  await test('a project switch keeps each scope\'s pending chat turns; another account clears them', () => {
+    reset();
+    const client = new QueryClient();
+    localStorage.setItem('neuroweave:pending-chat-turns:alice:personal', '["t1"]');
+    localStorage.setItem('neuroweave:pending-chat-turns:alice:p1', '["t2"]');
+    cleanupBusinessContext(client, { userId: 'alice', projectId: null }, null);
+    cleanupBusinessContext(client, null, { userId: 'alice', projectId: 'p1' });
+    assert.equal(localStorage.getItem('neuroweave:pending-chat-turns:alice:personal'), '["t1"]');
+    assert.deepEqual(turns.pendingTurns({ userId: 'alice', projectId: 'p1' }), ['t2']);
+    cleanupBusinessContext(client, { userId: 'alice', projectId: 'p1' }, null);
+    cleanupBusinessContext(client, null, { userId: 'bob', projectId: null });
+    assert.equal(localStorage.getItem('neuroweave:pending-chat-turns:alice:p1'), null);
+  });
+
+  await test('a rejected submission is not kept for recovery; 401 re-verifies the identity', async () => {
+    reset();
+    scope.setBusinessScope({ userId: 'alice', projectId: null });
+    let identityEvents = 0;
+    const onIdentity = () => { identityEvents += 1; };
+    window.addEventListener('neuroweave:identity-changed', onIdentity);
+    globalThis.fetch = async () => json({ detail: { code: 'input_access_denied', message: 'Not permitted' } }, 403);
+    await assert.rejects(chat.sendChat({ message: 'x', conversation_id: null, workspace_id: null, client_turn_id: 't9',
+      dataset_id: null, workflow_id: null }));
+    assert.deepEqual(turns.pendingTurns({ userId: 'alice', projectId: null }), []);
+    globalThis.fetch = async () => json({ detail: 'Authentication required' }, 401);
+    await assert.rejects(request('/api/workflows'));
+    window.removeEventListener('neuroweave:identity-changed', onIdentity);
+    assert.equal(identityEvents, 1);
+  });
+
+  await test('managing another member\'s resource asks for an audited reason and retries once', async () => {
+    reset();
+    scope.setBusinessScope({ userId: 'alice', projectId: 'p1' });
+    const seen = [];
+    globalThis.fetch = async (_url, init) => {
+      const reason = new Headers(init.headers).get('X-NeuroWeave-Reason');
+      seen.push(reason);
+      return reason ? json({ ok: true }) : json({ detail: { code: 'administrative_reason_required', message: 'Not permitted' } }, 403);
+    };
+    http.setAdministrativeReasonPrompt(() => 'member on leave');
+    assert.deepEqual(await request('/api/workflows/w/lock', { method: 'POST', body: '{}' }), { ok: true });
+    assert.deepEqual(seen, [null, encodeURIComponent('member on leave')]);
+    http.setAdministrativeReasonPrompt(() => null);
+    await assert.rejects(request('/api/workflows/w/lock', { method: 'POST', body: '{}' }), (e) => e.code === 'administrative_reason_required');
   });
   reset();
 } finally {

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useQueries, useQueryClient } from '@tanstack/react-query';
 import { request, errorText } from '../../api/http';
-import { pendingTurns, retryTurn, forgetTurn } from './chatTurns';
+import { pendingTurns, retryTurn, forgetTurn, isGoneForThisUser } from './chatTurns';
 import type { Turn, TurnScope } from './chatTurns';
 import { ui } from '../../lib/libraryText';
 import { useBusinessScope } from '../access/useScopeCleanup';
@@ -44,6 +44,19 @@ export function ChatTurnPanel({ onOpen, scope: explicitScope }: ChatTurnPanelPro
     })),
   });
 
+  // Turns the server no longer shows to this user (revoked, other account)
+  // are dropped from the recovery list instead of showing a stuck notice.
+  const gone = turns
+    .map((t, i) => (t.isError && isGoneForThisUser(t.error) ? ids[i] : ''))
+    .filter(Boolean)
+    .join(',');
+  useEffect(() => {
+    if (!gone || !scope) return;
+    for (const id of gone.split(',')) forgetTurn(id, scope);
+    window.dispatchEvent(new CustomEvent('neuroweave:chat-progress'));
+  }, [gone, scope]);
+  const goneIds = new Set(gone ? gone.split(',') : []);
+
   const completed = turns
     .map((t) => (t.data?.status === 'succeeded' ? t.data.conversation_id : ''))
     .filter(Boolean)
@@ -58,12 +71,13 @@ export function ChatTurnPanel({ onOpen, scope: explicitScope }: ChatTurnPanelPro
     }
   }, [completed, client]);
 
-  if (!ids.length) return null;
+  if (!ids.some((id) => !goneIds.has(id))) return null;
 
   return (
     <div className="max-h-40 shrink-0 space-y-2 overflow-auto border-b border-line p-3 text-xs" aria-live="polite">
       {error && <p className="text-danger">{error}</p>}
       {turns.map((query, i) => {
+        if (goneIds.has(ids[i])) return null;
         const turn = query.data;
         return (
           <div key={ids[i]} className="flex flex-wrap items-center gap-2">

@@ -56,6 +56,19 @@ export function clearPendingTurnScope(userId: string, projectId: string | null):
   }
 }
 
+/** Forget every pending turn of one user (sign-out or a different account). */
+export function clearPendingTurnsForUser(userId: string): void {
+  try {
+    const prefix = `neuroweave:pending-chat-turns:${userId}:`;
+    for (let i = localStorage.length - 1; i >= 0; i -= 1) {
+      const k = localStorage.key(i);
+      if (k?.startsWith(prefix)) localStorage.removeItem(k);
+    }
+  } catch {
+    /* best effort */
+  }
+}
+
 export function clearAllPendingTurnScopes(): void {
   try {
     for (let i = localStorage.length - 1; i >= 0; i -= 1) {
@@ -65,6 +78,12 @@ export function clearAllPendingTurnScopes(): void {
   } catch {
     /* best effort */
   }
+}
+
+/** The server says this turn is not (or no longer) visible to this user. */
+export function isGoneForThisUser(error: unknown): boolean {
+  const status = (error as { status?: number })?.status;
+  return status === 403 || status === 404;
 }
 
 /** Progress events belong to the epoch that started the turn. */
@@ -103,7 +122,14 @@ export async function resolveChatScope(): Promise<TurnScope> {
 export async function waitForTurn(id: string, scope: TurnScope, epoch = currentEpoch()): Promise<ChatResponse> {
   for (;;) {
     await requireCurrentScope(scope, epoch);
-    const turn = await request<Turn>(`/api/chat/turns/${encodeURIComponent(id)}`);
+    let turn: Turn;
+    try {
+      turn = await request<Turn>(`/api/chat/turns/${encodeURIComponent(id)}`);
+    } catch (error) {
+      // 403/404: the turn is no longer ours to see (revoked, other account).
+      if (isGoneForThisUser(error)) remember(scope.userId, scope.projectId, id, false);
+      throw error;
+    }
     await requireCurrentScope(scope, epoch);
     progress(turn, epoch);
     if (turn.status === 'succeeded' && turn.result) {
@@ -126,10 +152,21 @@ export async function submitTurn(
   const effective = scope?.userId ? scope : await resolveChatScope();
   const epoch = currentEpoch();
   remember(effective.userId, effective.projectId, payload.client_turn_id, true);
-  const turn = await request<Turn>('/api/chat/turns', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
+  let turn: Turn;
+  try {
+    turn = await request<Turn>('/api/chat/turns', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  } catch (error) {
+    // The server rejected the turn (validation, permission, conflict): there
+    // is nothing to recover. Network failures keep it for recovery.
+    const status = (error as { status?: number })?.status;
+    if (typeof status === 'number' && status >= 400 && status < 500) {
+      remember(effective.userId, effective.projectId, payload.client_turn_id, false);
+    }
+    throw error;
+  }
   // Do not emit even the initial response if the authenticated scope changed
   // while the submit request was in flight.
   await requireCurrentScope(effective, epoch);

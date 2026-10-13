@@ -102,6 +102,42 @@ def router_for(services: ApplicationServices) -> APIRouter:
             ),
         }
 
+    def verifier(scope: dict):
+        """Re-validate identity, membership and permissions inside the quota transaction."""
+        resource_access = access(services)
+        reader = resource_access.identity_reader
+
+        def call(method, *args, connection):
+            try:
+                return method(*args, connection=connection)
+            except TypeError:
+                return method(*args)
+
+        def verify(connection) -> None:
+            identity = call(reader.current_identity, connection=connection)
+            if not identity.enabled or identity.user_id != scope["submitter_id"]:
+                raise AuthorizationDenied("account_disabled_or_changed")
+            if identity.identity_revision != scope.get("identity_revision", identity.identity_revision):
+                raise AuthorizationDenied("identity_changed_during_submission")
+            project_id = scope.get("project_id")
+            if project_id:
+                membership = call(reader.project_membership, project_id, connection=connection)
+                if membership is None or not membership.active or membership.user_id != identity.user_id:
+                    raise AuthorizationDenied("project_membership_required")
+                if membership.archived:
+                    raise AuthorizationDenied("project_archived")
+                expected = scope.get("membership_revision")
+                if expected is not None and membership.membership_revision != expected:
+                    raise AuthorizationDenied("membership_changed_during_submission")
+            task_policy = resource_access.policy(ResourceType.TASK, scope["workflow_id"])
+            if task_policy is None or task_policy.permission_revision != scope["task_permission_revision"]:
+                raise AuthorizationDenied("task_permissions_changed")
+            output_policy = resource_access.policy(ResourceType.OUTPUT, scope["output_workspace_id"])
+            if output_policy is None or output_policy.permission_revision != scope["output_permission_revision"]:
+                raise AuthorizationDenied("output_permissions_changed")
+
+        return verify
+
     def reserve(workflow_id: str, scope: dict, execution, idempotency_key: str | None) -> dict:
         key = (idempotency_key or "").strip()[:200] or ("auto:" + uuid4().hex)
         return services.execution_control.reserve(
@@ -111,6 +147,7 @@ def router_for(services: ApplicationServices) -> APIRouter:
             idempotency_key=key,
             execution=execution,
             frozen_scope=scope,
+            verify=verifier(scope),
         )
 
     def replayed(reservation: dict) -> WorkflowRun:
@@ -139,6 +176,7 @@ def router_for(services: ApplicationServices) -> APIRouter:
                 workflow_id, request.expected_revision
             ),
             owner_id=access(services).actor().user_id,
+            authorize=access(services).background_guard((ResourceType.TASK, workflow_id, UPDATE)),
         )
 
     @router.post("/api/workflows/{workflow_id}/dry-run", response_model=Workflow)
@@ -238,7 +276,11 @@ def router_for(services: ApplicationServices) -> APIRouter:
                     Path(selected.root_path)
                 )
                 run = services.run_service.create(
-                    workflow_id, request.expected_revision, request.execution
+                    workflow_id, request.expected_revision, request.execution,
+                    # Bind the reservation before the worker can start.
+                    on_created=lambda run_id: services.execution_control.bind_run(
+                        reservation["reservation_id"], run_id
+                    ),
                 )
         except KeyError as exc:
             services.execution_control.release(reservation["reservation_id"])
@@ -249,7 +291,6 @@ def router_for(services: ApplicationServices) -> APIRouter:
         except BaseException:
             services.execution_control.release(reservation["reservation_id"])
             raise
-        services.execution_control.bind_run(reservation["reservation_id"], run.run_id)
         audit_run("run.submitted", run.run_id, {**scope, "units": reservation.get("units")}, "submit")
         return run
 
@@ -354,7 +395,10 @@ def router_for(services: ApplicationServices) -> APIRouter:
             return replayed(reservation)
         try:
             run = services.run_service.retry(
-                run_id, request.step_ids, request.sample_ids
+                run_id, request.step_ids, request.sample_ids,
+                on_created=lambda new_id: services.execution_control.bind_run(
+                    reservation["reservation_id"], new_id
+                ),
             )
         except KeyError as exc:
             services.execution_control.release(reservation["reservation_id"])
@@ -365,7 +409,6 @@ def router_for(services: ApplicationServices) -> APIRouter:
         except BaseException:
             services.execution_control.release(reservation["reservation_id"])
             raise
-        services.execution_control.bind_run(reservation["reservation_id"], run.run_id)
         audit_run("run.retried", run.run_id, {**scope, "units": reservation.get("units")}, "retry")
         return run
 

@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from threading import Event
 from uuid import uuid4
 from fastapi import HTTPException
-from .operation_context import OperationContext, current_operation, OperationCancelled
+from .operation_context import OperationContext, current_operation, OperationCancelled, OperationUnauthorized
 
 
 class ChatTurns:
@@ -116,9 +116,13 @@ class ChatTurns:
     async def _run(self,identity,request,event):
         def report(message):
             with self.store._connect() as db:db.execute("UPDATE chat_turns SET message=?,updated_at=? WHERE id=?",(message,datetime.now(timezone.utc).isoformat(),identity))
-        token=current_operation.set(OperationContext(event,report))
+        from .access.contracts import ResourceAction
+        def authorize():
+            # Live: same enabled user, still allowed on the conversation and inputs.
+            self._require_turn_action(identity, ResourceAction.UPDATE)
+            self._require_inputs(request)
+        token=current_operation.set(OperationContext(event,report,authorize))
         try:
-            from .access.contracts import ResourceAction
             # Queued work re-checks identity when it actually starts: a turn
             # queued before logout/disabling/revocation must not execute.
             self._require_turn_action(identity, ResourceAction.UPDATE)
@@ -131,7 +135,7 @@ class ChatTurns:
             self._require_turn_action(identity, ResourceAction.UPDATE)
             with self.store._connect() as db:db.execute("UPDATE chat_turns SET status='succeeded',message='处理完成',result_json=? WHERE id=?",(result.model_dump_json(),identity))
         except (Exception,asyncio.CancelledError) as exc:
-            status='cancelled' if isinstance(exc,OperationCancelled) else 'interrupted' if isinstance(exc,asyncio.CancelledError) else 'failed'
+            status='cancelled' if isinstance(exc,OperationCancelled) else 'failed' if isinstance(exc,OperationUnauthorized) else 'interrupted' if isinstance(exc,asyncio.CancelledError) else 'failed'
             message=str(getattr(exc,'detail',exc)) or '处理已中断'
             error=dict(message=message,status_code=getattr(exc,'status_code',500))
             with self.store._connect() as db:db.execute("UPDATE chat_turns SET status=?,message=?,error_json=? WHERE id=? AND status!='succeeded'",(status,message,json.dumps(error,ensure_ascii=False),identity))

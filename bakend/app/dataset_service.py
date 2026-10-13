@@ -162,7 +162,7 @@ class DatasetService:
             created_at=existing.created_at if existing else now,
             updated_at=now,
         )
-        checkpoint()
+        checkpoint(commit=True)
         with self.registration_lock:
             self.registration_guard(directory)
             self.store.save_dataset(dataset)
@@ -174,7 +174,7 @@ class DatasetService:
         updated = dataset.model_copy(
             update={"inspection": self._inspect(directory), "updated_at": self._now()}
         )
-        checkpoint()
+        checkpoint(commit=True)
         self.store.save_dataset(updated)
         return updated
 

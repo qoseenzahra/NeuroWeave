@@ -61,6 +61,9 @@ def build_services(settings: Settings, *, identity_reader=None, audit_sink=None)
     business_audit = SQLiteBusinessAuditSink(local_store._connect, forward=audit_sink)
     authorization_service = AuthorizationService(identity_reader, business_audit)
     resource_access = ResourceAccess(local_store, authorization_service)
+    from .access.dependencies import install as install_dependencies
+
+    install_dependencies(resource_access, local_store)
     directory_access = DirectoryAccess(DirectoryGrantStore(local_store), resource_access)
     execution_control = ExecutionControl(local_store)
     # Historical results (runs reused as inputs) inherit their task permission.
@@ -136,6 +139,8 @@ def build_services(settings: Settings, *, identity_reader=None, audit_sink=None)
 
     workspace_service.protected_paths = _protected_workspace_paths
     workspace_service.run_lock = run_service.mutation_lock
+    # Worker-side: a new run only starts with a matching, reserved frozen grant.
+    run_service.launch_guard = execution_control.require_launchable
     dataset_service.registration_lock = run_service.mutation_lock
     dataset_service.registration_guard = workspace_service.guard_dataset_registration
     pipeline_library = PipelineLibrary(local_store, capability_registry)

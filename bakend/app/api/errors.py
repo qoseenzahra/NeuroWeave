@@ -16,8 +16,8 @@ def revision_http_error(exc: RevisionConflict) -> HTTPException:
     )
 
 
-def submit_operation(operation_service, kind, key, action, *, owner_id=None):
+def submit_operation(operation_service, kind, key, action, *, owner_id=None, authorize=None):
     try:
-        return operation_service.submit(kind, key, action, owner_id=owner_id)
+        return operation_service.submit(kind, key, action, owner_id=owner_id, authorize=authorize)
     except ValueError as exc:
         raise HTTPException(status_code=429, detail=str(exc)) from exc

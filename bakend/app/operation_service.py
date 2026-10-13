@@ -9,7 +9,9 @@ from datetime import datetime, timezone
 from threading import Event, RLock
 from uuid import uuid4
 
-from .operation_context import OperationCancelled, OperationContext, checkpoint, current_operation
+from .operation_context import (
+    OperationCancelled, OperationContext, OperationUnauthorized, checkpoint, current_operation,
+)
 
 
 class OperationService:
@@ -44,7 +46,7 @@ class OperationService:
         value.pop("error_json", None)
         return value
 
-    def submit(self, kind, entity_key, action, *, owner_id=None):
+    def submit(self, kind, entity_key, action, *, owner_id=None, authorize=None):
         with self._lock, self.store._connect() as connection:
             active = connection.execute("SELECT * FROM operations WHERE status IN ('queued','running','cancel_requested')").fetchall()
             same = next((row for row in active if row["kind"] == kind and row["entity_key"] == entity_key
@@ -64,10 +66,10 @@ class OperationService:
         # Carry the request context (identity session, project scope, request id)
         # so the background job re-checks the *current* identity before committing.
         context = contextvars.copy_context()
-        self._executor.submit(context.run, self._run, identifier, event, action)
+        self._executor.submit(context.run, self._run, identifier, event, action, authorize)
         return dict(operation_id=identifier,status="queued",message="等待后台检查")
 
-    def _run(self, identifier, event, action):
+    def _run(self, identifier, event, action, authorize=None):
         last_report = 0.0
         def report(message):
             nonlocal last_report
@@ -77,18 +79,25 @@ class OperationService:
                     connection.execute("UPDATE operations SET message=?,updated_at=? WHERE operation_id=?",
                                        (message,datetime.now(timezone.utc).isoformat(),identifier))
                 last_report = now
-        token = current_operation.set(OperationContext(event, report))
+        operation = OperationContext(event, report, authorize)
+        token = current_operation.set(operation)
         try:
-            checkpoint()
+            # Queued work re-checks the initiator when it actually starts.
+            checkpoint(commit=True)
             with self.store._connect() as connection:
                 connection.execute("UPDATE operations SET status='running' WHERE operation_id=? AND status='queued'", (identifier,))
             value = action()
             result = value.model_dump(mode="json") if hasattr(value, "model_dump") else value
+            # A result is only delivered to an initiator who still has access.
+            operation.require_authorized(force=True)
             # Mutating services check cancellation immediately before their commit.
             # After that commit, report success even if a late cancel arrives.
             self._finish(identifier,"succeeded","检查完成",result=result)
         except OperationCancelled as exc:
             self._finish(identifier,"cancelled",str(exc))
+        except OperationUnauthorized as exc:
+            self._finish(identifier,"failed","权限已变更，后台检查已停止",
+                         error={"message":str(exc),"code":"permission_revoked"})
         except Exception as exc:
             error = {"message":str(exc)}
             if hasattr(exc, "current"):

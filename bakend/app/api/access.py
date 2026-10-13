@@ -53,6 +53,8 @@ class QuotaRequest(BaseModel):
     max_memory_gb_per_unit: int = Field(ge=1, le=8192)
     max_gpus_per_unit: int = Field(ge=0, le=64)
     allowed_nodes: list[str] | None = Field(default=None, max_length=256)
+    max_time_minutes: int | None = Field(default=None, ge=1, le=10080)
+    allowed_partitions: list[str] | None = Field(default=None, max_length=64)
 
 
 def router_for(services: ApplicationServices) -> APIRouter:
@@ -188,6 +190,8 @@ def router_for(services: ApplicationServices) -> APIRouter:
             request.max_concurrent_units, request.max_cpus_per_unit,
             request.max_memory_gb_per_unit, request.max_gpus_per_unit,
             tuple(request.allowed_nodes) if request.allowed_nodes is not None else None,
+            request.max_time_minutes,
+            tuple(request.allowed_partitions) if request.allowed_partitions is not None else None,
         )
         try:
             result = services.execution_control.set_quota(subject, policy, updated_by=access().actor().user_id)

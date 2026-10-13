@@ -477,11 +477,14 @@ def test_run_submission_freezes_scope_and_blocks_other_users(world, monkeypatch)
               workspace_root_path=workspace["root_path"])
     created = {}
 
-    def fake_create(workflow_id, expected_revision, execution):
+    def fake_create(workflow_id, expected_revision, execution, *, on_created=None):
         run = WorkflowRun(run_id="run_frozen", workflow_id=workflow_id, workflow_revision=1, status="queued",
                           output_directory=str(world.out / "alice" / "outputs"), created_at="2026", updated_at="2026",
                           execution=execution)
         world.services.local_store.save_run(run)
+        # The real service binds the grant before starting the worker.
+        on_created(run.run_id)
+        created["bound_before_start"] = world.services.execution_control.for_run(run.run_id) is not None
         created["run"] = run
         return run
 
@@ -490,6 +493,7 @@ def test_run_submission_freezes_scope_and_blocks_other_users(world, monkeypatch)
     headers = {"Idempotency-Key": "submit-once"}
     response = alice.post("/api/workflows/wf_run/runs", json={"expected_revision": 1}, headers=headers)
     assert response.status_code == 200, response.text
+    assert created["bound_before_start"]
     replay = alice.post("/api/workflows/wf_run/runs", json={"expected_revision": 1}, headers=headers)
     assert replay.status_code == 200 and replay.json()["run_id"] == "run_frozen"
     record = alice.get("/api/runs/run_frozen/authorization").json()
